@@ -1,0 +1,32 @@
+#pragma once
+
+// #define VJSYS
+
+#define DEFAULT_WIDTH 800
+#define DEFAULT_HEIGHT 600
+#define DEFAULT_FORMAT D3DFMT_X8R8G8B8;
+#define DEFAULT_VSYNC TRUE
+#define DEFAULT_MULTISAMPLE D3DMULTISAMPLE_NONE
+
+#define NEED_STENCIL TRUE
+#define MIN_VS_VERSION D3DVS_VERSION(0, 0)
+// #define MIN_VS_VERSION D3DVS_VERSION(1, 1)
+
+#ifdef NDEBUG
+#define WINDOWED 0
+#else
+#define WINDOWED 1
+#endif
+
+// #undef WINDOWED
+// #define WINDOWED 0
+
+#ifdef VJSYS
+#define DEFAULT_SOUNDCARD 0
+#else
+#define DEFAULT_SOUNDCARD 1
+#endif
+
+// HACK
+// #undef DEFAULT_SOUNDCARD
+// #define DEFAULT_SOUNDCARD 0
