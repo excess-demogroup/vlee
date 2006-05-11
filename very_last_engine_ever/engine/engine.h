@@ -10,6 +10,8 @@ namespace engine {
 #include "resourceproxy.h"
 #include "textureproxy.h"
 
+#include "demo.h"
+
 #include "drawable.h"
 #include "effect.h"
 #include "mesh.h"

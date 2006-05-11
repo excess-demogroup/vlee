@@ -193,6 +193,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\main.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -211,10 +215,6 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\very_last_engine_ever.cpp"
-				>
 			</File>
 			<Filter
 				Name="engine"
@@ -339,6 +339,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\megademo.h"
+				>
+			</File>
+			<File
 				RelativePath=".\resource.h"
 				>
 			</File>
@@ -349,6 +353,10 @@
 			<Filter
 				Name="engine"
 				>
+				<File
+					RelativePath=".\engine\demo.h"
+					>
+				</File>
 				<File
 					RelativePath=".\engine\engine.h"
 					>
@@ -378,6 +386,10 @@
 					>
 					<File
 						RelativePath=".\engine\core\core.h"
+						>
+					</File>
+					<File
+						RelativePath=".\engine\core\device.h"
 						>
 					</File>
 					<File

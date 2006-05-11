@@ -6,6 +6,7 @@ namespace core {
 #include "fatalexception.h"
 #include "err.h"
 
+#include "device.h"
 #include "vertexbuffer.h"
 #include "vertexdeclaration.h"
 #include "surface.h"
