@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_DEPRECATE
 #include ".\synctrack.h"
 #include <windows.h>
 #include <stdio.h>

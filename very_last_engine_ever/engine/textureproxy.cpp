@@ -5,9 +5,11 @@
 using namespace engine;
 using namespace engine::core;
 
-TextureProxy::TextureProxy(IDirect3DDevice9 *device) : device(device) {}
+TextureProxy::TextureProxy(IDirect3DDevice9 *device) : device(device)
+{}
 
-Texture* TextureProxy::load(std::string filename) {
+Texture* TextureProxy::load(std::string filename)
+{
 //	file *fp = file_open(filename.c_str());
 //	if (!fp) throw FatalException("file not found: ") + filename;
 //	Texture *temp = new Texture;
@@ -17,7 +19,9 @@ Texture* TextureProxy::load(std::string filename) {
 	IDirect3DTexture9 *tex;
 	if (FAILED(D3DXCreateTextureFromFile(device, filename.c_str(), &tex))) throw FatalException("D3DXCreateTextureFromFile() failed");
 //	if (FAILED(D3DXCreateTextureFromFile(device, filename.c_str(), &tex))) throw std::exception((std::string("failed to load ") + filename).c_str());
-	return new Texture(tex, false);
+	Texture *tex2 = new Texture;
+	tex2->Attach(tex);
+	return tex2;
 }
 
 std::map<Texture*, int> ResourceProxy<Texture>::ref_count_static;

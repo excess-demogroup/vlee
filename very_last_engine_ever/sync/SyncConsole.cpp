@@ -1,6 +1,5 @@
 #include "syncconsole.h"
 #include "synceditor.h"
-#define _CRT_SECURE_NO_DEPRECATE
 #include <windows.h>
 #include "uglyswitchhack.h"
 

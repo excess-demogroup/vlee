@@ -1,16 +1,16 @@
 #pragma once
 
-class Texture {
+class Texture : public CComPtr<IDirect3DTexture9>
+{
 public:
-	Texture(IDirect3DTexture9 *texture, bool addref) : texture(texture) {
-		if (texture) texture->AddRef();
-	}
+	Texture() : CComPtr<IDirect3DTexture9>() {}
 
-	Texture(IDirect3DDevice9 *device, UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = 0) : texture(0) {
+	Texture(IDirect3DDevice9 *device, UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = 0): CComPtr<IDirect3DTexture9>()
+	{
 		assert(0 != device);
-
 		engine::core::log::printf("creating texture... ");
 
+		IDirect3DTexture9 *texture;
 		HRESULT res = device->CreateTexture(width, height, levels, usage, format, pool, &texture, handle);
 		if (FAILED(res)) {
 			std::string base_message;
@@ -20,23 +20,15 @@ public:
 		}
 		assert(0 != texture);
 		engine::core::log::printf("done.\n");
+
+		Attach(texture); // don't addref
 	}
 
-	~Texture() {
-		if (texture) {
-			texture->Release();
-			texture = 0;
-		}
-	}
-
-	IDirect3DTexture9 *get_texture() const { return texture; }
-
-	IDirect3DSurface9 *get_surface(unsigned level) const {
-		IDirect3DSurface9 *surf;
-		if (FAILED(texture->GetSurfaceLevel(level, &surf))) throw FatalException("failed to get surface from texture");
+	CComPtr<IDirect3DSurface9> get_surface(int level = 0)
+	{
+		CComPtr<IDirect3DSurface9> surf;
+		d3d_err(p->GetSurfaceLevel(0, &surf));
 		return surf;
 	}
 
-protected:
-	IDirect3DTexture9 *texture;
 };

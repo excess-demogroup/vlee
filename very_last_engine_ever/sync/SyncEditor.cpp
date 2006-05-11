@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_DEPRECATE
 #include ".\synceditor.h"
 #include <windows.h>
 #include <sstream>
@@ -40,7 +39,7 @@ void SyncEditor::paint()
 	}
 
 	while (curpos < patternoffsets[curptn]) curptn--;
-	while ((patternoffsets.size() > (curptn + 1)) && (patternoffsets[curptn + 1] < curpos)) curptn++;
+	while ((patternoffsets.size() > unsigned(curptn + 1)) && (patternoffsets[curptn + 1] < curpos)) curptn++;
 
 	con.cls();
 	string prevgroup = "";
@@ -105,7 +104,7 @@ void SyncEditor::paint()
 		if(!((pos-patternoffsets[curptn])%8)) col = 0x222; else col = 0x111;
 		if(pos==curpos) { col=0x000; bg=0x111; }
 		//bool endnumbers = (orderfocus) ? (pos<(int)patternoffsets.size()-1) : ;//FIXME!!
-		if (pos >= patternoffsets[curptn] && ((patternoffsets.size() > curptn + 1) && pos < patternoffsets[curptn+1])) con.put(3,i,colour(col,bg),pos-patternoffsets[curptn],2);
+		if (pos >= patternoffsets[curptn] && ((patternoffsets.size() > unsigned(curptn + 1)) && pos < patternoffsets[curptn+1])) con.put(3,i,colour(col,bg),pos-patternoffsets[curptn],2);
 	}
 	//draw tracks.
 	con.offset(6,3);
@@ -173,7 +172,7 @@ void SyncEditor::paint()
 				}
 			}
 
-			if (pos >= patternoffsets[curptn] && (patternoffsets.size() > curptn + 1 && pos < patternoffsets[curptn+1])) { //&&pos<ptnlen
+			if (pos >= patternoffsets[curptn] && (patternoffsets.size() > unsigned(curptn + 1) && pos < patternoffsets[curptn+1])) { //&&pos<ptnlen
 				if((lower->first == pos) || (editinghere)) {
 					if((t.digits()==8) && !t.signd()) { //32bit unsigned quickhack. (stored as signed int anyway)
 						con.put(trackx, i, colour(col,bg), (unsigned int)value, t.digits());
@@ -262,6 +261,7 @@ void SyncEditor::showEditor()
 bool SyncEditor::doEvents()
 {
 	if (visible) return con.doevents(*this);
+	else return true;
 }
 
 bool SyncEditor::mouseevent(MOUSE_EVENT_RECORD e)
@@ -378,7 +378,7 @@ bool SyncEditor::keyevent(KEY_EVENT_RECORD e)
 				elsecase(VK_INSERT)
 				{
 					//patternoffsets.resize(patternoffsets.size()+1);
-					for (int i = patternoffsets.size() - 1; i > curptn + 1; i--)
+					for (int i = int(patternoffsets.size()) - 1; i > curptn + 1; i--)
 					{
 						patternoffsets[i] += 0x80;
 					}
@@ -393,7 +393,7 @@ bool SyncEditor::keyevent(KEY_EVENT_RECORD e)
 					vector<int>::iterator j = patternoffsets.begin();
 					j+=curptn + 1;
 					patternoffsets.erase(j);
-					for (int i = curptn+1; i < patternoffsets.size(); i++)
+					for (int i = curptn+1; i < int(patternoffsets.size()); i++)
 					{
 						patternoffsets[i] -= d;
 					}

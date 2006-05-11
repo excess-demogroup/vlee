@@ -10,15 +10,25 @@ float4x4 View : VIEW;
 float fade = 1.0;
 
 // textures
-texture EnvironmentMap 
+texture map;
+sampler tex_samp = sampler_state
+{
+	Texture = (map);
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+};
+
+texture env
 < 
-    string type = "CUBE";
-    string name = "test_cube.dds";
+	string type = "CUBE";
+	
 >;
 
-sampler Environment = sampler_state
+
+sampler env_samp = sampler_state
 {
-	Texture = (EnvironmentMap);
+	Texture = (env);
 	MipFilter = LINEAR;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
@@ -29,6 +39,7 @@ struct VS_OUTPUT
 	float4 pos  : POSITION;
 	float3 norm : TEXCOORD0;
 	float3 tex  : TEXCOORD1;
+	float3 pos2 : TEXCOORD2;
 };
 
 VS_OUTPUT vertex(
@@ -38,27 +49,28 @@ VS_OUTPUT vertex(
 {
 	VS_OUTPUT Out;
 	Out.pos  = mul(float4(ipos,  1), WorldViewProjection);
+	Out.pos2 = Out.pos.xyz;
+	
 	Out.norm = mul(inorm, WorldView);
-	Out.tex = Out.pos;
+	Out.tex = itex; // Out.pos;
 	return Out;
 }
 
 float4 pixel(VS_OUTPUT In) : COLOR
 {
 	float4 color;
-
-
-	In.norm = normalize(In.norm);
+	float3 N = normalize(In.norm);
+	float3 L = normalize(In.pos2);
 	
-	float3 ref_vec = reflect(normalize(In.tex), In.norm);
-	float4 env = texCUBE(Environment, ref_vec);
+//	float3 ref_vec = reflect(N, L);
+	float3 ref_vec = reflect(L, N);
 
-	color = env;
-	color *= 0.05 + pow(1 - abs(In.norm.z), 1);
-//	color -= 0.25;
-	color = pow(color, 2);
-
-	return color * fade;
+	color = max(dot(-N, L), 0);
+	color += texCUBE(env_samp, ref_vec) * pow(1 - max(dot(-N, L), 0), 1);
+	color *= tex2D(tex_samp, In.tex);
+	color *= 0.25;
+	
+	return color;
 }
 
 technique schvoi

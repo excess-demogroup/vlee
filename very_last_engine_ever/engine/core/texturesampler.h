@@ -22,7 +22,7 @@ public:
 	void set(IDirect3DDevice9 *device, unsigned index) {
 		assert(0 != device);
 
-		device->SetTexture(index, texture->get_texture());
+		device->SetTexture(index, (IDirect3DTexture9*)texture);
 		device->SetSamplerState(index, D3DSAMP_ADDRESSU, addressu);
 		device->SetSamplerState(index, D3DSAMP_ADDRESSV, addressv);
 		device->SetSamplerState(index, D3DSAMP_ADDRESSW, addressw);
