@@ -57,7 +57,7 @@ IDirect3DDevice9 *init_d3d(IDirect3D9 *direct3d, HWND win, D3DDISPLAYMODE mode, 
 	present_parameters.BackBufferHeight = mode.Height;
 	present_parameters.BackBufferFormat = mode.Format;
 	present_parameters.BackBufferFormat = mode.Format;
-	present_parameters.BackBufferCount = 3;
+	present_parameters.BackBufferCount = 1;
 //	present_parameters.MultiSampleType = D3DMULTISAMPLE_NONE;
 	present_parameters.MultiSampleType = multisample;
 //	present_parameters.MultiSampleType = D3DMULTISAMPLE_6_SAMPLES;

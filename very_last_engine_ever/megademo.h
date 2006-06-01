@@ -67,12 +67,24 @@ private:
 	engine::core::Texture tex;
 	engine::scenegraph::Scene scene; */
 
+	Sync &sync;
+	SyncTrack &fade, &flash, &part;
+	SyncTrack &xrot, &yrot, &zrot;
+
 public:
-	MegaDemo(engine::core::Device &device) :
+	MegaDemo(engine::core::Device &device, Sync &sync) :
 		Demo(device),
+		sync(sync),
+		fade( sync.getTrack("fade",     "global", 5, true)),
+		flash(sync.getTrack("flash",    "global", 5, true)),
+		part( sync.getTrack("part",     "global", 5, true)),
+		xrot( sync.getTrack("x",        "rotation", 5, true)),
+		yrot( sync.getTrack("y",        "rotation", 5, true)),
+		zrot( sync.getTrack("z",        "rotation", 5, true)),
 		texloader(device),
 		backbuffer(Surface::get_render_target(device))
 	{
+
 /*		tex   = texloader.get("test.jpg");
 		scene = sceneloader.get("test.scene");
 		music = musicloader.get(); */
@@ -129,7 +141,7 @@ public:
 		// setup projection
 		D3DXMATRIX proj;
 
-		D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(90.f), 4.f / 3, 1.f, 100000.f);
+		D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(90.f), 3.f / 4, 1.f, 100000.f);
 		device->SetTransform(D3DTS_PROJECTION, &proj);
 
 		float rot = time;

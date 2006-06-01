@@ -5,6 +5,8 @@
 #include "init.h"
 #include "engine/engine.h"
 
+#include "sync/SyncEditor.h"
+
 WTL::CAppModule _Module;
 
 using engine::core::FatalException;
@@ -29,7 +31,8 @@ float randf()
 }
 
 template <typename T>
-CComPtr<T> d3d_ptr(T *ptr) {
+CComPtr<T> d3d_ptr(T *ptr)
+{
 	// make a CComPtr<T> without adding a reference
 	CComPtr<T> com_ptr;
 	com_ptr.Attach(ptr); // don't addref
@@ -91,12 +94,25 @@ int main(int /*argc*/, char* /*argv*/ [])
 		if (!stream) throw FatalException("failed to open input-device");
 #endif
 
+		SyncTimerBASS_Stream synctimer(stream, 145, 4);
+
+#ifdef SYNC
+		SyncEditor sync("data\\__data_%s_%s.sync", synctimer);
+#else
+		Sync sync("data\\__data_%s_%s.sync", synctimer);
+#endif
+
 
 #if !WINDOWED
 		ShowCursor(0);
 #endif
 
-		MegaDemo demo(device);
+		MegaDemo demo(device, sync);
+
+#ifdef SYNC
+		sync.showEditor();
+#endif
+
 		demo.start();
 
 		BASS_Start();
@@ -106,11 +122,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 		bool done = false;
 		while (!done)
 		{
+#ifndef VJSYS
+			if (!sync.doEvents()) done = true;
+#endif
 
 			static float last_time = 0.f;
 			static float time_offset = 0.f;
 			float time = BASS_ChannelBytes2Seconds(stream, BASS_ChannelGetPosition(stream));
 
+#ifndef VJSYS
+			sync.update(); //gets current timing info from the SyncTimer.
+#endif
 			demo.draw(time);
 
 #ifndef NDEBUG

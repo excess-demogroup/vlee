@@ -12,7 +12,7 @@
 #define MIN_VS_VERSION D3DVS_VERSION(0, 0)
 // #define MIN_VS_VERSION D3DVS_VERSION(1, 1)
 
-#ifdef NDEBUG
+#if defined(NDEBUG) && !defined(SYNC)
 #define WINDOWED 0
 #else
 #define WINDOWED 1
