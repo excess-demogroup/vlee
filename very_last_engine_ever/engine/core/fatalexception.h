@@ -2,7 +2,8 @@
 
 #include <exception>
 
-class FatalException : public std::exception {
+class FatalException : public std::exception
+{
 public:
 	FatalException(std::string str) : exception(), str(str)
 	{
@@ -11,7 +12,8 @@ public:
 #endif
 	}
 
-	virtual const char *what() const {
+	virtual const char *what() const
+	{
 		return str.c_str();
 	}
 

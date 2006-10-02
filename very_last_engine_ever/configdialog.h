@@ -30,6 +30,7 @@ public:
 	UINT get_adapter() const { return adapter; }
 	D3DDISPLAYMODE get_mode() const { return mode; }
 	D3DMULTISAMPLE_TYPE get_multisample() const { return multisample; }
+	float get_aspect() const { return aspect; }
 
 	bool get_vsync() const { return vsync; }
 	unsigned get_soundcard() const { return soundcard; }
@@ -39,7 +40,6 @@ protected:
 	void refresh_formats();
 	void refresh_modes();
 	void refresh_multisample_types();
-
 	void enable_config(bool enable);
 
 	IDirect3D9 *direct3d;
@@ -47,6 +47,8 @@ protected:
 	D3DDISPLAYMODE mode;
 	D3DFORMAT format;
 	D3DMULTISAMPLE_TYPE multisample;
+
+	float aspect;
 
 	bool vsync;
 	unsigned soundcard;

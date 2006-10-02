@@ -107,7 +107,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		ShowCursor(0);
 #endif
 
-		MegaDemo demo(device, sync);
+		MegaDemo demo(device, config.get_aspect(), sync);
 
 #ifdef SYNC
 		sync.showEditor();

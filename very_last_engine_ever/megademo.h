@@ -40,6 +40,7 @@ class MegaDemo : public engine::Demo
 private:
 
 	Surface backbuffer;
+	float aspect;
 
 	Texture rtex;
 	CComPtr<IDirect3DSurface9> rtex_surf;
@@ -67,8 +68,9 @@ private:
 	SyncTrack &xrot, &yrot, &zrot;
 
 public:
-	MegaDemo(engine::core::Device &device, Sync &sync) :
+	MegaDemo(engine::core::Device &device, float aspect, Sync &sync) :
 		Demo(device),
+		aspect(aspect),
 		sync(sync),
 		fade( sync.getTrack("fade",     "global", 5, true)),
 		flash(sync.getTrack("flash",    "global", 5, true)),
@@ -129,12 +131,23 @@ public:
 			BASS_ChannelGetData(stream, spectrum, BASS_DATA_FFT512);
 		}
 
+		device->SetRenderTarget(0, backbuffer.get_surface());
+		D3DVIEWPORT9 viewport;
+		device->GetViewport(&viewport);
+		const float correction = (aspect * (9 / 16.f));
+		int old_height = viewport.Height;
+		int new_height = int(viewport.Height * correction);
+		viewport.Y      = (old_height - new_height) / 2;
+		viewport.Height = new_height;
+
 		device->BeginScene();
+		device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, D3DXCOLOR(0.f, 0.f, 0.f, 0.f), 1.f, 0);
+		device->SetViewport(&viewport);
 
 		// setup projection
 		D3DXMATRIX proj;
 
-		D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(90.f), 3.f / 4, 1.f, 100000.f);
+		D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(80.f), 16.f / 9, 1.f, 100000.f);
 		device->SetTransform(D3DTS_PROJECTION, &proj);
 
 		float rot = time;
@@ -160,9 +173,6 @@ public:
 		eff.set_matrices(world, view, proj);
 		eff->SetTexture("map", tex);
 		eff->CommitChanges();
-
-		device->SetRenderTarget(0, backbuffer.get_surface());
-		device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, D3DXCOLOR(0.f, 0.f, 0.f, 0.f), 1.f, 0);
 
 		eff.draw(mesh2);
 

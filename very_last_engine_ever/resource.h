@@ -9,14 +9,8 @@
 #define IDC_RESOLUTION                  1004
 #define IDC_VSYNC                       1005
 #define IDC_SOUNDCARD                   1006
-#define IDC_SPIN1                       1007
-#define IDC_RESOLUTION2                 1007
 #define IDC_MULTISAMPLE                 1007
-#define IDC_LOW                         1008
-#define IDC_MEDIUM                      1009
-#define IDC_HIGH                        1010
-#define IDC_RADIO4                      1011
-#define IDC_CUSTOM                      1011
+#define IDC_ASPECT                      1008
 
 // Next default values for new objects
 // 

@@ -22,7 +22,6 @@ sampler tex_samp = sampler_state
 texture env
 < 
 	string type = "CUBE";
-	
 >;
 
 
@@ -53,6 +52,7 @@ VS_OUTPUT vertex(
 	
 	Out.norm = mul(inorm, WorldView);
 	Out.tex = itex; // Out.pos;
+	Out.tex = normalize(Out.norm) * 0.5;
 	return Out;
 }
 

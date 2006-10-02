@@ -5,14 +5,18 @@
 
 #define ARRAY_SIZE(x) (sizeof((x)) / sizeof((x)[0]))
 
-ConfigDialog::ConfigDialog(IDirect3D9 *direct3d) : direct3d(direct3d) {
+ConfigDialog::ConfigDialog(IDirect3D9 *direct3d) : direct3d(direct3d)
+{
 	assert(0 != direct3d);
 	reset();
 }
 
-void ConfigDialog::reset() {
+void ConfigDialog::reset()
+{
 	mode.Width = DEFAULT_WIDTH;
 	mode.Height = DEFAULT_HEIGHT;
+	aspect = float(mode.Width) / mode.Height;
+
 	mode.Format = DEFAULT_FORMAT;
 	mode.RefreshRate = D3DPRESENT_RATE_DEFAULT;
 	vsync = DEFAULT_VSYNC;
@@ -21,8 +25,8 @@ void ConfigDialog::reset() {
 	soundcard = DEFAULT_SOUNDCARD;
 }
 
-LRESULT ConfigDialog::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-
+LRESULT ConfigDialog::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+{
 	// add adapters to list
 	unsigned adapter_count = direct3d->GetAdapterCount();
 	for (unsigned i = 0; i < adapter_count; ++i) {
@@ -36,12 +40,23 @@ LRESULT ConfigDialog::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 
 	// select first adapter by default
 	SendMessage(GetDlgItem(IDC_DEVICE), (UINT)CB_SETCURSEL, (WPARAM)adapter, 0);
+
 	refresh_formats();
 	refresh_modes();
 	refresh_multisample_types();
 
 	// set vsync checkbutton to the default setting
 	CheckDlgButton(IDC_VSYNC, DEFAULT_VSYNC);
+
+	// setup aspect ratio 
+	SendMessage(GetDlgItem(IDC_ASPECT), CB_ADDSTRING, 0, (LPARAM)"4:3");
+	SendMessage(GetDlgItem(IDC_ASPECT), CB_ADDSTRING, 0, (LPARAM)"16:10");
+	SendMessage(GetDlgItem(IDC_ASPECT), CB_ADDSTRING, 0, (LPARAM)"16:9");
+
+	float aspect = float(GetSystemMetrics(SM_CXSCREEN)) / GetSystemMetrics(SM_CYSCREEN);
+	if      (fabs(aspect - (16.f /  9)) < 1e-5) SendMessage(GetDlgItem(IDC_ASPECT), (UINT)CB_SETCURSEL, (WPARAM)2, 0);
+	else if (fabs(aspect - (16.f / 10)) < 1e-5) SendMessage(GetDlgItem(IDC_ASPECT), (UINT)CB_SETCURSEL, (WPARAM)1, 0);
+	else                                        SendMessage(GetDlgItem(IDC_ASPECT), (UINT)CB_SETCURSEL, (WPARAM)0, 0);
 
 	// select medium by default
 //	CheckDlgButton(IDC_MEDIUM, true);
@@ -98,6 +113,15 @@ LRESULT ConfigDialog::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 	if (IDOK == wID) {
 		vsync = (BST_CHECKED == IsDlgButtonChecked(IDC_VSYNC));
 		soundcard = (unsigned)SendMessage(GetDlgItem(IDC_SOUNDCARD), (UINT)CB_GETCURSEL, (WPARAM)0, 0);
+
+		char temp[256];
+		int sel = (unsigned)SendMessage(GetDlgItem(IDC_ASPECT), (UINT)CB_GETCURSEL, (WPARAM)0, 0);
+
+		SendMessage(GetDlgItem(IDC_ASPECT), (UINT)CB_GETLBTEXT, (WPARAM)sel, (LPARAM)temp);
+		int w, h;
+		sscanf(temp, "%d:%d", &w, &h);
+		aspect = float(w) / h;
+		sprintf(temp, "test %d:%d, %f\n", w, h, aspect);
 	}
 	EndDialog(wID);
 	return 0;
