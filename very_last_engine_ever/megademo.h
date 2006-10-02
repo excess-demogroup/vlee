@@ -4,21 +4,17 @@
 #define BPM 135
 #define END_TIME (60 * 3 + 30) /* 3:30 */
 
-Effect load_effect(IDirect3DDevice9 *device, const char * filename)
+namespace engine
 {
-	Effect eff;
-
-	ID3DXBuffer *err_buf = 0;
-	HRESULT hr = D3DXCreateEffectFromFile(device, filename, NULL, NULL, 0, NULL, &eff, &err_buf);
-
-	if (FAILED(hr))
+	Texture load_texture(engine::core::Device &device, std::string filename)
 	{
-		if (err_buf == 0) d3d_err(hr);
-		throw FatalException((const char*)err_buf->GetBufferPointer());
-	}
+		Texture tex;
 
-	eff.update();
-	return eff;
+		HRESULT hr = D3DXCreateTextureFromFile(device, filename.c_str(), &tex);
+		if (FAILED(hr)) throw core::FatalException(std::string("failed to load mesh \"") + filename + std::string("\"\n\n") + core::d3d_get_error(hr));
+
+		return tex;
+	}
 }
 
 void set_ramp(float alphas[], float base)
@@ -56,9 +52,8 @@ private:
 
 	Effect eff;
 	Effect blur_fx;
-	Effect blit_fx;
-	Effect brightpass_fx;
 	Effect tex_fx;
+
 	Texture tex;
 
 	engine::TextureProxy texloader;
@@ -102,16 +97,14 @@ public:
 
 		mesh2 = engine::load_mesh(device, "data/test.x");
 
-		eff     = load_effect(device, "data/test.fx");
-		blur_fx = load_effect(device, "data/blur.fx");
-		blit_fx = load_effect(device, "data/blit.fx");
-		tex_fx  = load_effect(device, "data/tex.fx");
-		brightpass_fx = load_effect(device, "data/brightpass.fx");
+		eff     = engine::load_effect(device, "data/test.fx");
+		blur_fx = engine::load_effect(device, "data/blur.fx");
+		tex_fx  = engine::load_effect(device, "data/tex.fx");
 
-		d3d_err(D3DXCreateTextureFromFile(device, "data/map.tga", &tex));
+		tex     = engine::load_texture(device, "data/logo.png");
 
 		CComPtr<IDirect3DCubeTexture9> env;
-		d3d_err(D3DXCreateCubeTextureFromFile(device, "data/stpeters_cross.dds", &env));
+		d3d_err(D3DXCreateCubeTextureFromFile(device, "data/stpeters_cross2.dds", &env));
 		eff->SetTexture("env", env);
 	}
 
@@ -152,7 +145,7 @@ public:
 		D3DXVECTOR3 eye(
 			sin(rot * 0.25f) * 10,
 			cos(rot * 0.25f) * 10,
-			10.f);
+			50.f);
 
 		// setup camera (view matrix)
 		D3DXMATRIX view;
@@ -168,33 +161,10 @@ public:
 		eff->SetTexture("map", tex);
 		eff->CommitChanges();
 
-		device->SetRenderTarget(0, rtex_surf);
-		device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, D3DXCOLOR(0.f, 0.f, 0.f, 0.f), 1.f, 0);
-		eff.draw(mesh2);
-
-//		device->StretchRect(rtex_surf, NULL, bloomtex_surf[0], NULL, D3DTEXF_NONE);
-		device->SetRenderTarget(0, bloomtex_surf[0]);
-		blit(device, rtex, brightpass_fx, polygon);
-
-		for (unsigned i = 0; i < 3; ++i)
-		{
-			device->SetRenderTarget(0, bloomtex_surf[1]);
-			D3DXVECTOR4 dir;
-			dir = D3DXVECTOR4((float(i) * 0.5f + 1.f) / backbuffer.get_desc().Width, 0.f, 0.f, 0.f);
-			blur_fx->SetVector("dir", &dir);
-			blit(device, bloomtex[0], blur_fx, polygon);
-
-			device->SetRenderTarget(0, bloomtex_surf[0]);
-			dir = D3DXVECTOR4(0.f, (float(i) * 0.5f + 1.f) / backbuffer.get_desc().Height, 0.f, 0.f);
-			blur_fx->SetVector("dir", &dir);
-			blit(device, bloomtex[1], blur_fx, polygon);
-		}
-
 		device->SetRenderTarget(0, backbuffer.get_surface());
-		device->Clear(0, 0, D3DCLEAR_TARGET, D3DXCOLOR(0.f, 0.f, 0.f, 0.f), 1.f, 0);
-		blit_fx->SetTexture("bloom", bloomtex[0]);
-		blit(device, rtex, blit_fx, polygon);
-//		blit(device, bloomtex[0], blit_fx, polygon);
+		device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, D3DXCOLOR(0.f, 0.f, 0.f, 0.f), 1.f, 0);
+
+		eff.draw(mesh2);
 
 		device->EndScene();
 		HRESULT res = device->Present(0, 0, 0, 0);

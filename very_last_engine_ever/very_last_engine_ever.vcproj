@@ -483,6 +483,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\engine\effect.h"
+					>
+				</File>
+				<File
 					RelativePath=".\engine\engine.h"
 					>
 				</File>
