@@ -4,8 +4,12 @@
 
 class FatalException : public std::exception {
 public:
-	FatalException(const char *str) : exception(), str(str) {}
-	FatalException(std::string str) : exception(), str(str) {}
+	FatalException(std::string str) : exception(), str(str)
+	{
+#ifdef _DEBUG
+		if (IsDebuggerPresent()) _CrtDbgBreak();
+#endif
+	}
 
 	virtual const char *what() const {
 		return str.c_str();

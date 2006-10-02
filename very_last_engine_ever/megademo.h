@@ -100,7 +100,7 @@ public:
 
 		d3d_err(D3DXCreatePolygon(device, 3.f, 4, &polygon, 0));
 
-		d3d_err(D3DXLoadMeshFromX("data/test.x", 0, device, 0, 0, 0, 0, &mesh2));
+		mesh2 = engine::load_mesh(device, "data/test.x");
 
 		eff     = load_effect(device, "data/test.fx");
 		blur_fx = load_effect(device, "data/blur.fx");
