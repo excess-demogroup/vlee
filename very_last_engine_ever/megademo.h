@@ -144,6 +144,8 @@ public:
 		device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, D3DXCOLOR(0.f, 0.f, 0.f, 0.f), 1.f, 0);
 		device->SetViewport(&viewport);
 
+		device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, 0x868e91, 1.f, 0);
+
 		// setup projection
 		D3DXMATRIX proj;
 
