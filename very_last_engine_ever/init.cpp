@@ -3,7 +3,7 @@
 #include "engine/engine.h"
 
 using namespace engine;
-using namespace engine::core;
+using namespace core;
 
 static bool is_depth_format_ok(IDirect3D9 *direct3d, UINT Adapter, D3DFORMAT DepthFormat, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat) {
 	// Verify that the depth format exists

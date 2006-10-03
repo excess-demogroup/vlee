@@ -1,7 +1,5 @@
 #pragma once
 
-namespace core {
-
 #include "log.h"
 #include "fatalexception.h"
 #include "err.h"
@@ -13,5 +11,3 @@ namespace core {
 #include "texture.h"
 #include "stateblock.h"
 #include "texturesampler.h"
-
-}

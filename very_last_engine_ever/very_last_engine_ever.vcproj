@@ -309,6 +309,10 @@
 				Name="engine"
 				>
 				<File
+					RelativePath=".\engine\effect.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\engine\scenerender.cpp"
 					>
 				</File>

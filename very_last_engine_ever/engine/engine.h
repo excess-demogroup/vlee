@@ -1,7 +1,5 @@
 #pragma once
 
-namespace engine {
-
 #include "core/core.h"
 #include "scenegraph/scenegraph.h"
 
@@ -17,5 +15,3 @@ namespace engine {
 #include "mesh.h"
 
 #include "scenerender.h"
-
-}

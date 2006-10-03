@@ -1,7 +1,10 @@
 #pragma once
 
-class Device : public CComPtr<IDirect3DDevice9>
+namespace core
 {
-public:
-	/* nothing yet */
+	class Device : public CComPtr<IDirect3DDevice9>
+	{
+	public:
+		/* nothing yet */
+	};
 };

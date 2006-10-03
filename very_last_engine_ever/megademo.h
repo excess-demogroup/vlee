@@ -6,7 +6,7 @@
 
 namespace engine
 {
-	Texture load_texture(engine::core::Device &device, std::string filename)
+	Texture load_texture(core::Device &device, std::string filename)
 	{
 		Texture tex;
 
@@ -68,7 +68,7 @@ private:
 	SyncTrack &xrot, &yrot, &zrot;
 
 public:
-	MegaDemo(engine::core::Device &device, float aspect, Sync &sync) :
+	MegaDemo(core::Device &device, float aspect, Sync &sync) :
 		Demo(device),
 		aspect(aspect),
 		sync(sync),

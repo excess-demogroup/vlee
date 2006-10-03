@@ -9,16 +9,15 @@
 
 WTL::CAppModule _Module;
 
-using engine::core::FatalException;
-using engine::core::Surface;
-using engine::core::d3d_err;
-using namespace engine::core;
+using core::FatalException;
+using core::Surface;
+using core::d3d_err;
+
+using namespace core;
+using namespace scenegraph;
 
 using engine::Mesh;
 using engine::Effect;
-
-// using namespace engine::core;
-using namespace engine::scenegraph;
 
 HWND win = 0;
 HSTREAM stream = 0;

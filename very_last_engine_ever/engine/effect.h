@@ -1,67 +1,58 @@
 #pragma once
 
-class Effect : public CComPtr<ID3DXEffect>
+#include "drawable.h"
+#include "core/device.h"
+
+namespace engine
 {
-public:
-	Effect() : CComPtr<ID3DXEffect>(), world(0), view(0), projection(0), worldview(0), worldviewprojection(0) { }
 
-	void update()
+	class Effect : public CComPtr<ID3DXEffect>
 	{
-		assert(p != 0);
-		world      = p->GetParameterBySemantic(0, "WORLD");
-		view       = p->GetParameterBySemantic(0, "VIEW");
-		projection = p->GetParameterBySemantic(0, "PROJECTION");
-		worldview  = p->GetParameterBySemantic(0, "WORLDVIEW");
-		worldviewprojection = p->GetParameterBySemantic(0, "WORLDVIEWPROJECTION");
-	}
+	public:
+		Effect() : CComPtr<ID3DXEffect>(), world(0), view(0), projection(0), worldview(0), worldviewprojection(0) { }
 
-	void set_matrices(D3DXMATRIX world, D3DXMATRIX view, D3DXMATRIX proj)
-	{
-			D3DXMATRIX world_view_proj;
-			world_view_proj = world * view * proj;
-
-			D3DXMATRIX world_view;
-			world_view = world * view;
-
-			assert(p != 0);
-
-			p->SetMatrix(this->world,      &world);
-			p->SetMatrix(this->view,       &view);
-			p->SetMatrix(this->projection, &proj);
-			p->SetMatrix(this->worldview,  &world_view);
-			p->SetMatrix(this->worldviewprojection, &world_view_proj);
-	}
-
-	void draw(Drawable &d)
-	{
-		UINT passes;
-		p->Begin(&passes, 0);
-		for (unsigned j = 0; j < passes; ++j)
+		void update()
 		{
-			p->BeginPass(j);
-			d.draw();
-			p->EndPass();
+			assert(p != 0);
+			world      = p->GetParameterBySemantic(0, "WORLD");
+			view       = p->GetParameterBySemantic(0, "VIEW");
+			projection = p->GetParameterBySemantic(0, "PROJECTION");
+			worldview  = p->GetParameterBySemantic(0, "WORLDVIEW");
+			worldviewprojection = p->GetParameterBySemantic(0, "WORLDVIEWPROJECTION");
 		}
-		p->End();
-	}
 
-	D3DXHANDLE world, view, projection, worldview, worldviewprojection;
-};
+		void set_matrices(D3DXMATRIX world, D3DXMATRIX view, D3DXMATRIX proj)
+		{
+				D3DXMATRIX world_view_proj;
+				world_view_proj = world * view * proj;
 
-inline Effect load_effect(core::Device &device, std::string filename)
-{
-	Effect eff;
+				D3DXMATRIX world_view;
+				world_view = world * view;
 
-	ID3DXBuffer *err_buf = 0;
-	HRESULT hr = D3DXCreateEffectFromFile(device, filename.c_str(), NULL, NULL, 0, NULL, &eff, &err_buf);
+				assert(p != 0);
 
-	if (FAILED(hr))
-	{
-		if (NULL == err_buf) throw core::FatalException(std::string("failed to load mesh \"") + filename + std::string("\"\n\n") + core::d3d_get_error(hr));
-		throw core::FatalException(std::string("failed to load mesh \"") + filename + std::string("\"\n\n") + std::string((const char*)err_buf->GetBufferPointer()));
-//		throw FatalException((const char*)err_buf->GetBufferPointer());
-	}
+				p->SetMatrix(this->world,      &world);
+				p->SetMatrix(this->view,       &view);
+				p->SetMatrix(this->projection, &proj);
+				p->SetMatrix(this->worldview,  &world_view);
+				p->SetMatrix(this->worldviewprojection, &world_view_proj);
+		}
 
-	eff.update();
-	return eff;
+		void draw(Drawable &d)
+		{
+			UINT passes;
+			p->Begin(&passes, 0);
+			for (unsigned j = 0; j < passes; ++j)
+			{
+				p->BeginPass(j);
+				d.draw();
+				p->EndPass();
+			}
+			p->End();
+		}
+
+		D3DXHANDLE world, view, projection, worldview, worldviewprojection;
+	};
+
+	Effect load_effect(core::Device &device, std::string filename);
 }

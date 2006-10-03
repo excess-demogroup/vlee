@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "../engine.h"
 
-using namespace engine::scenegraph;
+using namespace scenegraph;
 
 Node::~Node() {
 

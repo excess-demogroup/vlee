@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "../engine.h"
 
-using namespace engine::core;
+using namespace core;
 
 std::ostrstream logstream;
 

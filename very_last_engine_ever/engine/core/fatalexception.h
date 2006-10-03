@@ -2,21 +2,24 @@
 
 #include <exception>
 
-class FatalException : public std::exception
+namespace core
 {
-public:
-	FatalException(std::string str) : exception(), str(str)
+	class FatalException : public std::exception
 	{
-#ifdef _DEBUG
-		if (IsDebuggerPresent()) _CrtDbgBreak();
-#endif
-	}
+	public:
+		FatalException(std::string str) : exception(), str(str)
+		{
+	#ifdef _DEBUG
+			if (IsDebuggerPresent()) _CrtDbgBreak();
+	#endif
+		}
 
-	virtual const char *what() const
-	{
-		return str.c_str();
-	}
+		virtual const char *what() const
+		{
+			return str.c_str();
+		}
 
-private:
-	std::string str;
-};
+	private:
+		std::string str;
+	};
+}
