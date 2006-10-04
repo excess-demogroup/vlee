@@ -4,9 +4,12 @@
 #define BPM 135
 #define END_TIME (60 * 3 + 30) /* 3:30 */
 
+#include "core/texture.h"
+#include "engine/demo.h"
+
 namespace engine
 {
-	Texture load_texture(core::Device &device, std::string filename)
+	core::Texture load_texture(core::Device &device, std::string filename)
 	{
 		Texture tex;
 
@@ -57,7 +60,7 @@ private:
 
 	Texture tex;
 
-	engine::TextureProxy texloader;
+//	engine::TextureProxy texloader;
 
 /*	engine::bass::Stream music;
 	engine::core::Texture tex;
@@ -78,7 +81,7 @@ public:
 		xrot( sync.getTrack("x",        "rotation", 5, true)),
 		yrot( sync.getTrack("y",        "rotation", 5, true)),
 		zrot( sync.getTrack("z",        "rotation", 5, true)),
-		texloader(device),
+//		texloader(device),
 		backbuffer(Surface::get_render_target(device))
 	{
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "drawable.h"
-#include "core/device.h"
+#include "../core/device.h"
 
 namespace engine
 {

@@ -1,6 +1,9 @@
 #pragma once
 
 #include "core/err.h"
+#include "core/device.h"
+
+#include "engine/drawable.h"
 
 namespace engine
 {

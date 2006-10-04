@@ -1,5 +1,6 @@
 #include "stdafx.h"
-#include "../engine.h"
+#include "log.h"
+#include "fatalexception.h"
 
 using namespace core;
 

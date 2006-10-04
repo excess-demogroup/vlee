@@ -1,9 +1,8 @@
 #include "stdafx.h"
 #include "config.h"
-#include "engine/engine.h"
 
-using namespace engine;
-using namespace core;
+#include "core/fatalexception.h"
+using core::FatalException;
 
 static bool is_depth_format_ok(IDirect3D9 *direct3d, UINT Adapter, D3DFORMAT DepthFormat, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat) {
 	// Verify that the depth format exists

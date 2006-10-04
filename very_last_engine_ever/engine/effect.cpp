@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "effect.h"
 
-#include "core/device.h"
-#include "core/fatalexception.h"
-#include "core/err.h"
+#include "../core/device.h"
+#include "../core/fatalexception.h"
+#include "../core/err.h"
 
 namespace engine
 {

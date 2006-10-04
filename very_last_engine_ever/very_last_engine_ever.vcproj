@@ -320,22 +320,6 @@
 					RelativePath=".\engine\textureproxy.cpp"
 					>
 				</File>
-				<Filter
-					Name="core"
-					>
-					<File
-						RelativePath=".\engine\core\log.cpp"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="scenegraph"
-					>
-					<File
-						RelativePath=".\engine\scenegraph\node.cpp"
-						>
-					</File>
-				</Filter>
 			</Filter>
 			<Filter
 				Name="sync"
@@ -453,6 +437,22 @@
 					</FileConfiguration>
 				</File>
 			</Filter>
+			<Filter
+				Name="core"
+				>
+				<File
+					RelativePath=".\core\log.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="scenegraph"
+				>
+				<File
+					RelativePath=".\scenegraph\node.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -514,70 +514,6 @@
 					RelativePath=".\engine\vertexstreamer.h"
 					>
 				</File>
-				<Filter
-					Name="core"
-					>
-					<File
-						RelativePath=".\engine\core\core.h"
-						>
-					</File>
-					<File
-						RelativePath=".\engine\core\device.h"
-						>
-					</File>
-					<File
-						RelativePath=".\engine\core\fatalexception.h"
-						>
-					</File>
-					<File
-						RelativePath=".\engine\core\log.h"
-						>
-					</File>
-					<File
-						RelativePath=".\engine\core\stateblock.h"
-						>
-					</File>
-					<File
-						RelativePath=".\engine\core\surface.h"
-						>
-					</File>
-					<File
-						RelativePath=".\engine\core\texture.h"
-						>
-					</File>
-					<File
-						RelativePath=".\engine\core\texturesampler.h"
-						>
-					</File>
-					<File
-						RelativePath=".\engine\core\vertexbuffer.h"
-						>
-					</File>
-					<File
-						RelativePath=".\engine\core\vertexdeclaration.h"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="scenegraph"
-					>
-					<File
-						RelativePath=".\engine\scenegraph\camera.h"
-						>
-					</File>
-					<File
-						RelativePath=".\engine\scenegraph\node.h"
-						>
-					</File>
-					<File
-						RelativePath=".\engine\scenegraph\scene.h"
-						>
-					</File>
-					<File
-						RelativePath=".\engine\scenegraph\scenegraph.h"
-						>
-					</File>
-				</Filter>
 			</Filter>
 			<Filter
 				Name="sync"
@@ -604,6 +540,70 @@
 				</File>
 				<File
 					RelativePath=".\sync\uglyswitchhack.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="scenegraph"
+				>
+				<File
+					RelativePath=".\engine\scenegraph\camera.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\scenegraph\node.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\scenegraph\scene.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\scenegraph\scenegraph.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="core"
+				>
+				<File
+					RelativePath=".\engine\core\core.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\core\device.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\core\fatalexception.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\core\log.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\core\stateblock.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\core\surface.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\core\texture.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\core\texturesampler.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\core\vertexbuffer.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\core\vertexdeclaration.h"
 					>
 				</File>
 			</Filter>

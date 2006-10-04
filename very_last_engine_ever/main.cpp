@@ -3,7 +3,14 @@
 #include "config.h"
 #include "configdialog.h"
 #include "init.h"
+
+#include "core/fatalexception.h"
+#include "core/surface.h"
+
 #include "engine/engine.h"
+#include "engine/scenerender.h"
+#include "engine/mesh.h"
+#include "engine/effect.h"
 
 #include "sync/SyncEditor.h"
 
@@ -11,7 +18,6 @@ WTL::CAppModule _Module;
 
 using core::FatalException;
 using core::Surface;
-using core::d3d_err;
 
 using namespace core;
 using namespace scenegraph;

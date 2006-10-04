@@ -1,14 +1,24 @@
 #pragma once
 
-class SceneRenderer {
-public:
-	SceneRenderer(scenegraph::Scene *scene, scenegraph::Camera *camera) : scene(scene), camera(camera) {
+#include "../scenegraph/scene.h"
+#include "../scenegraph/camera.h"
 
-	}
+namespace engine
+{
 
-	void draw();
+	class SceneRenderer
+	{
+	public:
+		SceneRenderer(scenegraph::Scene *scene, scenegraph::Camera *camera) : scene(scene), camera(camera)
+		{
 
-private:
-	scenegraph::Scene *scene;
-	scenegraph::Camera *camera;
-};
+		}
+
+		void draw();
+
+	private:
+		scenegraph::Scene *scene;
+		scenegraph::Camera *camera;
+	};
+
+}

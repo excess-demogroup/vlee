@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "../engine.h"
 
+#include "node.h"
 using namespace scenegraph;
 
 Node::~Node() {
