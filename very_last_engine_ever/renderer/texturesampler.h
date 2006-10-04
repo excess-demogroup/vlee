@@ -5,7 +5,7 @@
 	to be used in both fixed function and pixelshaders (?)
 */
 
-namespace core
+namespace renderer
 {
 
 	class TextureSampler {

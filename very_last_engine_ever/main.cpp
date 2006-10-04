@@ -5,7 +5,7 @@
 #include "init.h"
 
 #include "core/fatalexception.h"
-#include "core/surface.h"
+#include "renderer/surface.h"
 
 #include "engine/engine.h"
 #include "engine/scenerender.h"
@@ -17,7 +17,9 @@
 WTL::CAppModule _Module;
 
 using core::FatalException;
-using core::Surface;
+
+using renderer::Device;
+using renderer::Surface;
 
 using namespace core;
 using namespace scenegraph;

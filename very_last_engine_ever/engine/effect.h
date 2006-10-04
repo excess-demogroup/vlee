@@ -1,7 +1,7 @@
 #pragma once
 
 #include "drawable.h"
-#include "../core/device.h"
+#include "../renderer/device.h"
 
 namespace engine
 {
@@ -54,5 +54,5 @@ namespace engine
 		D3DXHANDLE world, view, projection, worldview, worldviewprojection;
 	};
 
-	Effect load_effect(core::Device &device, std::string filename);
+	Effect load_effect(renderer::Device &device, std::string filename);
 }

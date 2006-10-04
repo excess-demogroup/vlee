@@ -1,10 +1,10 @@
 #pragma once
 
-#include "log.h"
-#include "fatalexception.h"
-#include "err.h"
+#include "../core/log.h"
+#include "../core/fatalexception.h"
+#include "../core/err.h"
 
-namespace core
+namespace renderer
 {
 
 	class Texture : public CComPtr<IDirect3DTexture9>

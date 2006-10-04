@@ -4,7 +4,8 @@
 #include "core/fatalexception.h"
 using core::FatalException;
 
-static bool is_depth_format_ok(IDirect3D9 *direct3d, UINT Adapter, D3DFORMAT DepthFormat, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat) {
+static bool is_depth_format_ok(IDirect3D9 *direct3d, UINT Adapter, D3DFORMAT DepthFormat, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat)
+{
 	// Verify that the depth format exists
 	HRESULT hr = direct3d->CheckDeviceFormat(Adapter, D3DDEVTYPE_HAL, AdapterFormat, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, DepthFormat);
 	if (FAILED(hr)) return false;
@@ -14,7 +15,8 @@ static bool is_depth_format_ok(IDirect3D9 *direct3d, UINT Adapter, D3DFORMAT Dep
 	return SUCCEEDED(hr);
 }
 
-D3DFORMAT get_best_depth_stencil_format(IDirect3D9 *direct3d, UINT adapter, D3DFORMAT format) {
+D3DFORMAT get_best_depth_stencil_format(IDirect3D9 *direct3d, UINT adapter, D3DFORMAT format)
+{
 	// a list of supported depth/stencil formats
 #if (!NEED_STENCIL)
 	static const D3DFORMAT formats[] = { D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D24X8, D3DFMT_D32, D3DFMT_D16, D3DFMT_D15S1 };
@@ -31,7 +33,8 @@ D3DFORMAT get_best_depth_stencil_format(IDirect3D9 *direct3d, UINT adapter, D3DF
 }
 
 
-void print_GUID(GUID g) {
+void print_GUID(GUID g)
+{
 	printf("const GUID GUID_name = { 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x };\n", g.Data1, g.Data2, g.Data3, g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3], g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7]);
 }
 
@@ -75,7 +78,7 @@ IDirect3DDevice9 *init_d3d(IDirect3D9 *direct3d, HWND win, D3DDISPLAYMODE mode, 
 	if (kusma_laptop_bug == identifier.DeviceIdentifier)
 	{
 #ifdef NDEBUG
-		MessageBox(NULL, "It appears you are using a very sketchy combination\nof hardware and drivers. Due to a driver-bug,\ntripple buffering will now be disabled.", "performance warning", MB_OK | MB_ICONWARNING);
+		MessageBox(NULL, "It appears you are using a very sketchy combination\nof hardware and drivers. Due to a driver-bug,\ntripple buffering will be disabled.", "performance warning", MB_OK | MB_ICONWARNING);
 #endif
 		present_parameters.BackBufferCount = 1;
 	}

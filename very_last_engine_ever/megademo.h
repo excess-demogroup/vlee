@@ -4,12 +4,15 @@
 #define BPM 135
 #define END_TIME (60 * 3 + 30) /* 3:30 */
 
-#include "core/texture.h"
+#include "renderer/texture.h"
+#include "renderer/device.h"
 #include "engine/demo.h"
+
+using renderer::Texture;
 
 namespace engine
 {
-	core::Texture load_texture(core::Device &device, std::string filename)
+	Texture load_texture(renderer::Device &device, std::string filename)
 	{
 		Texture tex;
 
@@ -71,7 +74,7 @@ private:
 	SyncTrack &xrot, &yrot, &zrot;
 
 public:
-	MegaDemo(core::Device &device, float aspect, Sync &sync) :
+	MegaDemo(renderer::Device &device, float aspect, Sync &sync) :
 		Demo(device),
 		aspect(aspect),
 		sync(sync),

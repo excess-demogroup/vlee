@@ -34,9 +34,8 @@ HRESULT IDirect3DDevice9::CreateRenderTarget(
 	HANDLE* pSharedHandle
 );
 */
-namespace core
+namespace renderer
 {
-
 	class Surface {
 	public:
 		Surface(IDirect3DSurface9 *surface = 0) : surface(surface) {}

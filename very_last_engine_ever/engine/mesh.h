@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/err.h"
-#include "core/device.h"
+#include "renderer/device.h"
 
 #include "engine/drawable.h"
 
@@ -15,7 +15,7 @@ namespace engine
 		}
 	};
 
-	inline Mesh load_mesh(core::Device &device, std::string filename)
+	inline Mesh load_mesh(renderer::Device &device, std::string filename)
 	{
 		Mesh mesh;
 		HRESULT hr = D3DXLoadMeshFromX("data/test.x", 0, device, 0, 0, 0, 0, &mesh);

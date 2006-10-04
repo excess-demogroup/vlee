@@ -1,6 +1,6 @@
 #pragma once
 
-namespace core
+namespace renderer
 {
 	class Device : public CComPtr<IDirect3DDevice9>
 	{

@@ -1,13 +1,15 @@
 #include "stdafx.h"
 #include "effect.h"
 
-#include "../core/device.h"
+#include "../renderer/device.h"
 #include "../core/fatalexception.h"
 #include "../core/err.h"
 
+using renderer::Device;
+
 namespace engine
 {
-	Effect load_effect(core::Device &device, std::string filename)
+	Effect load_effect(Device &device, std::string filename)
 	{
 		Effect eff;
 
