@@ -48,12 +48,6 @@ private:
 	Surface backbuffer;
 	float aspect;
 
-	Texture rtex;
-	CComPtr<IDirect3DSurface9> rtex_surf;
-
-	Texture bloomtex[2];
-	CComPtr<IDirect3DSurface9> bloomtex_surf[2];
-
 	Mesh polygon;
 	Mesh mesh2;
 
@@ -72,6 +66,7 @@ private:
 	Sync &sync;
 	SyncTrack &fade, &flash, &part;
 	SyncTrack &xrot, &yrot, &zrot;
+	SyncTrack &cam_seed, &cam_rand;
 
 public:
 	MegaDemo(renderer::Device &device, float aspect, Sync &sync) :
@@ -84,6 +79,8 @@ public:
 		xrot( sync.getTrack("x",        "rotation", 5, true)),
 		yrot( sync.getTrack("y",        "rotation", 5, true)),
 		zrot( sync.getTrack("z",        "rotation", 5, true)),
+		cam_seed( sync.getTrack("seed", "cam", 5, true)),
+		cam_rand( sync.getTrack("rand", "cam", 5, true)),
 //		texloader(device),
 		backbuffer(Surface::get_render_target(device))
 	{
@@ -91,15 +88,6 @@ public:
 /*		tex   = texloader.get("test.jpg");
 		scene = sceneloader.get("test.scene");
 		music = musicloader.get(); */
-
-		rtex = Texture(device, backbuffer.get_desc().Width, backbuffer.get_desc().Height, 1, D3DUSAGE_RENDERTARGET, D3DFMT_A16B16G16R16F, D3DPOOL_DEFAULT, 0);
-		rtex_surf = CComPtr<IDirect3DSurface9>(rtex.get_surface(0));
-
-		bloomtex[0] = Texture(device, backbuffer.get_desc().Width, backbuffer.get_desc().Height, 1, D3DUSAGE_RENDERTARGET, D3DFMT_A16B16G16R16F, D3DPOOL_DEFAULT, 0);
-		bloomtex[1] = Texture(device, backbuffer.get_desc().Width, backbuffer.get_desc().Height, 1, D3DUSAGE_RENDERTARGET, D3DFMT_A16B16G16R16F, D3DPOOL_DEFAULT, 0);
-
-		bloomtex_surf[0] = bloomtex[0].get_surface(0);
-		bloomtex_surf[1] = bloomtex[1].get_surface(0);
 
 		d3d_err(D3DXCreatePolygon(device, 3.f, 4, &polygon, 0));
 
@@ -160,13 +148,15 @@ public:
 
 		float rot = time;
 
+		srand(cam_seed.getIntValue());
+
 		// setup camera (animate parameters)
 		D3DXVECTOR3 at(0, 0.f, 10.f);
 		D3DXVECTOR3 up(0.f, 0.f, 1.f);
 		D3DXVECTOR3 eye(
-			sin(rot * 0.25f) * 10,
-			cos(rot * 0.25f) * 10,
-			50.f);
+			sin(rot * 0.25f) * 10 + randf() * cam_rand.getFloatValue(),
+			cos(rot * 0.25f) * 10 + randf() * cam_rand.getFloatValue(),
+			50.f + randf() * cam_rand.getFloatValue());
 
 		// setup camera (view matrix)
 		D3DXMATRIX view;
