@@ -1,11 +1,13 @@
 #pragma once
 
+#include "../renderer/device.h"
+
 namespace engine
 {
 	class Demo
 	{
 	public:
-		Demo(IDirect3DDevice9 *device) :
+		Demo(Device device) :
 			device(device),
 			done(false)
 		{
@@ -19,7 +21,7 @@ namespace engine
 		bool is_done()             { return done; }
 
 	protected:
-		IDirect3DDevice9 *device;
+		Device device;
 		bool done;
 	};
 }

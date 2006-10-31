@@ -156,8 +156,6 @@ Matrix4x4 radialblur_matrix(const Texture &tex, const Vector2 &center, const flo
 class MegaDemo : public engine::Demo
 {
 private:
-	Device device;
-
 	Surface backbuffer;
 	float aspect;
 
@@ -191,7 +189,6 @@ private:
 public:
 	MegaDemo(renderer::Device &device, float aspect, Sync &sync) :
 		Demo(device),
-		device(device),
 		aspect(aspect),
 		sync(sync),
 		fade( sync.getTrack("fade",     "global", 5, true)),
@@ -201,19 +198,15 @@ public:
 		yrot( sync.getTrack("y",        "rotation", 5, true)),
 		zrot( sync.getTrack("z",        "rotation", 5, true)),
 		cam_seed( sync.getTrack("seed", "cam", 5, true)),
-		cam_rand( sync.getTrack("rand", "cam", 5, true)),
-//		texloader(device),
-		backbuffer(device.get_render_target())
+		cam_rand( sync.getTrack("rand", "cam", 5, true))
 	{
+		backbuffer = device.get_render_target();
 
 /*		tex   = texloader.get("test.jpg");
 		scene = sceneloader.get("test.scene");
 		music = musicloader.get(); */
 
-
-
 		d3d_err(D3DXCreatePolygon(device, 3.f, 4, &polygon, 0));
-
 		mesh2 = engine::load_mesh(device, "data/test.x");
 
 		test_fx  = engine::load_effect(device, "data/test.fx");
