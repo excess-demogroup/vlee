@@ -4,6 +4,8 @@
 #include "../core/fatalexception.h"
 #include "../core/err.h"
 
+#include "surface.h"
+
 namespace renderer
 {
 
@@ -19,7 +21,8 @@ namespace renderer
 
 			IDirect3DTexture9 *texture;
 			HRESULT res = device->CreateTexture(width, height, levels, usage, format, pool, &texture, handle);
-			if (FAILED(res)) {
+			if (FAILED(res))
+			{
 				std::string base_message;
 				if (usage & D3DUSAGE_RENDERTARGET) base_message = std::string("failed to create render target\n");
 				else  base_message = std::string("failed to create texture\n");
@@ -31,9 +34,9 @@ namespace renderer
 			Attach(texture); // don't addref
 		}
 
-		CComPtr<IDirect3DSurface9> get_surface(int level = 0)
+		const Surface get_surface(int level = 0) const
 		{
-			CComPtr<IDirect3DSurface9> surf;
+			Surface surf;
 			core::d3d_err(p->GetSurfaceLevel(0, &surf));
 			return surf;
 		}

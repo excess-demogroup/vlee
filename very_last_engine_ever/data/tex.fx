@@ -7,6 +7,7 @@ float yoffs = 0.f;
 
 float xzoom = 1.f;
 float yzoom = 1.f;
+float4x4 tex_transform;
 
 // textures
 texture tex;
@@ -14,9 +15,9 @@ texture tex;
 sampler tex_sampler = sampler_state
 {
 	Texture = (tex);
-	MinFilter = POINT;
-	MagFilter = POINT;
 	MipFilter = NONE;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
 	
 	AddressU = CLAMP;
 	AddressV = CLAMP;
@@ -32,11 +33,8 @@ VS_OUTPUT vertex(float4 ipos : POSITION)
 {
 	VS_OUTPUT Out;
 	Out.pos = ipos;
-//	Out.tex = float2(Out.pos.x * 0.5 + 0.5f, -Out.pos.y * 0.5 * sin(1 + yoffs * 5) + 0.5f);
-//	Out.tex = float2(Out.pos.x * 0.5 + 0.5f + (0.5f / 256) + xoffs, -Out.pos.y * 0.5 + 0.5f + (0.5f / 256) * cos(1 + xoffs * 5) + yoffs);
-	Out.tex = float2(Out.pos.x * 0.5 + 0.5f + (0.5f / 256) + xoffs, -Out.pos.y * 0.5 + 0.5f + (0.5f / 256) + yoffs);
-	Out.tex -= float2(0.5f, 0.5f);
-	Out.tex *= float2(xzoom, yzoom);
+	Out.tex = float2(Out.pos.x * 0.5, -Out.pos.y * 0.5);
+	Out.tex = mul(Out.tex, tex_transform);
 	Out.tex += float2(0.5f, 0.5f);
 	return Out;
 }

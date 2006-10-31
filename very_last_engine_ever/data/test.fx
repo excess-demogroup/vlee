@@ -8,6 +8,7 @@ float4x4 World : WORLD;
 float4x4 View : VIEW;
 
 float fade = 1.0;
+float overbright = 1.0;
 
 // textures
 texture map;
@@ -70,7 +71,7 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	color *= tex2D(tex_samp, dot(-N, L));
 	color *= 0.25;
 	
-	return color;
+	return color * overbright;
 }
 
 technique schvoi

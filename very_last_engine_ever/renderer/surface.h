@@ -36,37 +36,19 @@ HRESULT IDirect3DDevice9::CreateRenderTarget(
 */
 namespace renderer
 {
-	class Surface {
+	class Surface : public CComPtr<IDirect3DSurface9>
+	{
 	public:
-		Surface(IDirect3DSurface9 *surface = 0) : surface(surface) {}
-
-		~Surface() {
-			if (surface) surface->Release();
+		Surface(IDirect3DSurface9 *surface = 0) : CComPtr<IDirect3DSurface9>(surface)
+		{
 		}
 
-		void set_render_target(IDirect3DDevice9 *device, unsigned index = 0) {
-			assert(0 != device);
-			assert(0 != surface);
-			device->SetRenderTarget(index, surface);
-		}
-
-		static Surface get_render_target(IDirect3DDevice9 *device, unsigned index = 0) {
-			assert(0 != device);
-			IDirect3DSurface9 *surface;
-			device->GetRenderTarget(index, &surface);
-			return Surface(surface);
-		}
-
-		D3DSURFACE_DESC get_desc() const {
+		const D3DSURFACE_DESC get_desc() const
+		{
 			D3DSURFACE_DESC desc;
-			surface->GetDesc(&desc);
+			p->GetDesc(&desc);
 			return desc;
 		}
-
-		IDirect3DSurface9 *get_surface() const { return surface; }
-
-	protected:
-		IDirect3DSurface9 *surface;
 	};
 
 }
