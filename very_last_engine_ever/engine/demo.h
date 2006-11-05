@@ -7,8 +7,9 @@ namespace engine
 	class Demo
 	{
 	public:
-		Demo(Device device) :
+		Demo(Device &device, Surface &backbuffer) :
 			device(device),
+			backbuffer(backbuffer),
 			done(false)
 		{
 			/* nothing special here, really */
@@ -21,7 +22,8 @@ namespace engine
 		bool is_done()             { return done; }
 
 	protected:
-		Device device;
+		Device  &device;
+		Surface &backbuffer;
 		bool done;
 	};
 }

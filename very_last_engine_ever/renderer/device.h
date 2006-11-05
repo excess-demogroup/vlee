@@ -20,6 +20,8 @@ namespace renderer
 			assert(NULL != p);
 			IDirect3DSurface9 *surface;
 			p->GetRenderTarget(index, &surface);
+			Surface s;
+//			s->Attach(surface);
 			return Surface(surface);
 		}
 	};

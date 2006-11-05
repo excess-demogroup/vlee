@@ -1,29 +1,22 @@
 #pragma once
 
-namespace core
+namespace renderer
 {
-	class VertexDeclaration {
+	class VertexDeclaration : public CComPtr<IDirect3DVertexDeclaration9>
+	{
 	public:
-		VertexDeclaration(IDirect3DVertexDeclaration9* decl) : decl(decl) {}
+		VertexDeclaration() : CComPtr<IDirect3DVertexDeclaration9>() {}
 
-		VertexDeclaration(IDirect3DDevice9 *device, CONST D3DVERTEXELEMENT9* vertex_elements) : decl(0)
+		VertexDeclaration(Device &device, CONST D3DVERTEXELEMENT9* vertex_elements)
 		{
 			assert(0 != device);
 			core::log::printf("creating vertexdeclaration... ");
+			IDirect3DVertexDeclaration9 *decl;
 			if (FAILED(device->CreateVertexDeclaration(vertex_elements, &decl)))
 				throw FatalException("failed to create vertex declaration");
 			core::log::printf("done.\n");
+			Attach(decl); // don't addref
 		}
-
-		~VertexDeclaration()
-		{
-			if (decl) decl->Release();
-		}
-
-		IDirect3DVertexDeclaration9 *get_vertex_declaration() const {
-			return decl;
-		}
-
 	private:
 		IDirect3DVertexDeclaration9* decl;
 	};

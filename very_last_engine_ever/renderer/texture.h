@@ -16,7 +16,7 @@ namespace renderer
 
 		Texture(IDirect3DDevice9 *device, UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = 0) : CComPtr<IDirect3DTexture9>()
 		{
-			assert(0 != device);
+			assert(NULL != device);
 			core::log::printf("creating texture... ");
 
 			IDirect3DTexture9 *texture;
@@ -28,7 +28,7 @@ namespace renderer
 				else  base_message = std::string("failed to create texture\n");
 				throw core::FatalException(base_message + std::string(DXGetErrorString9(res)) + std::string(" : ") + std::string(DXGetErrorDescription9(res)));
 			}
-			assert(0 != texture);
+			assert(NULL != texture);
 			core::log::printf("done.\n");
 
 			Attach(texture); // don't addref

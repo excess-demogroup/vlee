@@ -202,7 +202,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				AdditionalIncludeDirectories="C:\WTL75\include;include"
-				PreprocessorDefinitions="SYNC;WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;SYNC"
 				RuntimeLibrary="0"
 				FloatingPointModel="2"
 				UsePrecompiledHeader="2"
@@ -487,15 +487,23 @@
 					>
 				</File>
 				<File
+					RelativePath=".\engine\drawable.h"
+					>
+				</File>
+				<File
 					RelativePath=".\engine\effect.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\engine.h"
+					RelativePath=".\engine\image.h"
 					>
 				</File>
 				<File
 					RelativePath=".\engine\mesh.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\particlestreamer.h"
 					>
 				</File>
 				<File
@@ -547,19 +555,19 @@
 				Name="scenegraph"
 				>
 				<File
-					RelativePath=".\engine\scenegraph\camera.h"
+					RelativePath=".\scenegraph\camera.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\scenegraph\node.h"
+					RelativePath=".\scenegraph\node.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\scenegraph\scene.h"
+					RelativePath=".\scenegraph\scene.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\scenegraph\scenegraph.h"
+					RelativePath=".\scenegraph\scenegraph.h"
 					>
 				</File>
 			</Filter>
@@ -567,11 +575,7 @@
 				Name="core"
 				>
 				<File
-					RelativePath=".\engine\core\core.h"
-					>
-				</File>
-				<File
-					RelativePath=".\engine\core\device.h"
+					RelativePath=".\core\err.h"
 					>
 				</File>
 				<File
@@ -582,28 +586,44 @@
 					RelativePath=".\engine\core\log.h"
 					>
 				</File>
+			</Filter>
+			<Filter
+				Name="renderer"
+				>
 				<File
-					RelativePath=".\engine\core\stateblock.h"
+					RelativePath=".\renderer\device.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\core\surface.h"
+					RelativePath=".\renderer\indexbuffer.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\core\texture.h"
+					RelativePath=".\renderer\rendertexture.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\core\texturesampler.h"
+					RelativePath=".\renderer\stateblock.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\core\vertexbuffer.h"
+					RelativePath=".\renderer\surface.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\core\vertexdeclaration.h"
+					RelativePath=".\renderer\texture.h"
+					>
+				</File>
+				<File
+					RelativePath=".\renderer\texturesampler.h"
+					>
+				</File>
+				<File
+					RelativePath=".\renderer\vertexbuffer.h"
+					>
+				</File>
+				<File
+					RelativePath=".\renderer\vertexdeclaration.h"
 					>
 				</File>
 			</Filter>

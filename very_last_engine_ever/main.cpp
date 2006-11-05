@@ -92,7 +92,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 #ifndef VJSYS
 		if (!BASS_Init(config.get_soundcard(), 44100, BASS_DEVICE_LATENCY, 0, 0)) throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/rider_igjen-02.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config.get_soundcard()) ? BASS_STREAM_DECODE : 0));
+		stream = BASS_StreamCreateFile(false, "data/rider_igjen-04.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config.get_soundcard()) ? BASS_STREAM_DECODE : 0));
 		if (!stream) throw FatalException("failed to open tune");
 #else
 		BASS_RecordInit(config.get_soundcard());
@@ -100,7 +100,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		if (!stream) throw FatalException("failed to open input-device");
 #endif
 
-		SyncTimerBASS_Stream synctimer(stream, 145, 4);
+		SyncTimerBASS_Stream synctimer(stream, BPM, 4);
 
 #ifdef SYNC
 		SyncEditor sync("data\\__data_%s_%s.sync", synctimer);
@@ -113,7 +113,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		ShowCursor(0);
 #endif
 
-		MegaDemo demo(device, config.get_aspect(), sync);
+		Surface backbuffer;
+		backbuffer.Attach(device.get_render_target(0)); /* trick the ref-counter */
+		MegaDemo demo(device, backbuffer, config.get_aspect(), sync);
 
 #ifdef SYNC
 		sync.showEditor();
@@ -139,11 +141,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 #ifndef VJSYS
 			sync.update(); //gets current timing info from the SyncTimer.
 #endif
+			device->BeginScene();
 			demo.draw(time);
+			device->EndScene();
+			HRESULT res = device->Present(0, 0, 0, 0);
 
-#ifndef NDEBUG
-//			printf("real_time: %f\n", real_time);
-#endif
+			if (FAILED(res))
+			{
+				throw FatalException(std::string(DXGetErrorString9(res)) + std::string(" : ") + std::string(DXGetErrorDescription9(res)));
+			}
+
 
 			BASS_Update(); // decrease the chance of missing vsync
 
