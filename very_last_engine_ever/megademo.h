@@ -331,20 +331,23 @@ public:
 			test_fx.draw(mesh2);
 */
 
-			for (int i = 0; i < 10; ++i)
+			if (beat > (64 + 16))
 			{
-				Vector3 scale(0.1, 0.1, 0.1);
-				Vector3 translation(0,0,i * 25);
-				D3DXQUATERNION rotation;
-				D3DXQuaternionRotationYawPitchRoll(&rotation, 0, M_PI / 2, 0);
-				D3DXMatrixTransformation(&world, NULL, NULL, &scale, NULL, &rotation, &translation);
+				for (int i = 0; i < 10; ++i)
+				{
+					Vector3 scale(0.1, 0.1, 0.1);
+					Vector3 translation(0,0,i * 25);
+					D3DXQUATERNION rotation;
+					D3DXQuaternionRotationYawPitchRoll(&rotation, 0, M_PI / 2, 0);
+					D3DXMatrixTransformation(&world, NULL, NULL, &scale, NULL, &rotation, &translation);
 
-				tunelle_fx.set_matrices(world, view, proj);
-				tunelle_fx->SetTexture("map", tunelle_tex);
-				tunelle_fx->SetFloat("overbright", 1.0);
-				tunelle_fx->CommitChanges();
-				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-				tunelle_fx.draw(tunelle_mesh);
+					tunelle_fx.set_matrices(world, view, proj);
+					tunelle_fx->SetTexture("map", tunelle_tex);
+					tunelle_fx->SetFloat("overbright", 1.0);
+					tunelle_fx->CommitChanges();
+					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+					tunelle_fx.draw(tunelle_mesh);
+				}
 			}
 
 			world.make_identity();
