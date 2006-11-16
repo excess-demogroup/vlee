@@ -42,7 +42,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="C:\WTL75\include;include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;D3D_DEBUG_INFO;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;D3D_DEBUG_INFO;_CRT_SECURE_NO_DEPRECATE;WINDOWED"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"

@@ -11,6 +11,7 @@ float4x4 tex_transform;
 
 float3 up;
 float3 left;
+float3 fog_color = float3(1, 1, 1);
 
 
 float4x4 WorldViewProjection : WORLDVIEWPROJECTION;
@@ -64,9 +65,8 @@ VS_OUTPUT vertex(VS_INPUT In)
 float4 pixel(VS_OUTPUT In) : COLOR
 {
 	float fog_factor = In.z;
-	float4 fog_color = float4(1, 1, 1, 1);
 	float4 col = tex2D(tex_samp, In.tex);
-	return float4(lerp(col.xyz, fog_color.xyz, fog_factor), col.a);
+	return float4(lerp(col.xyz, fog_color, fog_factor), col.a);
 //	return tex2D(tex_samp, In.tex);
 //	return float4(In.tex, 0, 0);
 }

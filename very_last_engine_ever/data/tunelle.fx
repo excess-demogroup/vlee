@@ -9,6 +9,8 @@ float4x4 View : VIEW;
 
 float fade = 1.0;
 float overbright = 1.0;
+float3 fog_color = float3(1, 1, 1);
+
 
 // textures
 texture map;
@@ -70,13 +72,12 @@ float4 pixel(VS_OUTPUT In) : COLOR
 //	float3 ref_vec = reflect(N, L);
 	float3 ref_vec = reflect(L, N);
 
-	color = max(dot(-N, L), 0);
-	color += texCUBE(env_samp, ref_vec) * pow(1 - max(dot(-N, L), 0), 1);
+//	color = max(dot(-N, L), 0);
+	color = 1; // texCUBE(env_samp, ref_vec);
 	color *= tex2D(tex_samp, In.tex);
-	color *= 0.25;
+	color *= 0.5;
 	
-	float4 fog_color = float4(1, 1, 1, 1);
-	return float4(lerp(color.xyz, fog_color.xyz, In.fog_factor), color.a);
+	return float4(lerp(color.xyz, fog_color, In.fog_factor), color.a);
 	
 	return color * overbright;
 }

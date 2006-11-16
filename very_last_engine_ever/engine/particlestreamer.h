@@ -95,13 +95,7 @@ namespace engine
 				*locked_pointer++ = pos.z;
 				*locked_pointer++ = size;
 			}
-			
-			if (--locked_particles == 0)
-			{
-				end();
-				draw();
-				begin();
-			}
+			locked_particles--;
 		}
 
 		void end()
@@ -112,6 +106,7 @@ namespace engine
 
 		void draw()
 		{
+
 			int max_vertex      = PARTICLE_STREAMER_VERTEX_COUNT - (locked_particles * 4);
 			int primitive_count = 2 * (PARTICLE_STREAMER_PARTICLE_COUNT - locked_particles);
 

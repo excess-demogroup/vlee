@@ -55,7 +55,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
 	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
 	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
-//	_CrtSetBreakAlloc(68);
+//	_CrtSetBreakAlloc(68)
 #endif
 
 	_Module.Init(NULL, GetModuleHandle(0));
@@ -92,7 +92,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 #ifndef VJSYS
 		if (!BASS_Init(config.get_soundcard(), 44100, BASS_DEVICE_LATENCY, 0, 0)) throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/rider_igjen-04.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config.get_soundcard()) ? BASS_STREAM_DECODE : 0));
+		stream = BASS_StreamCreateFile(false, "data/rider_igjen-06.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config.get_soundcard()) ? BASS_STREAM_DECODE : 0));
 		if (!stream) throw FatalException("failed to open tune");
 #else
 		BASS_RecordInit(config.get_soundcard());
