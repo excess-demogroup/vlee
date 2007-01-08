@@ -43,7 +43,7 @@ public:
 	Texture &get_tex(float pos)
 	{
 		assert(0 != textures.size());
-		int idx = pos * textures.size();
+		int idx = int(pos * textures.size());
 		idx %= textures.size();
 		return textures[idx];
 	}
@@ -67,11 +67,11 @@ public:
 	Texture &get_tex_pingpong(float pos)
 	{
 		assert(0 != textures.size());
-		int idx = pos * textures.size();
+		int idx = int(pos * textures.size());
 		idx %= (textures.size() * 2) - 2;
-		if (idx >= textures.size()) idx = textures.size() - 1 - (idx - textures.size());
+		if (idx >= int(textures.size())) idx = textures.size() - 1 - (idx - textures.size());
 		assert(idx >= 0);
-		assert(idx < textures.size());
+		assert(idx < int(textures.size()));
 		return textures[idx];
 	}
 
@@ -130,8 +130,8 @@ Matrix4x4 texture_matrix(const Texture &tex)
 //	trans1._32 = 0.5;
 
 	D3DXMatrixIdentity(&trans2);
-	trans2._31 = -10.5 / tex.get_surface().get_desc().Width;
-	trans2._32 = -10.5 / tex.get_surface().get_desc().Height;
+	trans2._31 = -10.5f / tex.get_surface().get_desc().Width;
+	trans2._32 = -10.5f / tex.get_surface().get_desc().Height;
 
 	D3DXMatrixScaling(&scale, 0.5, 0.5, 1.0);
 	return trans2;
@@ -394,9 +394,9 @@ public:
 		float spec1_val = spectrum[0];
 
 		D3DXCOLOR clear_color;
-		clear_color.r = clear_color_param.getFloatValue() * (1.0 / 256);
-		clear_color.g = clear_color_param.getFloatValue() * (1.0 / 256);
-		clear_color.b = clear_color_param.getFloatValue() * (1.0 / 256);
+		clear_color.r = clear_color_param.getFloatValue() * (1.0f / 256);
+		clear_color.g = clear_color_param.getFloatValue() * (1.0f / 256);
+		clear_color.b = clear_color_param.getFloatValue() * (1.0f / 256);
 /*
 		clear_color.r = 0;
 		clear_color.g = 0;
@@ -407,7 +407,7 @@ public:
 		float blink = last_blink + (spectrum[0] - last_blink) * 0.1f;
 		last_blink = blink;
 
-		blink *= 0.05;
+		blink *= 0.05f;
 
 		clear_color.r += blink;
 		clear_color.g += blink;
@@ -426,7 +426,7 @@ public:
 			D3DXMATRIX proj;
 
 			D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(cam_fov.getFloatValue()), 16.f / 9, 0.01f, 1000.f);
-			D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(90.0), float(blurme1_tex.get_surface().get_desc().Width) / blurme1_tex.get_surface().get_desc().Height, 0.01f, 1000.f);
+			D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(90.0f), float(blurme1_tex.get_surface().get_desc().Width) / blurme1_tex.get_surface().get_desc().Height, 0.01f, 1000.f);
 			device->SetTransform(D3DTS_PROJECTION, &proj);
 
 			float rot = time * 0.4f;
@@ -481,7 +481,7 @@ public:
 						Vector3 scale(0.1, 0.1, 0.1);
 						Vector3 translation(0,0,i * 25);
 						D3DXQUATERNION rotation;
-						D3DXQuaternionRotationYawPitchRoll(&rotation, 0, M_PI / 2, 0);
+						D3DXQuaternionRotationYawPitchRoll(&rotation, 0, float(M_PI / 2), 0);
 						D3DXQUATERNION rotation2;
 						D3DXQuaternionRotationYawPitchRoll(&rotation2, 0, 0, zrot.getFloatValue());
 
@@ -577,7 +577,7 @@ public:
 			{
 				int vid = vid_track.getIntValue() % vids.size();
 
-				float tbeat = beat;
+				float tbeat = float(beat);
 				if (vid == 1) beat *= 2;
 
 				float x_scale = 1.0f;
@@ -587,7 +587,7 @@ public:
 				tex_transform.make_scaling(Vector3(x_scale, 1, 1));
 				tex_fx->SetMatrix("tex_transform", &tex_transform);
 
-				blit(device, vids[vid].get_tex_pingpong(beat), tex_fx, polygon);
+				blit(device, vids[vid].get_tex_pingpong(float(beat)), tex_fx, polygon);
 
 				if (beat > (512 + 128 + 32 - 8))
 				{
@@ -602,7 +602,7 @@ public:
 			Matrix4x4 texture_transform = texture_matrix(blurme1_tex);
 
 //			float amt = 1.0 - pow((1.0 - fmod(beat / 2, 1.0)) * 0.1, 2.0);
-			float amt = 1.0 - pow((blur_amt.getFloatValue()) * 0.1, 2.0);
+			float amt = 1.f - pow((blur_amt.getFloatValue()) * 0.1f, 2.f);
 
 			Vector3 texcoord_translate(
 				0.5 + (0.5 / blurme1_tex.get_surface().get_desc().Width),
@@ -672,11 +672,11 @@ public:
 			tex_transform.make_scaling(Vector3(1, 1, 1));
 			tex_fx->SetMatrix("tex_transform", &tex_transform);
 			if (beat < (64 + 8)) tex_fx->SetFloat("alpha", 1.f - clear_color.r);
-			else                 tex_fx->SetFloat("alpha", 1.f - (beat - (64 + 8)) / 8 );
+			else                 tex_fx->SetFloat("alpha", float(1.f - (beat - (64 + 8)) / 8) );
 			logo.draw(device);
 		}
 
-		if (blink_inout(beat * 8, (64 + 18) * 8, (64 + 18 + 8) * 8, 1 * 8))
+		if (blink_inout(float(beat) * 8, (64 + 18) * 8, (64 + 18 + 8) * 8, 1 * 8))
 		{
 			tex_transform.make_scaling(Vector3(pow(1.0 - fmod(beat / 4, 1.0), 8.0) * cos(beat * M_PI * 4) * 0.25 + 1.0, 1, 1));
 			tex_fx->SetMatrix("tex_transform", &tex_transform);
@@ -684,7 +684,7 @@ public:
 			analog.draw(device);
 		}
 
-		if (blink_inout(beat * 8, (256 + 32) * 8, (256 + 64) * 8, 1 * 8))
+		if (blink_inout(float(beat) * 8, (256 + 32) * 8, (256 + 64) * 8, 1 * 8))
 		{
 			tex_transform.make_scaling(Vector3(pow(1.0 - fmod(beat / 4, 1.0), 8.0) * cos(beat * M_PI * 4) * 0.25 + 1.0, 1, 1));
 			tex_fx->SetMatrix("tex_transform", &tex_transform);

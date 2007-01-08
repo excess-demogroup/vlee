@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../core/fatalexception.h"
+#include "../core/log.h"
+#include "device.h"
 
 namespace renderer
 {

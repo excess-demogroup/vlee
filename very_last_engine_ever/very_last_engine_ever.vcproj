@@ -313,6 +313,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\engine\particlestreamer.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\engine\scenerender.cpp"
 					>
 				</File>

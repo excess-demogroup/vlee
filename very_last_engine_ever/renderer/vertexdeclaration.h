@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../core/fatalexception.h"
+
 namespace renderer
 {
 	class VertexDeclaration : public CComPtr<IDirect3DVertexDeclaration9>
@@ -13,7 +15,7 @@ namespace renderer
 			core::log::printf("creating vertexdeclaration... ");
 			IDirect3DVertexDeclaration9 *decl;
 			if (FAILED(device->CreateVertexDeclaration(vertex_elements, &decl)))
-				throw FatalException("failed to create vertex declaration");
+				throw core::FatalException("failed to create vertex declaration");
 			core::log::printf("done.\n");
 			Attach(decl); // don't addref
 		}
