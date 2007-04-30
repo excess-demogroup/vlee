@@ -309,6 +309,10 @@
 				Name="engine"
 				>
 				<File
+					RelativePath=".\engine\anim.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\engine\effect.cpp"
 					>
 				</File>
@@ -490,6 +494,10 @@
 			<Filter
 				Name="engine"
 				>
+				<File
+					RelativePath=".\engine\anim.h"
+					>
+				</File>
 				<File
 					RelativePath=".\engine\demo.h"
 					>

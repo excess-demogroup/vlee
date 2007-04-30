@@ -9,6 +9,7 @@
 #include "renderer/device.h"
 #include "engine/demo.h"
 #include "engine/image.h"
+#include "engine/anim.h"
 #include "engine/particlestreamer.h"
 #include "engine/particlecloud.h"
 #include "engine/spectrumdata.h"
@@ -36,67 +37,6 @@ namespace engine
 
 		return tex;
 	}
-}
-
-class Video
-{
-public:
-	Texture &get_tex(float pos)
-	{
-		assert(0 != textures.size());
-		int idx = int(pos * textures.size());
-		idx %= textures.size();
-		return textures[idx];
-	}
-
-	/**
-	
-	0  0
-	1  1
-	2  2
-	3  3
-	4  4
-	3  5
-	2  6
-	1  7
-	0  8
-	1  9
-	2  10
-
-	*/
-
-	Texture &get_tex_pingpong(float pos)
-	{
-		assert(0 != textures.size());
-		int idx = int(pos * textures.size());
-		idx %= (textures.size() * 2) - 2;
-		if (idx >= int(textures.size())) idx = textures.size() - 1 - (idx - textures.size());
-		assert(idx >= 0);
-		assert(idx < int(textures.size()));
-		return textures[idx];
-	}
-
-	std::vector<Texture> textures;
-};
-
-Video load_video(Device &device, std::string folder)
-{
-	Video vid;
-	for (int i = 0; true; ++i)
-	{
-		char temp[256];
-		sprintf(temp, "%s/%04d.jpg", folder.c_str(), i);
-		Texture tex;
-		if (FAILED(D3DXCreateTextureFromFile(device, temp, &tex))) break;
-		vid.textures.push_back(tex);
-	}
-
-	if (0 == vid.textures.size())
-	{
-		throw FatalException("no frames in video");
-	}
-
-	return vid;
 }
 
 void set_ramp(float alphas[], float base)
@@ -224,9 +164,9 @@ private:
 	SyncTrack &vid_track;
 	SyncTrack &vid_flip;
 
-	std::vector<Video> vids;
+	std::vector<engine::Anim> vids;
 
-	SpectrumData spec;
+	engine::SpectrumData spec;
 
 	engine::ParticleStreamer streamer;
 	engine::ParticleCloud<float> cloud;
@@ -366,13 +306,11 @@ public:
 			}
 		}
 #endif
-		vids.push_back(load_video(device, "data/vid1"));
-		vids.push_back(load_video(device, "data/vid2"));
-		vids.push_back(load_video(device, "data/vid3"));
-		vids.push_back(load_video(device, "data/vid4"));
-
-//		spec = SpectrumData(10, load_float_data("data/test.fft"));
-		spec = load_spectrum_data("data/test.fft");
+		vids.push_back(engine::load_anim(device, "data/vid1"));
+		vids.push_back(engine::load_anim(device, "data/vid2"));
+		vids.push_back(engine::load_anim(device, "data/vid3"));
+		vids.push_back(engine::load_anim(device, "data/vid4"));
+		spec = engine::load_spectrum_data("data/test.fft");
 	}
 	
 	void start()
@@ -592,7 +530,7 @@ public:
 				tex_transform.make_scaling(Vector3(x_scale, 1, 1));
 				tex_fx->SetMatrix("tex_transform", &tex_transform);
 
-				blit(device, vids[vid].get_tex_pingpong(float(beat)), tex_fx, polygon);
+				blit(device, vids[vid].getFramePingPong(float(beat)), tex_fx, polygon);
 
 				if (beat > (512 + 128 + 32 - 8))
 				{

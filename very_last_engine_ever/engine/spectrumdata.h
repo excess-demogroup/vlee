@@ -1,34 +1,37 @@
 #pragma once
 
-class SpectrumData
+namespace engine
 {
-public:
-	SpectrumData() : rate(0) {}
-
-	SpectrumData(int rate, const std::vector<float> &data)
-		:
-		rate(rate),
-		data(data)
+	class SpectrumData
 	{
-	}
+	public:
+		SpectrumData() : rate(0) {}
 
-	inline float getValue(float time)
-	{
-		int pos = int(time * rate);
-		if (pos >= int(data.size())) pos = data.size() - 1;
+		SpectrumData(int rate, const std::vector<float> &data)
+			:
+			rate(rate),
+			data(data)
+		{
+		}
 
-		float v1 = data[pos];
-		if (pos == data.size() - 1) return v1;
-		float v2 = data[pos + 1];
+		inline float getValue(float time)
+		{
+			int pos = int(time * rate);
+			if (pos >= int(data.size())) pos = data.size() - 1;
 
-		float t = ((time * rate) - pos);
+			float v1 = data[pos];
+			if (pos == data.size() - 1) return v1;
+			float v2 = data[pos + 1];
 
-		return v1 + (v2 - v1) * t;
-	}
+			float t = ((time * rate) - pos);
 
-private:
-	std::vector<float> data;
-	int rate;
-};
+			return v1 + (v2 - v1) * t;
+		}
 
-SpectrumData load_spectrum_data(const char *filename);
+	private:
+		std::vector<float> data;
+		int rate;
+	};
+
+	SpectrumData load_spectrum_data(const char *filename);
+}
