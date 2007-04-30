@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\WTL75\include;include"
+				AdditionalIncludeDirectories="include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;D3D_DEBUG_INFO;_CRT_SECURE_NO_DEPRECATE;WINDOWED"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -321,6 +321,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\engine\spectrumdata.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\engine\textureproxy.cpp"
 					>
 				</File>
@@ -516,6 +520,10 @@
 				</File>
 				<File
 					RelativePath=".\engine\scenerender.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\spectrumdata.h"
 					>
 				</File>
 				<File

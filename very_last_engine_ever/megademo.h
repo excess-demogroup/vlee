@@ -11,6 +11,7 @@
 #include "engine/image.h"
 #include "engine/particlestreamer.h"
 #include "engine/particlecloud.h"
+#include "engine/spectrumdata.h"
 #include "math/vector3.h"
 #include "math/vector2.h"
 #include "math/matrix4x4.h"
@@ -225,6 +226,8 @@ private:
 
 	std::vector<Video> vids;
 
+	SpectrumData spec;
+
 	engine::ParticleStreamer streamer;
 	engine::ParticleCloud<float> cloud;
 
@@ -367,6 +370,9 @@ public:
 		vids.push_back(load_video(device, "data/vid2"));
 		vids.push_back(load_video(device, "data/vid3"));
 		vids.push_back(load_video(device, "data/vid4"));
+
+//		spec = SpectrumData(10, load_float_data("data/test.fft"));
+		spec = load_spectrum_data("data/test.fft");
 	}
 	
 	void start()
@@ -397,22 +403,21 @@ public:
 		clear_color.r = clear_color_param.getFloatValue() * (1.0f / 256);
 		clear_color.g = clear_color_param.getFloatValue() * (1.0f / 256);
 		clear_color.b = clear_color_param.getFloatValue() * (1.0f / 256);
-/*
+
 		clear_color.r = 0;
 		clear_color.g = 0;
 		clear_color.b = 0;
-*/
-
+		clear_color.r = spec.getValue(time) / 2;
 		static float last_blink = 0.f;
 		float blink = last_blink + (spectrum[0] - last_blink) * 0.1f;
 		last_blink = blink;
 
 		blink *= 0.05f;
-
+#if 0
 		clear_color.r += blink;
 		clear_color.g += blink;
 		clear_color.b += blink;
-
+#endif
 		particle_fx->SetFloatArray("fog_color", clear_color, 3);
 
 
@@ -632,7 +637,7 @@ public:
 			amt *= amt;
 #endif
 		}
-#if 1
+
 		device.set_render_target(backbuffer);
 		D3DVIEWPORT9 viewport;
 		device->GetViewport(&viewport);
@@ -642,58 +647,10 @@ public:
 		viewport.Y      = (old_height - new_height) / 2;
 		viewport.Height = new_height;
 
+		// draw it all
 		device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, D3DXCOLOR(0.f, 0.f, 0.f, 0.f), 1.f, 0);
 		device->SetViewport(&viewport);
-
 		blit(device, blurme2_tex, blur_fx, polygon);
-//		blur.draw(device);
-
-
-		device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-		device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-		device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-		Matrix4x4 tex_transform;
-//		tex_transform.make_scaling(Vector3(pow(1.0 - fmod(beat / 4, 1.0), 8.0) * cos(beat * M_PI * 4) * 0.25 + 1.0, 1, 1));
-		tex_transform.make_scaling(Vector3(1.0, 1, 1));
-		tex_fx->SetMatrix("tex_transform", &tex_transform);
-
-		if (beat > 256 + 64 && (beat < (512 + 128 + 32 - 8)))
-		{
-			tex_fx->SetFloat("alpha", fade.getFloatValue());
-			end.draw(device);
-		}
-
-		tex_fx->SetFloat("alpha", 1.0f);
-		ramme.draw(device);
-
-//		if (blink_inout(beat * 8, (64 + 4) * 8, (64 + 4 + 8) * 8, 1 * 8))
-		if ((beat > 64) &&  (beat < (64 + 16)))
-		{
-			tex_transform.make_scaling(Vector3(1, 1, 1));
-			tex_fx->SetMatrix("tex_transform", &tex_transform);
-			if (beat < (64 + 8)) tex_fx->SetFloat("alpha", 1.f - clear_color.r);
-			else                 tex_fx->SetFloat("alpha", float(1.f - (beat - (64 + 8)) / 8) );
-			logo.draw(device);
-		}
-
-		if (blink_inout(float(beat) * 8, (64 + 18) * 8, (64 + 18 + 8) * 8, 1 * 8))
-		{
-			tex_transform.make_scaling(Vector3(pow(1.0 - fmod(beat / 4, 1.0), 8.0) * cos(beat * M_PI * 4) * 0.25 + 1.0, 1, 1));
-			tex_fx->SetMatrix("tex_transform", &tex_transform);
-			tex_fx->SetFloat("alpha", 1.0f);
-			analog.draw(device);
-		}
-
-		if (blink_inout(float(beat) * 8, (256 + 32) * 8, (256 + 64) * 8, 1 * 8))
-		{
-			tex_transform.make_scaling(Vector3(pow(1.0 - fmod(beat / 4, 1.0), 8.0) * cos(beat * M_PI * 4) * 0.25 + 1.0, 1, 1));
-			tex_fx->SetMatrix("tex_transform", &tex_transform);
-			tex_fx->SetFloat("alpha", 1.0f);
-			greets.draw(device);
-		}
-
-		device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-#endif
 
 		if (time > END_TIME) done = true;
 	}
