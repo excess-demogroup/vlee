@@ -16,6 +16,9 @@
 #include "engine/mesh.h"
 #include "engine/effect.h"
 
+#include "scenegraph/prstransform.h"
+
+
 using math::Vector2;
 using math::Vector3;
 using math::Matrix4x4;

@@ -10,6 +10,6 @@ namespace scenegraph
 	public:
 		virtual NodeType getType() { return NODE_TRANSFORM; }
 		
-		virtual Matrhx4x4 getTransform() = 0;
+		virtual math::Matrix4x4 getTransform() = 0;
 	};
 }

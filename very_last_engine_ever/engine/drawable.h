@@ -1,7 +1,10 @@
 #pragma once
 
-class Drawable 
+namespace engine
 {
-public:
-	virtual void draw() = 0;
-};
+	class Drawable 
+	{
+	public:
+		virtual void draw() = 0;
+	};
+}

@@ -24,14 +24,18 @@ namespace math
 			D3DXMatrixIdentity(this);
 		}
 
-		void make_scaling(const Vector3 &scale)
-		{
-			D3DXMatrixScaling(this, scale.x, scale.y, scale.z);
-		}
-
 		void make_translation(const Vector3 &translate)
 		{
 			D3DXMatrixTranslation(this, translate.x, translate.y, translate.z);
+		}
+		void make_rotation(const Vector3 &rotation)
+		{
+			D3DXMatrixRotationYawPitchRoll(this, rotation.x, rotation.y, rotation.z);
+		}
+
+		void make_scaling(const Vector3 &scale)
+		{
+			D3DXMatrixScaling(this, scale.x, scale.y, scale.z);
 		}
 		
 		void make_projection(float fov, float aspect, float znear, float zfar)
