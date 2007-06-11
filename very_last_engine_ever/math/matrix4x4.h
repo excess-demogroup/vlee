@@ -1,5 +1,7 @@
 #pragma once
 
+#include "vector3.h"
+
 namespace math
 {
 	class Matrix4x4 : public D3DXMATRIX
@@ -30,6 +32,11 @@ namespace math
 		void make_translation(const Vector3 &translate)
 		{
 			D3DXMatrixTranslation(this, translate.x, translate.y, translate.z);
+		}
+		
+		void make_projection(float fov, float aspect, float znear, float zfar)
+		{
+			D3DXMatrixPerspectiveFovLH(this, D3DXToRadian(fov), aspect, znear, zfar);
 		}
 	};
 }

@@ -9,7 +9,7 @@ namespace scenegraph
 
 		virtual ~Node();
 
-		Node *get_parent() const {
+		Node *getParent() const {
 			return parent; // who's your daddy?!
 		}
 
