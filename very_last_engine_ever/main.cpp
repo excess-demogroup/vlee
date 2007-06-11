@@ -17,6 +17,7 @@
 #include "engine/effect.h"
 
 #include "scenegraph/prstransform.h"
+#include "scenegraph/meshnode.h"
 
 
 using math::Vector2;
@@ -150,8 +151,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		scenegraph::Scene scene;
 		scenegraph::Camera camera;
-		scene.addChildren(&camera);
-
+		scenegraph::PrsTransform camera_transform;
+		scenegraph::MeshNode meshnode(tunelle_mesh, tunelle_fx);
+		
+		camera_transform.addChild(&camera);
+		scene.addChild(&camera_transform);
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);

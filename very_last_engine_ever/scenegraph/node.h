@@ -19,7 +19,7 @@ namespace scenegraph
 		
 		virtual ~Node();
 
-		void addChildren(Node *node)
+		void addChild(Node *node)
 		{
 			children.push_back(node);
 		}

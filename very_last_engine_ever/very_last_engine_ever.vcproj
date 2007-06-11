@@ -579,7 +579,19 @@
 					>
 				</File>
 				<File
+					RelativePath=".\scenegraph\drawable.h"
+					>
+				</File>
+				<File
+					RelativePath=".\scenegraph\meshnode.h"
+					>
+				</File>
+				<File
 					RelativePath=".\scenegraph\node.h"
+					>
+				</File>
+				<File
+					RelativePath=".\scenegraph\prstransform.h"
 					>
 				</File>
 				<File
@@ -588,6 +600,10 @@
 				</File>
 				<File
 					RelativePath=".\scenegraph\scenegraph.h"
+					>
+				</File>
+				<File
+					RelativePath=".\scenegraph\transform.h"
 					>
 				</File>
 			</Filter>
