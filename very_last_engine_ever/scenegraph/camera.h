@@ -8,7 +8,8 @@ namespace scenegraph
 	class Camera : public Node
 	{
 	public:
-		Camera() :
+		Camera(std::string name) :
+			Node(name),
 			fov(60.0f), aspect(4.0f / 3),
 			znear(1.0f), zfar(1000.0f),
 			projection_dirty(true)

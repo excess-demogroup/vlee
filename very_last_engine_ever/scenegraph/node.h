@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace scenegraph
 {
 	enum NodeType
@@ -15,7 +17,7 @@ namespace scenegraph
 	{
 	public:
 
-		Node() : parent(NULL) { }
+		Node(std::string name) : parent(NULL) { }
 		
 		virtual ~Node();
 
@@ -32,7 +34,8 @@ namespace scenegraph
 		virtual NodeType getType() = 0;
 
 	private:
-
+		std::string name;
+		
 		Node *parent;
 		std::list<Node*> children;
 	};

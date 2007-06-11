@@ -148,14 +148,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture tunelle_tex  = engine::load_texture(device, "data/tunelle.dds");
 		Effect  tunelle_fx   = engine::load_effect(device, "data/tunelle.fx");
 
-
-		scenegraph::Scene scene;
-		scenegraph::Camera camera;
-		scenegraph::PrsTransform camera_transform;
-		scenegraph::MeshNode meshnode(tunelle_mesh, tunelle_fx);
-		
+		Scene scene("root");
+		Camera camera("cam");
+		PrsTransform camera_transform("cam.trans");
 		camera_transform.addChild(&camera);
 		scene.addChild(&camera_transform);
+
+		MeshNode meshnode("tunelle.mesh", tunelle_mesh, tunelle_fx);
+		PrsTransform mesh_transform("tunelle.trans");
+		mesh_transform.addChild(&meshnode);
+		scene.addChild(&mesh_transform);
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);

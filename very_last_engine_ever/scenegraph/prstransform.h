@@ -7,7 +7,8 @@ namespace scenegraph
 	class PrsTransform : public Transform
 	{
 	public:
-		PrsTransform() :
+		PrsTransform(std::string name) :
+			Transform(name),
 			position(0,0,0),
 			rotation(0,0,0),
 			scale(0,0,0),
