@@ -13,18 +13,11 @@
 #include "engine/particlestreamer.h"
 #include "engine/particlecloud.h"
 #include "engine/spectrumdata.h"
-#include "math/vector3.h"
-#include "math/vector2.h"
-#include "math/matrix4x4.h"
 
 using renderer::Texture;
 using renderer::RenderTexture;
 using engine::Image;
 using engine::Mesh;
-
-using math::Vector3;
-using math::Vector2;
-using math::Matrix4x4;
 
 namespace engine
 {

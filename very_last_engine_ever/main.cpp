@@ -5,26 +5,32 @@
 #include "init.h"
 
 #include "core/fatalexception.h"
-#include "renderer/surface.h"
 
+#include "math/vector2.h"
+#include "math/vector3.h"
+#include "math/matrix4x4.h"
+#include "renderer/device.h"
+#include "renderer/surface.h"
+#include "renderer/texture.h"
 #include "engine/scenerender.h"
 #include "engine/mesh.h"
 #include "engine/effect.h"
+
+using math::Vector2;
+using math::Vector3;
+using math::Matrix4x4;
+using renderer::Device;
+using renderer::Surface;
+using renderer::Texture;
+using engine::Mesh;
+using engine::Effect;
 
 #include "sync/SyncEditor.h"
 
 WTL::CAppModule _Module;
 
-using core::FatalException;
-
-using renderer::Device;
-using renderer::Surface;
-
 using namespace core;
 using namespace scenegraph;
-
-using engine::Mesh;
-using engine::Effect;
 
 HWND win = 0;
 HSTREAM stream = 0;
@@ -45,7 +51,18 @@ CComPtr<T> d3d_ptr(T *ptr)
 	return com_ptr;
 }
 
-#include "megademo.h"
+namespace engine
+{
+	Texture load_texture(renderer::Device &device, ::std::string filename)
+	{
+		Texture tex;
+
+		HRESULT hr = D3DXCreateTextureFromFile(device, filename.c_str(), &tex);
+		if (FAILED(hr)) throw core::FatalException(::std::string("failed to load mesh \"") + filename + ::std::string("\"\n\n") + core::d3d_get_error(hr));
+
+		return tex;
+	}
+}
 
 int main(int /*argc*/, char* /*argv*/ [])
 {
@@ -54,7 +71,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
 	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
 	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
-//	_CrtSetBreakAlloc(68)
+	_CrtSetBreakAlloc(68);
 #endif
 	
 	_Module.Init(NULL, GetModuleHandle(0));
@@ -83,21 +100,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 		D3DDISPLAYMODE mode = config.get_mode();
 		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, mode.Width, mode.Height, 0, 0, GetModuleHandle(0), 0);
 		if (!win) throw FatalException("CreateWindow() failed. something is VERY spooky.");
-		
 		Device device;
 		device.Attach(init_d3d(direct3d, win, mode, config.get_multisample(), config.get_adapter(), config.get_vsync()));
-		
 		ShowWindow(win, TRUE); // showing window after initing d3d in order to be able to see warnings during init
 		
-#ifndef VJSYS
 		if (!BASS_Init(config.get_soundcard(), 44100, BASS_DEVICE_LATENCY, 0, 0)) throw FatalException("failed to init bass");
 		stream = BASS_StreamCreateFile(false, "data/rider_igjen-06.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config.get_soundcard()) ? BASS_STREAM_DECODE : 0));
 		if (!stream) throw FatalException("failed to open tune");
-#else
-		BASS_RecordInit(config.get_soundcard());
-		HRECORD stream = BASS_RecordStart(44100, 2, BASS_RECORD_PAUSE, 0, 0);
-		if (!stream) throw FatalException("failed to open input-device");
-#endif
 		
 		SyncTimerBASS_Stream synctimer(stream, BPM, 4);
 		
@@ -107,20 +116,39 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Sync sync("data\\__data_%s_%s.sync", synctimer);
 #endif
 		
-		
 #if !WINDOWED
 		ShowCursor(0);
 #endif
 		
 		Surface backbuffer;
 		backbuffer.Attach(device.get_render_target(0)); /* trick the ref-counter */
-		MegaDemo demo(device, backbuffer, config.get_aspect(), sync);
 		
 #ifdef SYNC
 		sync.showEditor();
 #endif
 		
-		demo.start();
+
+
+
+
+
+
+
+
+		/** DEMO ***/
+
+
+
+
+		Mesh    tunelle_mesh = engine::load_mesh(device, "data/tunelle.x");
+		Texture tunelle_tex  = engine::load_texture(device, "data/tunelle.dds");
+		Effect  tunelle_fx   = engine::load_effect(device, "data/tunelle.fx");
+
+
+		scenegraph::Scene scene;
+		scenegraph::Camera camera;
+		scene.addChildren(&camera);
+
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -141,7 +169,43 @@ int main(int /*argc*/, char* /*argv*/ [])
 			sync.update(); //gets current timing info from the SyncTimer.
 #endif
 			device->BeginScene();
-			demo.draw(time);
+
+			D3DXCOLOR clear_color(1,0,0,0);
+			device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, clear_color, 1.f, 0);
+
+			Vector3 eye = Vector3(0, 0, 0);
+			Vector3 at  = Vector3(0, 0, 100);
+			Vector3 up  = Vector3(0, 1, 0);
+
+			D3DXMATRIX view;
+			D3DXMatrixLookAtLH(&view, &eye, &at, &up);
+			Matrix4x4 world;
+			D3DXMatrixIdentity(&world);
+			D3DXMATRIX proj;
+			D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(90), 16.f / 9, 0.01f, 1000.f);
+
+
+			Vector3 scale(0.1, 0.1, 0.1);
+			Vector3 translation(0, 0, 0);
+
+			D3DXQUATERNION rotation;
+			D3DXQuaternionRotationYawPitchRoll(&rotation, 0, float(M_PI / 2), 0);
+			D3DXQUATERNION rotation2;
+			D3DXQuaternionRotationYawPitchRoll(&rotation2, 0, 0, time * 0.01f);
+
+			rotation *= rotation2;
+
+
+			D3DXMatrixTransformation(&world, NULL, NULL, &scale, NULL, &rotation, &translation);
+
+			tunelle_fx.set_matrices(world, view, proj);
+			tunelle_fx->SetFloatArray("fog_color", clear_color, 3);
+			tunelle_fx->SetTexture("map", tunelle_tex);
+			tunelle_fx->SetFloat("overbright", 1.0);
+			tunelle_fx->CommitChanges();
+
+			tunelle_fx.draw(tunelle_mesh);
+
 			device->EndScene();
 			HRESULT res = device->Present(0, 0, 0, 0);
 			
@@ -164,6 +228,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 				}
 			}
 		}
+
+
+
+
+		/** END OF DEMO ***/
+
+
+
+
+
+
+
 
 		// cleanup
 		if (stream) BASS_StreamFree(stream);

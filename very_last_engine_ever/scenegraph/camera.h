@@ -15,6 +15,8 @@ namespace scenegraph
 		{
 		}
 		
+		virtual NodeType getType() { return NODE_CAMERA; }
+		
 		void setFov(float fov)
 		{
 			this->fov = fov;
