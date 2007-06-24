@@ -29,13 +29,11 @@ struct VS_OUTPUT
 	float2 tex  : TEXCOORD1;
 };
 
-VS_OUTPUT vertex(float4 ipos : POSITION)
+VS_OUTPUT vertex(float4 ipos : POSITION, float2 tex  : TEXCOORD0)
 {
 	VS_OUTPUT Out;
 	Out.pos = ipos;
-	Out.tex = float2(Out.pos.x * 0.5, -Out.pos.y * 0.5);
-	Out.tex = mul(Out.tex, tex_transform);
-	Out.tex += float2(0.5f, 0.5f);
+	Out.tex = tex;
 	return Out;
 }
 

@@ -8,7 +8,7 @@ engine::Anim engine::load_anim(renderer::Device &device, std::string folder)
 	for (int i = 0; true; ++i)
 	{
 		char temp[256];
-		sprintf(temp, "%s/%04d.jpg", folder.c_str(), i);
+		sprintf(temp, "%s/%04d.dds", folder.c_str(), i);
 		renderer::Texture tex;
 		if (FAILED(D3DXCreateTextureFromFile(device, temp, &tex))) break;
 		anim.textures.push_back(tex);

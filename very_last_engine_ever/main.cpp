@@ -15,10 +15,11 @@
 #include "engine/scenerender.h"
 #include "engine/mesh.h"
 #include "engine/effect.h"
+#include "engine/image.h"
+#include "engine/anim.h"
 
 #include "scenegraph/prstransform.h"
 #include "scenegraph/meshnode.h"
-
 
 using math::Vector2;
 using math::Vector3;
@@ -28,6 +29,40 @@ using renderer::Surface;
 using renderer::Texture;
 using engine::Mesh;
 using engine::Effect;
+using engine::Image;
+
+void blit(IDirect3DDevice9 *device, IDirect3DTexture9 *tex, Effect &eff, float x, float y, float w, float h)
+{
+	assert(polygon);
+	device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+	eff->SetTexture("tex", tex);
+	eff->CommitChanges();
+
+	D3DSURFACE_DESC desc;
+	tex->GetLevelDesc(0, &desc);
+	float s_nudge = 0.5f / desc.Width;
+	float t_nudge = 0.5f / desc.Height;
+
+	UINT passes;
+	eff->Begin(&passes, 0);
+	for (unsigned j = 0; j < passes; ++j)
+	{
+		eff->BeginPass(j);
+		float verts[] =
+		{
+			x,   y,   0, 0 + s_nudge, 1 + t_nudge,
+			x+w, y,   0, 1 + s_nudge, 1 + t_nudge,
+			x+w, y+h, 0, 1 + s_nudge, 0 + t_nudge,
+			x,   y+h, 0, 0 + s_nudge, 0 + t_nudge,
+		};
+
+		device->SetFVF(D3DFVF_XYZ | D3DFVF_TEX1);
+		device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 5);
+		eff->EndPass();
+	}
+	eff->End();
+
+}
 
 #include "sync/SyncEditor.h"
 
@@ -61,7 +96,17 @@ namespace engine
 	{
 		Texture tex;
 
-		HRESULT hr = D3DXCreateTextureFromFile(device, filename.c_str(), &tex);
+//		HRESULT hr = D3DXCreateTextureFromFile(device, filename.c_str(), &tex);
+		HRESULT hr = D3DXCreateTextureFromFileEx(
+			device, filename.c_str(),
+			D3DX_DEFAULT_NONPOW2, D3DX_DEFAULT_NONPOW2, // width and height
+			D3DX_DEFAULT, // miplevels
+			0, D3DFMT_UNKNOWN, // usage and format
+			D3DPOOL_MANAGED, // pool
+			D3DX_DEFAULT, D3DX_DEFAULT, // filtering
+			0, NULL, NULL,
+			&tex);
+
 		if (FAILED(hr)) throw core::FatalException(::std::string("failed to load mesh \"") + filename + ::std::string("\"\n\n") + core::d3d_get_error(hr));
 
 		return tex;
@@ -109,7 +154,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		ShowWindow(win, TRUE); // showing window after initing d3d in order to be able to see warnings during init
 		
 		if (!BASS_Init(config.get_soundcard(), 44100, BASS_DEVICE_LATENCY, 0, 0)) throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/rider_igjen-06.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config.get_soundcard()) ? BASS_STREAM_DECODE : 0));
+		stream = BASS_StreamCreateFile(false, "data/elg.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config.get_soundcard()) ? BASS_STREAM_DECODE : 0));
 		if (!stream) throw FatalException("failed to open tune");
 		
 		SyncTimerBASS_Stream synctimer(stream, BPM, 4);
@@ -142,6 +187,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 		/** DEMO ***/
 
 
+		Effect tex_fx      = engine::load_effect(device, "data/tex.fx");
+
+		Mesh polygon;
+		d3d_err(D3DXCreatePolygon(device, 3.f, 4, &polygon, 0));
+
+		Texture arrow_tex  = engine::load_texture(device, "data/arrow.dds");
+		engine::Image   arrow_img(arrow_tex, tex_fx);
+
+		engine::Anim moose_anim = engine::load_anim(device, "data/moose");
 
 
 		Mesh    tunelle_mesh = engine::load_mesh(device, "data/tunelle.x");
@@ -161,7 +215,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 60.0f) + 10);
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f) + 10);
 		
 		bool done = false;
 		while (!done)
@@ -172,7 +226,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			static float last_time = 0.f;
 			static float time_offset = 0.f;
-			float time = BASS_ChannelBytes2Seconds(stream, BASS_ChannelGetPosition(stream));
+			double time = BASS_ChannelBytes2Seconds(stream, BASS_ChannelGetPosition(stream));
+			double beat = time * (double(BPM) / 60);
 
 #ifndef VJSYS
 			sync.update(); //gets current timing info from the SyncTimer.
@@ -214,6 +269,59 @@ int main(int /*argc*/, char* /*argv*/ [])
 			tunelle_fx->CommitChanges();
 
 			tunelle_fx.draw(tunelle_mesh);
+
+			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+
+			float s = 1.0 / (1 + fmod(beat / 2, 1.0) * 0.25);
+
+			tex_fx->SetFloat("xoffs", 1 - fmod(time * 0.25, 2));
+			tex_fx->SetFloat("yoffs", 0.0f);
+			tex_fx->SetFloat("xzoom", ((1.0f)    / 1.5) * s);
+			tex_fx->SetFloat("yzoom", ((4.f / 3) / 1.5) * s);
+
+			// w = ((1.0f)    / 1.5) * s;
+			// h = ((4.f / 3) / 1.5) * s;
+
+			{
+				float w = ((1.0f)    / 0.75) * s;
+				float h = ((4.f / 3) / 0.75) * s;
+				blit(
+					device,
+					moose_anim.getFramePingPong(float(beat / 8)),
+					tex_fx,
+					1 - fmod(time * 0.5, 2) - w / 2,
+					0.0f  - h / 2,
+					w, h
+				);
+			}
+
+
+			Matrix4x4 tex_transform;
+			tex_transform.make_scaling(Vector3(1, 1, 1));
+			tex_fx->SetMatrix("tex_transform", &tex_transform);
+//			tex_fx->SetFloat("alpha", 0.75 + sin(time * 10) * 0.25);
+
+			s = 1.0 / (1 + fmod(beat, 1.0));
+			arrow_img.w = ((1.0f)    / 4) * s;
+			arrow_img.h = ((4.f / 3) / 4) * s;
+
+			arrow_img.x = 1 - fmod(time * 0.5, 2) - arrow_img.w / 2;
+			arrow_img.y = 0.85f  - arrow_img.h / 2;
+			arrow_img.draw(device);
+
+			arrow_img.x = 1 - fmod((time + 0.5) * 0.5, 2) - arrow_img.w / 2;
+			arrow_img.y = 0.6f - arrow_img.h / 2;
+			arrow_img.draw(device);
+/*
+			test_img.x = -1;
+			test_img.y = -1;
+			test_img.w =  2;
+			test_img.h =  2;
+			test_img.draw(device);
+*/
+			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 
 			device->EndScene();
 			HRESULT res = device->Present(0, 0, 0, 0);
