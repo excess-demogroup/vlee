@@ -33,7 +33,6 @@ using engine::Image;
 
 void blit(IDirect3DDevice9 *device, IDirect3DTexture9 *tex, Effect &eff, float x, float y, float w, float h)
 {
-	assert(polygon);
 	device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 	eff->SetTexture("tex", tex);
 	eff->CommitChanges();
