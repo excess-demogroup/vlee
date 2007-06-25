@@ -194,6 +194,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture arrow_tex  = engine::load_texture(device, "data/arrow.dds");
 		Image   arrow_img(arrow_tex, tex_fx);
 
+		Image   test_img(engine::load_texture(device, "data/test.dds"), tex_fx);
+
+
 		Anim moose_anim = engine::load_anim(device, "data/moose");
 
 
@@ -305,13 +308,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			arrow_img.x = 1 - fmod((time + 0.5) * 0.5, 2) - arrow_img.w / 2;
 			arrow_img.y = 0.6f - arrow_img.h / 2;
 			arrow_img.draw(device);
-/*
-			test_img.x = -1;
-			test_img.y = -1;
-			test_img.w =  2;
-			test_img.h =  2;
-			test_img.draw(device);
-*/
+
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			
 			core::d3d_err(device->SetRenderTarget(0, backbuffer));
@@ -321,12 +318,22 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, clear_color, 1.f, 0);
 
-			rt_img.x = -1 - 1.0 / config.get_mode().Width;
-			rt_img.y = -1 + 1.0 / config.get_mode().Height;
+			rt_img.x = -1;
+			rt_img.y = -1;
 			rt_img.w =  2;
 			rt_img.h =  2;
 			rt_img.draw(device);
 
+#if 0
+			test_img.x = -1;
+			test_img.y = -1;
+//			test_img.x = -1 - 1.0 / config.get_mode().Width;
+//			test_img.y = -1 + 1.0 / config.get_mode().Height;
+
+			test_img.w =  2;
+			test_img.h =  2;
+			test_img.draw(device);
+#endif
 			device->EndScene();
 			HRESULT res = device->Present(0, 0, 0, 0);
 			

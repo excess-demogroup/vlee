@@ -1,23 +1,12 @@
-string XFile = "misc\\teapot.x";
-int BCLR = 0xff202060;
-
 float alpha = 1.f;
-float xoffs = 0.f;
-float yoffs = 0.f;
-
-float xzoom = 1.f;
-float yzoom = 1.f;
-float4x4 tex_transform;
-
-// textures
 texture tex;
 
 sampler tex_sampler = sampler_state
 {
 	Texture = (tex);
 	MipFilter = NONE;
-	MinFilter = POINT;
-	MagFilter = POINT;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
 	
 	AddressU = CLAMP;
 	AddressV = CLAMP;
