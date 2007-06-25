@@ -350,24 +350,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 				);
 			}
 
-
-			Matrix4x4 tex_transform;
-			tex_transform.make_scaling(Vector3(1, 1, 1));
-			tex_fx->SetMatrix("tex_transform", &tex_transform);
-//			tex_fx->SetFloat("alpha", 0.75 + sin(time * 10) * 0.25);
-
-			s = 1.0 / (1 + fmod(beat, 1.0));
-			arrow_img.w = ((1.0f)    / 4) * s;
-			arrow_img.h = ((4.f / 3) / 4) * s;
-
-			arrow_img.x = 1 - fmod(time * 0.5, 2) - arrow_img.w / 2;
-			arrow_img.y = 0.85f  - arrow_img.h / 2;
-			arrow_img.draw(device);
-
-			arrow_img.x = 1 - fmod((time + 0.5) * 0.5, 2) - arrow_img.w / 2;
-			arrow_img.y = 0.6f - arrow_img.h / 2;
-			arrow_img.draw(device);
-
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			
 			core::d3d_err(device->SetRenderTarget(0, rt2));
@@ -405,6 +387,22 @@ int main(int /*argc*/, char* /*argv*/ [])
 			core::d3d_err(device->SetRenderTarget(0, backbuffer));
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 			blit(device, rt2, blur_fx, -1, -1, 2, 2);
+
+			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+			s = 1.0 / (1 + fmod(beat, 1.0));
+			arrow_img.w = ((1.0f)    / 4) * s;
+			arrow_img.h = ((4.f / 3) / 4) * s;
+
+			arrow_img.x = 1 - fmod(time * 0.5, 2) - arrow_img.w / 2;
+			arrow_img.y = 0.85f  - arrow_img.h / 2;
+			arrow_img.draw(device);
+
+			arrow_img.x = 1 - fmod((time + 0.5) * 0.5, 2) - arrow_img.w / 2;
+			arrow_img.y = 0.6f - arrow_img.h / 2;
+			arrow_img.draw(device);
+
+			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+
 
 #if 0
 			test_img.x = -1;
