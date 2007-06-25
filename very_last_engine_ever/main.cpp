@@ -36,16 +36,73 @@ using engine::Effect;
 using engine::Image;
 using engine::Anim;
 
+Matrix4x4 radialblur_matrix(const Texture &tex, const Vector2 &center, const float amt = 1.01)
+{
+	Matrix4x4 trans1;
+	trans1.make_identity();
+	trans1._13 = 0.5;
+	trans1._23 = 0.5;
+	
+	Matrix4x4 mat;
+	mat.make_scaling(Vector3(amt, amt, 1));
+	
+	Matrix4x4 trans2;
+	trans2.make_identity();
+	trans2._13 = -0.5;
+	trans2._23 = -0.5;
+	
+	return trans1 * mat * trans2;
+}
+
+Matrix4x4 texture_matrix(const Texture &tex)
+{
+	Matrix4x4 mat, trans1, trans2, scale;
+
+	//	D3DXMatrixIdentity(&trans2);
+//	trans1._31 = 0.5;
+//	trans1._32 = 0.5;
+
+	D3DXMatrixIdentity(&trans2);
+	trans2._31 = -10.5f / tex.get_surface().get_desc().Width;
+	trans2._32 = -10.5f / tex.get_surface().get_desc().Height;
+
+	D3DXMatrixScaling(&scale, 0.5, 0.5, 1.0);
+	return trans2;
+//	mat = trans2 * scale;
+
+//	mat = trans1 * scale;
+	return mat;
+}
+
+
 void blit(IDirect3DDevice9 *device, IDirect3DTexture9 *tex, Effect &eff, float x, float y, float w, float h)
 {
 	device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 	eff->SetTexture("tex", tex);
 	eff->CommitChanges();
 
-	D3DSURFACE_DESC desc;
-	tex->GetLevelDesc(0, &desc);
-	float s_nudge = 0.5f / desc.Width;
-	float t_nudge = 0.5f / desc.Height;
+	float s_nudge = 0.0f, t_nudge = 0.0f;
+	float x_nudge = 0.0f, y_nudge = 0.0f;
+
+	/* get render target */
+	IDirect3DSurface9 *rt;
+	device->GetRenderTarget(0, &rt);
+	
+	/* get surface description */
+	D3DSURFACE_DESC rt_desc;
+	rt->GetDesc(&rt_desc);
+
+	/* setup nudge */
+	x_nudge = -0.5f / (float(rt_desc.Width)  / 2);
+	y_nudge =  0.5f / (float(rt_desc.Height) / 2);
+
+	/* get texture description */
+	D3DSURFACE_DESC tex_desc;
+	tex->GetLevelDesc(0, &tex_desc);
+
+	/* setup nudge */
+	s_nudge = 0.0f / tex_desc.Width;
+	t_nudge = 0.0f / tex_desc.Height;
 
 	UINT passes;
 	eff->Begin(&passes, 0);
@@ -54,18 +111,17 @@ void blit(IDirect3DDevice9 *device, IDirect3DTexture9 *tex, Effect &eff, float x
 		eff->BeginPass(j);
 		float verts[] =
 		{
-			x,   y,   0, 0 + s_nudge, 1 + t_nudge,
-			x+w, y,   0, 1 + s_nudge, 1 + t_nudge,
-			x+w, y+h, 0, 1 + s_nudge, 0 + t_nudge,
-			x,   y+h, 0, 0 + s_nudge, 0 + t_nudge,
+			x+     x_nudge, y +     y_nudge, 0, 0 + s_nudge, 1 + t_nudge,
+			x+ w + x_nudge, y +     y_nudge, 0, 1 + s_nudge, 1 + t_nudge,
+			x+ w + x_nudge, y + h + y_nudge, 0, 1 + s_nudge, 0 + t_nudge,
+			x+     x_nudge, y + h + y_nudge, 0, 0 + s_nudge, 0 + t_nudge,
 		};
-
+		
 		device->SetFVF(D3DFVF_XYZ | D3DFVF_TEX1);
 		device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 5);
 		eff->EndPass();
 	}
 	eff->End();
-
 }
 
 #include "sync/SyncEditor.h"
@@ -155,6 +211,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		if (!win) throw FatalException("CreateWindow() failed. something is VERY spooky.");
 		Device device;
 		device.Attach(init_d3d(direct3d, win, mode, config.get_multisample(), config.get_adapter(), config.get_vsync()));
+//		device.Attach(init_d3d(direct3d, win, mode, D3DMULTISAMPLE_NONE, config.get_adapter(), config.get_vsync()));
 		ShowWindow(win, TRUE); // showing window after initing d3d in order to be able to see warnings during init
 		
 		if (!BASS_Init(config.get_soundcard(), 44100, BASS_DEVICE_LATENCY, 0, 0)) throw FatalException("failed to init bass");
@@ -186,8 +243,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 //		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_4_SAMPLES);
 		RenderTexture rt(device, config.get_mode().Width, config.get_mode().Height, 1, D3DFMT_A8R8G8B8, config.get_multisample());
+		RenderTexture rt2(device, config.get_mode().Width, config.get_mode().Height, 1, D3DFMT_A8R8G8B8);
 
 		Effect tex_fx      = engine::load_effect(device, "data/tex.fx");
+		Effect blur_fx     = engine::load_effect(device, "data/blur.fx");
 
 		Image   rt_img(rt, tex_fx);
 
@@ -311,18 +370,41 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			
-			core::d3d_err(device->SetRenderTarget(0, backbuffer));
+			core::d3d_err(device->SetRenderTarget(0, rt2));
 			rt.resolve();
 //			device->StretchRect(test_surf, NULL, test_surf2, NULL, D3DTEXF_NONE);
 //			device->StretchRect(rt.get_surface(0), NULL, backbuffer, NULL, D3DTEXF_POINT);
 
-			device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, clear_color, 1.f, 0);
+			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 
 			rt_img.x = -1;
 			rt_img.y = -1;
 			rt_img.w =  2;
 			rt_img.h =  2;
-			rt_img.draw(device);
+//			rt_img.draw(device);
+
+			Matrix4x4 texcoord_transform;
+			Matrix4x4 texture_transform = texture_matrix(rt);
+
+			Vector3 texcoord_translate(
+				0.5 + (0.5 / rt.get_surface().get_desc().Width),
+				0.5 + (0.5 / rt.get_surface().get_desc().Height),
+				0.0);
+			blur_fx->SetFloatArray("texcoord_translate", texcoord_translate, 2);
+			texcoord_transform.make_scaling(Vector3(1,1,1));
+			blur_fx->SetMatrix("texcoord_transform", &texcoord_transform);
+			blur_fx->SetMatrix("texture_transform", &texture_transform);
+
+//			device->SetRenderTarget(0, blurme2_tex.get_surface());
+			float amt = 1.0 / (1 + ((1 - fmod(time, 1.0)) * 0.02f));
+			Matrix4x4 texel_transform = radialblur_matrix(rt, Vector2(0, 0), amt);
+			blur_fx->SetMatrix("texel_transform", &texel_transform);
+			blit(device, rt, blur_fx, -1, -1, 2, 2);
+//			blit(device, blurme1_tex, blur_fx, polygon);
+
+			core::d3d_err(device->SetRenderTarget(0, backbuffer));
+			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
+			blit(device, rt2, blur_fx, -1, -1, 2, 2);
 
 #if 0
 			test_img.x = -1;
