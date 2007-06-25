@@ -12,6 +12,7 @@
 #include "renderer/device.h"
 #include "renderer/surface.h"
 #include "renderer/texture.h"
+#include "renderer/rendertexture.h"
 #include "engine/scenerender.h"
 #include "engine/mesh.h"
 #include "engine/effect.h"
@@ -24,12 +25,16 @@
 using math::Vector2;
 using math::Vector3;
 using math::Matrix4x4;
+
 using renderer::Device;
 using renderer::Surface;
 using renderer::Texture;
+using renderer::RenderTexture;
+
 using engine::Mesh;
 using engine::Effect;
 using engine::Image;
+using engine::Anim;
 
 void blit(IDirect3DDevice9 *device, IDirect3DTexture9 *tex, Effect &eff, float x, float y, float w, float h)
 {
@@ -177,40 +182,25 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 
 
-
-
-
-
-
-
 		/** DEMO ***/
 
+//		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_4_SAMPLES);
+		RenderTexture rt(device, config.get_mode().Width, config.get_mode().Height, 1, D3DFMT_A8R8G8B8, config.get_multisample());
 
 		Effect tex_fx      = engine::load_effect(device, "data/tex.fx");
 
-		Mesh polygon;
-		d3d_err(D3DXCreatePolygon(device, 3.f, 4, &polygon, 0));
+		Image   rt_img(rt, tex_fx);
 
 		Texture arrow_tex  = engine::load_texture(device, "data/arrow.dds");
-		engine::Image   arrow_img(arrow_tex, tex_fx);
+		Image   arrow_img(arrow_tex, tex_fx);
 
-		engine::Anim moose_anim = engine::load_anim(device, "data/moose");
+		Anim moose_anim = engine::load_anim(device, "data/moose");
 
 
 		Mesh    tunelle_mesh = engine::load_mesh(device, "data/tunelle.x");
 		Texture tunelle_tex  = engine::load_texture(device, "data/tunelle.dds");
 		Effect  tunelle_fx   = engine::load_effect(device, "data/tunelle.fx");
-
-		Scene scene("root");
-		Camera camera("cam");
-		PrsTransform camera_transform("cam.trans");
-		camera_transform.addChild(&camera);
-		scene.addChild(&camera_transform);
-
-		MeshNode meshnode("tunelle.mesh", tunelle_mesh, tunelle_fx);
-		PrsTransform mesh_transform("tunelle.trans");
-		mesh_transform.addChild(&meshnode);
-		scene.addChild(&mesh_transform);
+		
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -232,10 +222,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 			sync.update(); //gets current timing info from the SyncTimer.
 #endif
 			device->BeginScene();
-
+			
+			core::d3d_err(device->SetRenderTarget(0, rt));
+			
 			D3DXCOLOR clear_color(1,0,0,0);
 			device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, clear_color, 1.f, 0);
-
+			
 			Vector3 eye = Vector3(0, 0, 0);
 			Vector3 at  = Vector3(0, 0, 100);
 			Vector3 up  = Vector3(0, 1, 0);
@@ -321,6 +313,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 			test_img.draw(device);
 */
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+			
+			core::d3d_err(device->SetRenderTarget(0, backbuffer));
+			rt.resolve();
+//			device->StretchRect(test_surf, NULL, test_surf2, NULL, D3DTEXF_NONE);
+//			device->StretchRect(rt.get_surface(0), NULL, backbuffer, NULL, D3DTEXF_POINT);
+
+			device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, clear_color, 1.f, 0);
+
+			rt_img.x = -1 - 1.0 / config.get_mode().Width;
+			rt_img.y = -1 + 1.0 / config.get_mode().Height;
+			rt_img.w =  2;
+			rt_img.h =  2;
+			rt_img.draw(device);
 
 			device->EndScene();
 			HRESULT res = device->Present(0, 0, 0, 0);

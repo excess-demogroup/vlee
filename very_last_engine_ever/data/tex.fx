@@ -16,8 +16,8 @@ sampler tex_sampler = sampler_state
 {
 	Texture = (tex);
 	MipFilter = NONE;
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
+	MinFilter = POINT;
+	MagFilter = POINT;
 	
 	AddressU = CLAMP;
 	AddressV = CLAMP;
