@@ -244,6 +244,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 //		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_4_SAMPLES);
 		RenderTexture rt(device, config.get_mode().Width, config.get_mode().Height, 1, D3DFMT_A8R8G8B8, config.get_multisample());
 		RenderTexture rt2(device, config.get_mode().Width, config.get_mode().Height, 1, D3DFMT_A8R8G8B8);
+		RenderTexture rt3(device, config.get_mode().Width, config.get_mode().Height, 1, D3DFMT_A8R8G8B8);
 
 		Effect tex_fx      = engine::load_effect(device, "data/tex.fx");
 		Effect blur_fx     = engine::load_effect(device, "data/blur.fx");
@@ -251,7 +252,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Image   rt_img(rt, tex_fx);
 
 		Texture arrow_tex  = engine::load_texture(device, "data/arrow.dds");
-		Image   arrow_img(arrow_tex, tex_fx);
+		Effect  arrow_fx   = engine::load_effect(device, "data/arrow.fx");
+		Image   arrow_img(arrow_tex, arrow_fx);
 
 		Image   test_img(engine::load_texture(device, "data/test.dds"), tex_fx);
 
@@ -381,8 +383,29 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float amt = 1.0 / (1 + ((1 - fmod(time, 1.0)) * 0.02f));
 			Matrix4x4 texel_transform = radialblur_matrix(rt, Vector2(0, 0), amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
+
 			blit(device, rt, blur_fx, -1, -1, 2, 2);
 //			blit(device, blurme1_tex, blur_fx, polygon);
+
+			amt = 1.0 / (1 + ((1 - fmod(time, 1.0)) * 0.04f));
+			texel_transform = radialblur_matrix(rt, Vector2(0, 0), amt);
+			blur_fx->SetMatrix("texel_transform", &texel_transform);
+
+			core::d3d_err(device->SetRenderTarget(0, rt3));
+			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
+			blit(device, rt2, blur_fx, -1, -1, 2, 2);
+
+			amt = 1.0 / (1 + ((1 - fmod(time, 1.0)) * 0.08f));
+			texel_transform = radialblur_matrix(rt, Vector2(0, 0), amt);
+			blur_fx->SetMatrix("texel_transform", &texel_transform);
+
+			core::d3d_err(device->SetRenderTarget(0, rt2));
+			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
+			blit(device, rt3, blur_fx, -1, -1, 2, 2);
+
+			amt = 1.0 / (1 + ((1 - fmod(time, 1.0)) * 0.16f));
+			texel_transform = radialblur_matrix(rt, Vector2(0, 0), amt);
+			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
 			core::d3d_err(device->SetRenderTarget(0, backbuffer));
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
@@ -395,8 +418,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			arrow_img.x = 1 - fmod(time * 0.5, 2) - arrow_img.w / 2;
 			arrow_img.y = 0.85f  - arrow_img.h / 2;
+			arrow_fx->SetFloat("time", time);
 			arrow_img.draw(device);
 
+			arrow_img.w = -((1.0f)    / 4) * s;
 			arrow_img.x = 1 - fmod((time + 0.5) * 0.5, 2) - arrow_img.w / 2;
 			arrow_img.y = 0.6f - arrow_img.h / 2;
 			arrow_img.draw(device);

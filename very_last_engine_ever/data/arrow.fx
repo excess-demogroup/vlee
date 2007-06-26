@@ -1,5 +1,6 @@
 float alpha = 1.f;
 texture tex;
+float time;
 
 sampler tex_sampler = sampler_state
 {
@@ -28,7 +29,11 @@ VS_OUTPUT vertex(float4 ipos : POSITION, float2 tex  : TEXCOORD0)
 
 float4 pixel(VS_OUTPUT In) : COLOR
 {
-	return tex2D(tex_sampler, In.tex) * alpha;
+	float4 texcol = tex2D(tex_sampler, In.tex);
+//	texcol.r = sin(texcol.r + time);
+	texcol.r = lerp(0.0, frac(In.tex.x + time), texcol.r);
+	texcol.g = lerp(0.0, frac(In.tex.x + time - 0.5), texcol.g);
+	return texcol * alpha;
 }
 
 technique blur_ps_vs_2_0
