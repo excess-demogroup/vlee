@@ -79,7 +79,6 @@ void blit(IDirect3DDevice9 *device, IDirect3DTexture9 *tex, Effect &eff, float x
 {
 	device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 	eff->SetTexture("tex", tex);
-	eff->CommitChanges();
 
 	float s_nudge = 0.0f, t_nudge = 0.0f;
 	float x_nudge = 0.0f, y_nudge = 0.0f;
@@ -317,7 +316,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			tunelle_fx->SetFloatArray("fog_color", clear_color, 3);
 			tunelle_fx->SetTexture("map", tunelle_tex);
 			tunelle_fx->SetFloat("overbright", 1.0);
-			tunelle_fx->CommitChanges();
 
 			tunelle_fx.draw(tunelle_mesh);
 

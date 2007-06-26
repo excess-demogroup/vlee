@@ -28,7 +28,6 @@ namespace engine
 		{
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 			eff->SetTexture("tex", tex);
-			eff->CommitChanges();
 			float s_nudge = 0.0f, t_nudge = 0.0f;
 			float x_nudge = 0.0f, y_nudge = 0.0f;
 
