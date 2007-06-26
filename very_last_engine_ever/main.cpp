@@ -255,11 +255,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect  arrow_fx   = engine::load_effect(device, "data/arrow.fx");
 		Image   arrow_img(arrow_tex, arrow_fx);
 
-		Image   test_img(engine::load_texture(device, "data/test.dds"), tex_fx);
-
-
 		Anim moose_anim = engine::load_anim(device, "data/moose");
-
 
 		Mesh    tunelle_mesh = engine::load_mesh(device, "data/tunelle.x");
 		Texture tunelle_tex  = engine::load_texture(device, "data/tunelle.dds");
