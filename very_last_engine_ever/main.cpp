@@ -19,8 +19,7 @@
 #include "engine/image.h"
 #include "engine/anim.h"
 
-#include "scenegraph/prstransform.h"
-#include "scenegraph/meshnode.h"
+#include "engine/textureproxy.h"
 
 using math::Vector2;
 using math::Vector3;
@@ -141,35 +140,12 @@ float randf()
 }
 
 template <typename T>
-CComPtr<T> d3d_ptr(T *ptr)
+CComPtr<T> com_ptr(T *ptr)
 {
 	// make a CComPtr<T> without adding a reference
 	CComPtr<T> com_ptr;
 	com_ptr.Attach(ptr); // don't addref
 	return com_ptr;
-}
-
-namespace engine
-{
-	Texture loadTexture(renderer::Device &device, ::std::string filename)
-	{
-		Texture tex;
-
-//		HRESULT hr = D3DXCreateTextureFromFile(device, filename.c_str(), &tex);
-		HRESULT hr = D3DXCreateTextureFromFileEx(
-			device, filename.c_str(),
-			D3DX_DEFAULT_NONPOW2, D3DX_DEFAULT_NONPOW2, // width and height
-			D3DX_DEFAULT, // miplevels
-			0, D3DFMT_UNKNOWN, // usage and format
-			D3DPOOL_MANAGED, // pool
-			D3DX_DEFAULT, D3DX_DEFAULT, // filtering
-			0, NULL, NULL,
-			&tex);
-
-		if (FAILED(hr)) throw core::FatalException(::std::string("failed to load mesh \"") + filename + ::std::string("\"\n\n") + core::d3d_get_error(hr));
-
-		return tex;
-	}
 }
 
 int main(int /*argc*/, char* /*argv*/ [])
@@ -186,7 +162,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 	
 	try
 	{
-		CComPtr<IDirect3D9> direct3d = d3d_ptr(Direct3DCreate9(D3D_SDK_VERSION));
+		CComPtr<IDirect3D9> direct3d = com_ptr(Direct3DCreate9(D3D_SDK_VERSION));
 		if (!direct3d) throw FatalException("your directx-version is from the stone-age.\n\nTHRUG SAYS: UPGRADE!");
 		
 		ConfigDialog config(direct3d);
