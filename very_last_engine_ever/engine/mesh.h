@@ -15,7 +15,7 @@ namespace engine
 		}
 	};
 
-	inline Mesh load_mesh(renderer::Device &device, std::string filename)
+	inline Mesh loadMesh(renderer::Device &device, std::string filename)
 	{
 		Mesh mesh;
 		HRESULT hr = D3DXLoadMeshFromX(filename.c_str(), 0, device, 0, 0, 0, 0, &mesh);

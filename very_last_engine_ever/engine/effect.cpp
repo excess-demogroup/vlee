@@ -9,7 +9,7 @@ using renderer::Device;
 
 namespace engine
 {
-	Effect load_effect(Device &device, std::string filename)
+	Effect loadEffect(Device &device, std::string filename)
 	{
 		Effect eff;
 

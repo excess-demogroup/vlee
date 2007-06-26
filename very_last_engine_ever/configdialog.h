@@ -27,13 +27,13 @@ public:
 	LRESULT OnMultisampleChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnCloseCmd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
-	UINT get_adapter() const { return adapter; }
-	D3DDISPLAYMODE get_mode() const { return mode; }
-	D3DMULTISAMPLE_TYPE get_multisample() const { return multisample; }
-	float get_aspect() const { return aspect; }
+	UINT getAdapter() const { return adapter; }
+	D3DDISPLAYMODE getMode() const { return mode; }
+	D3DMULTISAMPLE_TYPE getMultisample() const { return multisample; }
+	float getAspect() const { return aspect; }
 
-	bool get_vsync() const { return vsync; }
-	unsigned get_soundcard() const { return soundcard; }
+	bool getVsync() const { return vsync; }
+	unsigned getSoundcard() const { return soundcard; }
 
 protected:
 

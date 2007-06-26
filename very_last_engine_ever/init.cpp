@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "config.h"
+#include "init.h"
 
 #include "core/fatalexception.h"
 using core::FatalException;
@@ -15,7 +16,7 @@ static bool is_depth_format_ok(IDirect3D9 *direct3d, UINT Adapter, D3DFORMAT Dep
 	return SUCCEEDED(hr);
 }
 
-D3DFORMAT get_best_depth_stencil_format(IDirect3D9 *direct3d, UINT adapter, D3DFORMAT format)
+D3DFORMAT init::get_best_depth_stencil_format(IDirect3D9 *direct3d, UINT adapter, D3DFORMAT format)
 {
 	// a list of supported depth/stencil formats
 #if (!NEED_STENCIL)
@@ -40,7 +41,7 @@ void print_GUID(GUID g)
 
 static const GUID kusma_laptop_bug = { 0xd7b71e3e, 0x4235, 0x11cf, 0x65, 0x6b, 0x18, 0x20, 0x2, 0xc2, 0xcb, 0x35 };
 
-IDirect3DDevice9 *init_d3d(IDirect3D9 *direct3d, HWND win, D3DDISPLAYMODE mode, D3DMULTISAMPLE_TYPE multisample, unsigned adapter, bool vsync) {
+IDirect3DDevice9 *init::initD3D(IDirect3D9 *direct3d, HWND win, D3DDISPLAYMODE mode, D3DMULTISAMPLE_TYPE multisample, unsigned adapter, bool vsync) {
 	D3DCAPS9 caps;
 	direct3d->GetDeviceCaps(adapter, D3DDEVTYPE_HAL, &caps);
 	DWORD tnl = D3DCREATE_HARDWARE_VERTEXPROCESSING;
@@ -66,7 +67,7 @@ IDirect3DDevice9 *init_d3d(IDirect3D9 *direct3d, HWND win, D3DDISPLAYMODE mode, 
 	present_parameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
 	present_parameters.Windowed = WINDOWED;
 	present_parameters.EnableAutoDepthStencil = TRUE;
-	present_parameters.AutoDepthStencilFormat = get_best_depth_stencil_format(direct3d, adapter, mode.Format);
+	present_parameters.AutoDepthStencilFormat = init::get_best_depth_stencil_format(direct3d, adapter, mode.Format);
 	present_parameters.PresentationInterval = present_interval;
 //	present_parameters.Flags = D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL;
 

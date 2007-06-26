@@ -152,7 +152,7 @@ CComPtr<T> d3d_ptr(T *ptr)
 
 namespace engine
 {
-	Texture load_texture(renderer::Device &device, ::std::string filename)
+	Texture loadTexture(renderer::Device &device, ::std::string filename)
 	{
 		Texture tex;
 
@@ -206,16 +206,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 		}
 #endif
 		
-		D3DDISPLAYMODE mode = config.get_mode();
+		D3DDISPLAYMODE mode = config.getMode();
 		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, mode.Width, mode.Height, 0, 0, GetModuleHandle(0), 0);
 		if (!win) throw FatalException("CreateWindow() failed. something is VERY spooky.");
 		Device device;
-		device.Attach(init_d3d(direct3d, win, mode, config.get_multisample(), config.get_adapter(), config.get_vsync()));
+		device.Attach(init::initD3D(direct3d, win, mode, config.getMultisample(), config.getAdapter(), config.getVsync()));
 //		device.Attach(init_d3d(direct3d, win, mode, D3DMULTISAMPLE_NONE, config.get_adapter(), config.get_vsync()));
 		ShowWindow(win, TRUE); // showing window after initing d3d in order to be able to see warnings during init
 		
-		if (!BASS_Init(config.get_soundcard(), 44100, BASS_DEVICE_LATENCY, 0, 0)) throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/elg.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config.get_soundcard()) ? BASS_STREAM_DECODE : 0));
+		if (!BASS_Init(config.getSoundcard(), 44100, BASS_DEVICE_LATENCY, 0, 0)) throw FatalException("failed to init bass");
+		stream = BASS_StreamCreateFile(false, "data/elg.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config.getSoundcard()) ? BASS_STREAM_DECODE : 0));
 		if (!stream) throw FatalException("failed to open tune");
 		
 		SyncTimerBASS_Stream synctimer(stream, BPM, 4);
@@ -242,24 +242,24 @@ int main(int /*argc*/, char* /*argv*/ [])
 		/** DEMO ***/
 
 //		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_4_SAMPLES);
-		RenderTexture rt(device, config.get_mode().Width, config.get_mode().Height, 1, D3DFMT_A8R8G8B8, config.get_multisample());
-		RenderTexture rt2(device, config.get_mode().Width, config.get_mode().Height, 1, D3DFMT_A8R8G8B8);
-		RenderTexture rt3(device, config.get_mode().Width, config.get_mode().Height, 1, D3DFMT_A8R8G8B8);
+		RenderTexture rt(device, config.getMode().Width, config.getMode().Height, 1, D3DFMT_A8R8G8B8, config.getMultisample());
+		RenderTexture rt2(device, config.getMode().Width, config.getMode().Height, 1, D3DFMT_A8R8G8B8);
+		RenderTexture rt3(device, config.getMode().Width, config.getMode().Height, 1, D3DFMT_A8R8G8B8);
 
-		Effect tex_fx      = engine::load_effect(device, "data/tex.fx");
-		Effect blur_fx     = engine::load_effect(device, "data/blur.fx");
+		Effect tex_fx      = engine::loadEffect(device, "data/tex.fx");
+		Effect blur_fx     = engine::loadEffect(device, "data/blur.fx");
 
 		Image   rt_img(rt, tex_fx);
 
-		Texture arrow_tex  = engine::load_texture(device, "data/arrow.dds");
-		Effect  arrow_fx   = engine::load_effect(device, "data/arrow.fx");
+		Texture arrow_tex  = engine::loadTexture(device, "data/arrow.dds");
+		Effect  arrow_fx   = engine::loadEffect(device, "data/arrow.fx");
 		Image   arrow_img(arrow_tex, arrow_fx);
 
-		Anim moose_anim = engine::load_anim(device, "data/moose");
+		Anim moose_anim = engine::loadAnim(device, "data/moose");
 
-		Mesh    tunelle_mesh = engine::load_mesh(device, "data/tunelle.x");
-		Texture tunelle_tex  = engine::load_texture(device, "data/tunelle.dds");
-		Effect  tunelle_fx   = engine::load_effect(device, "data/tunelle.fx");
+		Mesh    tunelle_mesh = engine::loadMesh(device, "data/tunelle.x");
+		Texture tunelle_tex  = engine::loadTexture(device, "data/tunelle.dds");
+		Effect  tunelle_fx   = engine::loadEffect(device, "data/tunelle.fx");
 		
 		
 		BASS_Start();
@@ -409,15 +409,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 			s = 1.0 / (1 + fmod(beat, 1.0));
-			arrow_img.w = ((1.0f)    / 4) * s;
-			arrow_img.h = ((4.f / 3) / 4) * s;
+			arrow_img.w = ((1.0f)    / 3) * s;
+			arrow_img.h = ((4.f / 3) / 3) * s;
 
 			arrow_img.x = 1 - fmod(time * 0.5, 2) - arrow_img.w / 2;
 			arrow_img.y = 0.85f  - arrow_img.h / 2;
 			arrow_fx->SetFloat("time", time);
 			arrow_img.draw(device);
 
-			arrow_img.w = -((1.0f)    / 4) * s;
+			arrow_img.w = -((1.0f)    / 3) * s;
 			arrow_img.x = 1 - fmod((time + 0.5) * 0.5, 2) - arrow_img.w / 2;
 			arrow_img.y = 0.6f - arrow_img.h / 2;
 			arrow_img.draw(device);
@@ -436,6 +436,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			test_img.draw(device);
 #endif
 			device->EndScene();
+			
 			HRESULT res = device->Present(0, 0, 0, 0);
 			
 			if (FAILED(res))

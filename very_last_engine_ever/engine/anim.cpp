@@ -2,7 +2,7 @@
 #include "anim.h"
 #include "../core/fatalexception.h"
 
-engine::Anim engine::load_anim(renderer::Device &device, std::string folder)
+engine::Anim engine::loadAnim(renderer::Device &device, std::string folder)
 {
 	engine::Anim anim;
 	for (int i = 0; true; ++i)

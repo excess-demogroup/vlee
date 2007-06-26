@@ -480,6 +480,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\init.h"
+				>
+			</File>
+			<File
 				RelativePath=".\megademo.h"
 				>
 			</File>

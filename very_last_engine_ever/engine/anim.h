@@ -31,5 +31,5 @@ namespace engine
 		std::vector<renderer::Texture> textures;
 	};
 
-	Anim load_anim(renderer::Device &device, std::string folder);
+	Anim loadAnim(renderer::Device &device, std::string folder);
 }

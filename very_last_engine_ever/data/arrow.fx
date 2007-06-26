@@ -31,9 +31,13 @@ float4 pixel(VS_OUTPUT In) : COLOR
 {
 	float4 texcol = tex2D(tex_sampler, In.tex);
 //	texcol.r = sin(texcol.r + time);
-	texcol.r = lerp(0.0, frac(In.tex.x + time), texcol.r);
-	texcol.g = lerp(0.0, frac(In.tex.x + time - 0.5), texcol.g);
-	return texcol * alpha;
+	float ym = min(1-In.tex.y, In.tex.y);
+	float4 col2 = float4(0,0,0,texcol.a);
+	float4 rcol = float4(0,1,1,1);
+	float4 gcol = float4(1,1,0,1);
+	col2 = lerp(col2, rcol * frac(In.tex.x - ym - time), texcol.r);
+	col2 = lerp(col2, gcol * frac(In.tex.x - ym - time - 0.5), texcol.g);
+	return col2 * alpha;
 }
 
 technique blur_ps_vs_2_0

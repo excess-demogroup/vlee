@@ -177,7 +177,7 @@ void ConfigDialog::refresh_multisample_types() {
 	unsigned best_hit = 0;
 	unsigned item = 0;
 	for (unsigned i = 0; i < ARRAY_SIZE(types); ++i) {
-		if (true == is_multisample_type_ok(direct3d, adapter, format, format, get_best_depth_stencil_format(direct3d, adapter, format), types[i]))
+		if (true == is_multisample_type_ok(direct3d, adapter, format, format, init::get_best_depth_stencil_format(direct3d, adapter, format), types[i]))
 		{
 			SendMessage(GetDlgItem(IDC_MULTISAMPLE), CB_ADDSTRING, 0, (LPARAM)type_strings[i]);
 			SendMessage(GetDlgItem(IDC_MULTISAMPLE), CB_SETITEMDATA, item, (UINT)types[i]);
