@@ -224,11 +224,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect tex_fx      = engine::loadEffect(device, "data/tex.fx");
 		Effect blur_fx     = engine::loadEffect(device, "data/blur.fx");
 
-		Image   rt_img(rt, tex_fx);
-
 		Texture arrow_tex  = engine::loadTexture(device, "data/arrow.dds");
 		Effect  arrow_fx   = engine::loadEffect(device, "data/arrow.fx");
 		Image   arrow_img(arrow_tex, arrow_fx);
+		Image   solnedgang_img(engine::loadTexture(device, "data/solnedgang.dds"), tex_fx);
+		Image   vers01_img(engine::loadTexture(device, "data/solnedgang.dds"), tex_fx);
 
 		Anim moose_anim = engine::loadAnim(device, "data/moose");
 
@@ -240,7 +240,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
 		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f) + 10);
-		
+
+
+		enum moose_state {
+			LEFT, RIGHT, IDLE
+		} ms = IDLE;
+		float move_time = 0.0f;
+		int pos = 0;
+
 		bool done = false;
 		while (!done)
 		{
@@ -252,6 +259,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 			static float time_offset = 0.f;
 			double time = BASS_ChannelBytes2Seconds(stream, BASS_ChannelGetPosition(stream));
 			double beat = time * (double(BPM) / 60);
+
+
+			switch (ms)
+			{
+			case LEFT:
+			case RIGHT:
+				/* if time passed, go idle */
+				if (beat - move_time > 2.0f) ms = IDLE;
+			break;
+
+			case IDLE:
+				break;
+			}
 
 #ifndef VJSYS
 			sync.update(); //gets current timing info from the SyncTimer.
@@ -293,7 +313,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 			tunelle_fx->SetTexture("map", tunelle_tex);
 			tunelle_fx->SetFloat("overbright", 1.0);
 
-			tunelle_fx.draw(tunelle_mesh);
+/*			tunelle_fx.draw(tunelle_mesh); */
+			solnedgang_img.x = -1;
+			solnedgang_img.y = -1;
+			solnedgang_img.w = 2;
+			solnedgang_img.h = 2;
+			solnedgang_img.draw(device);
+
+
 
 			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
 			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
@@ -301,7 +328,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			float s = 1.0 / (1 + fmod(beat / 2, 1.0) * 0.25);
 
-			tex_fx->SetFloat("xoffs", 1 - fmod(time * 0.25, 2));
+			tex_fx->SetFloat("xoffs", 1 - fmod(beat * 0.25, 2));
 			tex_fx->SetFloat("yoffs", 0.0f);
 			tex_fx->SetFloat("xzoom", ((1.0f)    / 1.5) * s);
 			tex_fx->SetFloat("yzoom", ((4.f / 3) / 1.5) * s);
@@ -312,11 +339,30 @@ int main(int /*argc*/, char* /*argv*/ [])
 			{
 				float w = ((1.0f)    / 0.75) * s;
 				float h = ((4.f / 3) / 0.75) * s;
+				int frame = 0;
+
+				switch (ms)
+				{
+				case LEFT:
+					frame = 0;
+				break;
+
+				case RIGHT:
+					frame = 2;
+				break;
+
+				case IDLE:
+					frame = 1;
+				break;
+
+				default: assert(0);
+				}
+
 				blit(
 					device,
-					moose_anim.getFramePingPong(float(beat / 8)),
+					moose_anim.getFrame(float(frame) / 3),
 					tex_fx,
-					1 - fmod(time * 0.5, 2) - w / 2,
+					float(pos) / 4 - w / 2,
 					0.0f  - h / 2,
 					w, h
 				);
@@ -331,12 +377,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 
-			rt_img.x = -1;
-			rt_img.y = -1;
-			rt_img.w =  2;
-			rt_img.h =  2;
-//			rt_img.draw(device);
-
 			Matrix4x4 texcoord_transform;
 			Matrix4x4 texture_transform = texture_matrix(rt);
 
@@ -350,14 +390,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 			blur_fx->SetMatrix("texture_transform", &texture_transform);
 
 //			device->SetRenderTarget(0, blurme2_tex.get_surface());
-			float amt = 1.0 / (1 + ((1 - fmod(time, 1.0)) * 0.02f));
+			float blur_amt = pow(1 - fmod(beat / 4, 1.0), 5) * 0.5f;
+			float amt = 1.0 / (1 + blur_amt * 0.02f);
 			Matrix4x4 texel_transform = radialblur_matrix(rt, Vector2(0, 0), amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
 			blit(device, rt, blur_fx, -1, -1, 2, 2);
 //			blit(device, blurme1_tex, blur_fx, polygon);
 
-			amt = 1.0 / (1 + ((1 - fmod(time, 1.0)) * 0.04f));
+			amt = 1.0 / (1 + blur_amt * 0.04f);
 			texel_transform = radialblur_matrix(rt, Vector2(0, 0), amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
@@ -365,7 +406,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 			blit(device, rt2, blur_fx, -1, -1, 2, 2);
 
-			amt = 1.0 / (1 + ((1 - fmod(time, 1.0)) * 0.08f));
+			amt = 1.0 / (1 + blur_amt * 0.08f);
 			texel_transform = radialblur_matrix(rt, Vector2(0, 0), amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
@@ -373,7 +414,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 			blit(device, rt3, blur_fx, -1, -1, 2, 2);
 
-			amt = 1.0 / (1 + ((1 - fmod(time, 1.0)) * 0.16f));
+			amt = 1.0 / (1 + blur_amt * 0.16f);
 			texel_transform = radialblur_matrix(rt, Vector2(0, 0), amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
@@ -397,19 +438,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			arrow_img.draw(device);
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-
-
-#if 0
-			test_img.x = -1;
-			test_img.y = -1;
-//			test_img.x = -1 - 1.0 / config.get_mode().Width;
-//			test_img.y = -1 + 1.0 / config.get_mode().Height;
-
-			test_img.w =  2;
-			test_img.h =  2;
-			test_img.draw(device);
-#endif
-			device->EndScene();
+			device->EndScene(); /* WE DONE IS! */
 			
 			HRESULT res = device->Present(0, 0, 0, 0);
 			
@@ -425,10 +454,26 @@ int main(int /*argc*/, char* /*argv*/ [])
 			{
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
+
+				/* handle keys-events */
 				if (WM_QUIT == msg.message) done = true;
 				if (WM_KEYDOWN == msg.message)
 				{
 					if (VK_ESCAPE == LOWORD(msg.wParam)) done = true;
+
+					if (VK_LEFT == LOWORD(msg.wParam))
+					{
+						ms = LEFT;
+						pos -= 1;
+						move_time = beat;
+					}
+
+					if (VK_RIGHT == LOWORD(msg.wParam))
+					{
+						ms = RIGHT;
+						pos += 1;
+						move_time = beat;
+					}
 				}
 			}
 		}
