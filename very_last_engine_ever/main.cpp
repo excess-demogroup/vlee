@@ -201,6 +201,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Sync sync("data\\__data_%s_%s.sync", synctimer);
 #endif
 		
+		SyncTrack &blur_amt_track = sync.getTrack("blur_amt",     "global", 5, true);
+		
 #if !WINDOWED
 		ShowCursor(0);
 #endif
@@ -211,7 +213,39 @@ int main(int /*argc*/, char* /*argv*/ [])
 #ifdef SYNC
 		sync.showEditor();
 #endif
-		
+
+		std::vector<float> levents;
+		std::vector<float> revents;
+
+		{
+			FILE *fp = fopen("data/steps.txt", "r");
+			if (!fp) throw FatalException("failed to load steps!");
+
+			while (!feof(fp))
+			{
+				float beat = 0;
+				int   dir = 0;
+				if (2 != fscanf(fp, "%c %f\n", &dir, &beat)) throw FatalException("failed to parse");
+				switch (dir)
+				{
+				case 'l':
+				case 'L':
+					levents.push_back(beat);
+				break;
+
+				case 'r':
+				case 'R':
+					revents.push_back(beat);
+				break;
+
+				default:
+					throw FatalException("failed to parse 2.0");
+				}
+			}
+
+			fclose(fp);
+			fp = NULL;
+		}
 
 
 		/** DEMO ***/
@@ -220,22 +254,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 		RenderTexture rt(device, config.getMode().Width, config.getMode().Height, 1, D3DFMT_A8R8G8B8, config.getMultisample());
 		RenderTexture rt2(device, config.getMode().Width, config.getMode().Height, 1, D3DFMT_A8R8G8B8);
 		RenderTexture rt3(device, config.getMode().Width, config.getMode().Height, 1, D3DFMT_A8R8G8B8);
-
+		
 		Effect tex_fx      = engine::loadEffect(device, "data/tex.fx");
 		Effect blur_fx     = engine::loadEffect(device, "data/blur.fx");
-
+		
 		Texture arrow_tex  = engine::loadTexture(device, "data/arrow.dds");
 		Effect  arrow_fx   = engine::loadEffect(device, "data/arrow.fx");
 		Image   arrow_img(arrow_tex, arrow_fx);
 		Image   solnedgang_img(engine::loadTexture(device, "data/solnedgang.dds"), tex_fx);
 		Image   vers01_img(engine::loadTexture(device, "data/solnedgang.dds"), tex_fx);
-
-		Anim moose_anim = engine::loadAnim(device, "data/moose");
-
-		Mesh    tunelle_mesh = engine::loadMesh(device, "data/tunelle.x");
-		Texture tunelle_tex  = engine::loadTexture(device, "data/tunelle.dds");
-		Effect  tunelle_fx   = engine::loadEffect(device, "data/tunelle.fx");
 		
+		Anim moose_anim = engine::loadAnim(device, "data/moose");
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -313,7 +342,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			tunelle_fx->SetTexture("map", tunelle_tex);
 			tunelle_fx->SetFloat("overbright", 1.0);
 
-/*			tunelle_fx.draw(tunelle_mesh); */
 			solnedgang_img.x = -1;
 			solnedgang_img.y = -1;
 			solnedgang_img.w = 2;
@@ -390,7 +418,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			blur_fx->SetMatrix("texture_transform", &texture_transform);
 
 //			device->SetRenderTarget(0, blurme2_tex.get_surface());
-			float blur_amt = pow(1 - fmod(beat / 4, 1.0), 5) * 0.5f;
+			float blur_amt = pow(1 - fmod(beat / 4, 1.0), 5) * (blur_amt_track.getFloatValue() / 256);
 			float amt = 1.0 / (1 + blur_amt * 0.02f);
 			Matrix4x4 texel_transform = radialblur_matrix(rt, Vector2(0, 0), amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
@@ -426,16 +454,30 @@ int main(int /*argc*/, char* /*argv*/ [])
 			s = 1.0 / (1 + fmod(beat, 1.0));
 			arrow_img.w = ((1.0f)    / 3) * s;
 			arrow_img.h = ((4.f / 3) / 3) * s;
-
-			arrow_img.x = 1 - fmod(time * 0.5, 2) - arrow_img.w / 2;
-			arrow_img.y = 0.85f  - arrow_img.h / 2;
 			arrow_fx->SetFloat("time", time);
-			arrow_img.draw(device);
 
-			arrow_img.w = -((1.0f)    / 3) * s;
-			arrow_img.x = 1 - fmod((time + 0.5) * 0.5, 2) - arrow_img.w / 2;
-			arrow_img.y = 0.6f - arrow_img.h / 2;
-			arrow_img.draw(device);
+			// right arrow
+			for (int i = 0; i < revents.size(); ++i)
+			{
+				float rel_beat = revents[i] - beat;
+				if (rel_beat < -2 || rel_beat > 2) continue;
+
+				arrow_img.x = (rel_beat * 0.5) - arrow_img.w / 2;
+				arrow_img.y = 0.85f  - arrow_img.h / 2;
+				arrow_img.draw(device);
+			}
+
+			// left arrow
+			for (int i = 0; i < levents.size(); ++i)
+			{
+				float rel_beat = levents[i] - beat;
+				if (rel_beat < -2 || rel_beat > 2) continue;
+
+				arrow_img.w = -((1.0f)    / 3) * s;
+				arrow_img.x = (rel_beat * 0.5) - arrow_img.w / 2;
+				arrow_img.y = 0.6f - arrow_img.h / 2;
+				arrow_img.draw(device);
+			}
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			device->EndScene(); /* WE DONE IS! */
@@ -460,6 +502,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				if (WM_KEYDOWN == msg.message)
 				{
 					if (VK_ESCAPE == LOWORD(msg.wParam)) done = true;
+					if (VK_SPACE == LOWORD(msg.wParam)) printf("beat: %f - time %f\n", beat, time);
 
 					if (VK_LEFT == LOWORD(msg.wParam))
 					{
