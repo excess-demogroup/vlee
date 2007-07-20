@@ -39,16 +39,16 @@ Matrix4x4 radialblur_matrix(const Texture &tex, const Vector2 &center, const flo
 {
 	Matrix4x4 trans1;
 	trans1.make_identity();
-	trans1._13 = 0.5;
-	trans1._23 = 0.5;
+	trans1._13 = 0.5 - center.x / 2;
+	trans1._23 = 0.5 - center.y / 2;
 	
 	Matrix4x4 mat;
 	mat.make_scaling(Vector3(amt, amt, 1));
 	
 	Matrix4x4 trans2;
 	trans2.make_identity();
-	trans2._13 = -0.5;
-	trans2._23 = -0.5;
+	trans2._13 = -(0.5 - center.x / 2);
+	trans2._23 = -(0.5 - center.y / 2);
 	
 	return trans1 * mat * trans2;
 }
@@ -523,16 +523,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 			blur_fx->SetMatrix("texture_transform", &texture_transform);
 
 //			device->SetRenderTarget(0, blurme2_tex.get_surface());
-			float blur_amt = pow(1 - fmod(beat / 4, 1.0), 5) * (blur_amt_track.getFloatValue() / 256);
+//			float blur_amt = pow(1 - fmod(beat / 4, 1.0), 5) * (blur_amt_track.getFloatValue() / 256);
+			float blur_amt = (blur_amt_track.getFloatValue() / 256);
 			float amt = 1.0 / (1 + blur_amt * 0.02f);
-			Matrix4x4 texel_transform = radialblur_matrix(rt, Vector2(0, 0), amt);
+			Vector2 blur_center(sin(time) * cos(time * 0.3), cos(time * 0.99) * sin(time * 0.4));
+			Matrix4x4 texel_transform = radialblur_matrix(rt, blur_center, amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
 			blit(device, rt, blur_fx, -1, -1, 2, 2);
 //			blit(device, blurme1_tex, blur_fx, polygon);
 
 			amt = 1.0 / (1 + blur_amt * 0.04f);
-			texel_transform = radialblur_matrix(rt, Vector2(0, 0), amt);
+			texel_transform = radialblur_matrix(rt, blur_center, amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
 			core::d3d_err(device->SetRenderTarget(0, rt3));
@@ -540,7 +542,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			blit(device, rt2, blur_fx, -1, -1, 2, 2);
 
 			amt = 1.0 / (1 + blur_amt * 0.08f);
-			texel_transform = radialblur_matrix(rt, Vector2(0, 0), amt);
+			texel_transform = radialblur_matrix(rt, blur_center, amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
 			core::d3d_err(device->SetRenderTarget(0, rt2));
@@ -548,7 +550,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			blit(device, rt3, blur_fx, -1, -1, 2, 2);
 
 			amt = 1.0 / (1 + blur_amt * 0.16f);
-			texel_transform = radialblur_matrix(rt, Vector2(0, 0), amt);
+			texel_transform = radialblur_matrix(rt, blur_center, amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
 			core::d3d_err(device->SetRenderTarget(0, backbuffer));
