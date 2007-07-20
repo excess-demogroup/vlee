@@ -19,7 +19,7 @@
 #define WINDOWED 1
 #endif
 
-#define BPM 106
+#define BPM 208
 
 // #undef WINDOWED
 // #define WINDOWED 0

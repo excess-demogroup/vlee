@@ -168,6 +168,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		ConfigDialog config(direct3d);
 		
 #ifdef NDEBUG
+#if 0
 		INT_PTR result = config.DoModal();
 		if (FAILED(result)) MessageBox(NULL, "could not initialize dialogbox, using default settings", NULL, MB_OK);
 		else
@@ -180,6 +181,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			}
 		}
 #endif
+#endif
 		
 		D3DDISPLAYMODE mode = config.getMode();
 		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, mode.Width, mode.Height, 0, 0, GetModuleHandle(0), 0);
@@ -190,7 +192,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		ShowWindow(win, TRUE); // showing window after initing d3d in order to be able to see warnings during init
 		
 		if (!BASS_Init(config.getSoundcard(), 44100, BASS_DEVICE_LATENCY, 0, 0)) throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/elg.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config.getSoundcard()) ? BASS_STREAM_DECODE : 0));
+		stream = BASS_StreamCreateFile(false, "data/208_skritt_til_venstre.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config.getSoundcard()) ? BASS_STREAM_DECODE : 0));
 		if (!stream) throw FatalException("failed to open tune");
 		
 		SyncTimerBASS_Stream synctimer(stream, BPM, 4);
@@ -201,8 +203,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Sync sync("data\\__data_%s_%s.sync", synctimer);
 #endif
 		
-		SyncTrack &blur_amt_track = sync.getTrack("blur_amt",     "global", 5, true);
-		
 #if !WINDOWED
 		ShowCursor(0);
 #endif
@@ -210,10 +210,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Surface backbuffer;
 		backbuffer.Attach(device.get_render_target(0)); /* trick the ref-counter */
 		
-#ifdef SYNC
-		sync.showEditor();
-#endif
-
 		std::vector<float> levents;
 		std::vector<float> revents;
 
@@ -250,22 +246,49 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		/** DEMO ***/
 
-//		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_4_SAMPLES);
+//		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE);
 		RenderTexture rt(device, config.getMode().Width, config.getMode().Height, 1, D3DFMT_A8R8G8B8, config.getMultisample());
 		RenderTexture rt2(device, config.getMode().Width, config.getMode().Height, 1, D3DFMT_A8R8G8B8);
 		RenderTexture rt3(device, config.getMode().Width, config.getMode().Height, 1, D3DFMT_A8R8G8B8);
 		
+		Matrix4x4 tex_transform;
+		tex_transform.make_identity();
 		Effect tex_fx      = engine::loadEffect(device, "data/tex.fx");
+		tex_fx->SetMatrix("transform", &tex_transform);
 		Effect blur_fx     = engine::loadEffect(device, "data/blur.fx");
 		
 		Texture arrow_tex  = engine::loadTexture(device, "data/arrow.dds");
 		Effect  arrow_fx   = engine::loadEffect(device, "data/arrow.fx");
 		Image   arrow_img(arrow_tex, arrow_fx);
 		Image   solnedgang_img(engine::loadTexture(device, "data/solnedgang.dds"), tex_fx);
-		Image   vers01_img(engine::loadTexture(device, "data/solnedgang.dds"), tex_fx);
-		
+
+		/* nice blue sky */
+		Effect  himmel_fx = engine::loadEffect(device, "data/himmel.fx");
+		himmel_fx->SetTexture("disco_tex", engine::loadTexture(device, "data/beam.dds"));
+		Image   himmel_img(engine::loadTexture(device, "data/himmel.dds"), himmel_fx);
+
+		Image   sol_img(engine::loadTexture(device, "data/sol.dds"), tex_fx);
+		Image   fjell_img(engine::loadTexture(device, "data/fjell.dds"), tex_fx);
+
+		Image   vers_1_img(engine::loadTexture(device, "data/vers_1.dds"), tex_fx);
+		Image   vers_2_img(engine::loadTexture(device, "data/vers_2.dds"), tex_fx);
+		Image   refreng_1_img(engine::loadTexture(device, "data/refreng_1.dds"), tex_fx);
+		Image   refreng_2_img(engine::loadTexture(device, "data/refreng_2.dds"), tex_fx);
+
+		Image   blomst_01_img(engine::loadTexture(device, "data/blomst_01.dds"), tex_fx);
+		Image   blomst_02_img(engine::loadTexture(device, "data/blomst_02.dds"), tex_fx);
+		Image   blomst_03_img(engine::loadTexture(device, "data/blomst_03.dds"), tex_fx);
+
 		Anim moose_anim = engine::loadAnim(device, "data/moose");
-		
+
+		SyncTrack &blur_amt_track = sync.getTrack("blur_amt",     "global", 5, true);
+		SyncTrack &moose_amt    = sync.getTrack("mooses",     "global", 5, true);
+		SyncTrack &mountain_boost = sync.getTrack("mount",     "global", 5, true);
+		SyncTrack &sun_alpha    = sync.getTrack("a",     "sun", 5, true);
+		SyncTrack &sun_rot      = sync.getTrack("r",     "sun", 5, true);
+		SyncTrack &sun_boost    = sync.getTrack("b",     "sun", 5, true);
+		SyncTrack &flower_boost = sync.getTrack("b",     "flowers", 5, true);
+
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
 		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f) + 10);
@@ -276,6 +299,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 		} ms = IDLE;
 		float move_time = 0.0f;
 		int pos = 0;
+
+#ifdef SYNC
+		sync.showEditor();
+#endif
+
 
 		bool done = false;
 		while (!done)
@@ -295,19 +323,21 @@ int main(int /*argc*/, char* /*argv*/ [])
 			case LEFT:
 			case RIGHT:
 				/* if time passed, go idle */
-				if (beat - move_time > 2.0f) ms = IDLE;
+				if (beat - move_time > 1.0f) ms = IDLE;
 			break;
 
 			case IDLE:
 				break;
 			}
-
+			
 #ifndef VJSYS
 			sync.update(); //gets current timing info from the SyncTimer.
 #endif
 			device->BeginScene();
 			
-			core::d3d_err(device->SetRenderTarget(0, rt));
+			IDirect3DSurface9 *temp = rt;
+			IDirect3DDevice9 *dev = device;
+			dev->SetRenderTarget(0, temp);
 			
 			D3DXCOLOR clear_color(1,0,0,0);
 			device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, clear_color, 1.f, 0);
@@ -315,18 +345,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Vector3 eye = Vector3(0, 0, 0);
 			Vector3 at  = Vector3(0, 0, 100);
 			Vector3 up  = Vector3(0, 1, 0);
-
+			
 			D3DXMATRIX view;
 			D3DXMatrixLookAtLH(&view, &eye, &at, &up);
 			Matrix4x4 world;
 			D3DXMatrixIdentity(&world);
 			D3DXMATRIX proj;
 			D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(90), 16.f / 9, 0.01f, 1000.f);
-
-
+			
 			Vector3 scale(0.1, 0.1, 0.1);
 			Vector3 translation(0, 0, 0);
-
+			
 			D3DXQUATERNION rotation;
 			D3DXQuaternionRotationYawPitchRoll(&rotation, 0, float(M_PI / 2), 0);
 			D3DXQUATERNION rotation2;
@@ -336,65 +365,141 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 
 			D3DXMatrixTransformation(&world, NULL, NULL, &scale, NULL, &rotation, &translation);
-
-			tunelle_fx.set_matrices(world, view, proj);
-			tunelle_fx->SetFloatArray("fog_color", clear_color, 3);
-			tunelle_fx->SetTexture("map", tunelle_tex);
-			tunelle_fx->SetFloat("overbright", 1.0);
-
+/*
 			solnedgang_img.x = -1;
 			solnedgang_img.y = -1;
 			solnedgang_img.w = 2;
 			solnedgang_img.h = 2;
 			solnedgang_img.draw(device);
-
-
+*/
+			
+			D3DXVECTOR4 disco_offset(time + sun_rot.getFloatValue() / 256, 0, 0,0);
+			himmel_fx->SetVector("disco_offset", &disco_offset);
+			himmel_fx->SetFloat("alpha", sun_alpha.getFloatValue() / 256);
+			himmel_img.x = -1;
+			himmel_img.y = -1;
+			himmel_img.w = 2;
+			himmel_img.h = 2;
+			himmel_img.draw(device);
 
 			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
 			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 
-			float s = 1.0 / (1 + fmod(beat / 2, 1.0) * 0.25);
+			float sol_boost = 1 + (1.0 / (1.0 + fmod((beat - 0) / 4, 1.0))) * 0.25 * (sun_boost.getFloatValue() / 256);
+			{
+				Matrix4x4 temp, temp2;
+				temp.make_scaling(Vector3(1.0 * sol_boost, (4.f/3) * sol_boost, 1.0 * sol_boost));
+				temp2.make_translation(Vector3(-0.175f, 0.1f, 0.0f));
+				tex_transform.make_rotation(Vector3(0, 0, (time / 64 + sun_rot.getFloatValue() / 256) ));
+				tex_transform = tex_transform * temp * temp2;
+			}
+			tex_fx->SetMatrix("transform", &tex_transform);
 
+			sol_img.w = 1;
+			sol_img.h = 1;
+			sol_img.x = -0.5;
+			sol_img.y = -0.5;
+			sol_img.draw(device);
+
+			tex_transform.make_identity();
+			tex_fx->SetMatrix("transform", &tex_transform);
+
+			fjell_img.x = -1;
+			fjell_img.y = -1;
+			fjell_img.w = 2;
+			fjell_img.h = 2 + (mountain_boost.getFloatValue() / 256) / (1 + fmod(beat / 4, 1.0));
+			fjell_img.draw(device);
+/*
 			tex_fx->SetFloat("xoffs", 1 - fmod(beat * 0.25, 2));
 			tex_fx->SetFloat("yoffs", 0.0f);
-			tex_fx->SetFloat("xzoom", ((1.0f)    / 1.5) * s);
-			tex_fx->SetFloat("yzoom", ((4.f / 3) / 1.5) * s);
-
-			// w = ((1.0f)    / 1.5) * s;
-			// h = ((4.f / 3) / 1.5) * s;
-
+*/
 			{
-				float w = ((1.0f)    / 0.75) * s;
-				float h = ((4.f / 3) / 0.75) * s;
+				float pulse = 0.0f;
+				float s = 1.0 / (1 + fmod(beat / 2, 1.0) * 0.25 * pulse);
+				
+				float w = ((1.0f)    / 0.8) * s;
+				float h = ((4.f / 3) / 0.8) * s;
 				int frame = 0;
-
+				
 				switch (ms)
 				{
 				case LEFT:
 					frame = 0;
 				break;
-
+				
 				case RIGHT:
 					frame = 2;
 				break;
-
+				
 				case IDLE:
 					frame = 1;
 				break;
-
+				
 				default: assert(0);
 				}
 
-				blit(
-					device,
-					moose_anim.getFrame(float(frame) / 3),
-					tex_fx,
-					float(pos) / 4 - w / 2,
-					0.0f  - h / 2,
-					w, h
-				);
+//				int max_moose_level = 1 + (int(time) % 10); // moose_amt.getIntValue();
+
+				int max_moose_count = moose_amt.getIntValue();
+				int max_moose_level = floor(0.5 + sqrtf(2*max_moose_count - 0.25));
+
+				int moose_count = 0;
+				for (int z = 0; z < max_moose_level; ++z)
+				{
+					int inv_z = max_moose_level - z - 1;
+//					int max_this_level = powf(2, inv_z);
+					int max_this_level = 1 + inv_z;
+					int start_this_level = 0;
+					if (z == 0) start_this_level = (max_moose_level * (max_moose_level+1))/2 - max_moose_count;
+
+					float fiz = 1.0f + (float(inv_z)) / 2;
+					for (int j = start_this_level; j < max_this_level; ++j)
+					{
+						float lj = j - (float(max_this_level - 1) / 2);
+
+						float x = lj + (float(pos) / 4);
+						float y = - 0.15 + 0.5f;
+
+						x /= fiz;
+						y /= fiz;
+						float lw = w / fiz;
+						float lh = h / fiz;
+
+						blit(
+							device,
+							moose_anim.getFrame(float(frame) / 3),
+							tex_fx,
+							x - lw / 2,
+							y - lh / 2 - 0.5,
+							lw,
+							lh
+						);
+					}
+				}
 			}
+
+			float blomst_01_boost = 1 + (1.0 / (1.0 + fmod((beat - 0) / 3, 1.0))) * 0.25 * (flower_boost.getFloatValue() / 256);
+			float blomst_02_boost = 1 + (1.0 / (1.0 + fmod((beat - 1) / 3, 1.0))) * 0.25 * (flower_boost.getFloatValue() / 256);
+			float blomst_03_boost = 1 + (1.0 / (1.0 + fmod((beat - 2) / 3, 1.0))) * 0.25 * (flower_boost.getFloatValue() / 256);
+
+			blomst_01_img.w = 0.25 * blomst_01_boost;
+			blomst_01_img.h = 0.73 * blomst_01_boost;
+			blomst_01_img.x = -1 + 0.22 - (blomst_01_img.w / 2);
+			blomst_01_img.y = -1;
+			blomst_01_img.draw(device);
+
+			blomst_02_img.w = 0.25 * blomst_02_boost;
+			blomst_02_img.h = 0.6 * blomst_02_boost;
+			blomst_02_img.x = -1 + 0.55 - blomst_02_img.w / 2;
+			blomst_02_img.y = -1;
+			blomst_02_img.draw(device);
+
+			blomst_03_img.w = 0.5 * blomst_03_boost;
+			blomst_03_img.h = 0.8 * blomst_03_boost;
+			blomst_03_img.x = 0.13 - blomst_03_img.w / 2;
+			blomst_03_img.y = -1;
+			blomst_03_img.draw(device);
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			
@@ -451,18 +556,52 @@ int main(int /*argc*/, char* /*argv*/ [])
 			blit(device, rt2, blur_fx, -1, -1, 2, 2);
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-			s = 1.0 / (1 + fmod(beat, 1.0));
+
+			if (time < 28)
+			{
+				vers_1_img.w = 15 / 2;
+				vers_1_img.h = 0.5;
+				vers_1_img.x = 1 - (time - 5) * 0.43f;
+				vers_1_img.y = 0.6;
+				vers_1_img.draw(device);
+			}
+			else if (time < 48)
+			{
+				refreng_1_img.w = 15 / 2;
+				refreng_1_img.h = 0.5;
+				refreng_1_img.x = 1 - (time - 28) * 0.42f;
+				refreng_1_img.y = 0.6;
+				refreng_1_img.draw(device);
+			}
+			else if (time < 68)
+			{
+				refreng_2_img.w = 15 / 2;
+				refreng_2_img.h = 0.5;
+				refreng_2_img.x = 1 - (time - 48) * 0.43f;
+				refreng_2_img.y = 0.6;
+				refreng_2_img.draw(device);
+			}
+			else
+			{
+				vers_2_img.w = 15 / 2;
+				vers_2_img.h = 0.5;
+				vers_2_img.x = 1 - (time - 78) * 0.43f;
+				vers_2_img.y = 0.6;
+				vers_2_img.draw(device);
+			}
+			
+			float s = 1.0 / (1 + fmod(beat, 1.0));
 			arrow_img.w = ((1.0f)    / 3) * s;
 			arrow_img.h = ((4.f / 3) / 3) * s;
 			arrow_fx->SetFloat("time", time);
-
+			
 			// right arrow
 			for (int i = 0; i < revents.size(); ++i)
 			{
-				float rel_beat = revents[i] - beat;
-				if (rel_beat < -2 || rel_beat > 2) continue;
+				float rel_beat = (revents[i] - beat) / 4;
+				if (rel_beat < -1 || rel_beat > 1) continue;
 
-				arrow_img.x = (rel_beat * 0.5) - arrow_img.w / 2;
+				arrow_img.x = rel_beat - arrow_img.w / 2;
 				arrow_img.y = 0.85f  - arrow_img.h / 2;
 				arrow_img.draw(device);
 			}
@@ -470,11 +609,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 			// left arrow
 			for (int i = 0; i < levents.size(); ++i)
 			{
-				float rel_beat = levents[i] - beat;
-				if (rel_beat < -2 || rel_beat > 2) continue;
+				float rel_beat = (levents[i] - beat) / 4;
+				if (rel_beat < -1 || rel_beat > 1) continue;
 
 				arrow_img.w = -((1.0f)    / 3) * s;
-				arrow_img.x = (rel_beat * 0.5) - arrow_img.w / 2;
+				arrow_img.x = rel_beat - arrow_img.w / 2;
 				arrow_img.y = 0.6f - arrow_img.h / 2;
 				arrow_img.draw(device);
 			}

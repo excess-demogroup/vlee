@@ -10,7 +10,7 @@ namespace renderer
 	public:
 		RenderTexture() {}
 		RenderTexture(IDirect3DDevice9 *device, UINT width, UINT height, UINT levels = 1, D3DFORMAT format = D3DFMT_A8R8G8B8,  D3DMULTISAMPLE_TYPE multisample = D3DMULTISAMPLE_NONE)
-			: Texture(device, width, height, levels, D3DUSAGE_RENDERTARGET, format), device(device), shadow_surf(NULL)
+			: Texture(device, width, height, levels, D3DUSAGE_RENDERTARGET, format), device(device), shadow_surf(NULL), texture_surf(NULL)
 		{
 			if (D3DMULTISAMPLE_NONE != multisample)
 			{

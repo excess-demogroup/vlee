@@ -1,5 +1,6 @@
 float alpha = 1.f;
 texture tex;
+float4x4 transform;
 
 sampler tex_sampler = sampler_state
 {
@@ -21,7 +22,7 @@ struct VS_OUTPUT
 VS_OUTPUT vertex(float4 ipos : POSITION, float2 tex  : TEXCOORD0)
 {
 	VS_OUTPUT Out;
-	Out.pos = ipos;
+	Out.pos = mul(ipos, transform);
 	Out.tex = tex;
 	return Out;
 }

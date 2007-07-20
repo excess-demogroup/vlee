@@ -18,7 +18,8 @@ Texture engine::loadTexture(renderer::Device &device, ::std::string filename)
 		D3DPOOL_MANAGED, // pool
 		D3DX_DEFAULT, D3DX_DEFAULT, // filtering
 		0, NULL, NULL,
-		&tex);
+		&tex
+	);
 
 	if (FAILED(hr)) throw core::FatalException(::std::string("failed to load mesh \"") + filename + ::std::string("\"\n\n") + core::d3d_get_error(hr));
 
