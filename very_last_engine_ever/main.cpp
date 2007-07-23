@@ -260,6 +260,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture arrow_tex  = engine::loadTexture(device, "data/arrow.dds");
 		Effect  arrow_fx   = engine::loadEffect(device, "data/arrow.fx");
 		Image   arrow_img(arrow_tex, arrow_fx);
+		Image   arrow_holder_img(engine::loadTexture(device, "data/arrow_holder.dds"), tex_fx);
 		Image   solnedgang_img(engine::loadTexture(device, "data/solnedgang.dds"), tex_fx);
 
 		/* nice blue sky */
@@ -593,6 +594,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			}
 			
 			float s = 1.0 / (1 + fmod(beat, 1.0));
+			s = 1 - (1 - s) * 0.25;
+			s *= 0.75;
+
 			arrow_img.w = ((1.0f)    / 3) * s;
 			arrow_img.h = ((4.f / 3) / 3) * s;
 			arrow_fx->SetFloat("time", time);
@@ -608,6 +612,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 				arrow_img.draw(device);
 			}
 
+			if (time > 28)
+			{
+				arrow_holder_img.w = ((1.0f)    / 3) * s;
+				arrow_holder_img.h = ((4.f / 3) / 3) * s;
+				arrow_holder_img.x = 0 - arrow_holder_img.w / 2;
+				arrow_holder_img.y = 0.85f  - arrow_holder_img.h / 2;
+				arrow_holder_img.draw(device);
+			}
+			
 			// left arrow
 			for (int i = 0; i < levents.size(); ++i)
 			{
@@ -619,7 +632,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 				arrow_img.y = 0.6f - arrow_img.h / 2;
 				arrow_img.draw(device);
 			}
-
+			
+			if (time > 28)
+			{
+				arrow_holder_img.w = -((1.0f)    / 3) * s;
+				arrow_holder_img.h = ((4.f / 3) / 3) * s;
+				arrow_holder_img.x = 0 - arrow_holder_img.w / 2;
+				arrow_holder_img.y = 0.6f - arrow_holder_img.h / 2;
+				arrow_holder_img.draw(device);
+			}
+/*
+			arrow_holder_img.w = ((1.0f)    / 3) * s;
+			arrow_holder_img.y = 0.85f  - arrow_holder_img.h / 2;
+			arrow_holder_img.draw(device);
+*/
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			device->EndScene(); /* WE DONE IS! */
 			
@@ -649,6 +675,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					{
 						ms = LEFT;
 						pos -= 1;
+						if (pos < -3) pos = -3;
 						move_time = beat;
 					}
 
@@ -656,6 +683,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					{
 						ms = RIGHT;
 						pos += 1;
+						if (pos > 3) pos = 3;
 						move_time = beat;
 					}
 				}
