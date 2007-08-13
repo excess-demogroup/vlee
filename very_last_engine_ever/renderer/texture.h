@@ -36,9 +36,9 @@ namespace renderer
 
 		const Surface get_surface(int level = 0) const
 		{
-			Surface surf;
+			IDirect3DSurface9 *surf;
 			core::d3d_err(p->GetSurfaceLevel(0, &surf));
-			return surf;
+			return Surface(surf);
 		}
 	};
 
