@@ -62,8 +62,8 @@ Matrix4x4 texture_matrix(const Texture &tex)
 //	trans1._32 = 0.5;
 
 	D3DXMatrixIdentity(&trans2);
-	trans2._31 = -10.5f / tex.getSurface().get_desc().Width;
-	trans2._32 = -10.5f / tex.getSurface().get_desc().Height;
+	trans2._31 = -10.5f / tex.getSurface().getDesc().Width;
+	trans2._32 = -10.5f / tex.getSurface().getDesc().Height;
 
 	D3DXMatrixScaling(&scale, 0.5, 0.5, 1.0);
 	return trans2;
@@ -86,7 +86,7 @@ void blit(renderer::Device &device, renderer::Texture &tex, Effect &eff, float x
 	Surface rt = device.getRenderTarget(0);
 	
 	/* get surface description */
-	D3DSURFACE_DESC rt_desc = rt.get_desc();
+	D3DSURFACE_DESC rt_desc = rt.getDesc();
 
 	/* setup nudge */
 	x_nudge = -0.5f / (float(rt_desc.Width)  / 2);
@@ -480,8 +480,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Matrix4x4 texture_transform = texture_matrix(rt);
 
 			Vector3 texcoord_translate(
-				0.5 + (0.5 / rt.getSurface().get_desc().Width),
-				0.5 + (0.5 / rt.getSurface().get_desc().Height),
+				0.5 + (0.5 / rt.getSurface().getDesc().Width),
+				0.5 + (0.5 / rt.getSurface().getDesc().Height),
 				0.0);
 			blur_fx->SetFloatArray("texcoord_translate", texcoord_translate, 2);
 			texcoord_transform.make_scaling(Vector3(1,1,1));

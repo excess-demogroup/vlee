@@ -33,5 +33,5 @@ namespace engine
 		int rate;
 	};
 
-	SpectrumData load_spectrum_data(const char *filename);
+	SpectrumData loadSpectrumData(const char *filename);
 }

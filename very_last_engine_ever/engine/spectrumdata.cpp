@@ -2,7 +2,7 @@
 #include "spectrumdata.h"
 #include "../core/fatalexception.h"
 
-engine::SpectrumData engine::load_spectrum_data(const char *filename)
+engine::SpectrumData engine::loadSpectrumData(const char *filename)
 {
 	FILE *fp = fopen(filename, "rb");
 	if (NULL == fp) throw core::FatalException("failed to load spectrum data");

@@ -44,7 +44,7 @@ namespace renderer
 			
 		}
 
-		const D3DSURFACE_DESC get_desc() const
+		const D3DSURFACE_DESC getDesc() const
 		{
 			D3DSURFACE_DESC desc;
 			p->GetDesc(&desc);
