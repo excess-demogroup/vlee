@@ -41,7 +41,8 @@ namespace renderer
 	//		unimplemented: D3DSAMP_DMAPOFFSET
 		}
 
-		void set_texture(Texture *texture) {
+		void setTexture(Texture *texture)
+		{
 			this->texture = texture;
 		}
 

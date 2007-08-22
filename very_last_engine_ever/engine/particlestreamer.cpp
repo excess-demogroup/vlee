@@ -59,7 +59,7 @@ ParticleStreamer::ParticleStreamer(renderer::Device &device) :
 		D3DDECL_END()
 	};
 
-	vertex_decl = renderer::VertexDeclaration(device, vertex_elements);
+	vertex_decl = device.createVertexDeclaration(vertex_elements);
 }
 
 void ParticleStreamer::draw()

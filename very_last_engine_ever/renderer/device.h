@@ -2,6 +2,7 @@
 
 #include "surface.h"
 #include "texture.h"
+#include "vertexdeclaration.h"
 #include "../core/err.h"
 
 namespace renderer
@@ -28,6 +29,21 @@ namespace renderer
 			Surface surface_wrapper;
 			surface_wrapper.Attach(surface);
 			return surface_wrapper;
+		}
+
+		VertexDeclaration createVertexDeclaration(CONST D3DVERTEXELEMENT9* vertex_elements)
+		{
+			core::log::printf("creating vertexdeclaration... ");
+			
+			assert(0 != p);
+			IDirect3DVertexDeclaration9 *decl;
+			if (FAILED(p->CreateVertexDeclaration(vertex_elements, &decl)))
+				throw core::FatalException("failed to create vertex declaration");
+			core::log::printf("done.\n");
+			
+			VertexDeclaration decl_wrapper;
+			decl_wrapper.Attach(decl); // don't addref
+			return decl_wrapper;
 		}
 
 		Texture createTexture(UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = 0)

@@ -16,7 +16,7 @@ namespace renderer
 			if (stateblock) stateblock->Release();
 		}
 
-		IDirect3DStateBlock9 *get_state_block() const {
+		IDirect3DStateBlock9 *getStateBlock() const {
 			return stateblock;
 		}
 
