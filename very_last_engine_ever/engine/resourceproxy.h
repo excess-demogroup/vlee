@@ -15,17 +15,22 @@ public:
 	T* get(I filename) {
 		T* obj = filename_map_static[filename];
 
-		if (obj && ref_count_static[obj] > 0) add_ref(obj);
+		if (obj && ref_count_static[obj] > 0) addRef(obj);
 		else {
-			try {
+			try
+			{
 				obj = load(filename);
-			} catch (FatalException &e) {
+			}
+			catch (FatalException &e)
+			{
+				/* append filename to error */
 				throw FatalException(std::string("Failed to load ") + filename + std::string("\n") + std::string(e.what()));
 			}
 
-			if (obj) {
+			if (obj)
+			{
 				filename_map_static[filename] = obj;
-				add_ref(obj);
+				addRef(obj);
 			}
 		}
 		return obj;
@@ -38,7 +43,7 @@ public:
 		if (0 == --ref_count_static[obj]) delete obj;
 	}
 
-	void add_ref(T* obj) {
+	void addRef(T* obj) {
 		ref_count[obj]++;
 		ref_count_static[obj]++;
 	}
