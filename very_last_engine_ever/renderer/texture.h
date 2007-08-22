@@ -46,7 +46,7 @@ namespace renderer
 		const Surface getSurface(int level = 0) const
 		{
 			IDirect3DSurface9 *surface;
-			core::d3d_err(p->GetSurfaceLevel(0, &surface));
+			core::d3dErr(p->GetSurfaceLevel(0, &surface));
 
 			Surface surface_wrapper;
 			surface_wrapper.Attach(surface);
@@ -56,7 +56,7 @@ namespace renderer
 		Surface getSurface(int level = 0)
 		{
 			IDirect3DSurface9 *surface;
-			core::d3d_err(p->GetSurfaceLevel(0, &surface));
+			core::d3dErr(p->GetSurfaceLevel(0, &surface));
 
 			Surface surface_wrapper;
 			surface_wrapper.Attach(surface);

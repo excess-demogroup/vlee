@@ -15,7 +15,7 @@ namespace renderer
 /*
 			if (D3DMULTISAMPLE_NONE != multisample)
 			{
-				core::d3d_err(
+				core::d3dErr(
 					device->CreateRenderTarget(
 						width, height,
 						format, multisample,

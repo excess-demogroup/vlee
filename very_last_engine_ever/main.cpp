@@ -471,8 +471,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			device.setRenderTarget(rt2.getRenderTarget());
 			rt.resolve();
-//			device->StretchRect(test_surf, NULL, test_surf2, NULL, D3DTEXF_NONE);
-//			device->StretchRect(rt.get_surface(0), NULL, backbuffer, NULL, D3DTEXF_POINT);
 
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 
@@ -488,8 +486,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			blur_fx->SetMatrix("texcoord_transform", &texcoord_transform);
 			blur_fx->SetMatrix("texture_transform", &texture_transform);
 
-//			device->SetRenderTarget(0, blurme2_tex.get_surface());
-//			float blur_amt = pow(1 - fmod(beat / 4, 1.0), 5) * (blur_amt_track.getFloatValue() / 256);
 			float blur_amt = 0.05f;
 			float amt = 1.0 / (1 + blur_amt * 0.02f);
 			Vector2 blur_center(sin(time) * cos(time * 0.3), cos(time * 0.99) * sin(time * 0.4));
@@ -504,7 +500,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			texel_transform = radialblur_matrix(rt, blur_center, amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
-			core::d3d_err(device->SetRenderTarget(0, rt3));
+			core::d3dErr(device->SetRenderTarget(0, rt3));
 			rt2.resolve();
 
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
@@ -514,7 +510,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			texel_transform = radialblur_matrix(rt, blur_center, amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
-			core::d3d_err(device->SetRenderTarget(0, rt2));
+			core::d3dErr(device->SetRenderTarget(0, rt2));
 			rt3.resolve();
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 			blit(device, rt3, blur_fx, -1, -1, 2, 2);
@@ -524,7 +520,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			texel_transform = radialblur_matrix(rt, blur_center, amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
-			core::d3d_err(device->SetRenderTarget(0, backbuffer));
+			core::d3dErr(device->SetRenderTarget(0, backbuffer));
 			rt.resolve();
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 			

@@ -14,14 +14,14 @@ namespace renderer
 		{
 			assert(NULL != p);
 			assert(NULL != surface);
-			core::d3d_err(p->SetRenderTarget(index, surface.p));
+			core::d3dErr(p->SetRenderTarget(index, surface.p));
 		}
 
 		Surface getRenderTarget(unsigned index = 0)
 		{
 			assert(NULL != p);
 			IDirect3DSurface9 *surface;
-			core::d3d_err(p->GetRenderTarget(index, &surface));
+			core::d3dErr(p->GetRenderTarget(index, &surface));
 
 /*			return Surface(surface); */
 
@@ -62,7 +62,7 @@ namespace renderer
 			)
 		{
 			IDirect3DSurface9 *d3d_surf;
-			core::d3d_err(
+			core::d3dErr(
 				p->CreateDepthStencilSurface(
 					Width,
 					Height,

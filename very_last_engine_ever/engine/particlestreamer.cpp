@@ -70,11 +70,11 @@ void ParticleStreamer::draw()
 	if (primitive_count == 0) return;
 
 	device->SetIndices(indices);
-	core::d3d_err(device->SetFVF(0));
-	core::d3d_err(device->SetVertexDeclaration(vertex_decl));
+	core::d3dErr(device->SetFVF(0));
+	core::d3dErr(device->SetVertexDeclaration(vertex_decl));
 
 	device->SetStreamSource(0, dynamic_vb, 0, 4 * sizeof(float));
 	device->SetStreamSource(1, static_vb,  0, 2 * sizeof(float));
 
-	core::d3d_err(device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, max_vertex, 0, primitive_count));
+	core::d3dErr(device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, max_vertex, 0, primitive_count));
 }
