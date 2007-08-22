@@ -30,7 +30,6 @@ namespace renderer
 		
 		~RenderTexture()
 		{
-			printf("destroying render texture\n");
 		}
 		
 		Surface getRenderTarget()

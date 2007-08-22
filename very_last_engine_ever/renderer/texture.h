@@ -19,7 +19,6 @@ namespace renderer
 		
 		virtual ~Texture()
 		{
-			printf("destroying texture\n");
 		}
 
 #if 1
