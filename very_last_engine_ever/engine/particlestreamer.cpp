@@ -35,7 +35,7 @@ ParticleStreamer::ParticleStreamer(renderer::Device &device) :
 	dynamic_vb = device.createVertexBuffer(PARTICLE_STREAMER_VERTEX_COUNT * 4 * sizeof(float), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, D3DPOOL_DEFAULT);
 
 	const int index_buffer_size = PARTICLE_STREAMER_PARTICLE_COUNT * sizeof(unsigned short) * 6;
-	indices = renderer::IndexBuffer(device, index_buffer_size, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16);
+	indices = device.createIndexBuffer(index_buffer_size, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16);
 	{
 		unsigned short *dst = (unsigned short *)indices.lock(0, index_buffer_size, 0);
 		for (int i = 0; i < PARTICLE_STREAMER_PARTICLE_COUNT; ++i)

@@ -2,8 +2,9 @@
 
 #include "surface.h"
 #include "texture.h"
-#include "vertexbuffer.h"
 #include "vertexdeclaration.h"
+#include "vertexbuffer.h"
+#include "indexbuffer.h"
 #include "../core/err.h"
 
 namespace renderer
@@ -48,6 +49,24 @@ namespace renderer
 			VertexBuffer vb_wrapper;
 			vb_wrapper.Attach(vb); // don't addref
 			return vb_wrapper;
+		}
+
+		IndexBuffer createIndexBuffer(UINT length, DWORD usage, D3DFORMAT format, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = 0)
+		{
+			core::log::printf("creating vertexbuffer... ");
+
+			assert(NULL != p);
+			IDirect3DIndexBuffer9 *ib;
+			if (FAILED(p->CreateIndexBuffer(length, usage, format, pool, &ib, handle)))
+			{
+				throw core::FatalException("failed to create vertex buffer");
+			}
+			assert(NULL != ib);
+			core::log::printf("done.\n");
+
+			IndexBuffer ib_wrapper;
+			ib_wrapper.Attach(ib); // don't addref
+			return ib_wrapper;
 		}
 
 		VertexDeclaration createVertexDeclaration(CONST D3DVERTEXELEMENT9* vertex_elements)

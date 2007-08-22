@@ -39,7 +39,8 @@ namespace renderer
 	class Surface : public CComPtr<IDirect3DSurface9>
 	{
 	public:
-		Surface(IDirect3DSurface9 *surface = 0) : CComPtr<IDirect3DSurface9>(surface)
+		Surface(IDirect3DSurface9 *surface = 0)
+			: CComPtr<IDirect3DSurface9>(surface)
 		{
 			
 		}
