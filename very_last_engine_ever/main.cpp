@@ -39,16 +39,16 @@ Matrix4x4 radialblur_matrix(const Texture &tex, const Vector2 &center, const flo
 {
 	Matrix4x4 trans1;
 	trans1.make_identity();
-	trans1._13 = 0.5 - center.x / 2;
-	trans1._23 = 0.5 - center.y / 2;
+	trans1._13 = 0.5f - center.x / 2;
+	trans1._23 = 0.5f - center.y / 2;
 	
 	Matrix4x4 mat;
 	mat.make_scaling(Vector3(amt, amt, 1));
 	
 	Matrix4x4 trans2;
 	trans2.make_identity();
-	trans2._13 = -(0.5 - center.x / 2);
-	trans2._23 = -(0.5 - center.y / 2);
+	trans2._13 = -(0.5f - center.x / 2);
+	trans2._23 = -(0.5f - center.y / 2);
 	
 	return trans1 * mat * trans2;
 }
@@ -62,8 +62,8 @@ Matrix4x4 texture_matrix(const Texture &tex)
 //	trans1._32 = 0.5;
 
 	D3DXMatrixIdentity(&trans2);
-	trans2._31 = -10.5f / tex.get_surface().get_desc().Width;
-	trans2._32 = -10.5f / tex.get_surface().get_desc().Height;
+	trans2._31 = -10.5f / tex.getSurface().get_desc().Width;
+	trans2._32 = -10.5f / tex.getSurface().get_desc().Height;
 
 	D3DXMatrixScaling(&scale, 0.5, 0.5, 1.0);
 	return trans2;
@@ -186,10 +186,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 		D3DDISPLAYMODE mode = config.getMode();
 		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, mode.Width, mode.Height, 0, 0, GetModuleHandle(0), 0);
 		if (!win) throw FatalException("CreateWindow() failed. something is VERY spooky.");
+
 		Device device;
 		device.Attach(init::initD3D(direct3d, win, mode, config.getMultisample(), config.getAdapter(), config.getVsync()));
-//		device.Attach(init_d3d(direct3d, win, mode, D3DMULTISAMPLE_NONE, config.get_adapter(), config.get_vsync()));
 		ShowWindow(win, TRUE); // showing window after initing d3d in order to be able to see warnings during init
+#if !WINDOWED
+		ShowCursor(0);
+#endif
 		
 		if (!BASS_Init(config.getSoundcard(), 44100, BASS_DEVICE_LATENCY, 0, 0)) throw FatalException("failed to init bass");
 		stream = BASS_StreamCreateFile(false, "data/208_skritt_til_venstre.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config.getSoundcard()) ? BASS_STREAM_DECODE : 0));
@@ -203,60 +206,30 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Sync sync("data\\__data_%s_%s.sync", synctimer);
 #endif
 		
-#if !WINDOWED
-		ShowCursor(0);
-#endif
-		
 		Surface backbuffer;
-		backbuffer.Attach(device.get_render_target(0)); /* trick the ref-counter */
+		backbuffer.Attach(device.getRenderTarget(0)); /* trick the ref-counter */
 		
-		std::vector<float> levents;
-		std::vector<float> revents;
-
-		{
-			FILE *fp = fopen("data/steps.txt", "r");
-			if (!fp) throw FatalException("failed to load steps!");
-
-			while (!feof(fp))
-			{
-				float beat = 0;
-				int   dir = 0;
-				if (2 != fscanf(fp, "%c %f\n", &dir, &beat)) throw FatalException("failed to parse");
-				switch (dir)
-				{
-				case 'l':
-				case 'L':
-					levents.push_back(beat);
-				break;
-
-				case 'r':
-				case 'R':
-					revents.push_back(beat);
-				break;
-
-				default:
-					throw FatalException("failed to parse 2.0");
-				}
-			}
-
-			fclose(fp);
-			fp = NULL;
-		}
-
-
 		/** DEMO ***/
 
 //		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE);
-		RenderTexture rt(device, config.getMode().Width, config.getMode().Height, 1, D3DFMT_A8R8G8B8, config.getMultisample());
-		RenderTexture rt2(device, config.getMode().Width, config.getMode().Height, 1, D3DFMT_A8R8G8B8);
-		RenderTexture rt3(device, config.getMode().Width, config.getMode().Height, 1, D3DFMT_A8R8G8B8);
+		RenderTexture rt(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8, config.getMultisample());
+		RenderTexture rt2(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8);
+		RenderTexture rt3(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8);
+
+		Surface rt_ds = device.createDepthStencilSurface(config.getWidth(), config.getHeight(), D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, TRUE);
+
+		RenderTexture pixelize(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8, config.getMultisample());
 		
 		Matrix4x4 tex_transform;
 		tex_transform.make_identity();
 		Effect tex_fx      = engine::loadEffect(device, "data/tex.fx");
 		tex_fx->SetMatrix("transform", &tex_transform);
 		Effect blur_fx     = engine::loadEffect(device, "data/blur.fx");
-		
+
+		Effect pixelize_fx      = engine::loadEffect(device, "data/pixelize.fx");
+		pixelize_fx->SetMatrix("transform", &tex_transform);
+		pixelize_fx->SetMatrix("tex_transform", &tex_transform);
+
 		Texture arrow_tex  = engine::loadTexture(device, "data/arrow.dds");
 		Effect  arrow_fx   = engine::loadEffect(device, "data/arrow.fx");
 		Image   arrow_img(arrow_tex, arrow_fx);
@@ -281,14 +254,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Image   blomst_03_img(engine::loadTexture(device, "data/blomst_03.dds"), tex_fx);
 
 		Anim moose_anim = engine::loadAnim(device, "data/moose");
-
-		SyncTrack &blur_amt_track = sync.getTrack("blur_amt",     "global", 5, true);
-		SyncTrack &moose_amt    = sync.getTrack("mooses",     "global", 5, true);
-		SyncTrack &mountain_boost = sync.getTrack("mount",     "global", 5, true);
-		SyncTrack &sun_alpha    = sync.getTrack("a",     "sun", 5, true);
-		SyncTrack &sun_rot      = sync.getTrack("r",     "sun", 5, true);
-		SyncTrack &sun_boost    = sync.getTrack("b",     "sun", 5, true);
-		SyncTrack &flower_boost = sync.getTrack("b",     "flowers", 5, true);
 
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -315,8 +280,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			static float last_time = 0.f;
 			static float time_offset = 0.f;
-			double time = BASS_ChannelBytes2Seconds(stream, BASS_ChannelGetPosition(stream));
-			double beat = time * (double(BPM) / 60);
+			float time = BASS_ChannelBytes2Seconds(stream, BASS_ChannelGetPosition(stream));
+			float beat = time * (float(BPM) / 60);
 
 
 			switch (ms)
@@ -336,9 +301,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 #endif
 			device->BeginScene();
 			
-			IDirect3DSurface9 *temp = rt;
-			IDirect3DDevice9 *dev = device;
-			dev->SetRenderTarget(0, temp);
+			device.setRenderTarget(rt.getSurface());
+			
+			D3DVIEWPORT9 viewport;
+			device->GetViewport(&viewport);
+			viewport.Width = 32;
+			viewport.Height = 32;
+			device->SetViewport(&viewport);
 			
 			D3DXCOLOR clear_color(1,0,0,0);
 			device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, clear_color, 1.f, 0);
@@ -374,9 +343,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			solnedgang_img.draw(device);
 */
 			
-			D3DXVECTOR4 disco_offset(time + sun_rot.getFloatValue() / 256, 0, 0,0);
+			D3DXVECTOR4 disco_offset(time, 0, 0,0);
 			himmel_fx->SetVector("disco_offset", &disco_offset);
-			himmel_fx->SetFloat("alpha", sun_alpha.getFloatValue() / 256);
+			himmel_fx->SetFloat("alpha", 1.0f);
 			himmel_img.x = -1;
 			himmel_img.y = -1;
 			himmel_img.w = 2;
@@ -387,12 +356,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 
-			float sol_boost = 1 + (1.0 / (1.0 + fmod((beat - 0) / 4, 1.0))) * 0.25 * (sun_boost.getFloatValue() / 256);
+			float sol_boost = 1 + (1.0f / (1.0f + fmod((beat - 0) / 4, 1.0f))) * 0.25f;
 			{
 				Matrix4x4 temp, temp2;
 				temp.make_scaling(Vector3(1.0 * sol_boost, (4.f/3) * sol_boost, 1.0 * sol_boost));
 				temp2.make_translation(Vector3(-0.175f, 0.1f, 0.0f));
-				tex_transform.make_rotation(Vector3(0, 0, (time / 64 + sun_rot.getFloatValue() / 256) ));
+				tex_transform.make_rotation(Vector3(0, 0, time / 64));
 				tex_transform = tex_transform * temp * temp2;
 			}
 			tex_fx->SetMatrix("transform", &tex_transform);
@@ -409,7 +378,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			fjell_img.x = -1;
 			fjell_img.y = -1;
 			fjell_img.w = 2;
-			fjell_img.h = 2 + (mountain_boost.getFloatValue() / 256) / (1 + fmod(beat / 4, 1.0));
+			fjell_img.h = 2 + 0.25f / (1 + fmod(beat / 4, 1.0f));
 			fjell_img.draw(device);
 /*
 			tex_fx->SetFloat("xoffs", 1 - fmod(beat * 0.25, 2));
@@ -417,10 +386,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 */
 			{
 				float pulse = 0.0f;
-				float s = 1.0 / (1 + fmod(beat / 2, 1.0) * 0.25 * pulse);
+				float s = 1.0f / (1 + fmod(beat / 2, 1.0f) * 0.25f * pulse);
 				
-				float w = ((1.0f)    / 0.8) * s;
-				float h = ((4.f / 3) / 0.8) * s;
+				float w = ((1.0f)    / 0.8f) * s;
+				float h = ((4.f / 3) / 0.8f) * s;
 				int frame = 0;
 				
 				switch (ms)
@@ -442,8 +411,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 //				int max_moose_level = 1 + (int(time) % 10); // moose_amt.getIntValue();
 
-				int max_moose_count = moose_amt.getIntValue();
-				int max_moose_level = floor(0.5 + sqrtf(2*max_moose_count - 0.25));
+				int max_moose_count = 1;
+				int max_moose_level = int(floor(0.5f + sqrtf(2*max_moose_count - 0.25f)));
 
 				int moose_count = 0;
 				for (int z = 0; z < max_moose_level; ++z)
@@ -460,7 +429,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 						float lj = j - (float(max_this_level - 1) / 2);
 
 						float x = lj + (float(pos) / 4);
-						float y = - 0.15 + 0.5f;
+						float y = - 0.15f + 0.5f;
 
 						x /= fiz;
 						y /= fiz;
@@ -472,7 +441,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 							moose_anim.getFrame(float(frame) / 3),
 							tex_fx,
 							x - lw / 2,
-							y - lh / 2 - 0.5,
+							y - lh / 2 - 0.5f,
 							lw,
 							lh
 						);
@@ -480,30 +449,29 @@ int main(int /*argc*/, char* /*argv*/ [])
 				}
 			}
 
-			float blomst_01_boost = 1 + (1.0 / (1.0 + fmod((beat - 0) / 3, 1.0))) * 0.25 * (flower_boost.getFloatValue() / 256);
-			float blomst_02_boost = 1 + (1.0 / (1.0 + fmod((beat - 1) / 3, 1.0))) * 0.25 * (flower_boost.getFloatValue() / 256);
-			float blomst_03_boost = 1 + (1.0 / (1.0 + fmod((beat - 2) / 3, 1.0))) * 0.25 * (flower_boost.getFloatValue() / 256);
+			float blomst_01_boost = 1 + (1.0f / (1.0f + fmod((beat - 0) / 3, 1.0f))) * 0.25f;
+			float blomst_02_boost = 1 + (1.0f / (1.0f + fmod((beat - 1) / 3, 1.0f))) * 0.25f;
+			float blomst_03_boost = 1 + (1.0f / (1.0f + fmod((beat - 2) / 3, 1.0f))) * 0.25f;
 
-			blomst_01_img.w = 0.25 * blomst_01_boost;
-			blomst_01_img.h = 0.73 * blomst_01_boost;
-			blomst_01_img.x = -1 + 0.22 - (blomst_01_img.w / 2);
+			blomst_01_img.w = 0.25f * blomst_01_boost;
+			blomst_01_img.h = 0.73f * blomst_01_boost;
+			blomst_01_img.x = -1 + 0.22f - (blomst_01_img.w / 2);
 			blomst_01_img.y = -1;
 			blomst_01_img.draw(device);
 
-			blomst_02_img.w = 0.25 * blomst_02_boost;
-			blomst_02_img.h = 0.6 * blomst_02_boost;
-			blomst_02_img.x = -1 + 0.55 - blomst_02_img.w / 2;
+			blomst_02_img.w = 0.25f * blomst_02_boost;
+			blomst_02_img.h = 0.6f * blomst_02_boost;
+			blomst_02_img.x = -1 + 0.55f - blomst_02_img.w / 2;
 			blomst_02_img.y = -1;
 			blomst_02_img.draw(device);
 
-			blomst_03_img.w = 0.5 * blomst_03_boost;
-			blomst_03_img.h = 0.8 * blomst_03_boost;
-			blomst_03_img.x = 0.13 - blomst_03_img.w / 2;
+			blomst_03_img.w = 0.5f * blomst_03_boost;
+			blomst_03_img.h = 0.8f * blomst_03_boost;
+			blomst_03_img.x = 0.13f - blomst_03_img.w / 2;
 			blomst_03_img.y = -1;
 			blomst_03_img.draw(device);
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-			
 			core::d3d_err(device->SetRenderTarget(0, rt2));
 			rt.resolve();
 //			device->StretchRect(test_surf, NULL, test_surf2, NULL, D3DTEXF_NONE);
@@ -515,8 +483,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Matrix4x4 texture_transform = texture_matrix(rt);
 
 			Vector3 texcoord_translate(
-				0.5 + (0.5 / rt.get_surface().get_desc().Width),
-				0.5 + (0.5 / rt.get_surface().get_desc().Height),
+				0.5 + (0.5 / rt.getSurface().get_desc().Width),
+				0.5 + (0.5 / rt.getSurface().get_desc().Height),
 				0.0);
 			blur_fx->SetFloatArray("texcoord_translate", texcoord_translate, 2);
 			texcoord_transform.make_scaling(Vector3(1,1,1));
@@ -525,11 +493,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 //			device->SetRenderTarget(0, blurme2_tex.get_surface());
 //			float blur_amt = pow(1 - fmod(beat / 4, 1.0), 5) * (blur_amt_track.getFloatValue() / 256);
-			float blur_amt = (blur_amt_track.getFloatValue() / 256);
+			float blur_amt = 0.05f;
 			float amt = 1.0 / (1 + blur_amt * 0.02f);
 			Vector2 blur_center(sin(time) * cos(time * 0.3), cos(time * 0.99) * sin(time * 0.4));
 			Matrix4x4 texel_transform = radialblur_matrix(rt, blur_center, amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
+#if 0
 
 			blit(device, rt, blur_fx, -1, -1, 2, 2);
 //			blit(device, blurme1_tex, blur_fx, polygon);
@@ -539,6 +508,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
 			core::d3d_err(device->SetRenderTarget(0, rt3));
+			rt2.resolve();
+
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 			blit(device, rt2, blur_fx, -1, -1, 2, 2);
 
@@ -547,105 +518,24 @@ int main(int /*argc*/, char* /*argv*/ [])
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
 			core::d3d_err(device->SetRenderTarget(0, rt2));
+			rt3.resolve();
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 			blit(device, rt3, blur_fx, -1, -1, 2, 2);
 
+#endif
 			amt = 1.0 / (1 + blur_amt * 0.16f);
 			texel_transform = radialblur_matrix(rt, blur_center, amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
 			core::d3d_err(device->SetRenderTarget(0, backbuffer));
+			rt.resolve();
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
-			blit(device, rt2, blur_fx, -1, -1, 2, 2);
-
-			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-
-			if (time < 28)
-			{
-				vers_1_img.w = 15 / 2;
-				vers_1_img.h = 0.5;
-				vers_1_img.x = 1 - (time - 5) * 0.43f;
-				vers_1_img.y = 0.6;
-				vers_1_img.draw(device);
-			}
-			else if (time < 48)
-			{
-				refreng_1_img.w = 15 / 2;
-				refreng_1_img.h = 0.5;
-				refreng_1_img.x = 1 - (time - 28) * 0.42f;
-				refreng_1_img.y = 0.6;
-				refreng_1_img.draw(device);
-			}
-			else if (time < 68)
-			{
-				refreng_2_img.w = 15 / 2;
-				refreng_2_img.h = 0.5;
-				refreng_2_img.x = 1 - (time - 48) * 0.43f;
-				refreng_2_img.y = 0.6;
-				refreng_2_img.draw(device);
-			}
-			else
-			{
-				vers_2_img.w = 15 / 2;
-				vers_2_img.h = 0.5;
-				vers_2_img.x = 1 - (time - 78) * 0.43f;
-				vers_2_img.y = 0.6;
-				vers_2_img.draw(device);
-			}
 			
-			float s = 1.0 / (1 + fmod(beat, 1.0));
-			s = 1 - (1 - s) * 0.25;
-			s *= 0.75;
+//			tex_transform.make_scaling(Vector3(config.getWidth() / 32, config.getHeight() / 32, 1.0f));
+			tex_transform.make_scaling(Vector3(32.0f / config.getWidth(), 32.0f / config.getHeight(), 1.0f));
+			pixelize_fx->SetMatrix("tex_transform", &tex_transform);
+			blit(device, rt, pixelize_fx, -1, -1, 2, 2);
 
-			arrow_img.w = ((1.0f)    / 3) * s;
-			arrow_img.h = ((4.f / 3) / 3) * s;
-			arrow_fx->SetFloat("time", time);
-			
-			// right arrow
-			for (int i = 0; i < revents.size(); ++i)
-			{
-				float rel_beat = (revents[i] - beat) / 4;
-				if (rel_beat < -1 || rel_beat > 1) continue;
-
-				arrow_img.x = rel_beat - arrow_img.w / 2;
-				arrow_img.y = 0.85f  - arrow_img.h / 2;
-				arrow_img.draw(device);
-			}
-
-			if (time > 28)
-			{
-				arrow_holder_img.w = ((1.0f)    / 3) * s;
-				arrow_holder_img.h = ((4.f / 3) / 3) * s;
-				arrow_holder_img.x = 0 - arrow_holder_img.w / 2;
-				arrow_holder_img.y = 0.85f  - arrow_holder_img.h / 2;
-				arrow_holder_img.draw(device);
-			}
-			
-			// left arrow
-			for (int i = 0; i < levents.size(); ++i)
-			{
-				float rel_beat = (levents[i] - beat) / 4;
-				if (rel_beat < -1 || rel_beat > 1) continue;
-
-				arrow_img.w = -((1.0f)    / 3) * s;
-				arrow_img.x = rel_beat - arrow_img.w / 2;
-				arrow_img.y = 0.6f - arrow_img.h / 2;
-				arrow_img.draw(device);
-			}
-			
-			if (time > 28)
-			{
-				arrow_holder_img.w = -((1.0f)    / 3) * s;
-				arrow_holder_img.h = ((4.f / 3) / 3) * s;
-				arrow_holder_img.x = 0 - arrow_holder_img.w / 2;
-				arrow_holder_img.y = 0.6f - arrow_holder_img.h / 2;
-				arrow_holder_img.draw(device);
-			}
-/*
-			arrow_holder_img.w = ((1.0f)    / 3) * s;
-			arrow_holder_img.y = 0.85f  - arrow_holder_img.h / 2;
-			arrow_holder_img.draw(device);
-*/
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			device->EndScene(); /* WE DONE IS! */
 			

@@ -24,7 +24,7 @@ namespace renderer
 				);
 			}
 			
-			texture_surf = this->get_surface(0);
+			texture_surf = this->getSurface(0);
 		}
 		
 		operator IDirect3DSurface9*()
@@ -32,7 +32,13 @@ namespace renderer
 			if (NULL != shadow_surf) return shadow_surf;
 			return texture_surf;
 		}
-
+		
+		operator Surface()
+		{
+			if (NULL != shadow_surf) return Surface(shadow_surf);
+			return Surface(texture_surf);
+		}
+		
 		void resolve()
 		{
 			if (NULL != shadow_surf) device->StretchRect(shadow_surf, NULL, texture_surf, NULL, D3DTEXF_NONE);

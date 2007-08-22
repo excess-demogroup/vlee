@@ -7,9 +7,8 @@ using renderer::Texture;
 
 Texture engine::loadTexture(renderer::Device &device, ::std::string filename)
 {
-	Texture tex;
+	IDirect3DTexture9 *texture;
 
-//		HRESULT hr = D3DXCreateTextureFromFile(device, filename.c_str(), &tex);
 	HRESULT hr = D3DXCreateTextureFromFileEx(
 		device, filename.c_str(),
 		D3DX_DEFAULT_NONPOW2, D3DX_DEFAULT_NONPOW2, // width and height
@@ -18,12 +17,12 @@ Texture engine::loadTexture(renderer::Device &device, ::std::string filename)
 		D3DPOOL_MANAGED, // pool
 		D3DX_DEFAULT, D3DX_DEFAULT, // filtering
 		0, NULL, NULL,
-		&tex
+		&texture
 	);
 
 	if (FAILED(hr)) throw core::FatalException(::std::string("failed to load mesh \"") + filename + ::std::string("\"\n\n") + core::d3d_get_error(hr));
 
-	return tex;
+	return Texture(texture);
 }
 
 

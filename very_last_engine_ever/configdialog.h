@@ -29,6 +29,9 @@ public:
 
 	UINT getAdapter() const { return adapter; }
 	D3DDISPLAYMODE getMode() const { return mode; }
+	UINT getWidth() const { return mode.Width; }
+	UINT getHeight() const { return mode.Height; }
+
 	D3DMULTISAMPLE_TYPE getMultisample() const { return multisample; }
 	float getAspect() const { return aspect; }
 

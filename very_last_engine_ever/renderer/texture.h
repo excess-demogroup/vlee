@@ -12,8 +12,11 @@ namespace renderer
 	class Texture : public CComPtr<IDirect3DTexture9>
 	{
 	public:
-		Texture() : CComPtr<IDirect3DTexture9>() {}
-
+		Texture(IDirect3DTexture9 *texture = NULL)
+			: CComPtr<IDirect3DTexture9>(texture)
+		{
+		}
+#if 1
 		Texture(IDirect3DDevice9 *device, UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = 0) : CComPtr<IDirect3DTexture9>()
 		{
 			assert(NULL != device);
@@ -33,13 +36,22 @@ namespace renderer
 
 			Attach(texture); // don't addref
 		}
-
-		const Surface get_surface(int level = 0) const
+#endif
+		
+		const Surface getSurface(int level = 0) const
 		{
 			IDirect3DSurface9 *surf;
 			core::d3d_err(p->GetSurfaceLevel(0, &surf));
 			return Surface(surf);
 		}
+		
+		Surface getSurface(int level = 0)
+		{
+			IDirect3DSurface9 *surf;
+			core::d3d_err(p->GetSurfaceLevel(0, &surf));
+			return Surface(surf);
+		}
+		
 	};
 
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "fatalexception.h"
+
 namespace core
 {
 
@@ -11,7 +13,7 @@ namespace core
 	inline void d3d_err(HRESULT hr)
 	{
 		// throw an error based on the errorcode
-		if (FAILED(hr)) throw FatalException(d3d_get_error(hr));
+		if (FAILED(hr)) throw core::FatalException(d3d_get_error(hr));
 	}
 
 }
