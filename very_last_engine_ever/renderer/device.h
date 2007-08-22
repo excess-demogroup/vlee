@@ -2,6 +2,7 @@
 
 #include "surface.h"
 #include "texture.h"
+#include "vertexbuffer.h"
 #include "vertexdeclaration.h"
 #include "../core/err.h"
 
@@ -29,6 +30,24 @@ namespace renderer
 			Surface surface_wrapper;
 			surface_wrapper.Attach(surface);
 			return surface_wrapper;
+		}
+
+		VertexBuffer createVertexBuffer(UINT length, DWORD usage, DWORD fvf, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = 0)
+		{
+			core::log::printf("creating vertexbuffer... ");
+
+			assert(NULL != p);
+			IDirect3DVertexBuffer9 *vb;
+			if (FAILED(p->CreateVertexBuffer(length, usage, fvf, pool, &vb, handle)))
+			{
+				throw core::FatalException("failed to create vertex buffer");
+			}
+			assert(NULL != vb);
+			core::log::printf("done.\n");
+			
+			VertexBuffer vb_wrapper;
+			vb_wrapper.Attach(vb); // don't addref
+			return vb_wrapper;
 		}
 
 		VertexDeclaration createVertexDeclaration(CONST D3DVERTEXELEMENT9* vertex_elements)

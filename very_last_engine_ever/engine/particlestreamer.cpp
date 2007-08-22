@@ -10,7 +10,7 @@ ParticleStreamer::ParticleStreamer(renderer::Device &device) :
 {
 	const int static_vb_size = PARTICLE_STREAMER_VERTEX_COUNT * 2 * sizeof(float);
 
-	static_vb  = renderer::VertexBuffer(device, static_vb_size,     D3DUSAGE_WRITEONLY,                    D3DPOOL_DEFAULT);
+	static_vb  = device.createVertexBuffer(static_vb_size, D3DUSAGE_WRITEONLY, D3DPOOL_DEFAULT);
 	assert(NULL != static_vb);
 	assert(PARTICLE_STREAMER_VERTEX_COUNT == (PARTICLE_STREAMER_PARTICLE_COUNT * 4));
 	{
@@ -32,7 +32,7 @@ ParticleStreamer::ParticleStreamer(renderer::Device &device) :
 		static_vb.unlock();
 	}
 
-	dynamic_vb = renderer::VertexBuffer(device, PARTICLE_STREAMER_VERTEX_COUNT * 4 * sizeof(float), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, D3DPOOL_DEFAULT);
+	dynamic_vb = device.createVertexBuffer(PARTICLE_STREAMER_VERTEX_COUNT * 4 * sizeof(float), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, D3DPOOL_DEFAULT);
 
 	const int index_buffer_size = PARTICLE_STREAMER_PARTICLE_COUNT * sizeof(unsigned short) * 6;
 	indices = renderer::IndexBuffer(device, index_buffer_size, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16);

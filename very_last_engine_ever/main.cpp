@@ -487,7 +487,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			blur_fx->SetMatrix("texture_transform", &texture_transform);
 
 			float blur_amt = 0.05f;
-			float amt = 1.0 / (1 + blur_amt * 0.02f);
+			float amt = 1.0f / (1 + blur_amt * 0.02f);
 			Vector2 blur_center(sin(time) * cos(time * 0.3), cos(time * 0.99) * sin(time * 0.4));
 			Matrix4x4 texel_transform = radialblur_matrix(rt, blur_center, amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
@@ -516,7 +516,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			blit(device, rt3, blur_fx, -1, -1, 2, 2);
 
 #endif
-			amt = 1.0 / (1 + blur_amt * 0.16f);
+			amt = 1.0f / (1 + blur_amt * 0.16f);
 			texel_transform = radialblur_matrix(rt, blur_center, amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
