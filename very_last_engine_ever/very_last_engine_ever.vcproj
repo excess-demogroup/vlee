@@ -465,6 +465,14 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="renderer"
+				>
+				<File
+					RelativePath=".\renderer\device.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
