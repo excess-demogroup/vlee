@@ -16,6 +16,12 @@ namespace renderer
 			: CComPtr<IDirect3DTexture9>(texture)
 		{
 		}
+		
+		virtual ~Texture()
+		{
+			printf("destroying texture\n");
+		}
+
 #if 1
 		Texture(IDirect3DDevice9 *device, UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = 0) : CComPtr<IDirect3DTexture9>()
 		{
@@ -40,16 +46,22 @@ namespace renderer
 		
 		const Surface getSurface(int level = 0) const
 		{
-			IDirect3DSurface9 *surf;
-			core::d3d_err(p->GetSurfaceLevel(0, &surf));
-			return Surface(surf);
+			IDirect3DSurface9 *surface;
+			core::d3d_err(p->GetSurfaceLevel(0, &surface));
+
+			Surface surface_wrapper;
+			surface_wrapper.Attach(surface);
+			return surface;
 		}
 		
 		Surface getSurface(int level = 0)
 		{
-			IDirect3DSurface9 *surf;
-			core::d3d_err(p->GetSurfaceLevel(0, &surf));
-			return Surface(surf);
+			IDirect3DSurface9 *surface;
+			core::d3d_err(p->GetSurfaceLevel(0, &surface));
+
+			Surface surface_wrapper;
+			surface_wrapper.Attach(surface);
+			return surface;
 		}
 		
 	};

@@ -22,7 +22,9 @@ Texture engine::loadTexture(renderer::Device &device, ::std::string filename)
 
 	if (FAILED(hr)) throw core::FatalException(::std::string("failed to load mesh \"") + filename + ::std::string("\"\n\n") + core::d3d_get_error(hr));
 
-	return Texture(texture);
+	Texture texture_wrapper;
+	texture_wrapper.Attach(texture);
+	return texture_wrapper;
 }
 
 

@@ -22,7 +22,12 @@ namespace renderer
 			assert(NULL != p);
 			IDirect3DSurface9 *surface;
 			core::d3d_err(p->GetRenderTarget(index, &surface));
-			return Surface(surface);
+
+/*			return Surface(surface); */
+
+			Surface surface_wrapper;
+			surface_wrapper.Attach(surface);
+			return surface_wrapper;
 		}
 
 		Texture createTexture(UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = 0)

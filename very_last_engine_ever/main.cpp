@@ -74,7 +74,7 @@ Matrix4x4 texture_matrix(const Texture &tex)
 }
 
 
-void blit(IDirect3DDevice9 *device, IDirect3DTexture9 *tex, Effect &eff, float x, float y, float w, float h)
+void blit(renderer::Device &device, renderer::Texture &tex, Effect &eff, float x, float y, float w, float h)
 {
 	device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 	eff->SetTexture("tex", tex);
@@ -83,12 +83,10 @@ void blit(IDirect3DDevice9 *device, IDirect3DTexture9 *tex, Effect &eff, float x
 	float x_nudge = 0.0f, y_nudge = 0.0f;
 
 	/* get render target */
-	IDirect3DSurface9 *rt;
-	device->GetRenderTarget(0, &rt);
+	Surface rt = device.getRenderTarget(0);
 	
 	/* get surface description */
-	D3DSURFACE_DESC rt_desc;
-	rt->GetDesc(&rt_desc);
+	D3DSURFACE_DESC rt_desc = rt.get_desc();
 
 	/* setup nudge */
 	x_nudge = -0.5f / (float(rt_desc.Width)  / 2);
@@ -206,20 +204,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Sync sync("data\\__data_%s_%s.sync", synctimer);
 #endif
 		
-		Surface backbuffer;
-		backbuffer.Attach(device.getRenderTarget(0)); /* trick the ref-counter */
+		Surface backbuffer = device.getRenderTarget(0); /* trick the ref-counter */
 		
 		/** DEMO ***/
 
 //		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE);
-		RenderTexture rt(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8, config.getMultisample());
+		RenderTexture rt(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8);
 		RenderTexture rt2(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8);
 		RenderTexture rt3(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8);
 
+/*
 		Surface rt_ds = device.createDepthStencilSurface(config.getWidth(), config.getHeight(), D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, TRUE);
-
 		RenderTexture pixelize(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8, config.getMultisample());
-		
+*/
 		Matrix4x4 tex_transform;
 		tex_transform.make_identity();
 		Effect tex_fx      = engine::loadEffect(device, "data/tex.fx");
@@ -472,7 +469,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			blomst_03_img.draw(device);
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-			core::d3d_err(device->SetRenderTarget(0, rt2));
+			device.setRenderTarget(rt2.getRenderTarget());
 			rt.resolve();
 //			device->StretchRect(test_surf, NULL, test_surf2, NULL, D3DTEXF_NONE);
 //			device->StretchRect(rt.get_surface(0), NULL, backbuffer, NULL, D3DTEXF_POINT);

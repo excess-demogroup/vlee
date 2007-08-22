@@ -41,6 +41,7 @@ namespace renderer
 	public:
 		Surface(IDirect3DSurface9 *surface = 0) : CComPtr<IDirect3DSurface9>(surface)
 		{
+			
 		}
 
 		const D3DSURFACE_DESC get_desc() const

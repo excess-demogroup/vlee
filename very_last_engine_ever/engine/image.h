@@ -32,9 +32,9 @@ namespace engine
 			float x_nudge = 0.0f, y_nudge = 0.0f;
 
 			/* get render target */
-			IDirect3DSurface9 *rt;
-			device->GetRenderTarget(0, &rt);
+			renderer::Surface rt = device.getRenderTarget();
 			
+#if 0
 			/* get surface description */
 			D3DSURFACE_DESC rt_desc;
 			rt->GetDesc(&rt_desc);
@@ -69,6 +69,7 @@ namespace engine
 				eff->EndPass();
 			}
 			eff->End();
+#endif
 		}
 		float x, y;
 		float w, h;
