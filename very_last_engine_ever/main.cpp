@@ -209,7 +209,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		/** DEMO ***/
 
 //		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE);
-		RenderTexture rt(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8);
+		RenderTexture rt(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8, config.getMultisample());
 		RenderTexture rt2(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8);
 		RenderTexture rt3(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8);
 
@@ -470,7 +470,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			device.setRenderTarget(rt2.getRenderTarget());
-			rt.resolve();
+			rt.resolve(device);
 
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 
@@ -521,7 +521,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
 			core::d3dErr(device->SetRenderTarget(0, backbuffer));
-			rt.resolve();
+			rt.resolve(device);
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 			
 //			tex_transform.make_scaling(Vector3(config.getWidth() / 32, config.getHeight() / 32, 1.0f));
