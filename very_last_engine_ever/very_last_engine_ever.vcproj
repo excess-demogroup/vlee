@@ -176,7 +176,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Sync|Win32"
+			Name="SyncRelease|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
@@ -297,7 +297,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Sync|Win32"
+					Name="SyncRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -356,7 +356,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Sync|Win32"
+						Name="SyncRelease|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -384,7 +384,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Sync|Win32"
+						Name="SyncRelease|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -412,7 +412,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Sync|Win32"
+						Name="SyncRelease|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -440,7 +440,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Sync|Win32"
+						Name="SyncRelease|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
