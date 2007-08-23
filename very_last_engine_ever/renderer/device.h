@@ -52,6 +52,9 @@ namespace renderer
 		void setRenderTarget(Surface &surface, unsigned index = 0);
 		Surface getRenderTarget(unsigned index = 0);
 
+		void setDepthStencilSurface(Surface &surface);
+		Surface getDepthStencilSurface();
+
 		/* vertex/index buffers */
 		VertexBuffer createVertexBuffer(UINT length, DWORD usage, DWORD fvf, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = NULL);
 		IndexBuffer createIndexBuffer(UINT length, DWORD usage, D3DFORMAT format, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = NULL);

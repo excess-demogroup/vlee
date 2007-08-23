@@ -204,7 +204,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Sync sync("data\\__data_%s_%s.sync", synctimer);
 #endif
 		
-		Surface backbuffer = device.getRenderTarget(0); /* trick the ref-counter */
+		Surface backbuffer   = device.getRenderTarget(0); /* trick the ref-counter */
+		Surface depthstencil = device.getDepthStencilSurface(); /* trick the ref-counter */
 		
 		/** DEMO ***/
 
@@ -470,6 +471,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			device.setRenderTarget(rt2.getRenderTarget());
+/*			device.setDepthStencilSurface(Surface(NULL)); */
+/*			device->SetRenderState(D3DRS_ZENABLE,  FALSE); */
 			rt.resolve(device);
 
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
