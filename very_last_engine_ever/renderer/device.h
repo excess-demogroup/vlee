@@ -62,7 +62,16 @@ namespace renderer
 
 		/* textures / surfaces */
 		Texture createTexture(UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = NULL);
-		Surface createDepthStencilSurface(UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard );
+		Surface createDepthStencilSurface(
+			UINT Width,
+			UINT Height,
+			D3DFORMAT Format = D3DFMT_D24S8,
+			D3DMULTISAMPLE_TYPE MultiSample = D3DMULTISAMPLE_NONE,
+			DWORD MultisampleQuality = 0,
+			BOOL Discard = TRUE,
+			HANDLE* pSharedHandle = NULL
+		);
+
 		Surface createRenderTarget(
 			UINT Width,
 			UINT Height,

@@ -186,7 +186,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		if (!win) throw FatalException("CreateWindow() failed. something is VERY spooky.");
 
 		Device device;
-		device.Attach(init::initD3D(direct3d, win, mode, config.getMultisample(), config.getAdapter(), config.getVsync()));
+		device.Attach(init::initD3D(direct3d, win, mode, D3DMULTISAMPLE_NONE, config.getAdapter(), config.getVsync()));
 		ShowWindow(win, TRUE); // showing window after initing d3d in order to be able to see warnings during init
 #if !WINDOWED
 		ShowCursor(0);
@@ -207,10 +207,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Surface backbuffer   = device.getRenderTarget(0); /* trick the ref-counter */
 		Surface depthstencil = device.getDepthStencilSurface(); /* trick the ref-counter */
 		
+		RenderTexture color_msaa(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8, config.getMultisample());
+		Surface depthstencil_msaa = device.createDepthStencilSurface(config.getWidth(), config.getHeight(), D3DFMT_D24S8, config.getMultisample());
+
 		/** DEMO ***/
 
 //		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE);
-		RenderTexture rt(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8, config.getMultisample());
 		RenderTexture rt2(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8);
 		RenderTexture rt3(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8);
 
@@ -299,7 +301,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 #endif
 			device->BeginScene();
 			
-			device.setRenderTarget(rt.getSurface());
+			/* setup multisampled stuffz */
+			device.setRenderTarget(color_msaa.getRenderTarget());
+			device.setDepthStencilSurface(depthstencil_msaa);
 			
 			D3DVIEWPORT9 viewport;
 			device->GetViewport(&viewport);
@@ -310,29 +314,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			D3DXCOLOR clear_color(1,0,0,0);
 			device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, clear_color, 1.f, 0);
 			
-			Vector3 eye = Vector3(0, 0, 0);
-			Vector3 at  = Vector3(0, 0, 100);
-			Vector3 up  = Vector3(0, 1, 0);
-			
-			D3DXMATRIX view;
-			D3DXMatrixLookAtLH(&view, &eye, &at, &up);
-			Matrix4x4 world;
-			D3DXMatrixIdentity(&world);
-			D3DXMATRIX proj;
-			D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(90), 16.f / 9, 0.01f, 1000.f);
-			
-			Vector3 scale(0.1, 0.1, 0.1);
-			Vector3 translation(0, 0, 0);
-			
-			D3DXQUATERNION rotation;
-			D3DXQuaternionRotationYawPitchRoll(&rotation, 0, float(M_PI / 2), 0);
-			D3DXQUATERNION rotation2;
-			D3DXQuaternionRotationYawPitchRoll(&rotation2, 0, 0, time * 0.01f);
-
-			rotation *= rotation2;
-
-
-			D3DXMatrixTransformation(&world, NULL, NULL, &scale, NULL, &rotation, &translation);
 /*
 			solnedgang_img.x = -1;
 			solnedgang_img.y = -1;
@@ -473,16 +454,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device.setRenderTarget(rt2.getRenderTarget());
 /*			device.setDepthStencilSurface(Surface(NULL)); */
 /*			device->SetRenderState(D3DRS_ZENABLE,  FALSE); */
-			rt.resolve(device);
+			device->SetDepthStencilSurface(NULL);
+			color_msaa.resolve(device);
 
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 
 			Matrix4x4 texcoord_transform;
-			Matrix4x4 texture_transform = texture_matrix(rt);
+			Matrix4x4 texture_transform = texture_matrix(color_msaa);
 
 			Vector3 texcoord_translate(
-				0.5 + (0.5 / rt.getSurface().getDesc().Width),
-				0.5 + (0.5 / rt.getSurface().getDesc().Height),
+				0.5 + (0.5 / color_msaa.getSurface().getDesc().Width),
+				0.5 + (0.5 / color_msaa.getSurface().getDesc().Height),
 				0.0);
 			blur_fx->SetFloatArray("texcoord_translate", texcoord_translate, 2);
 			texcoord_transform.make_scaling(Vector3(1,1,1));
@@ -492,7 +474,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float blur_amt = 0.05f;
 			float amt = 1.0f / (1 + blur_amt * 0.02f);
 			Vector2 blur_center(sin(time) * cos(time * 0.3), cos(time * 0.99) * sin(time * 0.4));
-			Matrix4x4 texel_transform = radialblur_matrix(rt, blur_center, amt);
+			Matrix4x4 texel_transform = radialblur_matrix(color_msaa, blur_center, amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 #if 0
 
@@ -520,17 +502,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 #endif
 			amt = 1.0f / (1 + blur_amt * 0.16f);
-			texel_transform = radialblur_matrix(rt, blur_center, amt);
+			texel_transform = radialblur_matrix(color_msaa, blur_center, amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
 			core::d3dErr(device->SetRenderTarget(0, backbuffer));
-			rt.resolve(device);
+			color_msaa.resolve(device);
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 			
 //			tex_transform.make_scaling(Vector3(config.getWidth() / 32, config.getHeight() / 32, 1.0f));
 			tex_transform.make_scaling(Vector3(32.0f / config.getWidth(), 32.0f / config.getHeight(), 1.0f));
 			pixelize_fx->SetMatrix("tex_transform", &tex_transform);
-			blit(device, rt, pixelize_fx, -1, -1, 2, 2);
+			blit(device, color_msaa, pixelize_fx, -1, -1, 2, 2);
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			device->EndScene(); /* WE DONE IS! */

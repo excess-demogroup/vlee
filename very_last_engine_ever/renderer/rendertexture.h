@@ -13,10 +13,10 @@ namespace renderer
 			: Texture(device, width, height, levels, D3DUSAGE_RENDERTARGET, format)
 		{
 			multisampled = D3DMULTISAMPLE_NONE != multisample;
-
+			
 			if (multisampled)
 			{
-				device.createRenderTarget(
+				shadow_surf = device.createRenderTarget(
 					width, height,
 					format, multisample,
 					0, false
@@ -32,7 +32,7 @@ namespace renderer
 		Surface getRenderTarget()
 		{
 			if (multisampled) return shadow_surf;
-			return texture_surf;
+			else return texture_surf;
 		}
 		
 		void resolve(Device &device)
@@ -40,9 +40,7 @@ namespace renderer
 			if (multisampled) device->StretchRect(shadow_surf, NULL, texture_surf, NULL, D3DTEXF_NONE);
 		}
 		
-	private:
-//		IDirect3DDevice9 *device;
-//		IDirect3DSurface9 *shadow_surf;
+//	private:
 		bool multisampled;
 		Surface shadow_surf;
 		Surface texture_surf;

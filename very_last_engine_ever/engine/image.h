@@ -64,7 +64,7 @@ namespace engine
 				};
 				
 				device->SetFVF(D3DFVF_XYZ | D3DFVF_TEX1);
-				device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 5);
+				core::d3dErr(device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 5));
 				eff->EndPass();
 			}
 			eff->End();
