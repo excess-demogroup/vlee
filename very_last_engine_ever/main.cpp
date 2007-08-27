@@ -166,7 +166,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		ConfigDialog config(direct3d);
 		
 #ifdef NDEBUG
-#if 0
+#if 1
 		INT_PTR result = config.DoModal();
 		if (FAILED(result)) MessageBox(NULL, "could not initialize dialogbox, using default settings", NULL, MB_OK);
 		else
