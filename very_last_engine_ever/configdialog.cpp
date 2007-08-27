@@ -3,6 +3,8 @@
 #include "config.h"
 #include "init.h"
 
+#include <string.h>
+
 #define ARRAY_SIZE(x) (sizeof((x)) / sizeof((x)[0]))
 
 ConfigDialog::ConfigDialog(IDirect3D9 *direct3d) : direct3d(direct3d)
@@ -49,14 +51,34 @@ LRESULT ConfigDialog::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	CheckDlgButton(IDC_VSYNC, DEFAULT_VSYNC);
 
 	// setup aspect ratio 
-	SendMessage(GetDlgItem(IDC_ASPECT), CB_ADDSTRING, 0, (LPARAM)"4:3");
-	SendMessage(GetDlgItem(IDC_ASPECT), CB_ADDSTRING, 0, (LPARAM)"16:10");
-	SendMessage(GetDlgItem(IDC_ASPECT), CB_ADDSTRING, 0, (LPARAM)"16:9");
+	float screen_aspect = float(GetSystemMetrics(SM_CXSCREEN)) / GetSystemMetrics(SM_CYSCREEN);
+	
+	int best_fit = 0;
+	float best_ratio = FLT_MAX;
 
-	float aspect = float(GetSystemMetrics(SM_CXSCREEN)) / GetSystemMetrics(SM_CYSCREEN);
-	if      (fabs(aspect - (16.f /  9)) < 1e-5) SendMessage(GetDlgItem(IDC_ASPECT), (UINT)CB_SETCURSEL, (WPARAM)2, 0);
-	else if (fabs(aspect - (16.f / 10)) < 1e-5) SendMessage(GetDlgItem(IDC_ASPECT), (UINT)CB_SETCURSEL, (WPARAM)1, 0);
-	else                                        SendMessage(GetDlgItem(IDC_ASPECT), (UINT)CB_SETCURSEL, (WPARAM)0, 0);
+	static const struct {
+		int w, h;
+	} aspect_ratios[] = {
+		{5, 4},
+		{4, 3},
+		{16, 10},
+		{16, 9},
+	};
+
+	for (int i = 0; i < ARRAY_SIZE(aspect_ratios); ++i)
+	{
+		char temp[256];
+		_snprintf(temp, 256, "%d:%d", aspect_ratios[i].w, aspect_ratios[i].h);
+		SendMessage(GetDlgItem(IDC_ASPECT), CB_ADDSTRING, 0, (LPARAM)temp);
+
+		float curr_ratio = float(aspect_ratios[i].w) / aspect_ratios[i].h;
+		if (fabs(curr_ratio - screen_aspect) < fabs(best_ratio - screen_aspect))
+		{
+			best_fit = i;
+			best_ratio = curr_ratio;
+		}
+	}
+	SendMessage(GetDlgItem(IDC_ASPECT), (UINT)CB_SETCURSEL, (WPARAM)best_fit, 0);
 
 	// select medium by default
 //	CheckDlgButton(IDC_MEDIUM, true);
