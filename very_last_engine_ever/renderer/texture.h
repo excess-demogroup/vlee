@@ -45,6 +45,8 @@ namespace renderer
 		
 		const Surface getSurface(int level = 0) const
 		{
+			assert(p != NULL);
+
 			IDirect3DSurface9 *surface;
 			core::d3dErr(p->GetSurfaceLevel(0, &surface));
 
@@ -55,12 +57,23 @@ namespace renderer
 		
 		Surface getSurface(int level = 0)
 		{
+			assert(p != NULL);
+
 			IDirect3DSurface9 *surface;
 			core::d3dErr(p->GetSurfaceLevel(0, &surface));
 
 			Surface surface_wrapper;
 			surface_wrapper.Attach(surface);
 			return surface;
+		}
+
+		D3DSURFACE_DESC getLevelDesc(int level = 0)
+		{
+			assert(p != NULL);
+
+			D3DSURFACE_DESC desc;
+			p->GetLevelDesc(0, &desc);
+			return desc;
 		}
 		
 	};

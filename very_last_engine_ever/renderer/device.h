@@ -55,6 +55,18 @@ namespace renderer
 		void setDepthStencilSurface(Surface &surface);
 		Surface getDepthStencilSurface();
 
+		D3DVIEWPORT9 getViewport() const
+		{
+			D3DVIEWPORT9 viewport;
+			p->GetViewport(&viewport);
+			return viewport;
+		}
+		
+		void setViewport(const D3DVIEWPORT9 *viewport)
+		{
+			p->SetViewport(viewport);
+		}
+
 		/* vertex/index buffers */
 		VertexBuffer createVertexBuffer(UINT length, DWORD usage, DWORD fvf, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = NULL);
 		IndexBuffer createIndexBuffer(UINT length, DWORD usage, D3DFORMAT format, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = NULL);

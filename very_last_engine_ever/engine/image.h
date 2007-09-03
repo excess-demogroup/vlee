@@ -35,12 +35,13 @@ namespace engine
 			renderer::Surface rt = device.getRenderTarget();
 			
 			/* get viewport description */
-			D3DVIEWPORT9 viewport;
-			device->GetViewport(&viewport);
+			D3DVIEWPORT9 viewport = device.getViewport();
 
 			/* setup nudge */
 			x_nudge = -0.5f / (float(viewport.Width)  / 2);
 			y_nudge =  0.5f / (float(viewport.Height) / 2);
+
+			tex.getLevelDesc();
 
 			/* get texture description */
 			D3DSURFACE_DESC tex_desc;
