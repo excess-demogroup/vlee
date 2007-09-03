@@ -2,6 +2,7 @@
 
 #include "drawable.h"
 #include "../renderer/device.h"
+#include "../math/matrix4x4.h"
 
 namespace engine
 {
@@ -10,7 +11,7 @@ namespace engine
 	{
 	public:
 		Effect() : CComPtr<ID3DXEffect>(), world(0), view(0), projection(0), worldview(0), worldviewprojection(0) { }
-
+		
 		void update()
 		{
 			assert(p != 0);
@@ -20,22 +21,27 @@ namespace engine
 			worldview  = p->GetParameterBySemantic(0, "WORLDVIEW");
 			worldviewprojection = p->GetParameterBySemantic(0, "WORLDVIEWPROJECTION");
 		}
-
-		void set_matrices(D3DXMATRIX world, D3DXMATRIX view, D3DXMATRIX proj)
+		
+		void setMatrix(D3DXHANDLE parameter, const math::Matrix4x4 &mat)
 		{
-				D3DXMATRIX world_view_proj;
-				world_view_proj = world * view * proj;
-
-				D3DXMATRIX world_view;
-				world_view = world * view;
-
-				assert(p != 0);
-
-				p->SetMatrix(this->world,      &world);
-				p->SetMatrix(this->view,       &view);
-				p->SetMatrix(this->projection, &proj);
-				p->SetMatrix(this->worldview,  &world_view);
-				p->SetMatrix(this->worldviewprojection, &world_view_proj);
+			p->SetMatrix(parameter, &mat);
+		}
+		
+		void setMatrices(D3DXMATRIX world, D3DXMATRIX view, D3DXMATRIX proj)
+		{
+			D3DXMATRIX world_view_proj;
+			world_view_proj = world * view * proj;
+			
+			D3DXMATRIX world_view;
+			world_view = world * view;
+			
+			assert(p != 0);
+			
+			setMatrix(this->world,      world);
+			setMatrix(this->view,       view);
+			setMatrix(this->projection, proj);
+			setMatrix(this->worldview,  world_view);
+			setMatrix(this->worldviewprojection, world_view_proj);
 		}
 
 		void draw(Drawable &d)

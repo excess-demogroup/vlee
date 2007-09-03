@@ -305,11 +305,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device.setRenderTarget(color_msaa.getRenderTarget());
 			device.setDepthStencilSurface(depthstencil_msaa);
 			
-			D3DVIEWPORT9 viewport;
-			device->GetViewport(&viewport);
+			D3DVIEWPORT9 viewport = device.getViewport();
 			viewport.Width = 32;
 			viewport.Height = 32;
-			device->SetViewport(&viewport);
+			device.setViewport(&viewport);
 			
 			D3DXCOLOR clear_color(1,0,0,0);
 			device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, clear_color, 1.f, 0);

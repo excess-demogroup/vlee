@@ -43,9 +43,9 @@ LRESULT ConfigDialog::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	// select first adapter by default
 	SendMessage(GetDlgItem(IDC_DEVICE), (UINT)CB_SETCURSEL, (WPARAM)adapter, 0);
 
-	refresh_formats();
-	refresh_modes();
-	refresh_multisample_types();
+	refreshFormats();
+	refreshModes();
+	refreshMultisampleTypes();
 
 	// set vsync checkbutton to the default setting
 	CheckDlgButton(IDC_VSYNC, DEFAULT_VSYNC);
@@ -87,7 +87,8 @@ LRESULT ConfigDialog::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 
 #ifndef VJSYS
 	// playback device
-	for (unsigned i = 0; 0 != BASS_GetDeviceDescription(i); ++i) {
+	for (unsigned i = 0; 0 != BASS_GetDeviceDescription(i); ++i)
+	{
 		SendMessage(GetDlgItem(IDC_SOUNDCARD), CB_ADDSTRING, 0, (LPARAM)BASS_GetDeviceDescription(i));
 	}
 #else
@@ -103,24 +104,27 @@ LRESULT ConfigDialog::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	return (LRESULT)TRUE;
 }
 
-LRESULT ConfigDialog::OnDeviceChange(WORD wNotifyCode, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+LRESULT ConfigDialog::OnDeviceChange(WORD wNotifyCode, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
 	adapter = (unsigned)SendMessage(GetDlgItem(IDC_DEVICE), (UINT)CB_GETCURSEL, (WPARAM)0, 0);
-	refresh_formats();
-	refresh_modes();
-	refresh_multisample_types();
+	refreshFormats();
+	refreshModes();
+	refreshMultisampleTypes();
 	return (LRESULT)TRUE;
 }
 
-LRESULT ConfigDialog::OnFormatChange(WORD wNotifyCode, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+LRESULT ConfigDialog::OnFormatChange(WORD wNotifyCode, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
 	format = (D3DFORMAT)SendMessage(GetDlgItem(IDC_FORMAT), (UINT)CB_GETITEMDATA, (WPARAM)SendMessage(GetDlgItem(IDC_FORMAT), (UINT)CB_GETCURSEL, (WPARAM)0, 0), 0);
-	refresh_modes();
-	refresh_multisample_types();
+	refreshModes();
+	refreshMultisampleTypes();
 	return (LRESULT)TRUE;
 }
 
-LRESULT ConfigDialog::OnResolutionChange(WORD wNotifyCode, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+LRESULT ConfigDialog::OnResolutionChange(WORD wNotifyCode, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
 	direct3d->EnumAdapterModes(adapter, format, (UINT)SendMessage(GetDlgItem(IDC_RESOLUTION), (UINT)CB_GETCURSEL, (WPARAM)0, 0), &mode);
-	refresh_multisample_types();
+	refreshMultisampleTypes();
 	return (LRESULT)TRUE;
 }
 
@@ -131,8 +135,10 @@ LRESULT ConfigDialog::OnMultisampleChange(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 	return 0;
 }
 
-LRESULT ConfigDialog::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if (IDOK == wID) {
+LRESULT ConfigDialog::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	if (IDOK == wID)
+	{
 		vsync = (BST_CHECKED == IsDlgButtonChecked(IDC_VSYNC));
 		soundcard = (unsigned)SendMessage(GetDlgItem(IDC_SOUNDCARD), (UINT)CB_GETCURSEL, (WPARAM)0, 0);
 
@@ -149,14 +155,16 @@ LRESULT ConfigDialog::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 	return 0;
 }
 
-void ConfigDialog::refresh_modes() {
+void ConfigDialog::refreshModes()
+{
 	unsigned mode_count = direct3d->GetAdapterModeCount(adapter, format);
 	unsigned best_mode = 0;
 	unsigned best_mode_refresh_rate = 0;
-
+	
 	SendMessage(GetDlgItem(IDC_RESOLUTION), (UINT)CB_RESETCONTENT, (WPARAM)0, 0);
-
-	for (unsigned i = 0; i < mode_count; ++i) {
+	
+	for (unsigned i = 0; i < mode_count; ++i)
+	{
 		D3DDISPLAYMODE mode;
 		direct3d->EnumAdapterModes(adapter, format, i, &mode);
 
@@ -164,14 +172,19 @@ void ConfigDialog::refresh_modes() {
 		sprintf_s(temp, 256, "%ux%u %uhz", mode.Width, mode.Height, mode.RefreshRate);
 		SendMessage(GetDlgItem(IDC_RESOLUTION), CB_ADDSTRING, 0, (LPARAM)temp);
 
-		if ((this->mode.Width == mode.Width) && (this->mode.Height == mode.Height)) {
-			if (this->mode.RefreshRate == D3DPRESENT_RATE_DEFAULT) {
-				if (best_mode_refresh_rate < mode.RefreshRate) {
+		if ((this->mode.Width == mode.Width) && (this->mode.Height == mode.Height))
+		{
+			if (this->mode.RefreshRate == D3DPRESENT_RATE_DEFAULT)
+			{
+				if (best_mode_refresh_rate < mode.RefreshRate)
+				{
 					best_mode = i;
 					best_mode_refresh_rate = mode.RefreshRate;
 				}
-			} else if (this->mode.RefreshRate == mode.RefreshRate) {
-					best_mode = i;
+			}
+			else if (this->mode.RefreshRate == mode.RefreshRate)
+			{
+				best_mode = i;
 			}
 		}
 	}
@@ -188,7 +201,8 @@ static bool is_multisample_type_ok(IDirect3D9 *direct3d, UINT Adapter, D3DFORMAT
 	return false;
 }
 
-void ConfigDialog::refresh_multisample_types() {
+void ConfigDialog::refreshMultisampleTypes()
+{
 	SendMessage(GetDlgItem(IDC_MULTISAMPLE), (UINT)CB_RESETCONTENT, (WPARAM)0, 0);
 
 	static const D3DMULTISAMPLE_TYPE types[] = { D3DMULTISAMPLE_NONE, /* D3DMULTISAMPLE_NONMASKABLE, */ D3DMULTISAMPLE_2_SAMPLES, D3DMULTISAMPLE_3_SAMPLES, D3DMULTISAMPLE_4_SAMPLES, D3DMULTISAMPLE_5_SAMPLES, D3DMULTISAMPLE_6_SAMPLES, D3DMULTISAMPLE_7_SAMPLES, D3DMULTISAMPLE_8_SAMPLES, D3DMULTISAMPLE_9_SAMPLES, D3DMULTISAMPLE_10_SAMPLES, D3DMULTISAMPLE_11_SAMPLES, D3DMULTISAMPLE_12_SAMPLES, D3DMULTISAMPLE_13_SAMPLES, D3DMULTISAMPLE_14_SAMPLES, D3DMULTISAMPLE_15_SAMPLES, D3DMULTISAMPLE_16_SAMPLES };
@@ -198,7 +212,8 @@ void ConfigDialog::refresh_multisample_types() {
 
 	unsigned best_hit = 0;
 	unsigned item = 0;
-	for (unsigned i = 0; i < ARRAY_SIZE(types); ++i) {
+	for (unsigned i = 0; i < ARRAY_SIZE(types); ++i)
+	{
 		if (true == is_multisample_type_ok(direct3d, adapter, format, format, init::get_best_depth_stencil_format(direct3d, adapter, format), types[i]))
 		{
 			SendMessage(GetDlgItem(IDC_MULTISAMPLE), CB_ADDSTRING, 0, (LPARAM)type_strings[i]);
@@ -212,7 +227,8 @@ void ConfigDialog::refresh_multisample_types() {
 	SendMessage(GetDlgItem(IDC_MULTISAMPLE), (UINT)CB_SETCURSEL, (WPARAM)best_hit, 0);
 }
 
-void ConfigDialog::refresh_formats() {
+void ConfigDialog::refreshFormats()
+{
 	unsigned item = 0;
 
 	SendMessage(GetDlgItem(IDC_FORMAT), (UINT)CB_RESETCONTENT, (WPARAM)0, 0);  
@@ -223,9 +239,11 @@ void ConfigDialog::refresh_formats() {
 
 	unsigned best_hit = 0;
 
-	for (unsigned i = 0; i < (sizeof(formats) / sizeof(formats[0])); ++i) {
+	for (unsigned i = 0; i < (sizeof(formats) / sizeof(formats[0])); ++i)
+	{
 		D3DDISPLAYMODE mode;
-		if (SUCCEEDED(direct3d->EnumAdapterModes(adapter, formats[i], 0, &mode))) {
+		if (SUCCEEDED(direct3d->EnumAdapterModes(adapter, formats[i], 0, &mode)))
+		{
 			SendMessage(GetDlgItem(IDC_FORMAT), CB_ADDSTRING, 0, (LPARAM)format_strings[i]);
 			SendMessage(GetDlgItem(IDC_FORMAT), CB_SETITEMDATA, item, formats[i]);
 
@@ -238,7 +256,8 @@ void ConfigDialog::refresh_formats() {
 	format = (D3DFORMAT)SendMessage(GetDlgItem(IDC_FORMAT), (UINT)CB_GETITEMDATA, (WPARAM)best_hit, 0);
 }
 
-void ConfigDialog::enable_config(bool enable) {
+void ConfigDialog::enableConfig(bool enable)
+{
 //	::ShowWindow(GetDlgItem(IDC_FORMAT), SW_HIDE);
 	::EnableWindow(GetDlgItem(IDC_DEVICE), enable);
 	::EnableWindow(GetDlgItem(IDC_FORMAT), enable);

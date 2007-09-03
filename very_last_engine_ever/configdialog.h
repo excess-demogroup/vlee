@@ -40,10 +40,10 @@ public:
 
 protected:
 
-	void refresh_formats();
-	void refresh_modes();
-	void refresh_multisample_types();
-	void enable_config(bool enable);
+	void refreshFormats();
+	void refreshModes();
+	void refreshMultisampleTypes();
+	void enableConfig(bool enable);
 
 	IDirect3D9 *direct3d;
 	UINT adapter;
