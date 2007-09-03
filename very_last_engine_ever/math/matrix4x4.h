@@ -8,16 +8,8 @@ namespace math
 	{
 	public:
 		Matrix4x4() {}
-
-		Matrix4x4(const Matrix4x4 &mat)
-		{
-			memcpy(this, &mat, sizeof(Matrix4x4));
-		}
-
-		Matrix4x4(const D3DXMATRIX &mat)
-		{
-			memcpy(this, &mat, sizeof(Matrix4x4));
-		}
+		Matrix4x4(const Matrix4x4 &mat) : D3DXMATRIX(mat) { }
+		Matrix4x4(const D3DXMATRIX &mat) : D3DXMATRIX(mat) { }
 
 		void make_identity()
 		{
