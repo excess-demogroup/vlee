@@ -34,13 +34,13 @@ namespace engine
 			/* get render target */
 			renderer::Surface rt = device.getRenderTarget();
 			
-			/* get surface description */
-			D3DSURFACE_DESC rt_desc;
-			rt->GetDesc(&rt_desc);
+			/* get viewport description */
+			D3DVIEWPORT9 viewport;
+			device->GetViewport(&viewport);
 
 			/* setup nudge */
-			x_nudge = -0.5f / (float(rt_desc.Width)  / 2);
-			y_nudge =  0.5f / (float(rt_desc.Height) / 2);
+			x_nudge = -0.5f / (float(viewport.Width)  / 2);
+			y_nudge =  0.5f / (float(viewport.Height) / 2);
 
 			/* get texture description */
 			D3DSURFACE_DESC tex_desc;
@@ -57,10 +57,10 @@ namespace engine
 				eff->BeginPass(j);
 				float verts[] =
 				{
-					x+     x_nudge, y +     y_nudge, 0, 0 + s_nudge, 1 + t_nudge,
-					x+ w + x_nudge, y +     y_nudge, 0, 1 + s_nudge, 1 + t_nudge,
-					x+ w + x_nudge, y + h + y_nudge, 0, 1 + s_nudge, 0 + t_nudge,
-					x+     x_nudge, y + h + y_nudge, 0, 0 + s_nudge, 0 + t_nudge,
+					x +     x_nudge, y +     y_nudge, 0, 0 + s_nudge, 1 + t_nudge,
+					x + w + x_nudge, y +     y_nudge, 0, 1 + s_nudge, 1 + t_nudge,
+					x + w + x_nudge, y + h + y_nudge, 0, 1 + s_nudge, 0 + t_nudge,
+					x +     x_nudge, y + h + y_nudge, 0, 0 + s_nudge, 0 + t_nudge,
 				};
 				
 				device->SetFVF(D3DFVF_XYZ | D3DFVF_TEX1);

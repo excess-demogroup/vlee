@@ -204,8 +204,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Sync sync("data\\__data_%s_%s.sync", synctimer);
 #endif
 		
-		Surface backbuffer   = device.getRenderTarget(0); /* trick the ref-counter */
-		Surface depthstencil = device.getDepthStencilSurface(); /* trick the ref-counter */
+		Surface backbuffer   = device.getRenderTarget(0);
+		Surface depthstencil = device.getDepthStencilSurface();
 		
 		RenderTexture color_msaa(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8, config.getMultisample());
 		Surface depthstencil_msaa = device.createDepthStencilSurface(config.getWidth(), config.getHeight(), D3DFMT_D24S8, config.getMultisample());

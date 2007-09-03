@@ -91,13 +91,16 @@ IDirect3DDevice9 *init::initD3D(IDirect3D9 *direct3d, HWND win, D3DDISPLAYMODE m
 	present_parameters.FullScreen_RefreshRateInHz = mode.RefreshRate;
 #endif
 
+	D3DDEVTYPE devtype = D3DDEVTYPE_HAL;
+//	devtype = D3DDEVTYPE_REF;
+
 	IDirect3DDevice9 *device;
-	HRESULT result = direct3d->CreateDevice(adapter, D3DDEVTYPE_HAL, win, tnl, &present_parameters, &device);
+	HRESULT result = direct3d->CreateDevice(adapter, devtype, win, tnl, &present_parameters, &device);
 
 	if (FAILED(result))
 	{
 		// in case the backbuffer-count was too high, try again (it should be turned down to max by the driver)
-		result = direct3d->CreateDevice(adapter, D3DDEVTYPE_HAL, win, tnl, &present_parameters, &device);
+		result = direct3d->CreateDevice(adapter, devtype, win, tnl, &present_parameters, &device);
 		if (FAILED(result))
 		{
 			throw FatalException(std::string(DXGetErrorString9(result)) + std::string(" : ") + std::string(DXGetErrorDescription9(result)));
