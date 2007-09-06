@@ -8,6 +8,7 @@
 // utilize win2k/xp functionality
 #define _WIN32_WINNT 0x0500
 
+#define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #define _USE_MATH_DEFINES
 #include <windows.h>

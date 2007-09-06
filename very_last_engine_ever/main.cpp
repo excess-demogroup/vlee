@@ -9,6 +9,7 @@
 #include "math/vector2.h"
 #include "math/vector3.h"
 #include "math/matrix4x4.h"
+#include "math/math.h"
 #include "renderer/device.h"
 #include "renderer/surface.h"
 #include "renderer/texture.h"
@@ -306,8 +307,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device.setDepthStencilSurface(depthstencil_msaa);
 			
 			D3DVIEWPORT9 viewport = device.getViewport();
-			viewport.Width = 32;
-			viewport.Height = 32;
+			viewport.Width = 64;
+			viewport.Height = 64;
 			device.setViewport(&viewport);
 			
 			D3DXCOLOR clear_color(1,0,0,0);
@@ -356,7 +357,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			fjell_img.x = -1;
 			fjell_img.y = -1;
 			fjell_img.w = 2;
-			fjell_img.h = 2 + 0.25f / (1 + fmod(beat / 4, 1.0f));
+//			fjell_img.h = 2 + 0.25f / (1 + fmod(beat / 4, 1.0f));
+			fjell_img.h = 2 + math::smoothstep(0.75, 1, fmod(beat / 4, 1)) * 0.1;
 			fjell_img.draw(device);
 /*
 			tex_fx->SetFloat("xoffs", 1 - fmod(beat * 0.25, 2));
@@ -509,7 +511,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 			
 //			tex_transform.make_scaling(Vector3(config.getWidth() / 32, config.getHeight() / 32, 1.0f));
-			tex_transform.make_scaling(Vector3(32.0f / config.getWidth(), 32.0f / config.getHeight(), 1.0f));
+			tex_transform.make_scaling(Vector3(64.0f / config.getWidth(), 64.0f / config.getHeight(), 1.0f));
 			pixelize_fx->SetMatrix("tex_transform", &tex_transform);
 			blit(device, color_msaa, pixelize_fx, -1, -1, 2, 2);
 
