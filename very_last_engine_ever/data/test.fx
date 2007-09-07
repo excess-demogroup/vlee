@@ -67,9 +67,9 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	float3 ref_vec = reflect(L, N);
 
 	color = max(dot(-N, L), 0);
-	color += texCUBE(env_samp, ref_vec) * pow(1 - max(dot(-N, L), 0), 1);
-	color *= tex2D(tex_samp, dot(-N, L));
-	color *= 0.25;
+	color = texCUBE(env_samp, ref_vec) * max(N.z, 0);
+/*	color *= tex2D(tex_samp, dot(-N, L));
+	color *= 0.25; */
 	
 	return color * overbright;
 }

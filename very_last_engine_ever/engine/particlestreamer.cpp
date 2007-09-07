@@ -10,7 +10,7 @@ ParticleStreamer::ParticleStreamer(renderer::Device &device) :
 {
 	const int static_vb_size = PARTICLE_STREAMER_VERTEX_COUNT * 2 * sizeof(float);
 
-	static_vb  = device.createVertexBuffer(static_vb_size, D3DUSAGE_WRITEONLY, D3DPOOL_DEFAULT);
+	static_vb  = device.createVertexBuffer(static_vb_size, D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
 	assert(NULL != static_vb);
 	assert(PARTICLE_STREAMER_VERTEX_COUNT == (PARTICLE_STREAMER_PARTICLE_COUNT * 4));
 	{

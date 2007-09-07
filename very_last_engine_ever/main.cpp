@@ -231,41 +231,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 		pixelize_fx->SetMatrix("transform", &tex_transform);
 		pixelize_fx->SetMatrix("tex_transform", &tex_transform);
 
-		Texture arrow_tex  = engine::loadTexture(device, "data/arrow.dds");
-		Effect  arrow_fx   = engine::loadEffect(device, "data/arrow.fx");
-		Image   arrow_img(arrow_tex, arrow_fx);
-		Image   arrow_holder_img(engine::loadTexture(device, "data/arrow_holder.dds"), tex_fx);
-		Image   solnedgang_img(engine::loadTexture(device, "data/solnedgang.dds"), tex_fx);
+		CComPtr<IDirect3DCubeTexture9> cube;
+		core::d3dErr(D3DXCreateCubeTextureFromFile(device, "data/stpeters_cross2.dds", &cube));
 
-		/* nice blue sky */
-		Effect  himmel_fx = engine::loadEffect(device, "data/himmel.fx");
-		himmel_fx->SetTexture("disco_tex", engine::loadTexture(device, "data/beam.dds"));
-		Image   himmel_img(engine::loadTexture(device, "data/himmel.dds"), himmel_fx);
+		Effect test_fx = engine::loadEffect(device, "data/test.fx");
+		test_fx->SetTexture("env", cube);
+		Mesh cube_x = engine::loadMesh(device, "data/cube.X");
 
-		Image   sol_img(engine::loadTexture(device, "data/sol.dds"), tex_fx);
-		Image   fjell_img(engine::loadTexture(device, "data/fjell.dds"), tex_fx);
-
-		Image   vers_1_img(engine::loadTexture(device, "data/vers_1.dds"), tex_fx);
-		Image   vers_2_img(engine::loadTexture(device, "data/vers_2.dds"), tex_fx);
-		Image   refreng_1_img(engine::loadTexture(device, "data/refreng_1.dds"), tex_fx);
-		Image   refreng_2_img(engine::loadTexture(device, "data/refreng_2.dds"), tex_fx);
-
-		Image   blomst_01_img(engine::loadTexture(device, "data/blomst_01.dds"), tex_fx);
-		Image   blomst_02_img(engine::loadTexture(device, "data/blomst_02.dds"), tex_fx);
-		Image   blomst_03_img(engine::loadTexture(device, "data/blomst_03.dds"), tex_fx);
-
-		Anim moose_anim = engine::loadAnim(device, "data/moose");
+		/*		static_vb  = device.createVertexBuffer(static_vb_size, D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT); */
 
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
 		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f) + 10);
 
-
-		enum moose_state {
-			LEFT, RIGHT, IDLE
-		} ms = IDLE;
-		float move_time = 0.0f;
-		int pos = 0;
 
 #ifdef SYNC
 		sync.showEditor();
@@ -284,19 +262,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float time = BASS_ChannelBytes2Seconds(stream, BASS_ChannelGetPosition(stream));
 			float beat = time * (float(BPM) / 60);
 
-
-			switch (ms)
-			{
-			case LEFT:
-			case RIGHT:
-				/* if time passed, go idle */
-				if (beat - move_time > 1.0f) ms = IDLE;
-			break;
-
-			case IDLE:
-				break;
-			}
-			
 #ifndef VJSYS
 			sync.update(); //gets current timing info from the SyncTimer.
 #endif
@@ -305,153 +270,40 @@ int main(int /*argc*/, char* /*argv*/ [])
 			/* setup multisampled stuffz */
 			device.setRenderTarget(color_msaa.getRenderTarget());
 			device.setDepthStencilSurface(depthstencil_msaa);
-			
+/*			
 			D3DVIEWPORT9 viewport = device.getViewport();
-			viewport.Width = 64;
-			viewport.Height = 64;
+			viewport.Width = 128;
+			viewport.Height = 12;
 			device.setViewport(&viewport);
-			
-			D3DXCOLOR clear_color(1,0,0,0);
+*/
+			D3DXCOLOR clear_color(0,0,0,0);
 			device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, clear_color, 1.f, 0);
+
+			Vector3 up(float(sin(time * 0.1f)), float(cos(time * 0.1f)), 0.f);
+			Vector3 eye(
+					float(sin(time * 0.25f) * 2),
+					float(cos(time * 0.25f) * 2),
+					float(cos(time * 0.35f) * 2)
+					);
 			
-/*
-			solnedgang_img.x = -1;
-			solnedgang_img.y = -1;
-			solnedgang_img.w = 2;
-			solnedgang_img.h = 2;
-			solnedgang_img.draw(device);
-*/
-			
-			D3DXVECTOR4 disco_offset(time, 0, 0,0);
-			himmel_fx->SetVector("disco_offset", &disco_offset);
-			himmel_fx->SetFloat("alpha", 1.0f);
-			himmel_img.x = -1;
-			himmel_img.y = -1;
-			himmel_img.w = 2;
-			himmel_img.h = 2;
-			himmel_img.draw(device);
+			Vector3 at(0, 0, 0);
 
-			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+			D3DXMATRIX world;
+			D3DXMatrixIdentity(&world);
+			D3DXMATRIX view;
+			D3DXMatrixLookAtLH(&view, &eye, &at, &up);
+			D3DXMATRIX proj;
+			D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(90), 16.0f / 10, 0.1f, 100.f);
 
-			float sol_boost = 1 + (1.0f / (1.0f + fmod((beat - 0) / 4, 1.0f))) * 0.25f;
-			{
-				Matrix4x4 temp, temp2;
-				temp.make_scaling(Vector3(1.0 * sol_boost, (4.f/3) * sol_boost, 1.0 * sol_boost));
-				temp2.make_translation(Vector3(-0.175f, 0.1f, 0.0f));
-				tex_transform.make_rotation(Vector3(0, 0, time / 64));
-				tex_transform = tex_transform * temp * temp2;
-			}
-			tex_fx->SetMatrix("transform", &tex_transform);
+			test_fx.setMatrices(world, view, proj);
+			test_fx->SetFloat("fade", 1.0f);
+			test_fx->SetFloat("mask_fade", 1.0f);
 
-			sol_img.w = 1;
-			sol_img.h = 1;
-			sol_img.x = -0.5;
-			sol_img.y = -0.5;
-			sol_img.draw(device);
-
-			tex_transform.make_identity();
-			tex_fx->SetMatrix("transform", &tex_transform);
-
-			fjell_img.x = -1;
-			fjell_img.y = -1;
-			fjell_img.w = 2;
-//			fjell_img.h = 2 + 0.25f / (1 + fmod(beat / 4, 1.0f));
-			fjell_img.h = 2 + math::smoothstep(0.75, 1, fmod(beat / 4, 1)) * 0.1;
-			fjell_img.draw(device);
-/*
-			tex_fx->SetFloat("xoffs", 1 - fmod(beat * 0.25, 2));
-			tex_fx->SetFloat("yoffs", 0.0f);
-*/
-			{
-				float pulse = 0.0f;
-				float s = 1.0f / (1 + fmod(beat / 2, 1.0f) * 0.25f * pulse);
-				
-				float w = ((1.0f)    / 0.8f) * s;
-				float h = ((4.f / 3) / 0.8f) * s;
-				int frame = 0;
-				
-				switch (ms)
-				{
-				case LEFT:
-					frame = 0;
-				break;
-				
-				case RIGHT:
-					frame = 2;
-				break;
-				
-				case IDLE:
-					frame = 1;
-				break;
-				
-				default: assert(0);
-				}
-
-//				int max_moose_level = 1 + (int(time) % 10); // moose_amt.getIntValue();
-
-				int max_moose_count = 1;
-				int max_moose_level = int(floor(0.5f + sqrtf(2*max_moose_count - 0.25f)));
-
-				int moose_count = 0;
-				for (int z = 0; z < max_moose_level; ++z)
-				{
-					int inv_z = max_moose_level - z - 1;
-//					int max_this_level = powf(2, inv_z);
-					int max_this_level = 1 + inv_z;
-					int start_this_level = 0;
-					if (z == 0) start_this_level = (max_moose_level * (max_moose_level+1))/2 - max_moose_count;
-
-					float fiz = 1.0f + (float(inv_z)) / 2;
-					for (int j = start_this_level; j < max_this_level; ++j)
-					{
-						float lj = j - (float(max_this_level - 1) / 2);
-
-						float x = lj + (float(pos) / 4);
-						float y = - 0.15f + 0.5f;
-
-						x /= fiz;
-						y /= fiz;
-						float lw = w / fiz;
-						float lh = h / fiz;
-
-						blit(
-							device,
-							moose_anim.getFrame(float(frame) / 3),
-							tex_fx,
-							x - lw / 2,
-							y - lh / 2 - 0.5f,
-							lw,
-							lh
-						);
-					}
-				}
-			}
-
-			float blomst_01_boost = 1 + (1.0f / (1.0f + fmod((beat - 0) / 3, 1.0f))) * 0.25f;
-			float blomst_02_boost = 1 + (1.0f / (1.0f + fmod((beat - 1) / 3, 1.0f))) * 0.25f;
-			float blomst_03_boost = 1 + (1.0f / (1.0f + fmod((beat - 2) / 3, 1.0f))) * 0.25f;
-
-			blomst_01_img.w = 0.25f * blomst_01_boost;
-			blomst_01_img.h = 0.73f * blomst_01_boost;
-			blomst_01_img.x = -1 + 0.22f - (blomst_01_img.w / 2);
-			blomst_01_img.y = -1;
-			blomst_01_img.draw(device);
-
-			blomst_02_img.w = 0.25f * blomst_02_boost;
-			blomst_02_img.h = 0.6f * blomst_02_boost;
-			blomst_02_img.x = -1 + 0.55f - blomst_02_img.w / 2;
-			blomst_02_img.y = -1;
-			blomst_02_img.draw(device);
-
-			blomst_03_img.w = 0.5f * blomst_03_boost;
-			blomst_03_img.h = 0.8f * blomst_03_boost;
-			blomst_03_img.x = 0.13f - blomst_03_img.w / 2;
-			blomst_03_img.y = -1;
-			blomst_03_img.draw(device);
-
+			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+
+			test_fx.draw(cube_x);
+
 			device.setRenderTarget(rt2.getRenderTarget());
 /*			device.setDepthStencilSurface(Surface(NULL)); */
 /*			device->SetRenderState(D3DRS_ZENABLE,  FALSE); */
@@ -511,11 +363,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 			
 //			tex_transform.make_scaling(Vector3(config.getWidth() / 32, config.getHeight() / 32, 1.0f));
-			tex_transform.make_scaling(Vector3(64.0f / config.getWidth(), 64.0f / config.getHeight(), 1.0f));
-			pixelize_fx->SetMatrix("tex_transform", &tex_transform);
+//			tex_transform.make_scaling(Vector3(64.0f / config.getWidth(), 64.0f / config.getHeight(), 1.0f));
+//			tex_transform.make_scaling(Vector3(64.0f / config.getWidth(), 64.0f / config.getHeight(), 1.0f));
+//			pixelize_fx->SetMatrix("tex_transform", &tex_transform);
 			blit(device, color_msaa, pixelize_fx, -1, -1, 2, 2);
 
-			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			device->EndScene(); /* WE DONE IS! */
 			
 			HRESULT res = device->Present(0, 0, 0, 0);
@@ -539,22 +391,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 				{
 					if (VK_ESCAPE == LOWORD(msg.wParam)) done = true;
 					if (VK_SPACE == LOWORD(msg.wParam)) printf("beat: %f - time %f\n", beat, time);
-
-					if (VK_LEFT == LOWORD(msg.wParam))
-					{
-						ms = LEFT;
-						pos -= 1;
-						if (pos < -3) pos = -3;
-						move_time = beat;
-					}
-
-					if (VK_RIGHT == LOWORD(msg.wParam))
-					{
-						ms = RIGHT;
-						pos += 1;
-						if (pos > 3) pos = 3;
-						move_time = beat;
-					}
 				}
 			}
 		}
