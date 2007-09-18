@@ -14,6 +14,9 @@
 #include "renderer/surface.h"
 #include "renderer/texture.h"
 #include "renderer/rendertexture.h"
+#include "renderer/vertexbuffer.h"
+#include "renderer/indexbuffer.h"
+#include "renderer/vertexdeclaration.h"
 #include "engine/scenerender.h"
 #include "engine/mesh.h"
 #include "engine/effect.h"
@@ -236,9 +239,54 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Effect test_fx = engine::loadEffect(device, "data/test.fx");
 		test_fx->SetTexture("env", cube);
+
 		Mesh cube_x = engine::loadMesh(device, "data/cube.X");
 
-		/*		static_vb  = device.createVertexBuffer(static_vb_size, D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT); */
+		Effect cubegrid_fx = engine::loadEffect(device, "data/cubegrid.fx");
+
+		const D3DVERTEXELEMENT9 vertex_elements[] =
+		{
+			{ 0, 0, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 },
+			{ 1, 0, D3DDECLTYPE_UBYTE4,  D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 },
+			D3DDECL_END()
+		};
+		renderer::VertexDeclaration vertex_decl = device.createVertexDeclaration(vertex_elements);
+
+		renderer::VertexBuffer static_vb  = device.createVertexBuffer(6 * 4 * 4, D3DUSAGE_WRITEONLY, 0, D3DPOOL_MANAGED);
+		{
+			BYTE *dst = (BYTE*)static_vb.lock(0, 6 * 4 * 4, 0);
+			
+			/* front face  */
+			*dst++ = 0;   *dst++ = 0;   *dst++ = 255; *dst++ = 255;
+			*dst++ = 255; *dst++ = 0;   *dst++ = 255; *dst++ = 255;
+			*dst++ = 0;   *dst++ = 255; *dst++ = 255; *dst++ = 255;
+			*dst++ = 255; *dst++ = 255; *dst++ = 255; *dst++ = 255;
+
+			static_vb.unlock();
+		}
+
+		renderer::VertexBuffer dynamic_vb = device.createVertexBuffer(16 * 16 * 4, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
+		{
+			BYTE *dst = (BYTE*)dynamic_vb.lock(0, 6 * 4 * 4, 0);
+			*dst++ = 0; *dst++ = 0; *dst++ = 0; *dst++ = 1;
+			*dst++ = 2; *dst++ = 0; *dst++ = 0; *dst++ = 1;
+			*dst++ = 0; *dst++ = 2; *dst++ = 0; *dst++ = 1;
+			*dst++ = 0; *dst++ = 0; *dst++ = 2; *dst++ = 1;
+			dynamic_vb.unlock();
+		}
+
+		renderer::IndexBuffer ib = device.createIndexBuffer(2 * 6 * 6, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED);
+		{
+			unsigned short *dst = (unsigned short*)ib.lock(0, 2 * 6 * 6, 0);
+			*dst++ = 0;
+			*dst++ = 1;
+			*dst++ = 2;
+
+			*dst++ = 3;
+			*dst++ = 2;
+			*dst++ = 1;
+			ib.unlock();
+		}
 
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -281,9 +329,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			Vector3 up(float(sin(time * 0.1f)), float(cos(time * 0.1f)), 0.f);
 			Vector3 eye(
-					float(sin(time * 0.25f) * 2),
-					float(cos(time * 0.25f) * 2),
-					float(cos(time * 0.35f) * 2)
+					float(sin(time * 0.25f) * 4),
+					float(cos(time * 0.25f) * 4),
+					float(cos(time * 0.35f) * 4)
 					);
 			
 			Vector3 at(0, 0, 0);
@@ -302,7 +350,47 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 
-			test_fx.draw(cube_x);
+//			test_fx.draw(cube_x);
+
+			cubegrid_fx.setMatrices(world, view, proj);
+
+			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+			device->SetVertexDeclaration(vertex_decl);
+
+			device->SetStreamSource(0, static_vb, 0, 4);
+			device->SetStreamSourceFreq(0, D3DSTREAMSOURCE_INDEXEDDATA | 4);
+
+			device->SetStreamSource(1, dynamic_vb, 0, 4);
+			device->SetStreamSourceFreq(1, D3DSTREAMSOURCE_INSTANCEDATA | 1UL);
+
+			device->SetIndices(ib);
+
+			UINT passes;
+			cubegrid_fx->Begin(&passes, 0);
+			for (UINT pass = 0; pass < passes; ++pass)
+			{
+				cubegrid_fx->BeginPass( pass );
+				device->DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2 );
+				cubegrid_fx->EndPass();
+			}
+			cubegrid_fx->End();
+
+			device->SetStreamSourceFreq(0, 1);
+			device->SetStreamSourceFreq(1, 1);
+
+#if 0
+			// Stream zero is our model, and its frequency is how we communicate the number of instances required,
+			// which in this case is the total number of boxes
+			V( pd3dDevice->SetStreamSource( 0, g_pVBBox, 0, sizeof(BOX_VERTEX)) );
+			V( pd3dDevice->SetStreamSourceFreq( 0, D3DSTREAMSOURCE_INDEXEDDATA | g_NumBoxes ) );
+			    
+			// Stream one is the instancing buffer, so this advances to the next value
+			// after each box instance has been drawn, so the divider is 1.
+			V( pd3dDevice->SetStreamSource( 1, g_pVBInstanceData, 0, sizeof( BOX_INSTANCEDATA_POS ) ) );
+			V( pd3dDevice->SetStreamSourceFreq( 1, D3DSTREAMSOURCE_INSTANCEDATA | 1ul ) );
+
+			V( pd3dDevice->SetIndices( g_pIBBox ) );
+#endif
 
 			device.setRenderTarget(rt2.getRenderTarget());
 /*			device.setDepthStencilSurface(Surface(NULL)); */
