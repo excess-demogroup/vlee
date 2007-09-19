@@ -13,11 +13,14 @@ struct VS_OUTPUT
 };
 
 VS_OUTPUT vertex(
-	float3 ipos  : POSITION,
-	float3 ipos2  : TEXCOORD0)
+	float4 ipos  : POSITION,
+	float4 ipos2 : TEXCOORD0)
 {
+	/* calculate object-space position */
+	float3 pos = (ipos.xyz - float3(0.5, 0.5, 0.5)) * (ipos2.w / 255);
+	
 	VS_OUTPUT Out;
-	Out.pos  = mul(float4(ipos + ipos2,  1), WorldViewProjection);
+	Out.pos  = mul(float4(pos + ipos2,  1), WorldViewProjection);
 	return Out;
 }
 

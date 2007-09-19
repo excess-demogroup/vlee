@@ -256,35 +256,62 @@ int main(int /*argc*/, char* /*argv*/ [])
 		{
 			BYTE *dst = (BYTE*)static_vb.lock(0, 6 * 4 * 4, 0);
 			
-			/* front face  */
+			/* front face (positive z) */
 			*dst++ = 0;   *dst++ = 0;   *dst++ = 255; *dst++ = 255;
 			*dst++ = 255; *dst++ = 0;   *dst++ = 255; *dst++ = 255;
 			*dst++ = 0;   *dst++ = 255; *dst++ = 255; *dst++ = 255;
 			*dst++ = 255; *dst++ = 255; *dst++ = 255; *dst++ = 255;
 
+			/* back face (negative z)*/
+			*dst++ = 255; *dst++ = 0;   *dst++ = 0; *dst++ = 255;
+			*dst++ = 0;   *dst++ = 0;   *dst++ = 0; *dst++ = 255;
+			*dst++ = 255; *dst++ = 255; *dst++ = 0; *dst++ = 255;
+			*dst++ = 0;   *dst++ = 255; *dst++ = 0; *dst++ = 255;
+
+			/* top face (positive y)*/
+			*dst++ = 0;   *dst++ = 255; *dst++ = 0;   *dst++ = 255;
+			*dst++ = 0;   *dst++ = 255; *dst++ = 255; *dst++ = 255;
+			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 255;
+			*dst++ = 255; *dst++ = 255; *dst++ = 255; *dst++ = 255;
+
+			/* bottom face (negative y) */
+			*dst++ = 0;   *dst++ = 0; *dst++ = 255; *dst++ = 255;
+			*dst++ = 0;   *dst++ = 0; *dst++ = 0;   *dst++ = 255;
+			*dst++ = 255; *dst++ = 0; *dst++ = 255; *dst++ = 255;
+			*dst++ = 255; *dst++ = 0; *dst++ = 0;   *dst++ = 255;
+
+			/* left face (positive x)*/
+			*dst++ = 255; *dst++ = 0;   *dst++ = 255; *dst++ = 255;
+			*dst++ = 255; *dst++ = 0;   *dst++ = 0;   *dst++ = 255;
+			*dst++ = 255; *dst++ = 255; *dst++ = 255; *dst++ = 255;
+			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 255;
+
+			/* right face (negative x)*/
+			*dst++ = 0; *dst++ = 0;   *dst++ = 0;   *dst++ = 255;
+			*dst++ = 0; *dst++ = 0;   *dst++ = 255; *dst++ = 255;
+			*dst++ = 0; *dst++ = 255; *dst++ = 0;   *dst++ = 255;
+			*dst++ = 0; *dst++ = 255; *dst++ = 255; *dst++ = 255;
+
 			static_vb.unlock();
 		}
 
 		renderer::VertexBuffer dynamic_vb = device.createVertexBuffer(16 * 16 * 4, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
-		{
-			BYTE *dst = (BYTE*)dynamic_vb.lock(0, 6 * 4 * 4, 0);
-			*dst++ = 0; *dst++ = 0; *dst++ = 0; *dst++ = 1;
-			*dst++ = 2; *dst++ = 0; *dst++ = 0; *dst++ = 1;
-			*dst++ = 0; *dst++ = 2; *dst++ = 0; *dst++ = 1;
-			*dst++ = 0; *dst++ = 0; *dst++ = 2; *dst++ = 1;
-			dynamic_vb.unlock();
-		}
-
+		
 		renderer::IndexBuffer ib = device.createIndexBuffer(2 * 6 * 6, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED);
 		{
 			unsigned short *dst = (unsigned short*)ib.lock(0, 2 * 6 * 6, 0);
-			*dst++ = 0;
-			*dst++ = 1;
-			*dst++ = 2;
-
-			*dst++ = 3;
-			*dst++ = 2;
-			*dst++ = 1;
+			
+			int faces = 6;
+			for (int i = 0; i < faces; ++i)
+			{
+				*dst++ = (i * 4) + 0;
+				*dst++ = (i * 4) + 1;
+				*dst++ = (i * 4) + 2;
+				*dst++ = (i * 4) + 3;
+				*dst++ = (i * 4) + 2;
+				*dst++ = (i * 4) + 1;
+			}
+			
 			ib.unlock();
 		}
 
@@ -354,7 +381,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			cubegrid_fx.setMatrices(world, view, proj);
 
+			{
+				BYTE *dst = (BYTE*)dynamic_vb.lock(0, 6 * 4 * 4, 0);
+				*dst++ = 0; *dst++ = 0; *dst++ = 0; *dst++ = (1 + cos(time)) * 127.5;
+				*dst++ = 1; *dst++ = 0; *dst++ = 0; *dst++ = (1 + sin(time)) * 127.5;
+				*dst++ = 0; *dst++ = 1; *dst++ = 0; *dst++ = 255;
+				*dst++ = 0; *dst++ = 0; *dst++ = 1; *dst++ = 255;
+				dynamic_vb.unlock();
+			}
+
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 			device->SetVertexDeclaration(vertex_decl);
 
 			device->SetStreamSource(0, static_vb, 0, 4);
@@ -370,7 +407,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			for (UINT pass = 0; pass < passes; ++pass)
 			{
 				cubegrid_fx->BeginPass( pass );
-				device->DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2 );
+				device->DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6 * 4, 0, 6 * 2);
 				cubegrid_fx->EndPass();
 			}
 			cubegrid_fx->End();
