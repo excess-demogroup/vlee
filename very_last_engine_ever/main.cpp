@@ -295,7 +295,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			static_vb.unlock();
 		}
 
-		renderer::VertexBuffer dynamic_vb = device.createVertexBuffer(16 * 16 * 4, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
+#define GRID_SIZE 64
+
+		renderer::VertexBuffer dynamic_vb = device.createVertexBuffer(GRID_SIZE * GRID_SIZE * GRID_SIZE * 4, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
 		
 		renderer::IndexBuffer ib = device.createIndexBuffer(2 * 6 * 6, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED);
 		{
@@ -351,17 +353,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 			viewport.Height = 12;
 			device.setViewport(&viewport);
 */
+			time /= 2;
 			D3DXCOLOR clear_color(0,0,0,0);
 			device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, clear_color, 1.f, 0);
 
 			Vector3 up(float(sin(time * 0.1f)), float(cos(time * 0.1f)), 0.f);
 			Vector3 eye(
-					float(sin(time * 0.25f) * 4),
-					float(cos(time * 0.25f) * 4),
-					float(cos(time * 0.35f) * 4)
+					GRID_SIZE / 2 + float(sin(time * 0.25f) * GRID_SIZE),
+					GRID_SIZE / 2 + float(cos(time * 0.25f) * GRID_SIZE),
+					GRID_SIZE / 2 + float(cos(time * 0.35f) * GRID_SIZE)
 					);
 			
-			Vector3 at(0, 0, 0);
+			Vector3 at(GRID_SIZE / 2, GRID_SIZE / 2, GRID_SIZE / 2);
 
 			D3DXMATRIX world;
 			D3DXMatrixIdentity(&world);
@@ -381,12 +384,54 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			cubegrid_fx.setMatrices(world, view, proj);
 
+			time /= 4;
+			float cx = 0.5f + sin(time) / 3;
+			float cy = 0.5f + cos(time) / 3;
+			float cz = 0.5f + sin(time / 3) / 3;
+
+			float cx2 = 0.5f + cos(time * 0.9f) / 3;
+			float cy2 = 0.5f + sin(time - 0.1f) / 3;
+			float cz2 = 0.5f + sin(time / 2) / 3;
+
+			int cubes = 0;
 			{
-				BYTE *dst = (BYTE*)dynamic_vb.lock(0, 6 * 4 * 4, 0);
-				*dst++ = 0; *dst++ = 0; *dst++ = 0; *dst++ = (1 + cos(time)) * 127.5;
-				*dst++ = 1; *dst++ = 0; *dst++ = 0; *dst++ = (1 + sin(time)) * 127.5;
-				*dst++ = 0; *dst++ = 1; *dst++ = 0; *dst++ = 255;
-				*dst++ = 0; *dst++ = 0; *dst++ = 1; *dst++ = 255;
+				BYTE *dst = (BYTE*)dynamic_vb.lock(0, GRID_SIZE * GRID_SIZE * GRID_SIZE * 4, 0);
+				for (int z = 0; z < GRID_SIZE; ++z)
+				{
+					for (int y = 0; y < GRID_SIZE; ++y)
+					{
+						for (int x = 0; x < GRID_SIZE; ++x)
+						{
+							float fx = float(x) * (1.0f / GRID_SIZE) - cx;
+							float fy = float(y) * (1.0f / GRID_SIZE) - cy;
+							float fz = float(z) * (1.0f / GRID_SIZE) - cz;
+							float fx2 = float(x) * (1.0f / GRID_SIZE) - cx2;
+							float fy2 = float(y) * (1.0f / GRID_SIZE) - cy2;
+							float fz2 = float(z) * (1.0f / GRID_SIZE) - cz2;
+
+/*
+							float fx = float(x) * (M_PI / GRID_SIZE);
+							float fy = float(y) * (M_PI / GRID_SIZE);
+							float fz = float(z) * (M_PI / GRID_SIZE);
+*/
+							float size = 1.0f / sqrt(fx * fx + fy * fy + fz * fz);
+							size += 1.0f / sqrt(fx2 * fx2 + fy2 * fy2 + fz2 * fz2);
+							size -= 8.0f;
+//							float size = 1.0 / sqrt(fx * fx + fy * fy + fz * fz);
+//							size = size * 3;
+							size *= GRID_SIZE / 32;
+							size = 0.5;
+
+							if (size <= 0) continue;
+							if (size > 3) continue;
+							if (size > 1) size = 1;
+							*dst++ = x; *dst++ = y; *dst++ = z;
+//							*dst++ = 32; // (1 + cos(time - x - y)) * 127.5;
+							*dst++ = BYTE(size * 255);
+							cubes++;
+						}
+					}
+				}
 				dynamic_vb.unlock();
 			}
 
@@ -395,7 +440,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetVertexDeclaration(vertex_decl);
 
 			device->SetStreamSource(0, static_vb, 0, 4);
-			device->SetStreamSourceFreq(0, D3DSTREAMSOURCE_INDEXEDDATA | 4);
+			device->SetStreamSourceFreq(0, D3DSTREAMSOURCE_INDEXEDDATA | cubes);
 
 			device->SetStreamSource(1, dynamic_vb, 0, 4);
 			device->SetStreamSourceFreq(1, D3DSTREAMSOURCE_INSTANCEDATA | 1UL);
