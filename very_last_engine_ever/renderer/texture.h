@@ -48,7 +48,7 @@ namespace renderer
 			assert(p != NULL);
 
 			IDirect3DSurface9 *surface;
-			core::d3dErr(p->GetSurfaceLevel(0, &surface));
+			core::d3dErr(p->GetSurfaceLevel(level, &surface));
 
 			Surface surface_wrapper;
 			surface_wrapper.Attach(surface);
@@ -60,7 +60,7 @@ namespace renderer
 			assert(p != NULL);
 
 			IDirect3DSurface9 *surface;
-			core::d3dErr(p->GetSurfaceLevel(0, &surface));
+			core::d3dErr(p->GetSurfaceLevel(level, &surface));
 
 			Surface surface_wrapper;
 			surface_wrapper.Attach(surface);
@@ -72,7 +72,7 @@ namespace renderer
 			assert(p != NULL);
 
 			D3DSURFACE_DESC desc;
-			p->GetLevelDesc(0, &desc);
+			p->GetLevelDesc(level, &desc);
 			return desc;
 		}
 		

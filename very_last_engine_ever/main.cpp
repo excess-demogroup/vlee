@@ -150,6 +150,32 @@ CComPtr<T> com_ptr(T *ptr)
 	return com_ptr;
 }
 
+void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_height, float screen_aspect, float demo_aspect)
+{
+	int letterbox_width, letterbox_height;
+
+	if (demo_aspect > screen_aspect)
+	{
+		/* demo is wider than screen, letterbox */
+		float aspect_change = screen_aspect / demo_aspect;
+		letterbox_width  = screen_width;
+		letterbox_height = int(math::round(screen_height * aspect_change));
+	}
+	else
+	{
+		/* screen is wider than demo, pillarbox */
+		float aspect_change = demo_aspect / screen_aspect;
+		letterbox_width  = int(math::round(screen_width * aspect_change));
+		letterbox_height = screen_height;
+	}
+
+	viewport->X = (screen_width  - letterbox_width ) / 2;
+	viewport->Y = (screen_height - letterbox_height) / 2;
+
+	viewport->Width  = letterbox_width;
+	viewport->Height = letterbox_height;
+}
+
 int main(int /*argc*/, char* /*argv*/ [])
 {
 #ifndef NDEBUG
@@ -157,7 +183,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
 	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
 	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
-	_CrtSetBreakAlloc(68);
+/*	_CrtSetBreakAlloc(68); */
 #endif
 	
 	_Module.Init(NULL, GetModuleHandle(0));
@@ -170,25 +196,23 @@ int main(int /*argc*/, char* /*argv*/ [])
 		ConfigDialog config(direct3d);
 		
 #ifdef NDEBUG
-#if 1
 		INT_PTR result = config.DoModal();
-		if (FAILED(result)) MessageBox(NULL, "could not initialize dialogbox, using default settings", NULL, MB_OK);
+		if (FAILED(result)) MessageBox(NULL, "Could not initialize dialogbox, using default settings.", NULL, MB_OK);
 		else
 		{
 			if (IDOK != result)
 			{
 				// cancel was hit...
-				MessageBox(NULL, "damn whimp...", "pfff", MB_OK);
+				MessageBox(NULL, "damn wimp...", "pfff", MB_OK);
 				return 0;
 			}
 		}
-#endif
 #endif
 		
 		D3DDISPLAYMODE mode = config.getMode();
 		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, mode.Width, mode.Height, 0, 0, GetModuleHandle(0), 0);
 		if (!win) throw FatalException("CreateWindow() failed. something is VERY spooky.");
-
+		
 		Device device;
 		device.Attach(init::initD3D(direct3d, win, mode, D3DMULTISAMPLE_NONE, config.getAdapter(), config.getVsync()));
 		ShowWindow(win, TRUE); // showing window after initing d3d in order to be able to see warnings during init
@@ -295,7 +319,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			static_vb.unlock();
 		}
 
-#define GRID_SIZE 64
+#define GRID_SIZE (64)
 
 		renderer::VertexBuffer dynamic_vb = device.createVertexBuffer(GRID_SIZE * GRID_SIZE * GRID_SIZE * 4, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
 		
@@ -317,6 +341,27 @@ int main(int /*argc*/, char* /*argv*/ [])
 			ib.unlock();
 		}
 
+			int cubes = 0;
+			{
+				BYTE *dst = (BYTE*)dynamic_vb.lock(0, GRID_SIZE * GRID_SIZE * GRID_SIZE * 4, 0);
+				for (int z = 0; z < GRID_SIZE; ++z)
+				{
+					for (int y = 0; y < GRID_SIZE; ++y)
+					{
+						for (int x = 0; x < GRID_SIZE; ++x)
+						{
+							float size = 0.5;
+							*dst++ = x; *dst++ = y; *dst++ = z;
+//							*dst++ = 32; // (1 + cos(time - x - y)) * 127.5;
+							*dst++ = BYTE(size * 255);
+							cubes++;
+						}
+					}
+				}
+				dynamic_vb.unlock();
+			}
+
+
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
 		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f) + 10);
@@ -326,6 +371,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		sync.showEditor();
 #endif
 
+		timeBeginPeriod(1);
+		DWORD lastFrameTime = timeGetTime();
 
 		bool done = false;
 		while (!done)
@@ -354,24 +401,25 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device.setViewport(&viewport);
 */
 			time /= 2;
-			D3DXCOLOR clear_color(0,0,0,0);
+			D3DXCOLOR clear_color(1,0,0,0);
 			device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, clear_color, 1.f, 0);
 
 			Vector3 up(float(sin(time * 0.1f)), float(cos(time * 0.1f)), 0.f);
 			Vector3 eye(
-					GRID_SIZE / 2 + float(sin(time * 0.25f) * GRID_SIZE),
-					GRID_SIZE / 2 + float(cos(time * 0.25f) * GRID_SIZE),
-					GRID_SIZE / 2 + float(cos(time * 0.35f) * GRID_SIZE)
-					);
-			
+				float(sin(time * 0.25f)),
+				float(cos(time * 0.25f)),
+				float(cos(time * 0.35f))
+			);
+			eye = normalize(eye);
+			eye *= GRID_SIZE;
 			Vector3 at(GRID_SIZE / 2, GRID_SIZE / 2, GRID_SIZE / 2);
 
 			D3DXMATRIX world;
 			D3DXMatrixIdentity(&world);
 			D3DXMATRIX view;
-			D3DXMatrixLookAtLH(&view, &eye, &at, &up);
+			D3DXMatrixLookAtLH(&view, &(eye + at), &at, &up);
 			D3DXMATRIX proj;
-			D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(90), 16.0f / 10, 0.1f, 100.f);
+			D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(70), DEMO_ASPECT, 0.1f, 100.f);
 
 			test_fx.setMatrices(world, view, proj);
 			test_fx->SetFloat("fade", 1.0f);
@@ -393,9 +441,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float cy2 = 0.5f + sin(time - 0.1f) / 3;
 			float cz2 = 0.5f + sin(time / 2) / 3;
 
+#if 1
+			static BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE];
 			int cubes = 0;
+			int culled = 0;
 			{
-				BYTE *dst = (BYTE*)dynamic_vb.lock(0, GRID_SIZE * GRID_SIZE * GRID_SIZE * 4, 0);
 				for (int z = 0; z < GRID_SIZE; ++z)
 				{
 					for (int y = 0; y < GRID_SIZE; ++y)
@@ -414,27 +464,62 @@ int main(int /*argc*/, char* /*argv*/ [])
 							float fy = float(y) * (M_PI / GRID_SIZE);
 							float fz = float(z) * (M_PI / GRID_SIZE);
 */
-							float size = 1.0f / sqrt(fx * fx + fy * fy + fz * fz);
-							size += 1.0f / sqrt(fx2 * fx2 + fy2 * fy2 + fz2 * fz2);
-							size -= 8.0f;
+							float size = 1.0f / (fx * fx + fy * fy + fz * fz);
+							size += 1.0f / (fx2 * fx2 + fy2 * fy2 + fz2 * fz2);
+							size -= 8.0f * 4;
 //							float size = 1.0 / sqrt(fx * fx + fy * fy + fz * fz);
 //							size = size * 3;
-							size *= GRID_SIZE / 32;
-							size = 0.5;
+							size /= 8;
+//							size *= GRID_SIZE / 64;
+//							size = 0.5;
+//							if (size > 1.75) size = 0;
 
-							if (size <= 0) continue;
-							if (size > 3) continue;
-							if (size > 1) size = 1;
+							grid[z][y][x] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
+						}
+					}
+				}
+
+				BYTE *dst = (BYTE*)dynamic_vb.lock(0, GRID_SIZE * GRID_SIZE * GRID_SIZE * 4, 0);
+				for (int z = 0; z < GRID_SIZE; ++z)
+				{
+					for (int y = 0; y < GRID_SIZE; ++y)
+					{
+						for (int x = 0; x < GRID_SIZE; ++x)
+						{
+							BYTE size = grid[z][y][x];
+
+							if (size == 0) continue;
+							if (
+								(x > 0 && x < GRID_SIZE - 1) &&
+								(y > 0 && y < GRID_SIZE - 1) &&
+								(z > 0 && z < GRID_SIZE - 1)
+								)
+							{
+
+								if (
+									grid[z][y][x-1] == 255 &&
+									grid[z][y][x+1] == 255 &&
+									grid[z][y-1][x] == 255 &&
+									grid[z][y+1][x] == 255 &&
+									grid[z-1][y][x] == 255 &&
+									grid[z+1][y][x] == 255
+									)
+								{
+									culled++;
+									continue;
+								}
+							}
+
 							*dst++ = x; *dst++ = y; *dst++ = z;
-//							*dst++ = 32; // (1 + cos(time - x - y)) * 127.5;
-							*dst++ = BYTE(size * 255);
+							*dst++ = size;
 							cubes++;
 						}
 					}
 				}
 				dynamic_vb.unlock();
 			}
-
+			printf("cubes: %d culled: %d\n", cubes, culled);
+#endif
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 			device->SetVertexDeclaration(vertex_decl);
@@ -528,10 +613,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 			texel_transform = radialblur_matrix(color_msaa, blur_center, amt);
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
-			core::d3dErr(device->SetRenderTarget(0, backbuffer));
+//			core::d3dErr(device->SetRenderTarget(0, backbuffer));
+			device.setRenderTarget(backbuffer);
+			device->Clear(0, 0, D3DCLEAR_TARGET, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
+
+			D3DVIEWPORT9 letterbox_viewport = device.getViewport();
+			makeLetterboxViewport(&letterbox_viewport, config.getWidth(), config.getHeight(), config.getAspect(), DEMO_ASPECT);
+			device.setViewport(&letterbox_viewport);
+
 			color_msaa.resolve(device);
-			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
-			
 //			tex_transform.make_scaling(Vector3(config.getWidth() / 32, config.getHeight() / 32, 1.0f));
 //			tex_transform.make_scaling(Vector3(64.0f / config.getWidth(), 64.0f / config.getHeight(), 1.0f));
 //			tex_transform.make_scaling(Vector3(64.0f / config.getWidth(), 64.0f / config.getHeight(), 1.0f));
@@ -541,6 +631,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->EndScene(); /* WE DONE IS! */
 			
 			HRESULT res = device->Present(0, 0, 0, 0);
+
+			DWORD frameTime = timeGetTime();
+			printf("frameTime: %d\n", frameTime - lastFrameTime);
+			lastFrameTime = frameTime;
+
 			
 			if (FAILED(res))
 			{

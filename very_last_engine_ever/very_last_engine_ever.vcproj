@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr9.lib lib/bass.lib"
+				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr9.lib lib/bass.lib winmm.lib"
 				LinkIncremental="2"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
@@ -140,7 +140,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr9.lib lib/bass.lib"
+				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr9.lib lib/bass.lib winmm.lib"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
@@ -221,7 +221,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr9.lib lib/bass.lib"
+				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr9.lib lib/bass.lib winmm.lib"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"

@@ -13,6 +13,7 @@
 #define _USE_MATH_DEFINES
 #include <windows.h>
 #include <shellapi.h>
+#include <mmsystem.h>
 
 #ifndef NDEBUG
 #define CRTDBG_MAP_ALLOC
@@ -36,6 +37,7 @@ extern CAppModule _Module;
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <float.h>
 #include <memory.h>
 #include <assert.h>

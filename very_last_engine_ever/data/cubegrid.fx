@@ -10,6 +10,7 @@ float4x4 View : VIEW;
 struct VS_OUTPUT
 {
 	float4 pos  : POSITION;
+	float fog : TEXCOORD0;
 };
 
 VS_OUTPUT vertex(
@@ -20,13 +21,15 @@ VS_OUTPUT vertex(
 	float3 pos = (ipos.xyz - float3(0.5, 0.5, 0.5)) * (ipos2.w / 255);
 	
 	VS_OUTPUT Out;
-	Out.pos  = mul(float4(pos + ipos2,  1), WorldViewProjection);
+	Out.pos = mul(float4(pos + ipos2,  1), WorldViewProjection);
+	Out.fog = Out.pos.z / 170;
 	return Out;
 }
 
 float4 pixel(VS_OUTPUT In) : COLOR
 {
-	return float4(1, 1, 1, 1);
+//	return float4(1, 1, 1, 1);
+	return lerp(float4(1, 1, 1, 1), float4(0,0,0,0), In.fog);
 }
 
 technique schvoi

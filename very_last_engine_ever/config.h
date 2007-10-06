@@ -19,7 +19,7 @@
 #define WINDOWED 1
 #endif
 
-#define DEMO_ASPECT (16.0 / 9)
+#define DEMO_ASPECT (4.0 / 3)
 #define BPM 208
 
 // #undef WINDOWED

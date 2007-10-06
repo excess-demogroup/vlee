@@ -6,6 +6,7 @@
 #include "vertexdeclaration.h"
 #include "vertexbuffer.h"
 #include "indexbuffer.h"
+
 #include "../core/err.h"
 
 namespace renderer
