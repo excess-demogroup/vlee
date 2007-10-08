@@ -190,12 +190,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 	
 	try
 	{
+		/* create d3d object */
 		CComPtr<IDirect3D9> direct3d = com_ptr(Direct3DCreate9(D3D_SDK_VERSION));
 		if (!direct3d) throw FatalException("your directx-version is from the stone-age.\n\nTHRUG SAYS: UPGRADE!");
 		
 		ConfigDialog config(direct3d);
 		
 #ifdef NDEBUG
+		/* show config dialog */
 		INT_PTR result = config.DoModal();
 		if (FAILED(result)) MessageBox(NULL, "Could not initialize dialogbox, using default settings.", NULL, MB_OK);
 		else
@@ -209,17 +211,25 @@ int main(int /*argc*/, char* /*argv*/ [])
 		}
 #endif
 		
-		D3DDISPLAYMODE mode = config.getMode();
-		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, mode.Width, mode.Height, 0, 0, GetModuleHandle(0), 0);
+		/* create window */
+		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, config.getWidth(), config.getHeight(), 0, 0, GetModuleHandle(0), 0);
 		if (!win) throw FatalException("CreateWindow() failed. something is VERY spooky.");
 		
+		/* create device */
 		Device device;
-		device.Attach(init::initD3D(direct3d, win, mode, D3DMULTISAMPLE_NONE, config.getAdapter(), config.getVsync()));
-		ShowWindow(win, TRUE); // showing window after initing d3d in order to be able to see warnings during init
+		device.Attach(init::initD3D(direct3d, win, config.getMode(), D3DMULTISAMPLE_NONE, config.getAdapter(), config.getVsync()));
+		
+		/* showing window after initing d3d in order to be able to see warnings during init */
+		ShowWindow(win, TRUE);
 #if !WINDOWED
 		ShowCursor(0);
 #endif
 		
+		/* setup letterbox */
+		D3DVIEWPORT9 letterbox_viewport = device.getViewport();
+		makeLetterboxViewport(&letterbox_viewport, config.getWidth(), config.getHeight(), config.getAspect(), DEMO_ASPECT);
+		
+		/* setup sound-playback */
 		if (!BASS_Init(config.getSoundcard(), 44100, BASS_DEVICE_LATENCY, 0, 0)) throw FatalException("failed to init bass");
 		stream = BASS_StreamCreateFile(false, "data/208_skritt_til_venstre.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config.getSoundcard()) ? BASS_STREAM_DECODE : 0));
 		if (!stream) throw FatalException("failed to open tune");
@@ -270,58 +280,105 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		const D3DVERTEXELEMENT9 vertex_elements[] =
 		{
-			{ 0, 0, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 },
-			{ 1, 0, D3DDECLTYPE_UBYTE4,  D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 },
+			/* static data */
+			{ 0, 0, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 }, // pos
+			{ 0, 4, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 3 }, // normal + front index
+			/* instance data */
+			{ 1, 0, D3DDECLTYPE_UBYTE4,  D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 }, // pos2
+			{ 1, 4, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 1 }, // instance array
+			{ 1, 8, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 2 }, // instance array
 			D3DDECL_END()
 		};
 		renderer::VertexDeclaration vertex_decl = device.createVertexDeclaration(vertex_elements);
 
-		renderer::VertexBuffer static_vb  = device.createVertexBuffer(6 * 4 * 4, D3DUSAGE_WRITEONLY, 0, D3DPOOL_MANAGED);
+		renderer::VertexBuffer static_vb  = device.createVertexBuffer(6 * 4 * (4 * 2), D3DUSAGE_WRITEONLY, 0, D3DPOOL_MANAGED);
 		{
-			BYTE *dst = (BYTE*)static_vb.lock(0, 6 * 4 * 4, 0);
+			BYTE *dst = (BYTE*)static_vb.lock(0, 6 * 4 * (4 * 2), 0);
 			
 			/* front face (positive z) */
 			*dst++ = 0;   *dst++ = 0;   *dst++ = 255; *dst++ = 255;
+			*dst++ = 127; *dst++ = 127; *dst++ = 255; *dst++ = 0; // <0,0,1>, 0
+
 			*dst++ = 255; *dst++ = 0;   *dst++ = 255; *dst++ = 255;
+			*dst++ = 127; *dst++ = 127; *dst++ = 255; *dst++ = 0; // <0,0,1>, 0
+
 			*dst++ = 0;   *dst++ = 255; *dst++ = 255; *dst++ = 255;
+			*dst++ = 127; *dst++ = 127; *dst++ = 255; *dst++ = 0; // <0,0,1>, 0
+
 			*dst++ = 255; *dst++ = 255; *dst++ = 255; *dst++ = 255;
+			*dst++ = 127; *dst++ = 127; *dst++ = 255; *dst++ = 0; // <0,0,1>, 0
 
 			/* back face (negative z)*/
 			*dst++ = 255; *dst++ = 0;   *dst++ = 0; *dst++ = 255;
+			*dst++ = 127; *dst++ = 127; *dst++ = 0; *dst++ = 1; // <0,0,-1>, 5
+
 			*dst++ = 0;   *dst++ = 0;   *dst++ = 0; *dst++ = 255;
+			*dst++ = 127; *dst++ = 127; *dst++ = 0; *dst++ = 1; // <0,0,-1>, 5
+
 			*dst++ = 255; *dst++ = 255; *dst++ = 0; *dst++ = 255;
+			*dst++ = 127; *dst++ = 127; *dst++ = 0; *dst++ = 1; // <0,0,-1>, 5
+
 			*dst++ = 0;   *dst++ = 255; *dst++ = 0; *dst++ = 255;
+			*dst++ = 127; *dst++ = 127; *dst++ = 0; *dst++ = 1; // <0,0,-1>, 5
 
 			/* top face (positive y)*/
 			*dst++ = 0;   *dst++ = 255; *dst++ = 0;   *dst++ = 255;
+			*dst++ = 127; *dst++ = 255; *dst++ = 127; *dst++ = 2; // <0,1,0>, 5
+
 			*dst++ = 0;   *dst++ = 255; *dst++ = 255; *dst++ = 255;
+			*dst++ = 127; *dst++ = 255; *dst++ = 127; *dst++ = 2; // <0,1,0>, 5
+
 			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 255;
+			*dst++ = 127; *dst++ = 255; *dst++ = 127; *dst++ = 2; // <0,1,0>, 5
+
 			*dst++ = 255; *dst++ = 255; *dst++ = 255; *dst++ = 255;
+			*dst++ = 127; *dst++ = 255; *dst++ = 127; *dst++ = 2; // <0,1,0>, 5
 
 			/* bottom face (negative y) */
 			*dst++ = 0;   *dst++ = 0; *dst++ = 255; *dst++ = 255;
+			*dst++ = 127; *dst++ = 0; *dst++ = 127; *dst++ = 3; // <0,-1,0>, 5
+
 			*dst++ = 0;   *dst++ = 0; *dst++ = 0;   *dst++ = 255;
+			*dst++ = 127; *dst++ = 0; *dst++ = 127; *dst++ = 3; // <0,-1,0>, 5
+
 			*dst++ = 255; *dst++ = 0; *dst++ = 255; *dst++ = 255;
+			*dst++ = 127; *dst++ = 0; *dst++ = 127; *dst++ = 3; // <0,-1,0>, 5
+
 			*dst++ = 255; *dst++ = 0; *dst++ = 0;   *dst++ = 255;
+			*dst++ = 127; *dst++ = 0; *dst++ = 127; *dst++ = 3; // <0,-1,0>, 5
 
 			/* left face (positive x)*/
 			*dst++ = 255; *dst++ = 0;   *dst++ = 255; *dst++ = 255;
+			*dst++ = 255; *dst++ = 127; *dst++ = 127; *dst++ = 4; // <1,0,0>, 5
+
 			*dst++ = 255; *dst++ = 0;   *dst++ = 0;   *dst++ = 255;
+			*dst++ = 255; *dst++ = 127; *dst++ = 127; *dst++ = 4; // <1,0,0>, 5
+
 			*dst++ = 255; *dst++ = 255; *dst++ = 255; *dst++ = 255;
+			*dst++ = 255; *dst++ = 127; *dst++ = 127; *dst++ = 4; // <1,0,0>, 5
+
 			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 255;
+			*dst++ = 255; *dst++ = 127; *dst++ = 127; *dst++ = 4; // <1,0,0>, 5
 
 			/* right face (negative x)*/
 			*dst++ = 0; *dst++ = 0;   *dst++ = 0;   *dst++ = 255;
+			*dst++ = 0; *dst++ = 127; *dst++ = 127; *dst++ = 5; // <-1,0,0>, 5
+
 			*dst++ = 0; *dst++ = 0;   *dst++ = 255; *dst++ = 255;
+			*dst++ = 0; *dst++ = 127; *dst++ = 127; *dst++ = 5; // <-1,0,0>, 5
+
 			*dst++ = 0; *dst++ = 255; *dst++ = 0;   *dst++ = 255;
+			*dst++ = 0; *dst++ = 127; *dst++ = 127; *dst++ = 5; // <-1,0,0>, 5
+
 			*dst++ = 0; *dst++ = 255; *dst++ = 255; *dst++ = 255;
+			*dst++ = 0; *dst++ = 127; *dst++ = 127; *dst++ = 5; // <-1,0,0>, 5
 
 			static_vb.unlock();
 		}
 
 #define GRID_SIZE (64)
 
-		renderer::VertexBuffer dynamic_vb = device.createVertexBuffer(GRID_SIZE * GRID_SIZE * GRID_SIZE * 4, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
+		renderer::VertexBuffer dynamic_vb = device.createVertexBuffer(GRID_SIZE * GRID_SIZE * GRID_SIZE * (4 * 3), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
 		
 		renderer::IndexBuffer ib = device.createIndexBuffer(2 * 6 * 6, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED);
 		{
@@ -479,7 +536,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					}
 				}
 
-				BYTE *dst = (BYTE*)dynamic_vb.lock(0, GRID_SIZE * GRID_SIZE * GRID_SIZE * 4, 0);
+				BYTE *dst = (BYTE*)dynamic_vb.lock(0, GRID_SIZE * GRID_SIZE * GRID_SIZE * (4 * 3), 0);
 				for (int z = 0; z < GRID_SIZE; ++z)
 				{
 					for (int y = 0; y < GRID_SIZE; ++y)
@@ -512,6 +569,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 							*dst++ = x; *dst++ = y; *dst++ = z;
 							*dst++ = size;
+
+							*dst++ = z < GRID_SIZE - 1 ? grid[z+1][y][x] : 0; // +z
+							*dst++ = z > 0 ?             grid[z-1][y][x] : 0; // -z
+
+							*dst++ = y < GRID_SIZE - 1 ? grid[z][y+1][x] : 0; // +y
+							*dst++ = y > 0 ?             grid[z][y-1][x] : 0; // -y
+
+							*dst++ = x < GRID_SIZE - 1 ? grid[z][y][x+1] : 0; // +x
+							*dst++ = x > 0 ?             grid[z][y][x-1] : 0; // -x
+
+							*dst++ = 128;
+							*dst++ = 128;
+
 							cubes++;
 						}
 					}
@@ -524,10 +594,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 			device->SetVertexDeclaration(vertex_decl);
 
-			device->SetStreamSource(0, static_vb, 0, 4);
+			device->SetStreamSource(0, static_vb, 0, 4 * 2);
 			device->SetStreamSourceFreq(0, D3DSTREAMSOURCE_INDEXEDDATA | cubes);
 
-			device->SetStreamSource(1, dynamic_vb, 0, 4);
+			device->SetStreamSource(1, dynamic_vb, 0, 4 * 3);
 			device->SetStreamSourceFreq(1, D3DSTREAMSOURCE_INSTANCEDATA | 1UL);
 
 			device->SetIndices(ib);
@@ -614,11 +684,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
 //			core::d3dErr(device->SetRenderTarget(0, backbuffer));
+
+			/* letterbox */
 			device.setRenderTarget(backbuffer);
 			device->Clear(0, 0, D3DCLEAR_TARGET, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
-
-			D3DVIEWPORT9 letterbox_viewport = device.getViewport();
-			makeLetterboxViewport(&letterbox_viewport, config.getWidth(), config.getHeight(), config.getAspect(), DEMO_ASPECT);
 			device.setViewport(&letterbox_viewport);
 
 			color_msaa.resolve(device);
@@ -635,7 +704,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			DWORD frameTime = timeGetTime();
 			printf("frameTime: %d\n", frameTime - lastFrameTime);
 			lastFrameTime = frameTime;
-
 			
 			if (FAILED(res))
 			{

@@ -22,15 +22,9 @@
 #define DEMO_ASPECT (4.0 / 3)
 #define BPM 208
 
-// #undef WINDOWED
-// #define WINDOWED 0
-
 #ifdef VJSYS
 #define DEFAULT_SOUNDCARD 0
 #else
 #define DEFAULT_SOUNDCARD 1
 #endif
 
-// HACK
-// #undef DEFAULT_SOUNDCARD
-// #define DEFAULT_SOUNDCARD 0

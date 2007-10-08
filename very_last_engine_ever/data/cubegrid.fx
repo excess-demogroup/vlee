@@ -15,14 +15,31 @@ struct VS_OUTPUT
 
 VS_OUTPUT vertex(
 	float4 ipos  : POSITION,
-	float4 ipos2 : TEXCOORD0)
+	float4 ipos2 : TEXCOORD0,
+	float4  distances[2] : TEXCOORD1,
+	float4 normal_front_index : TEXCOORD3
+	)
 {
 	/* calculate object-space position */
 	float3 pos = (ipos.xyz - float3(0.5, 0.5, 0.5)) * (ipos2.w / 255);
 	
+	float3 normal = (normal_front_index.xyz - float3(0.5, 0.5, 0.5)) * 2;
+	int front_index = normal_front_index.w * 256;
+	
 	VS_OUTPUT Out;
 	Out.pos = mul(float4(pos + ipos2,  1), WorldViewProjection);
-	Out.fog = Out.pos.z / 170;
+//	Out.fog = Out.pos.z / 70;
+	
+	float sizes[6] = {
+		distances[0].r,
+		distances[0].g,
+		distances[0].b,
+		distances[0].a,
+		distances[1].r,
+		distances[1].g,
+	};
+	
+	Out.fog = sizes[front_index];
 	return Out;
 }
 
