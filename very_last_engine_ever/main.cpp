@@ -176,8 +176,49 @@ void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_
 	viewport->Height = letterbox_height;
 }
 
-#define GRID_SIZE (128)
+#define GRID_SIZE (64)
+void fill_grid(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], float fgrid_size, const math::Vector3 &c1, const math::Vector3 &c2)
+{
+	int grid_size = floor(fgrid_size);
+	for (int z = 0; z < grid_size; ++z)
+	{
+		for (int y = 0; y < grid_size; ++y)
+		{
+			for (int x = 0; x < grid_size; ++x)
+			{
+				float fx = float(x) - c1.x;
+				float fy = float(y) - c1.y;
+				float fz = float(z) - c1.z;
+				float fx2 = float(x) - c2.x;
+				float fy2 = float(y) - c2.y;
+				float fz2 = float(z) - c2.z;
 
+/*
+				float fx = float(x) * (M_PI / GRID_SIZE);
+				float fy = float(y) * (M_PI / GRID_SIZE);
+				float fz = float(z) * (M_PI / GRID_SIZE);
+*/
+				float size = 1.0f / (fx * fx + fy * fy + fz * fz);
+				size += 1.0f / (fx2 * fx2 + fy2 * fy2 + fz2 * fz2);
+
+				size -= (0.75f / fgrid_size);
+//				size *= 8;
+				size *= fgrid_size / 0.75f;
+
+//				size *= fgrid_size;
+//				float size = 1.0 / sqrt(fx * fx + fy * fy + fz * fz);
+//				size = size * 3;
+//				size /= 8 * 8 * 8 * 2;
+//				size *= GRID_SIZE / 64;
+//				size = 0.5;
+//				if (size > 1.75) size = 0;
+
+				grid[z][y][x] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
+//				grid[z][y][x] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
+			}
+		}
+	}
+}
 
 
 int main(int /*argc*/, char* /*argv*/ [])
@@ -216,7 +257,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 #endif
 		
 		/* create window */
-		win = CreateWindow("edit", "very last engine ever", WS_POPUP, 0, 0, config.getWidth(), config.getHeight(), 0, 0, GetModuleHandle(0), 0);
+		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, config.getWidth(), config.getHeight(), 0, 0, GetModuleHandle(0), 0);
 		if (!win) throw FatalException("CreateWindow() failed. something is VERY spooky.");
 		
 		/* create device */
@@ -476,8 +517,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			);
 			eye = normalize(eye);
 
-//			float fgrid_size = ((1 + cos(time / 4 + M_PI)) / 2) * GRID_SIZE;
-			float fgrid_size = GRID_SIZE;
+			float fgrid_size = ((1 + cos(time / 4 + M_PI)) / 2) * GRID_SIZE;
+//			float fgrid_size = GRID_SIZE;
 			int grid_size = floor(fgrid_size);
 
 			eye *= fgrid_size;
@@ -501,58 +542,25 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			cubegrid_fx.setMatrices(world, view, proj);
 
-			time /= 4;
+//			time /= 4;
+
 			float cx = (0.5f + sin(time) / 3) * fgrid_size;
 			float cy = (0.5f + cos(time) / 3) * fgrid_size;
 			float cz = (0.5f + sin(time) / 3) * fgrid_size;
+			math::Vector3 c1(cx, cy, cz);
 
 			float cx2 = (0.5f + cos(time - M_PI) / 3) * fgrid_size;
 			float cy2 = (0.5f + sin(time - M_PI) / 3) * fgrid_size;
 			float cz2 = (0.5f + sin(time - M_PI) / 3) * fgrid_size;
+			math::Vector3 c2(cx2, cy2, cz2);
 
 #if 1
 			static BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE];
+			fill_grid(grid, fgrid_size, c1, c2);
+
 			int cubes = 0;
 			int culled = 0;
 			{
-				for (int z = 0; z < grid_size; ++z)
-				{
-					for (int y = 0; y < grid_size; ++y)
-					{
-						for (int x = 0; x < grid_size; ++x)
-						{
-							float fx = float(x) - cx;
-							float fy = float(y) - cy;
-							float fz = float(z) - cz;
-							float fx2 = float(x) - cx2;
-							float fy2 = float(y) - cy2;
-							float fz2 = float(z) - cz2;
-
-/*
-							float fx = float(x) * (M_PI / GRID_SIZE);
-							float fy = float(y) * (M_PI / GRID_SIZE);
-							float fz = float(z) * (M_PI / GRID_SIZE);
-*/
-							float size = 1.0f / (fx * fx + fy * fy + fz * fz);
-							size += 1.0f / (fx2 * fx2 + fy2 * fy2 + fz2 * fz2);
-
-							size -= (0.75f / fgrid_size);
-//							size *= 8;
-							size *= fgrid_size / 0.75f;
-
-//							size *= fgrid_size;
-//							float size = 1.0 / sqrt(fx * fx + fy * fy + fz * fz);
-//							size = size * 3;
-//							size /= 8 * 8 * 8 * 2;
-//							size *= GRID_SIZE / 64;
-//							size = 0.5;
-//							if (size > 1.75) size = 0;
-
-							grid[z][y][x] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
-						}
-					}
-				}
-
 				BYTE *dst = (BYTE*)dynamic_vb.lock(0, grid_size * grid_size * grid_size * (4 * 3), 0);
 				for (int z = 0; z < grid_size; ++z)
 				{
@@ -650,55 +658,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 /*			device.setDepthStencilSurface(Surface(NULL)); */
 /*			device->SetRenderState(D3DRS_ZENABLE,  FALSE); */
 			device->SetDepthStencilSurface(NULL);
-			color_msaa.resolve(device);
-
-			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
-
-			Matrix4x4 texcoord_transform;
-			Matrix4x4 texture_transform = texture_matrix(color_msaa);
-
-			Vector3 texcoord_translate(
-				0.5 + (0.5 / color_msaa.getSurface().getDesc().Width),
-				0.5 + (0.5 / color_msaa.getSurface().getDesc().Height),
-				0.0);
-			blur_fx->SetFloatArray("texcoord_translate", texcoord_translate, 2);
-			texcoord_transform.make_scaling(Vector3(1,1,1));
-			blur_fx->SetMatrix("texcoord_transform", &texcoord_transform);
-			blur_fx->SetMatrix("texture_transform", &texture_transform);
-
-			float blur_amt = 0.05f;
-			float amt = 1.0f / (1 + blur_amt * 0.02f);
-			Vector2 blur_center(sin(time) * cos(time * 0.3), cos(time * 0.99) * sin(time * 0.4));
-			Matrix4x4 texel_transform = radialblur_matrix(color_msaa, blur_center, amt);
-			blur_fx->SetMatrix("texel_transform", &texel_transform);
-#if 0
-
-			blit(device, rt, blur_fx, -1, -1, 2, 2);
-//			blit(device, blurme1_tex, blur_fx, polygon);
-
-			amt = 1.0 / (1 + blur_amt * 0.04f);
-			texel_transform = radialblur_matrix(rt, blur_center, amt);
-			blur_fx->SetMatrix("texel_transform", &texel_transform);
-
-			core::d3dErr(device->SetRenderTarget(0, rt3));
-			rt2.resolve();
-
-			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
-			blit(device, rt2, blur_fx, -1, -1, 2, 2);
-
-			amt = 1.0 / (1 + blur_amt * 0.08f);
-			texel_transform = radialblur_matrix(rt, blur_center, amt);
-			blur_fx->SetMatrix("texel_transform", &texel_transform);
-
-			core::d3dErr(device->SetRenderTarget(0, rt2));
-			rt3.resolve();
-			device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
-			blit(device, rt3, blur_fx, -1, -1, 2, 2);
-
-#endif
-			amt = 1.0f / (1 + blur_amt * 0.16f);
-			texel_transform = radialblur_matrix(color_msaa, blur_center, amt);
-			blur_fx->SetMatrix("texel_transform", &texel_transform);
 
 //			core::d3dErr(device->SetRenderTarget(0, backbuffer));
 
@@ -713,15 +672,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 //			tex_transform.make_scaling(Vector3(64.0f / config.getWidth(), 64.0f / config.getHeight(), 1.0f));
 //			pixelize_fx->SetMatrix("tex_transform", &tex_transform);
 			blit(device, color_msaa, pixelize_fx, -1, -1, 2, 2);
-
+			
 			device->EndScene(); /* WE DONE IS! */
 			
 			HRESULT res = device->Present(0, 0, 0, 0);
-
+/*
 			DWORD frameTime = timeGetTime();
 			printf("frameTime: %d\n", frameTime - lastFrameTime);
 			lastFrameTime = frameTime;
-			
+*/
 			if (FAILED(res))
 			{
 				throw FatalException(std::string(DXGetErrorString9(res)) + std::string(" : ") + std::string(DXGetErrorDescription9(res)));
