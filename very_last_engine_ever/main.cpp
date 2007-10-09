@@ -176,6 +176,10 @@ void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_
 	viewport->Height = letterbox_height;
 }
 
+#define GRID_SIZE (128)
+
+
+
 int main(int /*argc*/, char* /*argv*/ [])
 {
 #ifndef NDEBUG
@@ -212,7 +216,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 #endif
 		
 		/* create window */
-		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, config.getWidth(), config.getHeight(), 0, 0, GetModuleHandle(0), 0);
+		win = CreateWindow("edit", "very last engine ever", WS_POPUP, 0, 0, config.getWidth(), config.getHeight(), 0, 0, GetModuleHandle(0), 0);
 		if (!win) throw FatalException("CreateWindow() failed. something is VERY spooky.");
 		
 		/* create device */
@@ -381,8 +385,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			static_vb.unlock();
 		}
 
-#define GRID_SIZE (16)
-
 		renderer::VertexBuffer dynamic_vb = device.createVertexBuffer(GRID_SIZE * GRID_SIZE * GRID_SIZE * (4 * 3), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
 		
 		renderer::IndexBuffer ib = device.createIndexBuffer(2 * 6 * 6, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED);
@@ -468,13 +470,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			Vector3 up(float(sin(time * 0.1f)), float(cos(time * 0.1f)), 0.f);
 			Vector3 eye(
-				float(sin(time * 0.25f)),
-				float(cos(time * 0.25f)),
-				float(cos(time * 0.35f))
+				float(sin(time * 0.125f)),
+				float(cos(time * 0.125f)),
+				float(cos(time * 0.135f))
 			);
 			eye = normalize(eye);
-			eye *= GRID_SIZE;
-			Vector3 at(GRID_SIZE / 2, GRID_SIZE / 2, GRID_SIZE / 2);
+
+//			float fgrid_size = ((1 + cos(time / 4 + M_PI)) / 2) * GRID_SIZE;
+			float fgrid_size = GRID_SIZE;
+			int grid_size = floor(fgrid_size);
+
+			eye *= fgrid_size;
+			Vector3 at(fgrid_size / 2, fgrid_size / 2, fgrid_size / 2);
 
 			D3DXMATRIX world;
 			D3DXMatrixIdentity(&world);
@@ -495,31 +502,31 @@ int main(int /*argc*/, char* /*argv*/ [])
 			cubegrid_fx.setMatrices(world, view, proj);
 
 			time /= 4;
-			float cx = 0.5f + sin(time) / 3;
-			float cy = 0.5f + cos(time) / 3;
-			float cz = 0.5f + sin(time / 3) / 3;
+			float cx = (0.5f + sin(time) / 3) * fgrid_size;
+			float cy = (0.5f + cos(time) / 3) * fgrid_size;
+			float cz = (0.5f + sin(time) / 3) * fgrid_size;
 
-			float cx2 = 0.5f + cos(time * 0.9f) / 3;
-			float cy2 = 0.5f + sin(time - 0.1f) / 3;
-			float cz2 = 0.5f + sin(time / 2) / 3;
+			float cx2 = (0.5f + cos(time - M_PI) / 3) * fgrid_size;
+			float cy2 = (0.5f + sin(time - M_PI) / 3) * fgrid_size;
+			float cz2 = (0.5f + sin(time - M_PI) / 3) * fgrid_size;
 
 #if 1
 			static BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE];
 			int cubes = 0;
 			int culled = 0;
 			{
-				for (int z = 0; z < GRID_SIZE; ++z)
+				for (int z = 0; z < grid_size; ++z)
 				{
-					for (int y = 0; y < GRID_SIZE; ++y)
+					for (int y = 0; y < grid_size; ++y)
 					{
-						for (int x = 0; x < GRID_SIZE; ++x)
+						for (int x = 0; x < grid_size; ++x)
 						{
-							float fx = float(x) * (1.0f / GRID_SIZE) - cx;
-							float fy = float(y) * (1.0f / GRID_SIZE) - cy;
-							float fz = float(z) * (1.0f / GRID_SIZE) - cz;
-							float fx2 = float(x) * (1.0f / GRID_SIZE) - cx2;
-							float fy2 = float(y) * (1.0f / GRID_SIZE) - cy2;
-							float fz2 = float(z) * (1.0f / GRID_SIZE) - cz2;
+							float fx = float(x) - cx;
+							float fy = float(y) - cy;
+							float fz = float(z) - cz;
+							float fx2 = float(x) - cx2;
+							float fy2 = float(y) - cy2;
+							float fz2 = float(z) - cz2;
 
 /*
 							float fx = float(x) * (M_PI / GRID_SIZE);
@@ -528,10 +535,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 */
 							float size = 1.0f / (fx * fx + fy * fy + fz * fz);
 							size += 1.0f / (fx2 * fx2 + fy2 * fy2 + fz2 * fz2);
-							size -= 8.0f * 4;
+
+							size -= (0.75f / fgrid_size);
+//							size *= 8;
+							size *= fgrid_size / 0.75f;
+
+//							size *= fgrid_size;
 //							float size = 1.0 / sqrt(fx * fx + fy * fy + fz * fz);
 //							size = size * 3;
-							size /= 8;
+//							size /= 8 * 8 * 8 * 2;
 //							size *= GRID_SIZE / 64;
 //							size = 0.5;
 //							if (size > 1.75) size = 0;
@@ -541,20 +553,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 					}
 				}
 
-				BYTE *dst = (BYTE*)dynamic_vb.lock(0, GRID_SIZE * GRID_SIZE * GRID_SIZE * (4 * 3), 0);
-				for (int z = 0; z < GRID_SIZE; ++z)
+				BYTE *dst = (BYTE*)dynamic_vb.lock(0, grid_size * grid_size * grid_size * (4 * 3), 0);
+				for (int z = 0; z < grid_size; ++z)
 				{
-					for (int y = 0; y < GRID_SIZE; ++y)
+					for (int y = 0; y < grid_size; ++y)
 					{
-						for (int x = 0; x < GRID_SIZE; ++x)
+						for (int x = 0; x < grid_size; ++x)
 						{
 							BYTE size = grid[z][y][x];
 
 							if (size == 0) continue;
 							if (
-								(x > 0 && x < GRID_SIZE - 1) &&
-								(y > 0 && y < GRID_SIZE - 1) &&
-								(z > 0 && z < GRID_SIZE - 1)
+								(x > 0 && x < grid_size - 1) &&
+								(y > 0 && y < grid_size - 1) &&
+								(z > 0 && z < grid_size - 1)
 								)
 							{
 
@@ -575,13 +587,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 							*dst++ = x; *dst++ = y; *dst++ = z;
 							*dst++ = size;
 
-							*dst++ = z < GRID_SIZE - 1 ? grid[z+1][y][x] : 0; // +z
+							*dst++ = z < grid_size - 1 ? grid[z+1][y][x] : 0; // +z
 							*dst++ = z > 0 ?             grid[z-1][y][x] : 0; // -z
 
-							*dst++ = y < GRID_SIZE - 1 ? grid[z][y+1][x] : 0; // +y
+							*dst++ = y < grid_size - 1 ? grid[z][y+1][x] : 0; // +y
 							*dst++ = y > 0 ?             grid[z][y-1][x] : 0; // -y
 
-							*dst++ = x < GRID_SIZE - 1 ? grid[z][y][x+1] : 0; // +x
+							*dst++ = x < grid_size - 1 ? grid[z][y][x+1] : 0; // +x
 							*dst++ = x > 0 ?             grid[z][y][x-1] : 0; // -x
 
 							*dst++ = 128;

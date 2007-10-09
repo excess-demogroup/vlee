@@ -19,6 +19,8 @@
 #define WINDOWED 1
 #endif
 
+#define WINDOWED 1
+
 #define DEMO_ASPECT (4.0 / 3)
 #define BPM 208
 

@@ -94,6 +94,13 @@ IDirect3DDevice9 *init::initD3D(IDirect3D9 *direct3d, HWND win, D3DDISPLAYMODE m
 	D3DDEVTYPE devtype = D3DDEVTYPE_HAL;
 //	devtype = D3DDEVTYPE_REF;
 
+	D3DADAPTER_IDENTIFIER9 Identifier;
+	direct3d->GetAdapterIdentifier(adapter,0,&Identifier);
+	if (strstr(Identifier.Description,"PerfHUD") != 0)
+	{
+		devtype = D3DDEVTYPE_REF;
+	}
+
 	IDirect3DDevice9 *device;
 	HRESULT result = direct3d->CreateDevice(adapter, devtype, win, tnl, &present_parameters, &device);
 

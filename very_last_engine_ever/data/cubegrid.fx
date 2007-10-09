@@ -91,7 +91,8 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	
 	float4 color = float4(l, l, l, 1.0);
 	
-	return lerp(color, float4(0,0,0,0), In.fog);
+	return color;
+//	return lerp(color, float4(0,0,0,0), In.fog);
 }
 
 technique schvoi
