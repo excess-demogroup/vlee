@@ -7,28 +7,57 @@ float4x4 WorldView : WORLDVIEW;
 float4x4 World : WORLD;
 float4x4 View : VIEW;
 
+texture front_tex;
+sampler3D front_sampler = sampler_state
+{
+	Texture = (front_tex);
+	MipFilter = NONE;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	
+	AddressU = MIRRORONCE;
+	AddressV = MIRRORONCE;
+	AddressW = CLAMP;
+};
+
+
 struct VS_OUTPUT
 {
 	float4 pos  : POSITION;
-	float fog : TEXCOORD0;
+	float  fog  : TEXCOORD0;
+	float2 uv   : TEXCOORD1;
+	float front_dist : TEXCOORD2;
+	float light : TEXCOORD3;
+};
+
+const float3 normals[6] =
+{
+	float3( 0.0,  0.0,  1.0),
+	float3( 0.0,  0.0, -1.0),
+	float3( 0.0,  1.0,  0.0),
+	float3( 0.0, -1.0,  0.0),
+	float3( 1.0,  0.0,  0.0),
+	float3(-1.0,  0.0,  0.0)
 };
 
 VS_OUTPUT vertex(
 	float4 ipos  : POSITION,
 	float4 ipos2 : TEXCOORD0,
-	float4  distances[2] : TEXCOORD1,
-	float4 normal_front_index : TEXCOORD3
+	float4 distances[2] : TEXCOORD1,
+	float4 uv_face_index : TEXCOORD3
 	)
 {
 	/* calculate object-space position */
 	float3 pos = (ipos.xyz - float3(0.5, 0.5, 0.5)) * (ipos2.w / 255);
 	
-	float3 normal = (normal_front_index.xyz - float3(0.5, 0.5, 0.5)) * 2;
-	int front_index = normal_front_index.w * 256;
-	
+	int face_index = uv_face_index.w * 256;
+	float3 normal = normals[face_index];
+
 	VS_OUTPUT Out;
-	Out.pos = mul(float4(pos + ipos2,  1), WorldViewProjection);
-//	Out.fog = Out.pos.z / 70;
+	Out.pos = mul(float4(pos + ipos2.xyz,  1), WorldViewProjection);
+
+/*	Out.uv = ipos */
+	Out.uv = (uv_face_index.xy - 0.5) * (ipos2.w / 255) + 0.5;
 	
 	float sizes[6] = {
 		distances[0].r,
@@ -39,14 +68,30 @@ VS_OUTPUT vertex(
 		distances[1].g,
 	};
 	
-	Out.fog = sizes[front_index];
+	Out.front_dist = sizes[face_index];
+	
+	Out.light = max(dot(normal, normalize(float3(1,0.1,0.2))), 0);
+	Out.fog = clamp((Out.pos.z - 10) / 70, 0.0, 1.0);
+
 	return Out;
 }
 
 float4 pixel(VS_OUTPUT In) : COLOR
 {
-//	return float4(1, 1, 1, 1);
-	return lerp(float4(1, 1, 1, 1), float4(0,0,0,0), In.fog);
+//	float4 color = float4(In.uv,1,1);
+
+	float front_dist = In.front_dist;
+
+	float u = In.uv.x;
+	float v = In.uv.y;
+	
+	float ao = tex3D(front_sampler, float3(u * 2 - 1, v * 2 - 1, 1.0 - front_dist)).x;
+	
+	float l = (In.light * ao) + (ao * 0.1);
+	
+	float4 color = float4(l, l, l, 1.0);
+	
+	return lerp(color, float4(0,0,0,0), In.fog);
 }
 
 technique schvoi

@@ -245,14 +245,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Surface backbuffer   = device.getRenderTarget(0);
 		Surface depthstencil = device.getDepthStencilSurface();
 		
-		RenderTexture color_msaa(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8, config.getMultisample());
-		Surface depthstencil_msaa = device.createDepthStencilSurface(config.getWidth(), config.getHeight(), D3DFMT_D24S8, config.getMultisample());
+		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8, config.getMultisample());
+		Surface depthstencil_msaa = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8, config.getMultisample());
 
 		/** DEMO ***/
 
 //		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE);
-		RenderTexture rt2(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8);
-		RenderTexture rt3(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8);
+		RenderTexture rt2(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
+		RenderTexture rt3(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
 
 /*
 		Surface rt_ds = device.createDepthStencilSurface(config.getWidth(), config.getHeight(), D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, TRUE);
@@ -278,6 +278,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Effect cubegrid_fx = engine::loadEffect(device, "data/cubegrid.fx");
 
+		CComPtr<IDirect3DVolumeTexture9> front_tex;
+		core::d3dErr(D3DXCreateVolumeTextureFromFile(device, "data/front.dds", &front_tex));
+		cubegrid_fx->SetTexture("front_tex", front_tex);
+
+
 		const D3DVERTEXELEMENT9 vertex_elements[] =
 		{
 			/* static data */
@@ -297,86 +302,86 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			/* front face (positive z) */
 			*dst++ = 0;   *dst++ = 0;   *dst++ = 255; *dst++ = 255;
-			*dst++ = 127; *dst++ = 127; *dst++ = 255; *dst++ = 0; // <0,0,1>, 0
+			*dst++ = 0;   *dst++ = 0;   *dst++ = 0;   *dst++ = 0; // <0,0>, 0, 0
 
 			*dst++ = 255; *dst++ = 0;   *dst++ = 255; *dst++ = 255;
-			*dst++ = 127; *dst++ = 127; *dst++ = 255; *dst++ = 0; // <0,0,1>, 0
+			*dst++ = 255; *dst++ = 0;   *dst++ = 0;   *dst++ = 0; // <0,0,1>, 0
 
 			*dst++ = 0;   *dst++ = 255; *dst++ = 255; *dst++ = 255;
-			*dst++ = 127; *dst++ = 127; *dst++ = 255; *dst++ = 0; // <0,0,1>, 0
+			*dst++ = 0;   *dst++ = 255; *dst++ = 0;   *dst++ = 0; // <0,0,1>, 0
 
 			*dst++ = 255; *dst++ = 255; *dst++ = 255; *dst++ = 255;
-			*dst++ = 127; *dst++ = 127; *dst++ = 255; *dst++ = 0; // <0,0,1>, 0
+			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 0; // <0,0,1>, 0
 
 			/* back face (negative z)*/
 			*dst++ = 255; *dst++ = 0;   *dst++ = 0; *dst++ = 255;
-			*dst++ = 127; *dst++ = 127; *dst++ = 0; *dst++ = 1; // <0,0,-1>, 5
+			*dst++ = 0;   *dst++ = 0;   *dst++ = 0; *dst++ = 1; // <0,0,-1>, 5
 
 			*dst++ = 0;   *dst++ = 0;   *dst++ = 0; *dst++ = 255;
-			*dst++ = 127; *dst++ = 127; *dst++ = 0; *dst++ = 1; // <0,0,-1>, 5
+			*dst++ = 255; *dst++ = 0;   *dst++ = 0; *dst++ = 1; // <0,0,-1>, 5
 
 			*dst++ = 255; *dst++ = 255; *dst++ = 0; *dst++ = 255;
-			*dst++ = 127; *dst++ = 127; *dst++ = 0; *dst++ = 1; // <0,0,-1>, 5
+			*dst++ = 0;   *dst++ = 255; *dst++ = 0; *dst++ = 1; // <0,0,-1>, 5
 
 			*dst++ = 0;   *dst++ = 255; *dst++ = 0; *dst++ = 255;
-			*dst++ = 127; *dst++ = 127; *dst++ = 0; *dst++ = 1; // <0,0,-1>, 5
+			*dst++ = 255; *dst++ = 255; *dst++ = 0; *dst++ = 1; // <0,0,-1>, 5
 
 			/* top face (positive y)*/
 			*dst++ = 0;   *dst++ = 255; *dst++ = 0;   *dst++ = 255;
-			*dst++ = 127; *dst++ = 255; *dst++ = 127; *dst++ = 2; // <0,1,0>, 5
+			*dst++ = 0;   *dst++ = 0;   *dst++ = 0; *dst++ = 2; // <0,1,0>, 5
 
 			*dst++ = 0;   *dst++ = 255; *dst++ = 255; *dst++ = 255;
-			*dst++ = 127; *dst++ = 255; *dst++ = 127; *dst++ = 2; // <0,1,0>, 5
+			*dst++ = 255; *dst++ = 0;   *dst++ = 0;   *dst++ = 2; // <0,1,0>, 5
 
 			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 255;
-			*dst++ = 127; *dst++ = 255; *dst++ = 127; *dst++ = 2; // <0,1,0>, 5
+			*dst++ = 0;   *dst++ = 255; *dst++ = 0;   *dst++ = 2; // <0,1,0>, 5
 
 			*dst++ = 255; *dst++ = 255; *dst++ = 255; *dst++ = 255;
-			*dst++ = 127; *dst++ = 255; *dst++ = 127; *dst++ = 2; // <0,1,0>, 5
+			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 2; // <0,1,0>, 5
 
 			/* bottom face (negative y) */
-			*dst++ = 0;   *dst++ = 0; *dst++ = 255; *dst++ = 255;
-			*dst++ = 127; *dst++ = 0; *dst++ = 127; *dst++ = 3; // <0,-1,0>, 5
+			*dst++ = 0;   *dst++ = 0;   *dst++ = 255; *dst++ = 255;
+			*dst++ = 0;   *dst++ = 0;   *dst++ = 0;   *dst++ = 3; // <0,-1,0>, 5
 
-			*dst++ = 0;   *dst++ = 0; *dst++ = 0;   *dst++ = 255;
-			*dst++ = 127; *dst++ = 0; *dst++ = 127; *dst++ = 3; // <0,-1,0>, 5
+			*dst++ = 0;   *dst++ = 0;   *dst++ = 0;   *dst++ = 255;
+			*dst++ = 255; *dst++ = 0;   *dst++ = 0;   *dst++ = 3; // <0,-1,0>, 5
 
-			*dst++ = 255; *dst++ = 0; *dst++ = 255; *dst++ = 255;
-			*dst++ = 127; *dst++ = 0; *dst++ = 127; *dst++ = 3; // <0,-1,0>, 5
+			*dst++ = 255; *dst++ = 0;   *dst++ = 255; *dst++ = 255;
+			*dst++ = 0;   *dst++ = 255; *dst++ = 0;   *dst++ = 3; // <0,-1,0>, 5
 
-			*dst++ = 255; *dst++ = 0; *dst++ = 0;   *dst++ = 255;
-			*dst++ = 127; *dst++ = 0; *dst++ = 127; *dst++ = 3; // <0,-1,0>, 5
+			*dst++ = 255; *dst++ = 0;   *dst++ = 0;   *dst++ = 255;
+			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 3; // <0,-1,0>, 5
 
 			/* left face (positive x)*/
 			*dst++ = 255; *dst++ = 0;   *dst++ = 255; *dst++ = 255;
-			*dst++ = 255; *dst++ = 127; *dst++ = 127; *dst++ = 4; // <1,0,0>, 5
+			*dst++ = 0;   *dst++ = 0;   *dst++ = 127; *dst++ = 4; // <1,0,0>, 5
 
 			*dst++ = 255; *dst++ = 0;   *dst++ = 0;   *dst++ = 255;
-			*dst++ = 255; *dst++ = 127; *dst++ = 127; *dst++ = 4; // <1,0,0>, 5
+			*dst++ = 255; *dst++ = 0;   *dst++ = 0;   *dst++ = 4; // <1,0,0>, 5
 
 			*dst++ = 255; *dst++ = 255; *dst++ = 255; *dst++ = 255;
-			*dst++ = 255; *dst++ = 127; *dst++ = 127; *dst++ = 4; // <1,0,0>, 5
+			*dst++ = 0;   *dst++ = 255; *dst++ = 0;   *dst++ = 4; // <1,0,0>, 5
 
 			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 255;
-			*dst++ = 255; *dst++ = 127; *dst++ = 127; *dst++ = 4; // <1,0,0>, 5
+			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 4; // <1,0,0>, 5
 
 			/* right face (negative x)*/
-			*dst++ = 0; *dst++ = 0;   *dst++ = 0;   *dst++ = 255;
-			*dst++ = 0; *dst++ = 127; *dst++ = 127; *dst++ = 5; // <-1,0,0>, 5
+			*dst++ = 0;   *dst++ = 0;   *dst++ = 0;   *dst++ = 255;
+			*dst++ = 0;   *dst++ = 0;   *dst++ = 0;   *dst++ = 5; // <-1,0,0>, 5
 
-			*dst++ = 0; *dst++ = 0;   *dst++ = 255; *dst++ = 255;
-			*dst++ = 0; *dst++ = 127; *dst++ = 127; *dst++ = 5; // <-1,0,0>, 5
+			*dst++ = 0;   *dst++ = 0;   *dst++ = 255; *dst++ = 255;
+			*dst++ = 255; *dst++ = 0;   *dst++ = 0;   *dst++ = 5; // <-1,0,0>, 5
 
-			*dst++ = 0; *dst++ = 255; *dst++ = 0;   *dst++ = 255;
-			*dst++ = 0; *dst++ = 127; *dst++ = 127; *dst++ = 5; // <-1,0,0>, 5
+			*dst++ = 0;   *dst++ = 255; *dst++ = 0;   *dst++ = 255;
+			*dst++ = 0;   *dst++ = 255; *dst++ = 0;   *dst++ = 5; // <-1,0,0>, 5
 
-			*dst++ = 0; *dst++ = 255; *dst++ = 255; *dst++ = 255;
-			*dst++ = 0; *dst++ = 127; *dst++ = 127; *dst++ = 5; // <-1,0,0>, 5
+			*dst++ = 0;   *dst++ = 255; *dst++ = 255; *dst++ = 255;
+			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 5; // <-1,0,0>, 5
 
 			static_vb.unlock();
 		}
 
-#define GRID_SIZE (64)
+#define GRID_SIZE (16)
 
 		renderer::VertexBuffer dynamic_vb = device.createVertexBuffer(GRID_SIZE * GRID_SIZE * GRID_SIZE * (4 * 3), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
 		
