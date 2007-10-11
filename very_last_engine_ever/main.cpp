@@ -299,19 +299,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 		RenderTexture rt2(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
 		RenderTexture rt3(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
 
-/*
-		Surface rt_ds = device.createDepthStencilSurface(config.getWidth(), config.getHeight(), D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, TRUE);
-		RenderTexture pixelize(device, config.getWidth(), config.getHeight(), 1, D3DFMT_A8R8G8B8, config.getMultisample());
-*/
 		Matrix4x4 tex_transform;
 		tex_transform.make_identity();
 		Effect tex_fx      = engine::loadEffect(device, "data/tex.fx");
 		tex_fx->SetMatrix("transform", &tex_transform);
 		Effect blur_fx     = engine::loadEffect(device, "data/blur.fx");
 
-		Effect pixelize_fx      = engine::loadEffect(device, "data/pixelize.fx");
-		pixelize_fx->SetMatrix("transform", &tex_transform);
-		pixelize_fx->SetMatrix("tex_transform", &tex_transform);
+		Image color_image(color_msaa, tex_fx);
 
 		renderer::CubeTexture cube = engine::loadCubeTexture(device, "data/stpeters_cross2.dds");
 
@@ -612,18 +606,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 			}
 			printf("cubes: %d culled: %d\n", cubes, culled);
 #endif
+			/* setup render state */
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-			device->SetVertexDeclaration(vertex_decl);
 
+			/* setup vs input */
+			device->SetVertexDeclaration(vertex_decl);
 			device->SetStreamSource(0, static_vb, 0, 4 * 2);
 			device->SetStreamSourceFreq(0, D3DSTREAMSOURCE_INDEXEDDATA | cubes);
-
 			device->SetStreamSource(1, dynamic_vb, 0, 4 * 3);
 			device->SetStreamSourceFreq(1, D3DSTREAMSOURCE_INSTANCEDATA | 1UL);
 
 			device->SetIndices(ib);
 
+			/* draw */
 			UINT passes;
 			cubegrid_fx->Begin(&passes, 0);
 			for (UINT pass = 0; pass < passes; ++pass)
@@ -634,41 +630,23 @@ int main(int /*argc*/, char* /*argv*/ [])
 			}
 			cubegrid_fx->End();
 
+			/* back to normal */
 			device->SetStreamSourceFreq(0, 1);
 			device->SetStreamSourceFreq(1, 1);
 
-#if 0
-			// Stream zero is our model, and its frequency is how we communicate the number of instances required,
-			// which in this case is the total number of boxes
-			V( pd3dDevice->SetStreamSource( 0, g_pVBBox, 0, sizeof(BOX_VERTEX)) );
-			V( pd3dDevice->SetStreamSourceFreq( 0, D3DSTREAMSOURCE_INDEXEDDATA | g_NumBoxes ) );
-			    
-			// Stream one is the instancing buffer, so this advances to the next value
-			// after each box instance has been drawn, so the divider is 1.
-			V( pd3dDevice->SetStreamSource( 1, g_pVBInstanceData, 0, sizeof( BOX_INSTANCEDATA_POS ) ) );
-			V( pd3dDevice->SetStreamSourceFreq( 1, D3DSTREAMSOURCE_INSTANCEDATA | 1ul ) );
-
-			V( pd3dDevice->SetIndices( g_pIBBox ) );
-#endif
-
-			device.setRenderTarget(rt2.getRenderTarget());
-/*			device.setDepthStencilSurface(Surface(NULL)); */
-/*			device->SetRenderState(D3DRS_ZENABLE,  FALSE); */
-			device->SetDepthStencilSurface(NULL);
-
-//			core::d3dErr(device->SetRenderTarget(0, backbuffer));
-
 			/* letterbox */
 			device.setRenderTarget(backbuffer);
+			device->SetDepthStencilSurface(NULL);
 			device->Clear(0, 0, D3DCLEAR_TARGET, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
 			device.setViewport(&letterbox_viewport);
 
 			color_msaa.resolve(device);
-//			tex_transform.make_scaling(Vector3(config.getWidth() / 32, config.getHeight() / 32, 1.0f));
-//			tex_transform.make_scaling(Vector3(64.0f / config.getWidth(), 64.0f / config.getHeight(), 1.0f));
-//			tex_transform.make_scaling(Vector3(64.0f / config.getWidth(), 64.0f / config.getHeight(), 1.0f));
-//			pixelize_fx->SetMatrix("tex_transform", &tex_transform);
-			blit(device, color_msaa, pixelize_fx, -1, -1, 2, 2);
+
+			color_image.x = -1;
+			color_image.y = -1;
+			color_image.w = 2;
+			color_image.h = 2;
+			color_image.draw(device);
 			
 			device->EndScene(); /* WE DONE IS! */
 			
