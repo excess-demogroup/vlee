@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../renderer/texture.h"
+#include "../renderer/volumetexture.h"
 #include "../renderer/device.h"
 #include "resourceproxy.h"
 
@@ -15,5 +16,6 @@ namespace engine
 		IDirect3DDevice9 *device;
 	};
 
-	renderer::Texture loadTexture(renderer::Device &device, ::std::string filename);
+	renderer::Texture       loadTexture(renderer::Device &device, ::std::string filename);
+	renderer::VolumeTexture loadVolumeTexture(renderer::Device &device, ::std::string filename);
 }

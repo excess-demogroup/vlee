@@ -20,6 +20,18 @@ sampler3D front_sampler = sampler_state
 	AddressW = CLAMP;
 };
 
+texture side_tex;
+sampler3D side_sampler = sampler_state
+{
+	Texture = (side_tex);
+	MipFilter = NONE;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	
+	AddressU = MIRRORONCE;
+	AddressV = CLAMP;
+	AddressW = CLAMP;
+};
 
 struct VS_OUTPUT
 {

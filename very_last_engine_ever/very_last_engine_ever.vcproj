@@ -120,9 +120,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
+				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="include;&quot;$(ProjectDir)&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="0"
+				EnableEnhancedInstructionSet="2"
 				FloatingPointModel="2"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -144,7 +146,7 @@
 				LinkIncremental="1"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				EntryPointSymbol="mainCRTStartup"
@@ -663,15 +665,15 @@
 					>
 				</File>
 				<File
-					RelativePath=".\renderer\texturesampler.h"
-					>
-				</File>
-				<File
 					RelativePath=".\renderer\vertexbuffer.h"
 					>
 				</File>
 				<File
 					RelativePath=".\renderer\vertexdeclaration.h"
+					>
+				</File>
+				<File
+					RelativePath=".\renderer\volumetexture.h"
 					>
 				</File>
 			</Filter>

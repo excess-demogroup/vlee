@@ -176,7 +176,7 @@ void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_
 	viewport->Height = letterbox_height;
 }
 
-#define GRID_SIZE (64)
+#define GRID_SIZE (16)
 void fill_grid(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], float fgrid_size, const math::Vector3 &c1, const math::Vector3 &c2)
 {
 	int grid_size = floor(fgrid_size);
@@ -322,9 +322,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Mesh cube_x = engine::loadMesh(device, "data/cube.X");
 
 		Effect cubegrid_fx = engine::loadEffect(device, "data/cubegrid.fx");
-
+/*
 		CComPtr<IDirect3DVolumeTexture9> front_tex;
 		core::d3dErr(D3DXCreateVolumeTextureFromFile(device, "data/front.dds", &front_tex));
+*/
+		renderer::VolumeTexture front_tex = engine::loadVolumeTexture(device, "data/front_.dds");
 		cubegrid_fx->SetTexture("front_tex", front_tex);
 
 
@@ -517,7 +519,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			);
 			eye = normalize(eye);
 
-			float fgrid_size = ((1 + cos(time / 4 + M_PI)) / 2) * GRID_SIZE;
+			float fgrid_size = ((2 + cos(time / 4 + M_PI)) / 4) * GRID_SIZE;
 //			float fgrid_size = GRID_SIZE;
 			int grid_size = floor(fgrid_size);
 

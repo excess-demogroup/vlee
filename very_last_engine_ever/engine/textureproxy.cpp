@@ -10,7 +10,8 @@ Texture engine::loadTexture(renderer::Device &device, ::std::string filename)
 	IDirect3DTexture9 *texture;
 
 	HRESULT hr = D3DXCreateTextureFromFileEx(
-		device, filename.c_str(),
+		device,
+		filename.c_str(),
 		D3DX_DEFAULT_NONPOW2, D3DX_DEFAULT_NONPOW2, // width and height
 		D3DX_DEFAULT, // miplevels
 		0, D3DFMT_UNKNOWN, // usage and format
@@ -20,9 +21,33 @@ Texture engine::loadTexture(renderer::Device &device, ::std::string filename)
 		&texture
 	);
 
-	if (FAILED(hr)) throw core::FatalException(::std::string("failed to load mesh \"") + filename + ::std::string("\"\n\n") + core::d3dGetError(hr));
+	if (FAILED(hr)) throw core::FatalException(::std::string("failed to load texture \"") + filename + ::std::string("\"\n\n") + core::d3dGetError(hr));
 
 	Texture texture_wrapper;
+	texture_wrapper.Attach(texture);
+	return texture_wrapper;
+}
+
+using renderer::VolumeTexture;
+VolumeTexture engine::loadVolumeTexture(renderer::Device &device, ::std::string filename)
+{
+	IDirect3DVolumeTexture9 *texture;
+	
+	HRESULT hr = D3DXCreateVolumeTextureFromFileEx(
+		device,
+		filename.c_str(),
+		D3DX_DEFAULT, D3DX_DEFAULT, D3DX_DEFAULT, // width, height and depth
+		D3DX_DEFAULT, // miplevels
+		0, D3DFMT_UNKNOWN, // usage and format
+		D3DPOOL_MANAGED, // pool
+		D3DX_DEFAULT, D3DX_DEFAULT, // filtering
+		0, NULL, NULL,
+		&texture
+	);
+	
+	if (FAILED(hr)) throw core::FatalException(::std::string("failed to load volume texture \"") + filename + ::std::string("\"\n\n") + core::d3dGetError(hr));
+	
+	VolumeTexture texture_wrapper;
 	texture_wrapper.Attach(texture);
 	return texture_wrapper;
 }
