@@ -70,6 +70,19 @@ namespace engine
 			}
 			eff->End();
 		}
+
+		void setPosition(float x, float y)
+		{
+			this->x = x;
+			this->y = y;
+		}
+
+		void setDimension(float w, float h)
+		{
+			this->w = w;
+			this->h = h;
+		}
+	private:
 		float x, y;
 		float w, h;
 

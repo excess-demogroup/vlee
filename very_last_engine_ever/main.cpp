@@ -595,10 +595,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			color_msaa.resolve(device);
 
-			color_image.x = -1;
-			color_image.y = -1;
-			color_image.w = 2;
-			color_image.h = 2;
+			color_image.setPosition(-1, -1);
+			color_image.setDimension(2, 2);
 			color_image.draw(device);
 			
 			device->EndScene(); /* WE DONE IS! */
