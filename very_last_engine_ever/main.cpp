@@ -313,20 +313,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 		pixelize_fx->SetMatrix("transform", &tex_transform);
 		pixelize_fx->SetMatrix("tex_transform", &tex_transform);
 
-		CComPtr<IDirect3DCubeTexture9> cube;
-		core::d3dErr(D3DXCreateCubeTextureFromFile(device, "data/stpeters_cross2.dds", &cube));
+		renderer::CubeTexture cube = engine::loadCubeTexture(device, "data/stpeters_cross2.dds");
 
 		Effect test_fx = engine::loadEffect(device, "data/test.fx");
 		test_fx->SetTexture("env", cube);
 
 		Mesh cube_x = engine::loadMesh(device, "data/cube.X");
-
 		Effect cubegrid_fx = engine::loadEffect(device, "data/cubegrid.fx");
-/*
-		CComPtr<IDirect3DVolumeTexture9> front_tex;
-		core::d3dErr(D3DXCreateVolumeTextureFromFile(device, "data/front.dds", &front_tex));
-*/
-		renderer::VolumeTexture front_tex = engine::loadVolumeTexture(device, "data/front_.dds");
+
+		renderer::VolumeTexture front_tex = engine::loadVolumeTexture(device, "data/front.dds");
 		cubegrid_fx->SetTexture("front_tex", front_tex);
 
 

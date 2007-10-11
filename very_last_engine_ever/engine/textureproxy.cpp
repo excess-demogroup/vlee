@@ -28,6 +28,30 @@ Texture engine::loadTexture(renderer::Device &device, ::std::string filename)
 	return texture_wrapper;
 }
 
+using renderer::CubeTexture;
+CubeTexture engine::loadCubeTexture(renderer::Device &device, ::std::string filename)
+{
+	IDirect3DCubeTexture9 *texture;
+	
+	HRESULT hr = D3DXCreateCubeTextureFromFileEx(
+		device,
+		filename.c_str(),
+		D3DX_DEFAULT, // size
+		D3DX_DEFAULT, // miplevels
+		0, D3DFMT_UNKNOWN, // usage and format
+		D3DPOOL_MANAGED, // pool
+		D3DX_DEFAULT, D3DX_DEFAULT, // filtering
+		0, NULL, NULL,
+		&texture
+	);
+	
+	if (FAILED(hr)) throw core::FatalException(::std::string("failed to load cube texture \"") + filename + ::std::string("\"\n\n") + core::d3dGetError(hr));
+	
+	CubeTexture texture_wrapper;
+	texture_wrapper.Attach(texture);
+	return texture_wrapper;
+}
+
 using renderer::VolumeTexture;
 VolumeTexture engine::loadVolumeTexture(renderer::Device &device, ::std::string filename)
 {

@@ -641,6 +641,10 @@
 				Name="renderer"
 				>
 				<File
+					RelativePath=".\renderer\cubetexture.h"
+					>
+				</File>
+				<File
 					RelativePath=".\renderer\device.h"
 					>
 				</File>
