@@ -77,53 +77,6 @@ Matrix4x4 texture_matrix(const Texture &tex)
 	return mat;
 }
 
-
-void blit(renderer::Device &device, renderer::Texture &tex, Effect &eff, float x, float y, float w, float h)
-{
-	device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-	eff->SetTexture("tex", tex);
-
-	float s_nudge = 0.0f, t_nudge = 0.0f;
-	float x_nudge = 0.0f, y_nudge = 0.0f;
-
-	/* get render target */
-	Surface rt = device.getRenderTarget(0);
-	
-	/* get surface description */
-	D3DSURFACE_DESC rt_desc = rt.getDesc();
-
-	/* setup nudge */
-	x_nudge = -0.5f / (float(rt_desc.Width)  / 2);
-	y_nudge =  0.5f / (float(rt_desc.Height) / 2);
-
-	/* get texture description */
-	D3DSURFACE_DESC tex_desc;
-	tex->GetLevelDesc(0, &tex_desc);
-
-	/* setup nudge */
-	s_nudge = 0.0f / tex_desc.Width;
-	t_nudge = 0.0f / tex_desc.Height;
-
-	UINT passes;
-	eff->Begin(&passes, 0);
-	for (unsigned j = 0; j < passes; ++j)
-	{
-		eff->BeginPass(j);
-		float verts[] =
-		{
-			x+     x_nudge, y +     y_nudge, 0, 0 + s_nudge, 1 + t_nudge,
-			x+ w + x_nudge, y +     y_nudge, 0, 1 + s_nudge, 1 + t_nudge,
-			x+ w + x_nudge, y + h + y_nudge, 0, 1 + s_nudge, 0 + t_nudge,
-			x+     x_nudge, y + h + y_nudge, 0, 0 + s_nudge, 0 + t_nudge,
-		};
-		
-		device->SetFVF(D3DFVF_XYZ | D3DFVF_TEX1);
-		device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 5);
-		eff->EndPass();
-	}
-	eff->End();
-}
-
 #include "sync/SyncEditor.h"
 
 WTL::CAppModule _Module;
