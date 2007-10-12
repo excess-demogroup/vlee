@@ -57,26 +57,6 @@ Matrix4x4 radialblur_matrix(const Texture &tex, const Vector2 &center, const flo
 	return trans1 * mat * trans2;
 }
 
-Matrix4x4 texture_matrix(const Texture &tex)
-{
-	Matrix4x4 mat, trans1, trans2, scale;
-
-	//	D3DXMatrixIdentity(&trans2);
-//	trans1._31 = 0.5;
-//	trans1._32 = 0.5;
-
-	D3DXMatrixIdentity(&trans2);
-	trans2._31 = -10.5f / tex.getSurface().getDesc().Width;
-	trans2._32 = -10.5f / tex.getSurface().getDesc().Height;
-
-	D3DXMatrixScaling(&scale, 0.5, 0.5, 1.0);
-	return trans2;
-//	mat = trans2 * scale;
-
-//	mat = trans1 * scale;
-	return mat;
-}
-
 #include "sync/SyncEditor.h"
 
 WTL::CAppModule _Module;
