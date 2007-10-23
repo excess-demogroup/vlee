@@ -109,16 +109,42 @@ void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_
 	viewport->Height = letterbox_height;
 }
 
-#define GRID_SIZE (16)
+#include "engine/voxelgrid.h"
+#define GRID_SIZE (50)
+
+#define VOXEL_DATA_SIZE (128)
+engine::VoxelGrid<VOXEL_DATA_SIZE> voxelgrid;
+
 void fill_grid(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], float fgrid_size, const math::Vector3 &c1, const math::Vector3 &c2)
 {
-	int grid_size = floor(fgrid_size);
+	int grid_size = int(floor(fgrid_size));
 	for (int z = 0; z < grid_size; ++z)
 	{
 		for (int y = 0; y < grid_size; ++y)
 		{
 			for (int x = 0; x < grid_size; ++x)
 			{
+#if 0
+				Vector3 p(float(x) / (grid_size / 2), float(y) / (grid_size / 2), float(z) / (grid_size / 2));
+				Vector3 p2 = mrot * p;
+
+				float x2 = p2.x * (GRID_SIZE / 2) + (GRID_SIZE / 2);
+				float y2 = p2.y * (GRID_SIZE / 2) + (GRID_SIZE / 2);
+				float z2 = p2.z * (GRID_SIZE / 2) + (GRID_SIZE / 2);
+
+				int ix = int(floor(x2));
+				int iy = int(floor(y2));
+				int iz = int(floor(z2));
+
+				if (ix <= 0 || ix >= GRID_SIZE-1) continue;
+				if (iy <= 0 || iy >= GRID_SIZE-1) continue;
+				if (iz <= 0 || iz >= GRID_SIZE-1) continue;
+
+				float dist = grid.trilinearSample(x2, y2, z2);
+
+				float size = (0.5f / grid_size) - dist * 0.5f;
+				grid[z][y][x] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
+#else
 				float fx = float(x) - c1.x;
 				float fy = float(y) - c1.y;
 				float fz = float(z) - c1.z;
@@ -148,10 +174,47 @@ void fill_grid(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], float fgrid_size, con
 
 				grid[z][y][x] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
 //				grid[z][y][x] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
+#endif
 			}
 		}
 	}
 }
+
+void fill_grid2(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], Matrix4x4 mrot, float fgrid_size)
+{
+	int grid_size = int(floor(fgrid_size));
+	for (int z = -int(grid_size / 2); z < int(grid_size / 2); ++z)
+	{
+		for (int y = -int(grid_size / 2); y < int(grid_size / 2); ++y)
+		{
+			for (int x = -int(grid_size / 2); x < int(grid_size / 2); ++x)
+			{
+				Vector3 p(float(x) / (grid_size / 2), float(y) / (grid_size / 2), float(z) / (grid_size / 2));
+//				Vector3 p2 = mrot * p;
+				Vector3 p2 = math::mul(mrot, p);
+
+				float x2 = p2.x * (VOXEL_DATA_SIZE / 2) + (VOXEL_DATA_SIZE / 2);
+				float y2 = p2.y * (VOXEL_DATA_SIZE / 2) + (VOXEL_DATA_SIZE / 2);
+				float z2 = p2.z * (VOXEL_DATA_SIZE / 2) + (VOXEL_DATA_SIZE / 2);
+
+				int ix = int(floor(x2));
+				int iy = int(floor(y2));
+				int iz = int(floor(z2));
+
+				if (ix <= 0 || ix >= VOXEL_DATA_SIZE-1) continue;
+				if (iy <= 0 || iy >= VOXEL_DATA_SIZE-1) continue;
+				if (iz <= 0 || iz >= VOXEL_DATA_SIZE-1) continue;
+
+				float dist = voxelgrid.trilinearSample(x2, y2, z2) * sqrtf(VOXEL_DATA_SIZE * VOXEL_DATA_SIZE);
+
+				float size = (0.5f / grid_size) - dist * 0.5f;
+				grid[z + (grid_size / 2)][y + (grid_size / 2)][x + (grid_size / 2)] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
+
+			}
+		}
+	}
+}
+
 
 
 int main(int /*argc*/, char* /*argv*/ [])
@@ -370,25 +433,43 @@ int main(int /*argc*/, char* /*argv*/ [])
 			ib.unlock();
 		}
 
-			int cubes = 0;
+		int cubes = 0;
+		{
+			BYTE *dst = (BYTE*)dynamic_vb.lock(0, GRID_SIZE * GRID_SIZE * GRID_SIZE * 4, 0);
+			for (int z = 0; z < GRID_SIZE; ++z)
 			{
-				BYTE *dst = (BYTE*)dynamic_vb.lock(0, GRID_SIZE * GRID_SIZE * GRID_SIZE * 4, 0);
-				for (int z = 0; z < GRID_SIZE; ++z)
+				for (int y = 0; y < GRID_SIZE; ++y)
 				{
-					for (int y = 0; y < GRID_SIZE; ++y)
+					for (int x = 0; x < GRID_SIZE; ++x)
 					{
-						for (int x = 0; x < GRID_SIZE; ++x)
-						{
-							float size = 0.5;
-							*dst++ = x; *dst++ = y; *dst++ = z;
+						float size = 0.5;
+						*dst++ = x; *dst++ = y; *dst++ = z;
 //							*dst++ = 32; // (1 + cos(time - x - y)) * 127.5;
-							*dst++ = BYTE(size * 255);
-							cubes++;
-						}
+						*dst++ = BYTE(size * 255);
+						cubes++;
 					}
 				}
-				dynamic_vb.unlock();
 			}
+			dynamic_vb.unlock();
+		}
+
+		FILE *fp = fopen("data/duck.voxel", "rb");
+		if (NULL == fp) throw FatalException("failed to load voxel");
+		float max_dist;
+		fread(&max_dist, 4, 1, fp);
+		for (int z = 0; z < VOXEL_DATA_SIZE; ++z)
+		{
+			for (int y = 0; y < VOXEL_DATA_SIZE; ++y)
+			{
+				for (int x = 0; x < VOXEL_DATA_SIZE; ++x)
+				{
+					signed char bdist;
+					fread(&bdist, 1, 1, fp);
+					voxelgrid.setDistance(x, y, z, bdist);
+				}
+			}
+		}
+		fclose(fp);
 
 
 		BASS_Start();
@@ -441,9 +522,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			);
 			eye = normalize(eye);
 
-			float fgrid_size = ((2 + cos(time / 4 + M_PI)) / 4) * GRID_SIZE;
-//			float fgrid_size = GRID_SIZE;
-			int grid_size = floor(fgrid_size);
+//			float fgrid_size = ((2 + float(cos(time / 4 + M_PI))) / 4) * GRID_SIZE;
+			float fgrid_size = GRID_SIZE;
+			int grid_size = int(floor(fgrid_size));
 
 			eye *= fgrid_size;
 			Vector3 at(fgrid_size / 2, fgrid_size / 2, fgrid_size / 2);
@@ -453,7 +534,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			D3DXMATRIX view;
 			D3DXMatrixLookAtLH(&view, &(eye + at), &at, &up);
 			D3DXMATRIX proj;
-			D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(70), DEMO_ASPECT, 0.1f, 100.f);
+			D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(60), DEMO_ASPECT, 0.1f, 100.f);
 
 			test_fx.setMatrices(world, view, proj);
 			test_fx->SetFloat("fade", 1.0f);
@@ -480,7 +561,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 #if 1
 			static BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE];
-			fill_grid(grid, fgrid_size, c1, c2);
+//			fill_grid(grid, fgrid_size, c1, c2);
+			Matrix4x4 mrot;
+			mrot.make_identity();
+			mrot.make_rotation(Vector3(0, time, 0));
+			mrot.make_rotation(Vector3(float(-M_PI / 2), float(M_PI - sin(time / 5)), float(M_PI + time / 3)));
+			Matrix4x4 mscale;
+			float scale = 0.75f;
+			mscale.make_scaling(Vector3(scale, scale, scale));
+			fill_grid2(grid, mrot * mscale, fgrid_size);
 
 			int cubes = 0;
 			int culled = 0;

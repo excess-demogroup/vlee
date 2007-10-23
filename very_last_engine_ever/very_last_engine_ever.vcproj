@@ -556,6 +556,10 @@
 					RelativePath=".\engine\vertexstreamer.h"
 					>
 				</File>
+				<File
+					RelativePath=".\engine\voxelgrid.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="sync"

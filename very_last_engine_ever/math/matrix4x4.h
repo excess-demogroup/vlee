@@ -35,4 +35,16 @@ namespace math
 			D3DXMatrixPerspectiveFovLH(this, D3DXToRadian(fov), aspect, znear, zfar);
 		}
 	};
+
+	inline Vector3 mul(const Matrix4x4 &m, const Vector3 &v)
+	{
+		D3DXVECTOR4 temp;
+		D3DXVec3Transform(
+			&temp,
+			&v,
+			&m
+		);
+		return Vector3(temp.x, temp.y, temp.z);
+	}
+
 }
