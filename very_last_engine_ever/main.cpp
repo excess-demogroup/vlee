@@ -110,7 +110,7 @@ void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_
 }
 
 #include "engine/voxelgrid.h"
-#define GRID_SIZE (50)
+#define GRID_SIZE (48)
 
 #define VOXEL_DATA_SIZE (128)
 engine::VoxelGrid<VOXEL_DATA_SIZE> voxelgrid;
@@ -180,16 +180,20 @@ void fill_grid(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], float fgrid_size, con
 	}
 }
 
-void fill_grid2(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], Matrix4x4 mrot, float fgrid_size)
+void fill_grid2(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], Matrix4x4 mrot, float grid_size)
 {
-	int grid_size = int(floor(fgrid_size));
-	for (int z = -int(grid_size / 2); z < int(grid_size / 2); ++z)
+	int igrid_min_size = int(floor(grid_size) / 2);
+	int igrid_max_size = int(ceil(grid_size) / 2);
+
+	float grid_size_rcp = 1.0 / (grid_size / 2);
+	
+	for (int z = -igrid_min_size; z < igrid_max_size; ++z)
 	{
-		for (int y = -int(grid_size / 2); y < int(grid_size / 2); ++y)
+		for (int y = -igrid_min_size; y < igrid_max_size; ++y)
 		{
-			for (int x = -int(grid_size / 2); x < int(grid_size / 2); ++x)
+			for (int x = -igrid_min_size; x < igrid_max_size; ++x)
 			{
-				Vector3 p(float(x) / (grid_size / 2), float(y) / (grid_size / 2), float(z) / (grid_size / 2));
+				Vector3 p(float(x) * grid_size_rcp, float(y) * grid_size_rcp, float(z) * grid_size_rcp);
 //				Vector3 p2 = mrot * p;
 				Vector3 p2 = math::mul(mrot, p);
 
@@ -205,10 +209,10 @@ void fill_grid2(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], Matrix4x4 mrot, floa
 				if (iy <= 0 || iy >= VOXEL_DATA_SIZE-1) continue;
 				if (iz <= 0 || iz >= VOXEL_DATA_SIZE-1) continue;
 
-				float dist = voxelgrid.trilinearSample(x2, y2, z2) * sqrtf(VOXEL_DATA_SIZE * VOXEL_DATA_SIZE);
+				float dist = voxelgrid.trilinearSample(x2, y2, z2) * (sqrtf(VOXEL_DATA_SIZE * VOXEL_DATA_SIZE) / 2);
 
 				float size = (0.5f / grid_size) - dist * 0.5f;
-				grid[z + (grid_size / 2)][y + (grid_size / 2)][x + (grid_size / 2)] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
+				grid[z + igrid_min_size][y + igrid_min_size][x + igrid_min_size] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
 
 			}
 		}
@@ -516,18 +520,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			Vector3 up(float(sin(time * 0.1f)), float(cos(time * 0.1f)), 0.f);
 			Vector3 eye(
-				float(sin(time * 0.125f)),
-				float(cos(time * 0.125f)),
-				float(cos(time * 0.135f))
+				float(sin(time * 0.125f * 4)),
+				float(cos(time * 0.125f * 5)),
+				float(cos(time * 0.135f * 3))
 			);
 			eye = normalize(eye);
 
-//			float fgrid_size = ((2 + float(cos(time / 4 + M_PI))) / 4) * GRID_SIZE;
-			float fgrid_size = GRID_SIZE;
-			int grid_size = int(floor(fgrid_size));
+//			float grid_size = ((2 + float(cos(time))) / 4) * GRID_SIZE;
+			float grid_size = (1 + cos(time)) / 2;
+			grid_size = pow(grid_size, 0.5f);
+			grid_size *= GRID_SIZE;
 
-			eye *= fgrid_size;
-			Vector3 at(fgrid_size / 2, fgrid_size / 2, fgrid_size / 2);
+			eye *= grid_size;
+			Vector3 at(floor(grid_size / 2), floor(grid_size / 2), floor(grid_size / 2));
 
 			D3DXMATRIX world;
 			D3DXMatrixIdentity(&world);
@@ -549,14 +554,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 //			time /= 4;
 
-			float cx = (0.5f + sin(time) / 3) * fgrid_size;
-			float cy = (0.5f + cos(time) / 3) * fgrid_size;
-			float cz = (0.5f + sin(time) / 3) * fgrid_size;
+			float cx = (0.5f + sin(time) / 3) * grid_size;
+			float cy = (0.5f + cos(time) / 3) * grid_size;
+			float cz = (0.5f + sin(time) / 3) * grid_size;
 			math::Vector3 c1(cx, cy, cz);
 
-			float cx2 = (0.5f + cos(time - M_PI) / 3) * fgrid_size;
-			float cy2 = (0.5f + sin(time - M_PI) / 3) * fgrid_size;
-			float cz2 = (0.5f + sin(time - M_PI) / 3) * fgrid_size;
+			float cx2 = (0.5f + cos(time - M_PI) / 3) * grid_size;
+			float cy2 = (0.5f + sin(time - M_PI) / 3) * grid_size;
+			float cz2 = (0.5f + sin(time - M_PI) / 3) * grid_size;
 			math::Vector3 c2(cx2, cy2, cz2);
 
 #if 1
@@ -569,25 +574,29 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Matrix4x4 mscale;
 			float scale = 0.75f;
 			mscale.make_scaling(Vector3(scale, scale, scale));
-			fill_grid2(grid, mrot * mscale, fgrid_size);
+			fill_grid2(grid, mrot * mscale, grid_size);
 
 			int cubes = 0;
 			int culled = 0;
 			{
-				BYTE *dst = (BYTE*)dynamic_vb.lock(0, grid_size * grid_size * grid_size * (4 * 3), 0);
-				for (int z = 0; z < grid_size; ++z)
+				int igrid_min_size = int(floor(grid_size) / 2);
+				int igrid_max_size = int(ceil(grid_size) / 2);
+				int igrid_size = igrid_max_size + igrid_min_size;
+
+				BYTE *dst = (BYTE*)dynamic_vb.lock(0, igrid_size * igrid_size * igrid_size * (4 * 3), 0);
+				for (int z = 0; z < igrid_size; ++z)
 				{
-					for (int y = 0; y < grid_size; ++y)
+					for (int y = 0; y < igrid_size; ++y)
 					{
-						for (int x = 0; x < grid_size; ++x)
+						for (int x = 0; x < igrid_size; ++x)
 						{
 							BYTE size = grid[z][y][x];
 
 							if (size == 0) continue;
 							if (
-								(x > 0 && x < grid_size - 1) &&
-								(y > 0 && y < grid_size - 1) &&
-								(z > 0 && z < grid_size - 1)
+								(x > 0 && x < igrid_size - 1) &&
+								(y > 0 && y < igrid_size - 1) &&
+								(z > 0 && z < igrid_size - 1)
 								)
 							{
 
@@ -608,13 +617,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 							*dst++ = x; *dst++ = y; *dst++ = z;
 							*dst++ = size;
 
-							*dst++ = z < grid_size - 1 ? grid[z+1][y][x] : 0; // +z
+							*dst++ = z < igrid_size - 1 ? grid[z+1][y][x] : 0; // +z
 							*dst++ = z > 0 ?             grid[z-1][y][x] : 0; // -z
 
-							*dst++ = y < grid_size - 1 ? grid[z][y+1][x] : 0; // +y
+							*dst++ = y < igrid_size - 1 ? grid[z][y+1][x] : 0; // +y
 							*dst++ = y > 0 ?             grid[z][y-1][x] : 0; // -y
 
-							*dst++ = x < grid_size - 1 ? grid[z][y][x+1] : 0; // +x
+							*dst++ = x < igrid_size - 1 ? grid[z][y][x+1] : 0; // +x
 							*dst++ = x > 0 ?             grid[z][y][x-1] : 0; // -x
 
 							*dst++ = 128;
