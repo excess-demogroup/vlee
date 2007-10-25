@@ -18,6 +18,12 @@ namespace math
 		return t * t * (3 - 2 * t);
 	}
 
+	template <typename T>
+	inline T lerp(T v0, T v1, float t)
+	{
+		return v0 + (v1 - v0) * t;
+	}
+
 	float round(float f)
 	{
 		return floor(f + 0.5f);

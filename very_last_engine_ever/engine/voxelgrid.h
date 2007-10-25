@@ -285,10 +285,9 @@ namespace engine
 			return distances[getIndex(x, y, z)];
 		}
 
+#if 0
 		float trilinearSample(float x, float y, float z)
 		{
-	//		x = floor(x);
-
 			int ix = int(floor(x));
 			int iy = int(floor(y));
 			int iz = int(floor(z));
@@ -327,6 +326,46 @@ namespace engine
 			
 			return v;
 		}
+#else
+		float trilinearSample(float x, float y, float z)
+		{
+			int ix = int(floor(x));
+			int iy = int(floor(y));
+			int iz = int(floor(z));
+
+			signed char f0 = pointSample(ix,     iy,     iz);
+			signed char f1 = pointSample(ix + 1, iy,     iz);
+			signed char f2 = pointSample(ix,     iy + 1, iz);
+			signed char f3 = pointSample(ix + 1, iy + 1, iz);
+
+			signed char b0 = pointSample(ix,     iy,     iz + 1);
+			signed char b1 = pointSample(ix + 1, iy,     iz + 1);
+			signed char b2 = pointSample(ix,     iy + 1, iz + 1);
+			signed char b3 = pointSample(ix + 1, iy + 1, iz + 1);
+
+			float xt = (x - ix);
+			float yt = (y - iy);
+			float zt = (z - iz);
+
+			float a = (1 - xt);
+			float b = (    xt);
+
+
+			float y1, y2;
+
+			/* first layer */
+			y1 = math::lerp(float(f0), float(f1), xt);
+			y2 = math::lerp(float(f2), float(f3), xt);
+			float z1 = math::lerp(y1, y2, yt);
+
+			/* second layer */
+			y1 = math::lerp(float(b0), float(b1), xt);
+			y2 = math::lerp(float(b2), float(b3), xt);
+			float z2 = math::lerp(y1, y2, yt);
+
+			return math::lerp(z1, z2, zt);
+		}
+#endif
 
 		void setDistance(int x, int y, int z, float dist)
 		{

@@ -111,7 +111,7 @@ void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_
 
 #include "engine/voxelgrid.h"
 // #define GRID_SIZE (64)
-#define GRID_SIZE (64+32)
+#define GRID_SIZE (128)
 
 #define VOXEL_DATA_SIZE (32)
 engine::VoxelGrid<VOXEL_DATA_SIZE> voxelgrid;
@@ -186,8 +186,10 @@ void fill_grid2(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], Matrix4x4 mrot, floa
 	int igrid_min_size = int(floor(grid_size) / 2);
 	int igrid_max_size = int(ceil(grid_size) / 2);
 
-//	igrid_min_size /= 2;
-//	igrid_max_size /= 2;
+#if 0
+	igrid_min_size /= 4;
+	igrid_max_size /= 4;
+#endif
 
 	float translate = VOXEL_DATA_SIZE / 2;
 	float scale = VOXEL_DATA_SIZE / 2;
@@ -198,19 +200,33 @@ void fill_grid2(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], Matrix4x4 mrot, floa
 	mrot *= mscale * mtranslate;
 
 	float grid_size_rcp = 1.0 / (grid_size / 2);
-	Vector3 left = Vector3(mrot._11, mrot._12, mrot._13) * grid_size_rcp;
+
+	Vector3 dx = Vector3(mrot._11, mrot._12, mrot._13) * grid_size_rcp;
+	Vector3 dy = Vector3(mrot._21, mrot._22, mrot._23) * grid_size_rcp;
+	Vector3 dz = Vector3(mrot._31, mrot._32, mrot._33) * grid_size_rcp;
+
+	Vector3 pz(
+		float(-igrid_min_size) * grid_size_rcp,
+		float(-igrid_min_size) * grid_size_rcp,
+		float(-igrid_min_size) * grid_size_rcp
+	);
+	pz = math::mul(mrot, pz);
 
 	for (int z = -igrid_min_size; z < igrid_max_size; ++z)
 	{
+		Vector3 py = pz;
+		pz += dz;
+
 		for (int y = -igrid_min_size; y < igrid_max_size; ++y)
 		{
-			Vector3 p(float(-igrid_min_size) * grid_size_rcp, float(y) * grid_size_rcp, float(z) * grid_size_rcp);
-			p = math::mul(mrot, p);
+			Vector3 px = py;
+			py += dy;
 
 			for (int x = -igrid_min_size; x < igrid_max_size; ++x)
 			{
-				Vector3 p2 = p;
-				p += left;
+				Vector3 p2 = px;
+				px += dx;
+
 //				Vector3 p(float(x) * grid_size_rcp, float(y) * grid_size_rcp, float(z) * grid_size_rcp);
 //				Vector3 p2 = math::mul(mrot, p);
 //				Vector3 p2 = p / 2;
@@ -227,9 +243,9 @@ void fill_grid2(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], Matrix4x4 mrot, floa
 				if (iz <= 0 || iz >= VOXEL_DATA_SIZE-1) continue;
 
 				float dist = voxelgrid.trilinearSample(p2.x, p2.y, p2.z) / 128;
-//				float dist = voxelgrid.pointSample(x2, y2, z2) / 128.0f;
-//				dist *= sqrtf(VOXEL_DATA_SIZE * VOXEL_DATA_SIZE) / 2;
-				dist *= 64;
+//				float dist = voxelgrid.pointSample(p2.x, p2.y, p2.z) / 128.0f;
+				dist *= sqrtf(VOXEL_DATA_SIZE * VOXEL_DATA_SIZE * VOXEL_DATA_SIZE) / 2;
+//				dist *= 64;
 
 				float size = (0.5f / grid_size) - dist * 0.5f;
 				grid[z + igrid_min_size][y + igrid_min_size][x + igrid_min_size] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
