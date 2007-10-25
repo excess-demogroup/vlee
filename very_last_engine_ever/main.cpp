@@ -110,9 +110,10 @@ void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_
 }
 
 #include "engine/voxelgrid.h"
-#define GRID_SIZE (48)
+// #define GRID_SIZE (64)
+#define GRID_SIZE (64+32)
 
-#define VOXEL_DATA_SIZE (128)
+#define VOXEL_DATA_SIZE (32)
 engine::VoxelGrid<VOXEL_DATA_SIZE> voxelgrid;
 
 void fill_grid(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], float fgrid_size, const math::Vector3 &c1, const math::Vector3 &c2)
@@ -185,35 +186,53 @@ void fill_grid2(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], Matrix4x4 mrot, floa
 	int igrid_min_size = int(floor(grid_size) / 2);
 	int igrid_max_size = int(ceil(grid_size) / 2);
 
+//	igrid_min_size /= 2;
+//	igrid_max_size /= 2;
+
+	float translate = VOXEL_DATA_SIZE / 2;
+	float scale = VOXEL_DATA_SIZE / 2;
+
+	Matrix4x4 mtranslate, mscale;
+	mtranslate.make_translation(Vector3(translate, translate, translate));
+	mscale.make_scaling(Vector3(scale, scale, scale));
+	mrot *= mscale * mtranslate;
+
 	float grid_size_rcp = 1.0 / (grid_size / 2);
-	
+	Vector3 left = Vector3(mrot._11, mrot._12, mrot._13) * grid_size_rcp;
+
 	for (int z = -igrid_min_size; z < igrid_max_size; ++z)
 	{
 		for (int y = -igrid_min_size; y < igrid_max_size; ++y)
 		{
+			Vector3 p(float(-igrid_min_size) * grid_size_rcp, float(y) * grid_size_rcp, float(z) * grid_size_rcp);
+			p = math::mul(mrot, p);
+
 			for (int x = -igrid_min_size; x < igrid_max_size; ++x)
 			{
-				Vector3 p(float(x) * grid_size_rcp, float(y) * grid_size_rcp, float(z) * grid_size_rcp);
-//				Vector3 p2 = mrot * p;
-				Vector3 p2 = math::mul(mrot, p);
+				Vector3 p2 = p;
+				p += left;
+//				Vector3 p(float(x) * grid_size_rcp, float(y) * grid_size_rcp, float(z) * grid_size_rcp);
+//				Vector3 p2 = math::mul(mrot, p);
+//				Vector3 p2 = p / 2;
+//				Vector3 p2 = Vector3(p.z, p.y, p.x);
 
-				float x2 = p2.x * (VOXEL_DATA_SIZE / 2) + (VOXEL_DATA_SIZE / 2);
-				float y2 = p2.y * (VOXEL_DATA_SIZE / 2) + (VOXEL_DATA_SIZE / 2);
-				float z2 = p2.z * (VOXEL_DATA_SIZE / 2) + (VOXEL_DATA_SIZE / 2);
+				int ix = int(floor(p2.x));
+				int iy = int(floor(p2.y));
+				int iz = int(floor(p2.z));
 
-				int ix = int(floor(x2));
-				int iy = int(floor(y2));
-				int iz = int(floor(z2));
+				grid[z + igrid_min_size][y + igrid_min_size][x + igrid_min_size] = 0;
 
 				if (ix <= 0 || ix >= VOXEL_DATA_SIZE-1) continue;
 				if (iy <= 0 || iy >= VOXEL_DATA_SIZE-1) continue;
 				if (iz <= 0 || iz >= VOXEL_DATA_SIZE-1) continue;
 
-				float dist = voxelgrid.trilinearSample(x2, y2, z2) * (sqrtf(VOXEL_DATA_SIZE * VOXEL_DATA_SIZE) / 2);
+				float dist = voxelgrid.trilinearSample(p2.x, p2.y, p2.z) / 128;
+//				float dist = voxelgrid.pointSample(x2, y2, z2) / 128.0f;
+//				dist *= sqrtf(VOXEL_DATA_SIZE * VOXEL_DATA_SIZE) / 2;
+				dist *= 64;
 
 				float size = (0.5f / grid_size) - dist * 0.5f;
 				grid[z + igrid_min_size][y + igrid_min_size][x + igrid_min_size] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
-
 			}
 		}
 	}
@@ -416,8 +435,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			static_vb.unlock();
 		}
+		
+		int vb_switcher = 0;
+		renderer::VertexBuffer dynamic_vbs[2];
+		dynamic_vbs[0] = device.createVertexBuffer(GRID_SIZE * GRID_SIZE * GRID_SIZE * (4 * 3), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
+		dynamic_vbs[1] = device.createVertexBuffer(GRID_SIZE * GRID_SIZE * GRID_SIZE * (4 * 3), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
 
-		renderer::VertexBuffer dynamic_vb = device.createVertexBuffer(GRID_SIZE * GRID_SIZE * GRID_SIZE * (4 * 3), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
+/*		dynamic_vbs[0] = device.createVertexBuffer(GRID_SIZE * GRID_SIZE * GRID_SIZE * (4 * 3), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_SYSTEMMEM);
+		dynamic_vbs[1] = device.createVertexBuffer(GRID_SIZE * GRID_SIZE * GRID_SIZE * (4 * 3), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_SYSTEMMEM); */
 		
 		renderer::IndexBuffer ib = device.createIndexBuffer(2 * 6 * 6, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED);
 		{
@@ -435,26 +460,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			}
 			
 			ib.unlock();
-		}
-
-		int cubes = 0;
-		{
-			BYTE *dst = (BYTE*)dynamic_vb.lock(0, GRID_SIZE * GRID_SIZE * GRID_SIZE * 4, 0);
-			for (int z = 0; z < GRID_SIZE; ++z)
-			{
-				for (int y = 0; y < GRID_SIZE; ++y)
-				{
-					for (int x = 0; x < GRID_SIZE; ++x)
-					{
-						float size = 0.5;
-						*dst++ = x; *dst++ = y; *dst++ = z;
-//							*dst++ = 32; // (1 + cos(time - x - y)) * 127.5;
-						*dst++ = BYTE(size * 255);
-						cubes++;
-					}
-				}
-			}
-			dynamic_vb.unlock();
 		}
 
 		FILE *fp = fopen("data/duck.voxel", "rb");
@@ -499,6 +504,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			static float time_offset = 0.f;
 			float time = BASS_ChannelBytes2Seconds(stream, BASS_ChannelGetPosition(stream));
 			float beat = time * (float(BPM) / 60);
+//			time = timeGetTime() / 1000.0f;
 
 #ifndef VJSYS
 			sync.update(); //gets current timing info from the SyncTimer.
@@ -526,9 +532,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 			);
 			eye = normalize(eye);
 
+			float grid_size = 1.0f;
 //			float grid_size = ((2 + float(cos(time))) / 4) * GRID_SIZE;
-			float grid_size = (1 + cos(time)) / 2;
-			grid_size = pow(grid_size, 0.5f);
+//			float grid_size = (1 + cos(time)) / 2;
+//			grid_size = pow(grid_size, 0.5f);
 			grid_size *= GRID_SIZE;
 
 			eye *= grid_size;
@@ -539,7 +546,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			D3DXMATRIX view;
 			D3DXMatrixLookAtLH(&view, &(eye + at), &at, &up);
 			D3DXMATRIX proj;
-			D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(60), DEMO_ASPECT, 0.1f, 100.f);
+			D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(60), DEMO_ASPECT, 0.1f, 1000.f);
 
 			test_fx.setMatrices(world, view, proj);
 			test_fx->SetFloat("fade", 1.0f);
@@ -579,11 +586,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 			int cubes = 0;
 			int culled = 0;
 			{
+
 				int igrid_min_size = int(floor(grid_size) / 2);
 				int igrid_max_size = int(ceil(grid_size) / 2);
 				int igrid_size = igrid_max_size + igrid_min_size;
 
-				BYTE *dst = (BYTE*)dynamic_vb.lock(0, igrid_size * igrid_size * igrid_size * (4 * 3), 0);
+				BYTE *dst = (BYTE*)dynamic_vbs[vb_switcher & 1].lock(0, igrid_size * igrid_size * igrid_size * (4 * 3), 0);
 				for (int z = 0; z < igrid_size; ++z)
 				{
 					for (int y = 0; y < igrid_size; ++y)
@@ -633,9 +641,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 						}
 					}
 				}
-				dynamic_vb.unlock();
+				dynamic_vbs[vb_switcher & 1].unlock();
 			}
-			printf("cubes: %d culled: %d\n", cubes, culled);
+//			printf("cubes: %d culled: %d\n", cubes, culled);
 #endif
 			/* setup render state */
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
@@ -645,8 +653,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetVertexDeclaration(vertex_decl);
 			device->SetStreamSource(0, static_vb, 0, 4 * 2);
 			device->SetStreamSourceFreq(0, D3DSTREAMSOURCE_INDEXEDDATA | cubes);
-			device->SetStreamSource(1, dynamic_vb, 0, 4 * 3);
+			device->SetStreamSource(1, dynamic_vbs[vb_switcher & 1], 0, 4 * 3);
 			device->SetStreamSourceFreq(1, D3DSTREAMSOURCE_INSTANCEDATA | 1UL);
+			vb_switcher++;
+
 
 			device->SetIndices(ib);
 
@@ -680,11 +690,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->EndScene(); /* WE DONE IS! */
 			
 			HRESULT res = device->Present(0, 0, 0, 0);
-/*
+
 			DWORD frameTime = timeGetTime();
 			printf("frameTime: %d\n", frameTime - lastFrameTime);
 			lastFrameTime = frameTime;
-*/
+
 			if (FAILED(res))
 			{
 				throw FatalException(std::string(DXGetErrorString9(res)) + std::string(" : ") + std::string(DXGetErrorDescription9(res)));

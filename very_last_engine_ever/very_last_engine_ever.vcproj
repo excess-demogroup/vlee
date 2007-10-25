@@ -533,6 +533,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\engine\particlecloud.h"
+					>
+				</File>
+				<File
 					RelativePath=".\engine\particlestreamer.h"
 					>
 				</File>
