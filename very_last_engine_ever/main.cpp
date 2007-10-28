@@ -110,8 +110,11 @@ void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_
 }
 
 #include "engine/voxelgrid.h"
-// #define GRID_SIZE (64)
 #define GRID_SIZE (128)
+//#define GRID_SIZE (96)
+//#define GRID_SIZE (64)
+//#define GRID_SIZE (32)
+//#define GRID_SIZE (16)
 
 #define VOXEL_DATA_SIZE (32)
 engine::VoxelGrid<VOXEL_DATA_SIZE> voxelgrid;
@@ -199,7 +202,7 @@ void fill_grid2(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], Matrix4x4 mrot, floa
 	mscale.make_scaling(Vector3(scale, scale, scale));
 	mrot *= mscale * mtranslate;
 
-	float grid_size_rcp = 1.0 / (grid_size / 2);
+	float grid_size_rcp = 1.0f / (grid_size / 2);
 
 	Vector3 dx = Vector3(mrot._11, mrot._12, mrot._13) * grid_size_rcp;
 	Vector3 dy = Vector3(mrot._21, mrot._22, mrot._23) * grid_size_rcp;
@@ -212,6 +215,13 @@ void fill_grid2(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], Matrix4x4 mrot, floa
 	);
 	pz = math::mul(mrot, pz);
 
+	int dx_x = int(dx.x * (1 << 24));
+	int dx_y = int(dx.y * (1 << 24));
+	int dx_z = int(dx.z * (1 << 24));
+
+	const int high_thresh = 4;
+	const int low_thresh = 32;
+
 	for (int z = -igrid_min_size; z < igrid_max_size; ++z)
 	{
 		Vector3 py = pz;
@@ -219,30 +229,59 @@ void fill_grid2(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], Matrix4x4 mrot, floa
 
 		for (int y = -igrid_min_size; y < igrid_max_size; ++y)
 		{
-			Vector3 px = py;
+			int px_x = int(py.x * (1 << 24));
+			int px_y = int(py.y * (1 << 24));
+			int px_z = int(py.z * (1 << 24));
+
 			py += dy;
 
 			for (int x = -igrid_min_size; x < igrid_max_size; ++x)
 			{
-				Vector3 p2 = px;
-				px += dx;
+				int px = px_x;
+				int py = px_y;
+				int pz = px_z;
 
-//				Vector3 p(float(x) * grid_size_rcp, float(y) * grid_size_rcp, float(z) * grid_size_rcp);
-//				Vector3 p2 = math::mul(mrot, p);
-//				Vector3 p2 = p / 2;
-//				Vector3 p2 = Vector3(p.z, p.y, p.x);
+				px_x += dx_x;
+				px_y += dx_y;
+				px_z += dx_z;
 
-				int ix = int(floor(p2.x));
-				int iy = int(floor(p2.y));
-				int iz = int(floor(p2.z));
+				int ix = px >> 24;
+				int iy = py >> 24;
+				int iz = pz >> 24;
 
 				grid[z + igrid_min_size][y + igrid_min_size][x + igrid_min_size] = 0;
 
-				if (ix <= 0 || ix >= VOXEL_DATA_SIZE-1) continue;
-				if (iy <= 0 || iy >= VOXEL_DATA_SIZE-1) continue;
-				if (iz <= 0 || iz >= VOXEL_DATA_SIZE-1) continue;
+				if (
+					ix <= 0 || ix >= VOXEL_DATA_SIZE-1 ||
+					iy <= 0 || iy >= VOXEL_DATA_SIZE-1 ||
+					iz <= 0 || iz >= VOXEL_DATA_SIZE-1)
+				{
+					grid[z + igrid_min_size][y + igrid_min_size][x + igrid_min_size] = 0;
+					continue;
+				}
 
-				float dist = voxelgrid.trilinearSample(p2.x, p2.y, p2.z) / 128;
+				int index = voxelgrid.getIndex(ix, iy, iz);
+
+				if (voxelgrid.min_distances[index] > 1)
+				{
+					grid[z + igrid_min_size][y + igrid_min_size][x + igrid_min_size] = 0;
+					continue;
+				}
+				if (voxelgrid.max_distances[index] < -1)
+				{
+					grid[z + igrid_min_size][y + igrid_min_size][x + igrid_min_size] = 255;
+					continue;
+				}
+
+#if 0
+				float dist = voxelgrid.trilinearSample(
+					float(px) / (1 << 24),
+					float(py) / (1 << 24),
+					float(pz) / (1 << 24)
+				) / 128;
+#else
+				float dist = float(voxelgrid.trilinearSample(px, py, pz)) / (128);
+#endif
 //				float dist = voxelgrid.pointSample(p2.x, p2.y, p2.z) / 128.0f;
 				dist *= sqrtf(VOXEL_DATA_SIZE * VOXEL_DATA_SIZE * VOXEL_DATA_SIZE) / 2;
 //				dist *= 64;
@@ -550,7 +589,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			float grid_size = 1.0f;
 //			float grid_size = ((2 + float(cos(time))) / 4) * GRID_SIZE;
-//			float grid_size = (1 + cos(time)) / 2;
+//			float grid_size = (1 - cos(time / 2)) / 2;
 //			grid_size = pow(grid_size, 0.5f);
 			grid_size *= GRID_SIZE;
 
@@ -576,20 +615,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 			cubegrid_fx.setMatrices(world, view, proj);
 
 //			time /= 4;
-
+			static BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE];
+#if 0
 			float cx = (0.5f + sin(time) / 3) * grid_size;
 			float cy = (0.5f + cos(time) / 3) * grid_size;
 			float cz = (0.5f + sin(time) / 3) * grid_size;
 			math::Vector3 c1(cx, cy, cz);
-
-			float cx2 = (0.5f + cos(time - M_PI) / 3) * grid_size;
+			float cx2 = (0.5f + float(cos(time - M_PI) / 3) * grid_size;
 			float cy2 = (0.5f + sin(time - M_PI) / 3) * grid_size;
 			float cz2 = (0.5f + sin(time - M_PI) / 3) * grid_size;
 			math::Vector3 c2(cx2, cy2, cz2);
-
-#if 1
-			static BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE];
-//			fill_grid(grid, fgrid_size, c1, c2);
+			fill_grid(grid, fgrid_size, c1, c2);
+#else
 			Matrix4x4 mrot;
 			mrot.make_identity();
 			mrot.make_rotation(Vector3(0, time, 0));
@@ -598,6 +635,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float scale = 0.75f;
 			mscale.make_scaling(Vector3(scale, scale, scale));
 			fill_grid2(grid, mrot * mscale, grid_size);
+#endif
 
 			int cubes = 0;
 			int culled = 0;
@@ -660,7 +698,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				dynamic_vbs[vb_switcher & 1].unlock();
 			}
 //			printf("cubes: %d culled: %d\n", cubes, culled);
-#endif
+
 			/* setup render state */
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);

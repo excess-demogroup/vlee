@@ -261,6 +261,8 @@ static unsigned int swizzle_3d_lut[256] =
 0x249249
 };
 
+#include <limits.h>
+
 namespace engine
 {
 
@@ -268,13 +270,20 @@ namespace engine
 	class VoxelGrid
 	{
 	public:
-		inline int getIndex(int x, int y, int z)
+		VoxelGrid()
+		{
+			memset(distances, 0, sizeof(signed char) *grid_size * grid_size * grid_size);
+			memset(max_distances, CHAR_MIN, sizeof(signed char) * grid_size * grid_size * grid_size);
+			memset(min_distances, CHAR_MAX, sizeof(signed char) * grid_size * grid_size * grid_size);
+		}
+
+		inline int getIndex(int x, int y, int z) const
 		{
 			return swizzle_3d_lut[x] | (swizzle_3d_lut[y] << 1) | (swizzle_3d_lut[z] << 2);
 //			return (z * grid_size + y) * grid_size + x;
 		}
 
-		inline signed char pointSample(int x, int y, int z)
+		inline signed char pointSample(int x, int y, int z) const
 		{
 			assert(x >= 0);
 			assert(x < grid_size);
@@ -286,7 +295,7 @@ namespace engine
 		}
 
 #if 0
-		float trilinearSample(float x, float y, float z)
+		float trilinearSample(float x, float y, float z) const
 		{
 			int ix = int(floor(x));
 			int iy = int(floor(y));
@@ -327,7 +336,7 @@ namespace engine
 			return v;
 		}
 #else
-		float trilinearSample(float x, float y, float z)
+		float trilinearSample(float x, float y, float z) const
 		{
 			int ix = int(floor(x));
 			int iy = int(floor(y));
@@ -367,6 +376,88 @@ namespace engine
 		}
 #endif
 
+#if 1
+		float trilinearSample(int x, int y, int z) const
+		{
+			int ix = x >> 24;
+			int iy = y >> 24;
+			int iz = z >> 24;
+
+			int f0 = pointSample(ix,     iy,     iz);
+			int f1 = pointSample(ix + 1, iy,     iz);
+			int f2 = pointSample(ix,     iy + 1, iz);
+			int f3 = pointSample(ix + 1, iy + 1, iz);
+
+			signed char b0 = pointSample(ix,     iy,     iz + 1);
+			signed char b1 = pointSample(ix + 1, iy,     iz + 1);
+			signed char b2 = pointSample(ix,     iy + 1, iz + 1);
+			signed char b3 = pointSample(ix + 1, iy + 1, iz + 1);
+
+			int ixt = (x & ((1 << 24) - 1)) >> 8;
+			int iyt = (y & ((1 << 24) - 1)) >> 8;
+			int izt = (z & ((1 << 24) - 1)) >> 8;
+
+			float xt = float(ixt) / (1 << 16);
+			float yt = float(iyt) / (1 << 16);
+			float zt = float(izt) / (1 << 16);
+
+			float y1, y2;
+
+			/* first layer */
+			y1 = (f0 << 16) + ((int(f1) - f0) * ixt); /* 8:24 */
+			y2 = (f2 << 16) + ((int(f3) - f2) * ixt); /* 8:24 */
+//			y1 = math::lerp(float(f0), float(f1), xt);
+//			y2 = math::lerp(float(f2), float(f3), xt);
+			float z1 = math::lerp(float(y1), float(y2), yt) / (1 << 16);
+
+			/* second layer */
+			y1 = (b0 << 16) + ((int(b1) - b0) * ixt);
+			y2 = (b2 << 16) + ((int(b3) - b2) * ixt);
+			float z2 = math::lerp(y1, y2, yt) / (1 << 16);
+
+			return math::lerp(z1, z2, zt);
+		}
+#else
+		int trilinearSample(int x, int y, int z) const
+		{
+			int ix = x >> 24;
+			int iy = y >> 24;
+			int iz = z >> 24;
+
+			int f0 = pointSample(ix,     iy,     iz);
+			int f1 = pointSample(ix + 1, iy,     iz);
+			int f2 = pointSample(ix,     iy + 1, iz);
+			int f3 = pointSample(ix + 1, iy + 1, iz);
+
+			signed char b0 = pointSample(ix,     iy,     iz + 1);
+			signed char b1 = pointSample(ix + 1, iy,     iz + 1);
+			signed char b2 = pointSample(ix,     iy + 1, iz + 1);
+			signed char b3 = pointSample(ix + 1, iy + 1, iz + 1);
+
+			int ixt = (x & ((1 << 24) - 1)) >> 8; /* 16:16 */
+			int iyt = (y & ((1 << 24) - 1)) >> 8; /* 16:16 */
+			int izt = (z & ((1 << 24) - 1)) >> 8; /* 16:16 */
+
+			float xt = float(ixt) / (1 << 16);
+			float yt = float(iyt) / (1 << 16);
+			float zt = float(izt) / (1 << 16);
+
+			int y1, y2;
+
+			/* first layer */
+			y1 = (f0 << 8) + (((int(f1) - f0) * ixt) >> 8); /* 8:24 */
+			y2 = (f2 << 8) + (((int(f3) - f2) * ixt) >> 8); /* 8:24 */
+			int z1 = (y1 + (((y2 - y1) * iyt) >> 16)); /* 16:16 */
+
+			/* second layer */
+			y1 = (b0 << 16) + ((int(b1) - b0) * ixt);
+			y2 = (b2 << 16) + ((int(b3) - b2) * ixt);
+			y1 >>= 8; /* 16:16 */
+			y2 >>= 8; /* 16:16 */
+			int z2 = (y1 + (((y2 - y1) * iyt) >> 16)); /* 16:16 */
+			return (z1 + (((z2 - z1) * izt) >> 16)) / 256; /* 16:16 */
+		}
+#endif
 		void setDistance(int x, int y, int z, float dist)
 		{
 			assert(x >= 0);
@@ -376,11 +467,50 @@ namespace engine
 			assert(z >= 0);
 			assert(z < grid_size);
 			
-			distances[getIndex(x, y, z)] = (signed char)dist;
+			signed char cdist = (signed char)dist;
+			distances[getIndex(x, y, z)] = cdist;
+#if 1
+			for (int zo = -1; zo <= 1; ++zo)
+			{
+				for (int yo = -1; yo <= 1; ++yo)
+				{
+					for (int xo = -1; xo <= 1; ++xo)
+					{
+						updateMinMax(x+xo, y+yo, z + zo, cdist);
+					}
+				}
+			}
+#else
+			updateMinMax(x,   y,   z, cdist);
+			updateMinMax(x+1, y,   z, cdist);
+			updateMinMax(x,   y+1, z, cdist);
+			updateMinMax(x+1, y+1, z, cdist);
+			updateMinMax(x,   y,   z+1, cdist);
+			updateMinMax(x+1, y,   z+1, cdist);
+			updateMinMax(x,   y+1, z+1, cdist);
+			updateMinMax(x+1, y+1, z+1, cdist);
+#endif
+		}
+
+		void updateMinMax(int x, int y, int z, signed char dist)
+		{
+			if (x < 0) return;
+			if (x > grid_size - 1) return;
+			if (y < 0) return;
+			if (y > grid_size - 1) return;
+			if (z < 0) return;
+			if (z > grid_size - 1) return;
+			
+			int index = getIndex(x, y, z);
+			if (min_distances[index] > dist) min_distances[index] = dist;
+			if (max_distances[index] < dist) max_distances[index] = dist;
 		}
 
 	private:
 		signed char distances[grid_size * grid_size * grid_size];
+	public:
+		signed char max_distances[grid_size * grid_size * grid_size];
+		signed char min_distances[grid_size * grid_size * grid_size];
 	};
 }
 
