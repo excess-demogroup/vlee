@@ -404,16 +404,20 @@ namespace engine
 			float y1, y2;
 
 			/* first layer */
-			y1 = (f0 << 16) + ((int(f1) - f0) * ixt); /* 8:24 */
-			y2 = (f2 << 16) + ((int(f3) - f2) * ixt); /* 8:24 */
-//			y1 = math::lerp(float(f0), float(f1), xt);
-//			y2 = math::lerp(float(f2), float(f3), xt);
-			float z1 = math::lerp(float(y1), float(y2), yt) / (1 << 16);
+//			y1 = (f0 << 16) + ((int(f1) - f0) * ixt); /* 8:24 */
+//			y2 = (f2 << 16) + ((int(f3) - f2) * ixt); /* 8:24 */
+//			float z1 = math::lerp(float(y1), float(y2), yt) / (1 << 16);
+			y1 = math::lerp(float(f0), float(f1), xt);
+			y2 = math::lerp(float(f2), float(f3), xt);
+			float z1 = math::lerp(float(y1), float(y2), yt);
 
 			/* second layer */
-			y1 = (b0 << 16) + ((int(b1) - b0) * ixt);
-			y2 = (b2 << 16) + ((int(b3) - b2) * ixt);
-			float z2 = math::lerp(y1, y2, yt) / (1 << 16);
+//			y1 = (b0 << 16) + ((int(b1) - b0) * ixt);
+//			y2 = (b2 << 16) + ((int(b3) - b2) * ixt);
+//			float z2 = math::lerp(y1, y2, yt) / (1 << 16);
+			y1 = math::lerp(float(b0), float(b1), xt);
+			y2 = math::lerp(float(b2), float(b3), xt);
+			float z2 = math::lerp(float(y1), float(y2), yt);
 
 			return math::lerp(z1, z2, zt);
 		}

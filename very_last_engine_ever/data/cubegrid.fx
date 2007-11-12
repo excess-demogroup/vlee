@@ -36,10 +36,10 @@ sampler3D side_sampler = sampler_state
 struct VS_OUTPUT
 {
 	float4 pos  : POSITION;
-	float  fog  : TEXCOORD0;
-	float2 uv   : TEXCOORD1;
-	float front_dist : TEXCOORD2;
-	float light : TEXCOORD3;
+	half   fog  : TEXCOORD0;
+	half2  uv   : TEXCOORD1;
+	half   front_dist : TEXCOORD2;
+	half   light : TEXCOORD3;
 };
 
 const float3 normals[6] =
@@ -53,10 +53,13 @@ const float3 normals[6] =
 };
 
 VS_OUTPUT vertex(
+	/* mesh data */
 	float4 ipos  : POSITION,
-	float4 ipos2 : TEXCOORD0,
-	float4 distances[2] : TEXCOORD1,
-	float4 uv_face_index : TEXCOORD3
+	float4 uv_face_index : TEXCOORD0, /* xy = uv, z = undefined, w = face index */
+	
+	/* instance data */
+	float4 ipos2 : TEXCOORD1,
+	float4 distances[2]  : TEXCOORD2
 	)
 {
 	/* calculate object-space position */

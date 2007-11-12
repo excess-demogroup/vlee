@@ -110,8 +110,8 @@ void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_
 }
 
 #include "engine/voxelgrid.h"
-#define GRID_SIZE (128)
-//#define GRID_SIZE (96)
+//#define GRID_SIZE (128)
+#define GRID_SIZE (96)
 //#define GRID_SIZE (64)
 //#define GRID_SIZE (32)
 //#define GRID_SIZE (16)
@@ -219,8 +219,8 @@ void fill_grid2(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], Matrix4x4 mrot, floa
 	int dx_y = int(dx.y * (1 << 24));
 	int dx_z = int(dx.z * (1 << 24));
 
-	const int high_thresh = 4;
-	const int low_thresh = 32;
+	const int high_threshold = 1;
+	const int low_threshold = -1;
 
 	for (int z = -igrid_min_size; z < igrid_max_size; ++z)
 	{
@@ -249,8 +249,6 @@ void fill_grid2(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], Matrix4x4 mrot, floa
 				int iy = py >> 24;
 				int iz = pz >> 24;
 
-				grid[z + igrid_min_size][y + igrid_min_size][x + igrid_min_size] = 0;
-
 				if (
 					ix <= 0 || ix >= VOXEL_DATA_SIZE-1 ||
 					iy <= 0 || iy >= VOXEL_DATA_SIZE-1 ||
@@ -262,12 +260,12 @@ void fill_grid2(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], Matrix4x4 mrot, floa
 
 				int index = voxelgrid.getIndex(ix, iy, iz);
 
-				if (voxelgrid.min_distances[index] > 1)
+				if (voxelgrid.min_distances[index] > high_threshold)
 				{
 					grid[z + igrid_min_size][y + igrid_min_size][x + igrid_min_size] = 0;
 					continue;
 				}
-				if (voxelgrid.max_distances[index] < -1)
+				if (voxelgrid.max_distances[index] < low_threshold)
 				{
 					grid[z + igrid_min_size][y + igrid_min_size][x + igrid_min_size] = 255;
 					continue;
@@ -281,8 +279,8 @@ void fill_grid2(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], Matrix4x4 mrot, floa
 				) / 128;
 #else
 				float dist = float(voxelgrid.trilinearSample(px, py, pz)) / (128);
+//				float dist = voxelgrid.pointSample(ix, iy, iz) / 128.0f;
 #endif
-//				float dist = voxelgrid.pointSample(p2.x, p2.y, p2.z) / 128.0f;
 				dist *= sqrtf(VOXEL_DATA_SIZE * VOXEL_DATA_SIZE * VOXEL_DATA_SIZE) / 2;
 //				dist *= 64;
 
@@ -397,11 +395,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 		{
 			/* static data */
 			{ 0, 0, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 }, // pos
-			{ 0, 4, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 3 }, // normal + front index
+			{ 0, 4, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 }, // normal + front index
 			/* instance data */
-			{ 1, 0, D3DDECLTYPE_UBYTE4,  D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 }, // pos2
-			{ 1, 4, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 1 }, // instance array
-			{ 1, 8, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 2 }, // instance array
+			{ 1, 0, D3DDECLTYPE_UBYTE4,  D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 1 }, // pos2
+			{ 1, 4, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 2 }, // instance array
+			{ 1, 8, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 3 }, // instance array
 			D3DDECL_END()
 		};
 		renderer::VertexDeclaration vertex_decl = device.createVertexDeclaration(vertex_elements);
@@ -587,9 +585,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			);
 			eye = normalize(eye);
 
-			float grid_size = 1.0f;
+//			float grid_size = 1.0f;
 //			float grid_size = ((2 + float(cos(time))) / 4) * GRID_SIZE;
-//			float grid_size = (1 - cos(time / 2)) / 2;
+			float grid_size = (1 - cos(time / 4)) / 2;
 //			grid_size = pow(grid_size, 0.5f);
 			grid_size *= GRID_SIZE;
 
@@ -679,14 +677,48 @@ int main(int /*argc*/, char* /*argv*/ [])
 							*dst++ = x; *dst++ = y; *dst++ = z;
 							*dst++ = size;
 
+							/* neighbour info: 6 centers, 12 edges, 8 corners */
+							/* x = center, y = even edge, z = odd edge, w = */
+							/* tc0 - x y z w */
+							/* tc1 - x y z w */
+							/* tc2 - x y z w */
+							/* tc3 - x y z w */
+							/* tc4 - x y z w */
+							/* tc5 - x y z w */
+							/* tc6 - x y z w */
+
+							/* fill in centre faces */
 							*dst++ = z < igrid_size - 1 ? grid[z+1][y][x] : 0; // +z
-							*dst++ = z > 0 ?             grid[z-1][y][x] : 0; // -z
+							*dst++ = z > 0 ?              grid[z-1][y][x] : 0; // -z
 
 							*dst++ = y < igrid_size - 1 ? grid[z][y+1][x] : 0; // +y
-							*dst++ = y > 0 ?             grid[z][y-1][x] : 0; // -y
+							*dst++ = y > 0 ?              grid[z][y-1][x] : 0; // -y
 
 							*dst++ = x < igrid_size - 1 ? grid[z][y][x+1] : 0; // +x
-							*dst++ = x > 0 ?             grid[z][y][x-1] : 0; // -x
+							*dst++ = x > 0 ?              grid[z][y][x-1] : 0; // -x
+
+#if 0
+							/* fill in edge faces */
+							// front layer (z+1)
+							*dst++ = (y < igrid_size - 1 && z < igrid_size - 1) ? grid[z+1][y+1][x] : 0; // +y +z
+							*dst++ = (y > 0              && z < igrid_size - 1) ? grid[z+1][y-1][x] : 0; // -y +z
+							*dst++ = (x < igrid_size - 1 && z < igrid_size - 1) ? grid[z+1][y][x+1] : 0; // +x +z
+							*dst++ = (x > 0              && z < igrid_size - 1) ? grid[z+1][y][x-1] : 0; // -x +z
+
+							// middle layer (z)
+							*dst++ = (x > 0              && y > 0             ) ? grid[z][y-1][x-1] : 0; // -x -y
+							*dst++ = (x < igrid_size - 1 && y > 0             ) ? grid[z][y-1][x+1] : 0; // +x -y
+							*dst++ = (x > 0              && y < igrid_size - 1) ? grid[z][y+1][x-1] : 0; // -x +y
+							*dst++ = (x < igrid_size - 1 && y < igrid_size - 1) ? grid[z][y+1][x+1] : 0; // +x +y
+
+							// bottom layer (z-1)
+							*dst++ = (y < igrid_size - 1 && z > 0             ) ? grid[z-1][y+1][x] : 0; // +y -z
+							*dst++ = (y > 0              && z > 0             ) ? grid[z-1][y-1][x] : 0; // -y -z
+							*dst++ = (x < igrid_size - 1 && z > 0             ) ? grid[z-1][y][x+1] : 0; // +x -z
+							*dst++ = (x > 0              && z > 0             ) ? grid[z-1][y][x-1] : 0; // -x -z
+#endif
+
+							/* fill in corners (?) */
 
 							*dst++ = 128;
 							*dst++ = 128;
