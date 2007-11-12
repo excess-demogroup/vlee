@@ -39,6 +39,16 @@ namespace renderer
 		{
 			if (multisampled) device->StretchRect(shadow_surf, NULL, texture_surf, NULL, D3DTEXF_NONE);
 		}
+
+		int getWidth()
+		{
+			return getRenderTarget().getDesc().Width;
+		}
+		
+		int getHeight()
+		{
+			return getRenderTarget().getDesc().Height;
+		}
 		
 //	private:
 		bool multisampled;

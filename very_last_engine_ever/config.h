@@ -19,10 +19,7 @@
 #define WINDOWED 1
 #endif
 
-#undef WINDOWED
-#define WINDOWED 1
-
-#define DEMO_ASPECT (4.0 / 3)
+#define DEMO_ASPECT (16.0 / 9)
 #define BPM 208
 
 #ifdef VJSYS

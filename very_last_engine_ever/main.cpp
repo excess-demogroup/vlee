@@ -111,8 +111,8 @@ void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_
 
 #include "engine/voxelgrid.h"
 //#define GRID_SIZE (128)
-#define GRID_SIZE (96)
-//#define GRID_SIZE (64)
+// #define GRID_SIZE (96)
+#define GRID_SIZE (64)
 //#define GRID_SIZE (32)
 //#define GRID_SIZE (16)
 
@@ -348,7 +348,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		/* setup sound-playback */
 		if (!BASS_Init(config.getSoundcard(), 44100, BASS_DEVICE_LATENCY, 0, 0)) throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/208_skritt_til_venstre.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config.getSoundcard()) ? BASS_STREAM_DECODE : 0));
+		stream = BASS_StreamCreateFile(false, "data/TEST1.MP3", 0, 0, BASS_MP3_SETPOS | ((0 == config.getSoundcard()) ? BASS_STREAM_DECODE : 0));
 		if (!stream) throw FatalException("failed to open tune");
 		
 		SyncTimerBASS_Stream synctimer(stream, BPM, 4);
@@ -358,7 +358,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 #else
 		Sync sync("data\\__data_%s_%s.sync", synctimer);
 #endif
-		
+		SyncTrack &gridSizeTrack      = sync.getTrack("size", "grid", 4, false);
+		SyncTrack &sobelBlendTrack    = sync.getTrack("blend", "sobel", 4, true);
+		SyncTrack &colorMapBlendTrack = sync.getTrack("blend", "color map", 4, true);
+
 		Surface backbuffer   = device.getRenderTarget(0);
 		Surface depthstencil = device.getDepthStencilSurface();
 		
@@ -377,7 +380,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 		tex_fx->SetMatrix("transform", &tex_transform);
 		Effect blur_fx     = engine::loadEffect(device, "data/blur.fx");
 
-		Image color_image(color_msaa, tex_fx);
+		Effect color_map_fx = engine::loadEffect(device, "data/color_map.fx");
+		Image color_image(color_msaa, color_map_fx);
+		Texture color_map0_tex = engine::loadTexture(device, "data/color_map0.png");
+//		color_map_fx.set
+		color_map_fx->SetTexture("color_map", color_map0_tex);
+		color_map_fx->SetFloat("texel_width", 1.0f / color_msaa.getWidth());
+		color_map_fx->SetFloat("texel_height", 1.0f / color_msaa.getHeight());
+//		test_fx->SetFloat("fade", 1.0f);
+
+		Image scanlinesImage(engine::loadTexture(device, "data/scanlines.png"), tex_fx);
+
+
 
 		renderer::CubeTexture cube = engine::loadCubeTexture(device, "data/stpeters_cross2.dds");
 
@@ -389,7 +403,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		renderer::VolumeTexture front_tex = engine::loadVolumeTexture(device, "data/front.dds");
 		cubegrid_fx->SetTexture("front_tex", front_tex);
-
 
 		const D3DVERTEXELEMENT9 vertex_elements[] =
 		{
@@ -574,7 +587,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device.setViewport(&viewport);
 */
 			time /= 2;
-			D3DXCOLOR clear_color(1,0,0,0);
+			D3DXCOLOR clear_color(spectrum[0] * 1.5f, 0.f, 0.f, 0.f);
 			device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, clear_color, 1.f, 0);
 
 			Vector3 up(float(sin(time * 0.1f)), float(cos(time * 0.1f)), 0.f);
@@ -587,7 +600,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 //			float grid_size = 1.0f;
 //			float grid_size = ((2 + float(cos(time))) / 4) * GRID_SIZE;
-			float grid_size = (1 - cos(time / 4)) / 2;
+	//		float grid_size = (1 - cos(time / 4)) / 2;
+			float grid_size = math::clamp(gridSizeTrack.getFloatValue() / 256.0f, 0.0f, 1.0f);
 //			grid_size = pow(grid_size, 0.5f);
 			grid_size *= GRID_SIZE;
 
@@ -768,10 +782,22 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device.setViewport(&letterbox_viewport);
 
 			color_msaa.resolve(device);
-
+			
+			color_map_fx->SetFloat("sobel_fade", sobelBlendTrack.getFloatValue() * (1.f / 256));
+			color_map_fx->SetFloat("fade", colorMapBlendTrack.getFloatValue() * (1.f / 256));
+			
 			color_image.setPosition(-1, -1);
 			color_image.setDimension(2, 2);
 			color_image.draw(device);
+			
+			scanlinesImage.setPosition(-1, -1);
+			scanlinesImage.setDimension(2, 2);
+
+			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+			scanlinesImage.draw(device);
+			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			
 			device->EndScene(); /* WE DONE IS! */
 			
