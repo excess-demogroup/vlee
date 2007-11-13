@@ -109,190 +109,6 @@ void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_
 	viewport->Height = letterbox_height;
 }
 
-#include "engine/voxelgrid.h"
-//#define GRID_SIZE (128)
-// #define GRID_SIZE (96)
-#define GRID_SIZE (64)
-//#define GRID_SIZE (32)
-//#define GRID_SIZE (16)
-
-#define VOXEL_DATA_SIZE (32)
-engine::VoxelGrid<VOXEL_DATA_SIZE> voxelgrid;
-
-void fill_grid(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], float fgrid_size, const math::Vector3 &c1, const math::Vector3 &c2)
-{
-	int grid_size = int(floor(fgrid_size));
-	for (int z = 0; z < grid_size; ++z)
-	{
-		for (int y = 0; y < grid_size; ++y)
-		{
-			for (int x = 0; x < grid_size; ++x)
-			{
-#if 0
-				Vector3 p(float(x) / (grid_size / 2), float(y) / (grid_size / 2), float(z) / (grid_size / 2));
-				Vector3 p2 = mrot * p;
-
-				float x2 = p2.x * (GRID_SIZE / 2) + (GRID_SIZE / 2);
-				float y2 = p2.y * (GRID_SIZE / 2) + (GRID_SIZE / 2);
-				float z2 = p2.z * (GRID_SIZE / 2) + (GRID_SIZE / 2);
-
-				int ix = int(floor(x2));
-				int iy = int(floor(y2));
-				int iz = int(floor(z2));
-
-				if (ix <= 0 || ix >= GRID_SIZE-1) continue;
-				if (iy <= 0 || iy >= GRID_SIZE-1) continue;
-				if (iz <= 0 || iz >= GRID_SIZE-1) continue;
-
-				float dist = grid.trilinearSample(x2, y2, z2);
-
-				float size = (0.5f / grid_size) - dist * 0.5f;
-				grid[z][y][x] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
-#else
-				float fx = float(x) - c1.x;
-				float fy = float(y) - c1.y;
-				float fz = float(z) - c1.z;
-				float fx2 = float(x) - c2.x;
-				float fy2 = float(y) - c2.y;
-				float fz2 = float(z) - c2.z;
-
-/*
-				float fx = float(x) * (M_PI / GRID_SIZE);
-				float fy = float(y) * (M_PI / GRID_SIZE);
-				float fz = float(z) * (M_PI / GRID_SIZE);
-*/
-				float size = 1.0f / (fx * fx + fy * fy + fz * fz);
-				size += 1.0f / (fx2 * fx2 + fy2 * fy2 + fz2 * fz2);
-
-				size -= (0.75f / fgrid_size);
-//				size *= 8;
-				size *= fgrid_size / 0.75f;
-
-//				size *= fgrid_size;
-//				float size = 1.0 / sqrt(fx * fx + fy * fy + fz * fz);
-//				size = size * 3;
-//				size /= 8 * 8 * 8 * 2;
-//				size *= GRID_SIZE / 64;
-//				size = 0.5;
-//				if (size > 1.75) size = 0;
-
-				grid[z][y][x] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
-//				grid[z][y][x] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
-#endif
-			}
-		}
-	}
-}
-
-void fill_grid2(BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE], Matrix4x4 mrot, float grid_size)
-{
-	int igrid_min_size = int(floor(grid_size) / 2);
-	int igrid_max_size = int(ceil(grid_size) / 2);
-
-#if 0
-	igrid_min_size /= 4;
-	igrid_max_size /= 4;
-#endif
-
-	float translate = VOXEL_DATA_SIZE / 2;
-	float scale = VOXEL_DATA_SIZE / 2;
-
-	Matrix4x4 mtranslate, mscale;
-	mtranslate.make_translation(Vector3(translate, translate, translate));
-	mscale.make_scaling(Vector3(scale, scale, scale));
-	mrot *= mscale * mtranslate;
-
-	float grid_size_rcp = 1.0f / (grid_size / 2);
-
-	Vector3 dx = Vector3(mrot._11, mrot._12, mrot._13) * grid_size_rcp;
-	Vector3 dy = Vector3(mrot._21, mrot._22, mrot._23) * grid_size_rcp;
-	Vector3 dz = Vector3(mrot._31, mrot._32, mrot._33) * grid_size_rcp;
-
-	Vector3 pz(
-		float(-igrid_min_size) * grid_size_rcp,
-		float(-igrid_min_size) * grid_size_rcp,
-		float(-igrid_min_size) * grid_size_rcp
-	);
-	pz = math::mul(mrot, pz);
-
-	int dx_x = int(dx.x * (1 << 24));
-	int dx_y = int(dx.y * (1 << 24));
-	int dx_z = int(dx.z * (1 << 24));
-
-	const int high_threshold = 1;
-	const int low_threshold = -1;
-
-	for (int z = -igrid_min_size; z < igrid_max_size; ++z)
-	{
-		Vector3 py = pz;
-		pz += dz;
-
-		for (int y = -igrid_min_size; y < igrid_max_size; ++y)
-		{
-			int px_x = int(py.x * (1 << 24));
-			int px_y = int(py.y * (1 << 24));
-			int px_z = int(py.z * (1 << 24));
-
-			py += dy;
-
-			for (int x = -igrid_min_size; x < igrid_max_size; ++x)
-			{
-				int px = px_x;
-				int py = px_y;
-				int pz = px_z;
-
-				px_x += dx_x;
-				px_y += dx_y;
-				px_z += dx_z;
-
-				int ix = px >> 24;
-				int iy = py >> 24;
-				int iz = pz >> 24;
-
-				if (
-					ix <= 0 || ix >= VOXEL_DATA_SIZE-1 ||
-					iy <= 0 || iy >= VOXEL_DATA_SIZE-1 ||
-					iz <= 0 || iz >= VOXEL_DATA_SIZE-1)
-				{
-					grid[z + igrid_min_size][y + igrid_min_size][x + igrid_min_size] = 0;
-					continue;
-				}
-
-				int index = voxelgrid.getIndex(ix, iy, iz);
-
-				if (voxelgrid.min_distances[index] > high_threshold)
-				{
-					grid[z + igrid_min_size][y + igrid_min_size][x + igrid_min_size] = 0;
-					continue;
-				}
-				if (voxelgrid.max_distances[index] < low_threshold)
-				{
-					grid[z + igrid_min_size][y + igrid_min_size][x + igrid_min_size] = 255;
-					continue;
-				}
-
-#if 0
-				float dist = voxelgrid.trilinearSample(
-					float(px) / (1 << 24),
-					float(py) / (1 << 24),
-					float(pz) / (1 << 24)
-				) / 128;
-#else
-				float dist = float(voxelgrid.trilinearSample(px, py, pz)) / (128);
-//				float dist = voxelgrid.pointSample(ix, iy, iz) / 128.0f;
-#endif
-				dist *= sqrtf(VOXEL_DATA_SIZE * VOXEL_DATA_SIZE * VOXEL_DATA_SIZE) / 2;
-//				dist *= 64;
-
-				float size = (0.5f / grid_size) - dist * 0.5f;
-				grid[z + igrid_min_size][y + igrid_min_size][x + igrid_min_size] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
-			}
-		}
-	}
-}
-
-
-
 int main(int /*argc*/, char* /*argv*/ [])
 {
 #ifndef NDEBUG
@@ -348,7 +164,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		/* setup sound-playback */
 		if (!BASS_Init(config.getSoundcard(), 44100, BASS_DEVICE_LATENCY, 0, 0)) throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/TEST1.MP3", 0, 0, BASS_MP3_SETPOS | ((0 == config.getSoundcard()) ? BASS_STREAM_DECODE : 0));
+		stream = BASS_StreamCreateFile(false, "data/glitch.ogg", 0, 0, BASS_MP3_SETPOS | ((0 == config.getSoundcard()) ? BASS_STREAM_DECODE : 0));
 		if (!stream) throw FatalException("failed to open tune");
 		
 		SyncTimerBASS_Stream synctimer(stream, BPM, 4);
@@ -358,9 +174,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 #else
 		Sync sync("data\\__data_%s_%s.sync", synctimer);
 #endif
-		SyncTrack &gridSizeTrack      = sync.getTrack("size", "grid", 4, false);
-		SyncTrack &sobelBlendTrack    = sync.getTrack("blend", "sobel", 4, true);
-		SyncTrack &colorMapBlendTrack = sync.getTrack("blend", "color map", 4, true);
+		SyncTrack &cameraDistanceTrack = sync.getTrack("distance", "camera", 6, false);
+		SyncTrack &cameraRollTrack     = sync.getTrack("roll", "camera", 6, false);
+		SyncTrack &sobelBlendTrack     = sync.getTrack("blend", "sobel", 6, true);
+		SyncTrack &colorMapBlendTrack  = sync.getTrack("blend", "color map", 6, true);
+
+		SyncTrack &jellyAmtX = sync.getTrack("amt_x", "jelly", 6, true);
+		SyncTrack &jellyAmtY = sync.getTrack("amt_y", "jelly", 6, true);
+		SyncTrack &jellyAmtZ = sync.getTrack("amt_z", "jelly", 6, true);
+
+		SyncTrack &jellyScaleX = sync.getTrack("scale_x", "jelly", 6, true);
+		SyncTrack &jellyScaleY = sync.getTrack("scale_y", "jelly", 6, true);
+		SyncTrack &jellyScaleZ = sync.getTrack("scale_z", "jelly", 6, true);
 
 		Surface backbuffer   = device.getRenderTarget(0);
 		Surface depthstencil = device.getDepthStencilSurface();
@@ -389,160 +214,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Image scanlinesImage(engine::loadTexture(device, "data/scanlines.png"), tex_fx);
 
-		renderer::CubeTexture cubemap_tex = engine::loadCubeTexture(device, "data/stpeters_cross2.dds");
+		renderer::CubeTexture cubemap_tex = engine::loadCubeTexture(device, "data/stpeters_cross3.dds");
 /*
 		Effect test_fx = engine::loadEffect(device, "data/test.fx");
 		test_fx->SetTexture("env", cube);
 */
-		Mesh cube_x = engine::loadMesh(device, "data/cube.X");
-		Effect cubegrid_fx = engine::loadEffect(device, "data/cubegrid.fx");
-		cubegrid_fx->SetTexture("reflectionMap", cubemap_tex);
+		Effect jellyfish_fx = engine::loadEffect(device, "data/jellyfish.fx");
+		jellyfish_fx->SetTexture("reflectionMap", cubemap_tex);
+		Mesh sphere_x       = engine::loadMesh(device, "data/sphere2.x");
 
-		renderer::VolumeTexture front_tex = engine::loadVolumeTexture(device, "data/front.dds");
-		cubegrid_fx->SetTexture("front_tex", front_tex);
-
-		const D3DVERTEXELEMENT9 vertex_elements[] =
-		{
-			/* static data */
-			{ 0, 0, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 }, // pos
-			{ 0, 4, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 }, // normal + front index
-			/* instance data */
-			{ 1, 0, D3DDECLTYPE_UBYTE4,  D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 1 }, // pos2
-			{ 1, 4, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 2 }, // instance array
-			{ 1, 8, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 3 }, // instance array
-			D3DDECL_END()
-		};
-		renderer::VertexDeclaration vertex_decl = device.createVertexDeclaration(vertex_elements);
-
-		renderer::VertexBuffer static_vb  = device.createVertexBuffer(6 * 4 * (4 * 2), D3DUSAGE_WRITEONLY, 0, D3DPOOL_MANAGED);
-		{
-			BYTE *dst = (BYTE*)static_vb.lock(0, 6 * 4 * (4 * 2), 0);
-			
-			/* front face (positive z) */
-			*dst++ = 0;   *dst++ = 0;   *dst++ = 255; *dst++ = 255;
-			*dst++ = 0;   *dst++ = 0;   *dst++ = 0;   *dst++ = 0; // <0,0>, 0, 0
-
-			*dst++ = 255; *dst++ = 0;   *dst++ = 255; *dst++ = 255;
-			*dst++ = 255; *dst++ = 0;   *dst++ = 0;   *dst++ = 0; // <0,0,1>, 0
-
-			*dst++ = 0;   *dst++ = 255; *dst++ = 255; *dst++ = 255;
-			*dst++ = 0;   *dst++ = 255; *dst++ = 0;   *dst++ = 0; // <0,0,1>, 0
-
-			*dst++ = 255; *dst++ = 255; *dst++ = 255; *dst++ = 255;
-			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 0; // <0,0,1>, 0
-
-			/* back face (negative z)*/
-			*dst++ = 255; *dst++ = 0;   *dst++ = 0; *dst++ = 255;
-			*dst++ = 0;   *dst++ = 0;   *dst++ = 0; *dst++ = 1; // <0,0,-1>, 5
-
-			*dst++ = 0;   *dst++ = 0;   *dst++ = 0; *dst++ = 255;
-			*dst++ = 255; *dst++ = 0;   *dst++ = 0; *dst++ = 1; // <0,0,-1>, 5
-
-			*dst++ = 255; *dst++ = 255; *dst++ = 0; *dst++ = 255;
-			*dst++ = 0;   *dst++ = 255; *dst++ = 0; *dst++ = 1; // <0,0,-1>, 5
-
-			*dst++ = 0;   *dst++ = 255; *dst++ = 0; *dst++ = 255;
-			*dst++ = 255; *dst++ = 255; *dst++ = 0; *dst++ = 1; // <0,0,-1>, 5
-
-			/* top face (positive y)*/
-			*dst++ = 0;   *dst++ = 255; *dst++ = 0;   *dst++ = 255;
-			*dst++ = 0;   *dst++ = 0;   *dst++ = 0; *dst++ = 2; // <0,1,0>, 5
-
-			*dst++ = 0;   *dst++ = 255; *dst++ = 255; *dst++ = 255;
-			*dst++ = 255; *dst++ = 0;   *dst++ = 0;   *dst++ = 2; // <0,1,0>, 5
-
-			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 255;
-			*dst++ = 0;   *dst++ = 255; *dst++ = 0;   *dst++ = 2; // <0,1,0>, 5
-
-			*dst++ = 255; *dst++ = 255; *dst++ = 255; *dst++ = 255;
-			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 2; // <0,1,0>, 5
-
-			/* bottom face (negative y) */
-			*dst++ = 0;   *dst++ = 0;   *dst++ = 255; *dst++ = 255;
-			*dst++ = 0;   *dst++ = 0;   *dst++ = 0;   *dst++ = 3; // <0,-1,0>, 5
-
-			*dst++ = 0;   *dst++ = 0;   *dst++ = 0;   *dst++ = 255;
-			*dst++ = 255; *dst++ = 0;   *dst++ = 0;   *dst++ = 3; // <0,-1,0>, 5
-
-			*dst++ = 255; *dst++ = 0;   *dst++ = 255; *dst++ = 255;
-			*dst++ = 0;   *dst++ = 255; *dst++ = 0;   *dst++ = 3; // <0,-1,0>, 5
-
-			*dst++ = 255; *dst++ = 0;   *dst++ = 0;   *dst++ = 255;
-			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 3; // <0,-1,0>, 5
-
-			/* left face (positive x)*/
-			*dst++ = 255; *dst++ = 0;   *dst++ = 255; *dst++ = 255;
-			*dst++ = 0;   *dst++ = 0;   *dst++ = 127; *dst++ = 4; // <1,0,0>, 5
-
-			*dst++ = 255; *dst++ = 0;   *dst++ = 0;   *dst++ = 255;
-			*dst++ = 255; *dst++ = 0;   *dst++ = 0;   *dst++ = 4; // <1,0,0>, 5
-
-			*dst++ = 255; *dst++ = 255; *dst++ = 255; *dst++ = 255;
-			*dst++ = 0;   *dst++ = 255; *dst++ = 0;   *dst++ = 4; // <1,0,0>, 5
-
-			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 255;
-			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 4; // <1,0,0>, 5
-
-			/* right face (negative x)*/
-			*dst++ = 0;   *dst++ = 0;   *dst++ = 0;   *dst++ = 255;
-			*dst++ = 0;   *dst++ = 0;   *dst++ = 0;   *dst++ = 5; // <-1,0,0>, 5
-
-			*dst++ = 0;   *dst++ = 0;   *dst++ = 255; *dst++ = 255;
-			*dst++ = 255; *dst++ = 0;   *dst++ = 0;   *dst++ = 5; // <-1,0,0>, 5
-
-			*dst++ = 0;   *dst++ = 255; *dst++ = 0;   *dst++ = 255;
-			*dst++ = 0;   *dst++ = 255; *dst++ = 0;   *dst++ = 5; // <-1,0,0>, 5
-
-			*dst++ = 0;   *dst++ = 255; *dst++ = 255; *dst++ = 255;
-			*dst++ = 255; *dst++ = 255; *dst++ = 0;   *dst++ = 5; // <-1,0,0>, 5
-
-			static_vb.unlock();
-		}
-		
-		int vb_switcher = 0;
-		renderer::VertexBuffer dynamic_vbs[2];
-		dynamic_vbs[0] = device.createVertexBuffer(GRID_SIZE * GRID_SIZE * GRID_SIZE * (4 * 3), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
-		dynamic_vbs[1] = device.createVertexBuffer(GRID_SIZE * GRID_SIZE * GRID_SIZE * (4 * 3), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
-
-/*		dynamic_vbs[0] = device.createVertexBuffer(GRID_SIZE * GRID_SIZE * GRID_SIZE * (4 * 3), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_SYSTEMMEM);
-		dynamic_vbs[1] = device.createVertexBuffer(GRID_SIZE * GRID_SIZE * GRID_SIZE * (4 * 3), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_SYSTEMMEM); */
-		
-		renderer::IndexBuffer ib = device.createIndexBuffer(2 * 6 * 6, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED);
-		{
-			unsigned short *dst = (unsigned short*)ib.lock(0, 2 * 6 * 6, 0);
-			
-			int faces = 6;
-			for (int i = 0; i < faces; ++i)
-			{
-				*dst++ = (i * 4) + 0;
-				*dst++ = (i * 4) + 1;
-				*dst++ = (i * 4) + 2;
-				*dst++ = (i * 4) + 3;
-				*dst++ = (i * 4) + 2;
-				*dst++ = (i * 4) + 1;
-			}
-			
-			ib.unlock();
-		}
-
-		FILE *fp = fopen("data/duck.voxel", "rb");
-		if (NULL == fp) throw FatalException("failed to load voxel");
-		float max_dist;
-		fread(&max_dist, 4, 1, fp);
-		for (int z = 0; z < VOXEL_DATA_SIZE; ++z)
-		{
-			for (int y = 0; y < VOXEL_DATA_SIZE; ++y)
-			{
-				for (int x = 0; x < VOXEL_DATA_SIZE; ++x)
-				{
-					signed char bdist;
-					fread(&bdist, 1, 1, fp);
-					voxelgrid.setDistance(x, y, z, bdist);
-				}
-			}
-		}
-		fclose(fp);
-
+		Effect skybox_fx = engine::loadEffect(device, "data/skybox.fx");
+		skybox_fx->SetTexture("reflectionMap", cubemap_tex);
+		Mesh cube_x         = engine::loadMesh(device, "data/cube.X");
 
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -552,9 +235,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 #ifdef SYNC
 		sync.showEditor();
 #endif
-
-		timeBeginPeriod(1);
-		DWORD lastFrameTime = timeGetTime();
 
 		bool done = false;
 		while (!done)
@@ -588,28 +268,27 @@ int main(int /*argc*/, char* /*argv*/ [])
 //			D3DXCOLOR clear_color(spectrum[0] * 1.5f, 0.f, 0.f, 0.f);
 			device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, clear_color, 1.f, 0);
 
-			Vector3 up(float(sin(time * 0.1f)), float(cos(time * 0.1f)), 0.f);
+			float roll = cameraRollTrack.getFloatValue() / 256;
+			roll *= (2 * M_PI);
+			Vector3 up(float(sin(roll)), float(cos(roll)), 0.f);
 			Vector3 eye(
-				float(sin(time * 0.125f * 4)),
-				float(cos(time * 0.125f * 5)),
-				float(cos(time * 0.135f * 3))
+				float(sin(time * 0.125f * 5)),
+				float(cos(time * 0.125f * 5)) * 0.1f,
+				float(cos(time * 0.125f * 3))
 			);
 			eye = normalize(eye);
 
-//			float grid_size = 1.0f;
-//			float grid_size = ((2 + float(cos(time))) / 4) * GRID_SIZE;
-	//		float grid_size = (1 - cos(time / 4)) / 2;
-			float grid_size = math::clamp(gridSizeTrack.getFloatValue() / 256.0f, 0.0f, 1.0f);
-//			grid_size = pow(grid_size, 0.5f);
-			grid_size *= GRID_SIZE;
+			float camera_distance = 60 * (cameraDistanceTrack.getFloatValue() / 256);
+			eye *= camera_distance;
+			Vector3 at(0, 0, 0);
 
-			eye *= grid_size;
-			Vector3 at(floor(grid_size / 2), floor(grid_size / 2), floor(grid_size / 2));
+			Matrix4x4 world;
+			world.make_identity();
 
-			D3DXMATRIX world;
-			D3DXMatrixIdentity(&world);
-			D3DXMATRIX view;
-			D3DXMatrixLookAtLH(&view, &(eye + at), &at, &up);
+/*			D3DXMATRIX view;
+			D3DXMatrixLookAtLH(&view, &(eye + at), &at, &up); */
+			Matrix4x4 view;
+			view.makeLookAt(eye + at, at, roll);
 			D3DXMATRIX proj;
 			D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(60), DEMO_ASPECT, 0.1f, 1000.f);
 /*
@@ -620,158 +299,30 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 
-//			test_fx.draw(cube_x);
+			jellyfish_fx.setMatrices(world, view, proj);
+			jellyfish_fx.setVector3("amt",   Vector3(
+				jellyAmtX.getFloatValue() / 256,
+				jellyAmtY.getFloatValue() / 256,
+				jellyAmtZ.getFloatValue() / 256)
+			);
+			jellyfish_fx.setVector3("scale", Vector3(
+				jellyScaleX.getFloatValue() / 256,
+				jellyScaleY.getFloatValue() / 256,
+				jellyScaleZ.getFloatValue() / 256)
+			);
+			jellyfish_fx->SetFloat("time", time);
+			math::Matrix4x4 mvp = world * view * proj;
+//			Vector3 viewPosition(eye + at);
+			jellyfish_fx.setVector3("vViewPosition", eye + at);
+//			jellyfish_fx.setVector3("vViewPosition", Vector3(mvp._14, mvp._24, mvp._34));
+//			jellyfish_fx.setVector3("vViewPosition", Vector3(mvp._41, mvp._42, mvp._43));
+//			jellyfish_fx.setVector3("vViewPosition", Vector3(sin(time*10) * 100, 0, cos(time*20) * 100));
+			jellyfish_fx.draw(sphere_x);
 
-			cubegrid_fx.setMatrices(world, view, proj);
-
-//			time /= 4;
-			static BYTE grid[GRID_SIZE][GRID_SIZE][GRID_SIZE];
-#if 0
-			float cx = (0.5f + sin(time) / 3) * grid_size;
-			float cy = (0.5f + cos(time) / 3) * grid_size;
-			float cz = (0.5f + sin(time) / 3) * grid_size;
-			math::Vector3 c1(cx, cy, cz);
-			float cx2 = (0.5f + float(cos(time - M_PI) / 3) * grid_size;
-			float cy2 = (0.5f + sin(time - M_PI) / 3) * grid_size;
-			float cz2 = (0.5f + sin(time - M_PI) / 3) * grid_size;
-			math::Vector3 c2(cx2, cy2, cz2);
-			fill_grid(grid, fgrid_size, c1, c2);
-#else
-			Matrix4x4 mrot;
-			mrot.make_identity();
-			mrot.make_rotation(Vector3(0, time, 0));
-			mrot.make_rotation(Vector3(float(-M_PI / 2), float(M_PI - sin(time / 5)), float(M_PI + time / 3)));
-			Matrix4x4 mscale;
-			float scale = 0.75f;
-			mscale.make_scaling(Vector3(scale, scale, scale));
-			fill_grid2(grid, mrot * mscale, grid_size);
-#endif
-
-			int cubes = 0;
-			int culled = 0;
-			{
-
-				int igrid_min_size = int(floor(grid_size) / 2);
-				int igrid_max_size = int(ceil(grid_size) / 2);
-				int igrid_size = igrid_max_size + igrid_min_size;
-
-				BYTE *dst = (BYTE*)dynamic_vbs[vb_switcher & 1].lock(0, igrid_size * igrid_size * igrid_size * (4 * 3), 0);
-				for (int z = 0; z < igrid_size; ++z)
-				{
-					for (int y = 0; y < igrid_size; ++y)
-					{
-						for (int x = 0; x < igrid_size; ++x)
-						{
-							BYTE size = grid[z][y][x];
-
-							if (size == 0) continue;
-							if (
-								(x > 0 && x < igrid_size - 1) &&
-								(y > 0 && y < igrid_size - 1) &&
-								(z > 0 && z < igrid_size - 1)
-								)
-							{
-
-								if (
-									grid[z][y][x-1] == 255 &&
-									grid[z][y][x+1] == 255 &&
-									grid[z][y-1][x] == 255 &&
-									grid[z][y+1][x] == 255 &&
-									grid[z-1][y][x] == 255 &&
-									grid[z+1][y][x] == 255
-									)
-								{
-									culled++;
-									continue;
-								}
-							}
-
-							*dst++ = x; *dst++ = y; *dst++ = z;
-							*dst++ = size;
-
-							/* neighbour info: 6 centers, 12 edges, 8 corners */
-							/* x = center, y = even edge, z = odd edge, w = */
-							/* tc0 - x y z w */
-							/* tc1 - x y z w */
-							/* tc2 - x y z w */
-							/* tc3 - x y z w */
-							/* tc4 - x y z w */
-							/* tc5 - x y z w */
-							/* tc6 - x y z w */
-
-							/* fill in centre faces */
-							*dst++ = z < igrid_size - 1 ? grid[z+1][y][x] : 0; // +z
-							*dst++ = z > 0 ?              grid[z-1][y][x] : 0; // -z
-
-							*dst++ = y < igrid_size - 1 ? grid[z][y+1][x] : 0; // +y
-							*dst++ = y > 0 ?              grid[z][y-1][x] : 0; // -y
-
-							*dst++ = x < igrid_size - 1 ? grid[z][y][x+1] : 0; // +x
-							*dst++ = x > 0 ?              grid[z][y][x-1] : 0; // -x
-
-#if 0
-							/* fill in edge faces */
-							// front layer (z+1)
-							*dst++ = (y < igrid_size - 1 && z < igrid_size - 1) ? grid[z+1][y+1][x] : 0; // +y +z
-							*dst++ = (y > 0              && z < igrid_size - 1) ? grid[z+1][y-1][x] : 0; // -y +z
-							*dst++ = (x < igrid_size - 1 && z < igrid_size - 1) ? grid[z+1][y][x+1] : 0; // +x +z
-							*dst++ = (x > 0              && z < igrid_size - 1) ? grid[z+1][y][x-1] : 0; // -x +z
-
-							// middle layer (z)
-							*dst++ = (x > 0              && y > 0             ) ? grid[z][y-1][x-1] : 0; // -x -y
-							*dst++ = (x < igrid_size - 1 && y > 0             ) ? grid[z][y-1][x+1] : 0; // +x -y
-							*dst++ = (x > 0              && y < igrid_size - 1) ? grid[z][y+1][x-1] : 0; // -x +y
-							*dst++ = (x < igrid_size - 1 && y < igrid_size - 1) ? grid[z][y+1][x+1] : 0; // +x +y
-
-							// bottom layer (z-1)
-							*dst++ = (y < igrid_size - 1 && z > 0             ) ? grid[z-1][y+1][x] : 0; // +y -z
-							*dst++ = (y > 0              && z > 0             ) ? grid[z-1][y-1][x] : 0; // -y -z
-							*dst++ = (x < igrid_size - 1 && z > 0             ) ? grid[z-1][y][x+1] : 0; // +x -z
-							*dst++ = (x > 0              && z > 0             ) ? grid[z-1][y][x-1] : 0; // -x -z
-#endif
-
-							/* fill in corners (?) */
-
-							*dst++ = 128;
-							*dst++ = 128;
-
-							cubes++;
-						}
-					}
-				}
-				dynamic_vbs[vb_switcher & 1].unlock();
-			}
-//			printf("cubes: %d culled: %d\n", cubes, culled);
-
-			/* setup render state */
-			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
+			skybox_fx.setMatrices(world, view, proj);
+			skybox_fx.draw(cube_x);
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-
-			/* setup vs input */
-			device->SetVertexDeclaration(vertex_decl);
-			device->SetStreamSource(0, static_vb, 0, 4 * 2);
-			device->SetStreamSourceFreq(0, D3DSTREAMSOURCE_INDEXEDDATA | cubes);
-			device->SetStreamSource(1, dynamic_vbs[vb_switcher & 1], 0, 4 * 3);
-			device->SetStreamSourceFreq(1, D3DSTREAMSOURCE_INSTANCEDATA | 1UL);
-			vb_switcher++;
-
-
-			device->SetIndices(ib);
-
-			/* draw */
-			UINT passes;
-			cubegrid_fx->Begin(&passes, 0);
-			for (UINT pass = 0; pass < passes; ++pass)
-			{
-				cubegrid_fx->BeginPass( pass );
-				device->DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6 * 4, 0, 6 * 2);
-				cubegrid_fx->EndPass();
-			}
-			cubegrid_fx->End();
-
-			/* back to normal */
-			device->SetStreamSourceFreq(0, 1);
-			device->SetStreamSourceFreq(1, 1);
 
 			/* letterbox */
 			device.setRenderTarget(backbuffer);
@@ -800,10 +351,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->EndScene(); /* WE DONE IS! */
 			
 			HRESULT res = device->Present(0, 0, 0, 0);
-
-			DWORD frameTime = timeGetTime();
-			printf("frameTime: %d\n", frameTime - lastFrameTime);
-			lastFrameTime = frameTime;
 
 			if (FAILED(res))
 			{
