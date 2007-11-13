@@ -313,7 +313,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		ConfigDialog config(direct3d);
 		
-#ifdef NDEBUG
+#if !WINDOWED
 		/* show config dialog */
 		INT_PTR result = config.DoModal();
 		if (FAILED(result)) MessageBox(NULL, "Could not initialize dialogbox, using default settings.", NULL, MB_OK);
@@ -383,23 +383,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect color_map_fx = engine::loadEffect(device, "data/color_map.fx");
 		Image color_image(color_msaa, color_map_fx);
 		Texture color_map0_tex = engine::loadTexture(device, "data/color_map0.png");
-//		color_map_fx.set
 		color_map_fx->SetTexture("color_map", color_map0_tex);
 		color_map_fx->SetFloat("texel_width", 1.0f / color_msaa.getWidth());
 		color_map_fx->SetFloat("texel_height", 1.0f / color_msaa.getHeight());
-//		test_fx->SetFloat("fade", 1.0f);
 
 		Image scanlinesImage(engine::loadTexture(device, "data/scanlines.png"), tex_fx);
 
-
-
-		renderer::CubeTexture cube = engine::loadCubeTexture(device, "data/stpeters_cross2.dds");
-
+		renderer::CubeTexture cubemap_tex = engine::loadCubeTexture(device, "data/stpeters_cross2.dds");
+/*
 		Effect test_fx = engine::loadEffect(device, "data/test.fx");
 		test_fx->SetTexture("env", cube);
-
+*/
 		Mesh cube_x = engine::loadMesh(device, "data/cube.X");
 		Effect cubegrid_fx = engine::loadEffect(device, "data/cubegrid.fx");
+		cubegrid_fx->SetTexture("reflectionMap", cubemap_tex);
 
 		renderer::VolumeTexture front_tex = engine::loadVolumeTexture(device, "data/front.dds");
 		cubegrid_fx->SetTexture("front_tex", front_tex);
@@ -549,7 +546,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f) + 10);
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f));
 
 
 #ifdef SYNC
@@ -587,7 +584,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device.setViewport(&viewport);
 */
 			time /= 2;
-			D3DXCOLOR clear_color(spectrum[0] * 1.5f, 0.f, 0.f, 0.f);
+			D3DXCOLOR clear_color(0.45f, 0.25f, 0.25f, 0.f);
+//			D3DXCOLOR clear_color(spectrum[0] * 1.5f, 0.f, 0.f, 0.f);
 			device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, clear_color, 1.f, 0);
 
 			Vector3 up(float(sin(time * 0.1f)), float(cos(time * 0.1f)), 0.f);
@@ -614,11 +612,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 			D3DXMatrixLookAtLH(&view, &(eye + at), &at, &up);
 			D3DXMATRIX proj;
 			D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(60), DEMO_ASPECT, 0.1f, 1000.f);
-
+/*
 			test_fx.setMatrices(world, view, proj);
 			test_fx->SetFloat("fade", 1.0f);
 			test_fx->SetFloat("mask_fade", 1.0f);
-
+*/
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 

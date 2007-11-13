@@ -33,6 +33,20 @@ sampler3D side_sampler = sampler_state
 	AddressW = CLAMP;
 };
 
+texture reflectionMap;
+samplerCUBE reflectionSampler = sampler_state
+{
+	Texture = (reflectionMap);
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	AddressW = CLAMP;
+};
+
+
 struct VS_OUTPUT
 {
 	float4 pos  : POSITION;
@@ -40,6 +54,9 @@ struct VS_OUTPUT
 	half2  uv   : TEXCOORD1;
 	half   front_dist : TEXCOORD2;
 	half   light : TEXCOORD3;
+	half3  reflection : TEXCOORD4;
+	half3  view : TEXCOORD5;
+	half3  normal : TEXCOORD6;
 };
 
 const float3 normals[6] =
@@ -67,6 +84,7 @@ VS_OUTPUT vertex(
 	
 	int face_index = uv_face_index.w * 256;
 	float3 normal = normals[face_index];
+	normal = mul(float4(normal, 0), WorldView);
 
 	VS_OUTPUT Out;
 	Out.pos = mul(float4(pos + ipos2.xyz,  1), WorldViewProjection);
@@ -85,8 +103,11 @@ VS_OUTPUT vertex(
 	
 	Out.front_dist = sizes[face_index];
 	
-	Out.light = max(dot(normal, normalize(float3(1,0.1,0.2))), 0);
+	Out.light = max(dot(normal, normalize(float3(0,0.5,-0.5))), 0);
 	Out.fog = clamp((Out.pos.z - 10) / 70, 0.0, 1.0);
+	Out.reflection    = reflect(-Out.pos, normal);
+	Out.view = -Out.pos;
+	Out.normal = normal;
 
 	return Out;
 }
@@ -105,6 +126,11 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	float l = (In.light * ao) + (ao * 0.1);
 	
 	float4 color = float4(l, l, l, 1.0);
+	
+	half fresnel = pow(1.0 - dot(In.normal, normalize(In.view)), 2.5);
+	color += texCUBE(reflectionSampler, normalize(In.reflection)) * fresnel * ao;
+//	return pow(1.0 - fresnel, 2.5);
+
 	
 	return color;
 //	return lerp(color, float4(0,0,0,0), In.fog);
