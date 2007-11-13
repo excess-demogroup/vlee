@@ -15,10 +15,10 @@ struct VS_INPUT
 
 struct VS_OUTPUT 
 {
-	float4 Pos:     POSITION;
-	float3 normal     :     TEXCOORD0;
-	float3 reflection :     TEXCOORD1; 
-	float3 refraction :     TEXCOORD2; 
+	float4 Pos        : POSITION;
+	float3 reflection : TEXCOORD1; 
+	float3 refraction : TEXCOORD2; 
+	float  fresnel    : TEXCOORD3;
 };
 
 float time;
@@ -58,9 +58,9 @@ VS_OUTPUT vs_main( VS_INPUT In )
 
 	Out.Pos           = mul(float4(pos,  1.0), matWorldViewProjection);
 	Out.reflection    = reflect(view, norm);
-	Out.refraction    = reflect(view, norm * 0.35f); /* fake, but who cares? */
+	Out.refraction    = reflect(view, norm * 0.4f); /* fake, but who cares? */
+	Out.fresnel       = dot(view, norm);
 	norm = mul(float4(norm, 0.0), matWorldViewProjection);
-	Out.normal        = norm;
 
 	return Out;
 }
@@ -101,15 +101,11 @@ struct PS_OUTPUT
 PS_OUTPUT ps_main( PS_INPUT In )
 {
 	PS_OUTPUT Out;
-
-//	Out.color    = float4(normalize(In.normal), 1);
-//	Out.color    = pow(abs(normalize(In.normal).z), 2) * 0.25;
-//	Out.color  = texCUBE(tex, normalize(In.reflection));
-
-	float4 reflection = texCUBE(reflectionMapSampler, normalize(In.reflection));
-	float4 refraction = texCUBE(reflectionMapSampler, normalize(In.refraction));;
-	float fresnel = abs(normalize(In.normal).z);
-	fresnel = 0.5;
+	
+	float4 reflection = texCUBE(reflectionMapSampler, normalize(In.reflection)) * 2;
+	float4 refraction = texCUBE(reflectionMapSampler, normalize(In.refraction));
+	float fresnel = In.fresnel;
+//	float fresnel = abs(normalize(In.normal).z);
 	Out.color = lerp(reflection, refraction, fresnel) *  pow(1.0 - fresnel, 1.0);
 
 	return Out;

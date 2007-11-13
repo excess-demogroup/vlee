@@ -22,6 +22,8 @@
 #include "engine/effect.h"
 #include "engine/image.h"
 #include "engine/anim.h"
+#include "engine/particlestreamer.h"
+#include "engine/particlecloud.h"
 
 #include "engine/textureproxy.h"
 
@@ -205,12 +207,30 @@ int main(int /*argc*/, char* /*argv*/ [])
 		tex_fx->SetMatrix("transform", &tex_transform);
 		Effect blur_fx     = engine::loadEffect(device, "data/blur.fx");
 
+		Effect particle_fx = engine::loadEffect(device, "data/particle.fx");
+		Texture bartikkel_tex = engine::loadTexture(device, "data/particle.png");
+		particle_fx->SetTexture("tex", bartikkel_tex);
+
+
 		Effect color_map_fx = engine::loadEffect(device, "data/color_map.fx");
 		Image color_image(color_msaa, color_map_fx);
 		Texture color_map0_tex = engine::loadTexture(device, "data/color_map0.png");
 		color_map_fx->SetTexture("color_map", color_map0_tex);
 		color_map_fx->SetFloat("texel_width", 1.0f / color_msaa.getWidth());
 		color_map_fx->SetFloat("texel_height", 1.0f / color_msaa.getHeight());
+
+
+		engine::ParticleStreamer streamer(device);
+		engine::ParticleCloud<float> cloud;
+		for (int i = 0; i < 1024 * 8; ++i)
+		{
+			float x = (randf() - 0.5f) * 200;
+			float z = (randf() - 0.5f) * 200;
+			float y = (randf() - 0.5f) * 200;
+			float s = (randf() + 0.75f) * 0.5f;
+			cloud.particles.insert(cloud.particles.end(), engine::Particle<float>(Vector3(x, y, z), s));
+		}
+
 
 		Image scanlinesImage(engine::loadTexture(device, "data/scanlines.png"), tex_fx);
 
@@ -273,8 +293,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Vector3 up(float(sin(roll)), float(cos(roll)), 0.f);
 			Vector3 eye(
 				float(sin(time * 0.125f * 5)),
-				float(cos(time * 0.125f * 5)) * 0.1f,
-				float(cos(time * 0.125f * 3))
+				float(cos(time * 0.125f * 3)) * 0.25f,
+				float(cos(time * 0.125f * 5))
 			);
 			eye = normalize(eye);
 
@@ -323,6 +343,59 @@ int main(int /*argc*/, char* /*argv*/ [])
 			skybox_fx.setMatrices(world, view, proj);
 			skybox_fx.draw(cube_x);
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+
+#if 1
+			Matrix4x4 modelview = world * view;
+			cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
+			
+			particle_fx.setMatrices(world, view, proj);
+			
+			{
+				Vector3 up(modelview._12, modelview._22, modelview._32);
+				Vector3 left(modelview._11, modelview._21, modelview._31);
+				math::normalize(up);
+				math::normalize(left);
+				
+				particle_fx->SetFloatArray("up", up, 3);
+				particle_fx->SetFloatArray("left", left, 3);
+				particle_fx->SetFloat("alpha", 0.1);
+				particle_fx->CommitChanges();
+			}
+
+			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+			device->SetRenderState(D3DRS_ZWRITEENABLE, false);
+			
+			std::list<engine::Particle<float> >::const_iterator iter = cloud.particles.begin();
+			bool iter_done = false;
+			
+			while (!iter_done)
+			{
+				streamer.begin();
+				for (int i = 0; i < 1024; ++i)
+				{
+					streamer.add(
+						Vector3(iter->pos.x,
+								iter->pos.y,
+								iter->pos.z
+						),
+						iter->data // + (1 - fmod(beat, 1.0)) * 2
+					);
+					++iter;
+
+					if (cloud.particles.end() == iter)
+					{
+						iter_done = true;
+						break;
+					}
+				}
+				streamer.end();
+				particle_fx.draw(streamer);
+			}
+			device->SetRenderState(D3DRS_ZWRITEENABLE, true);
+#endif
 
 			/* letterbox */
 			device.setRenderTarget(backbuffer);
