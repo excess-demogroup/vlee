@@ -87,12 +87,15 @@ float luminance(float3 color)
 float4 pixel(VS_OUTPUT In) : COLOR
 {
 	float4 tex = tex2D(tex_sampler, In.tex);
-	float4 edges = sobel(tex_sampler, In.tex);
-	float4 color1 = lerp(tex, edges, sobel_fade);
+//	float4 edges = sobel(tex_sampler, In.tex);
+//	float4 color = lerp(tex, edges, sobel_fade);
+	float4 color = tex;
 	
-	float lum = luminance(color1.rgb);
-	float4 color2 = tex2D(color_map_sampler, lum);
-	return lerp(color1, color2, fade);
+	/* lookup in palette */
+	float lum = luminance(color.rgb);
+	float4 pal_color = tex2D(color_map_sampler, lum);
+	
+	return lerp(color, pal_color, fade);
 }
 
 technique blur_ps_vs_2_0

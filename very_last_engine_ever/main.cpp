@@ -293,7 +293,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Vector3 up(float(sin(roll)), float(cos(roll)), 0.f);
 			Vector3 eye(
 				float(sin(time * 0.125f * 5)),
-				float(cos(time * 0.125f * 3)) * 0.25f,
+				float(cos(time * 0.125f * 10)) * 0.5f,
 				float(cos(time * 0.125f * 5))
 			);
 			eye = normalize(eye);
@@ -305,22 +305,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Matrix4x4 world;
 			world.make_identity();
 
-/*			D3DXMATRIX view;
-			D3DXMatrixLookAtLH(&view, &(eye + at), &at, &up); */
 			Matrix4x4 view;
 			view.makeLookAt(eye + at, at, roll);
-			D3DXMATRIX proj;
-			D3DXMatrixPerspectiveFovLH(&proj, D3DXToRadian(60), DEMO_ASPECT, 0.1f, 1000.f);
-/*
-			test_fx.setMatrices(world, view, proj);
-			test_fx->SetFloat("fade", 1.0f);
-			test_fx->SetFloat("mask_fade", 1.0f);
-*/
+			Matrix4x4 proj;
+			proj.make_projection(60.0f, DEMO_ASPECT, 0.1f, 1000.f);
+			
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-
+			
 			jellyfish_fx.setMatrices(world, view, proj);
-			jellyfish_fx.setVector3("amt",   Vector3(
+			jellyfish_fx.setVector3("amt", Vector3(
 				jellyAmtX.getFloatValue() / 256,
 				jellyAmtY.getFloatValue() / 256,
 				jellyAmtZ.getFloatValue() / 256)
@@ -332,11 +326,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			);
 			jellyfish_fx->SetFloat("time", time);
 			math::Matrix4x4 mvp = world * view * proj;
-//			Vector3 viewPosition(eye + at);
 			jellyfish_fx.setVector3("vViewPosition", eye + at);
-//			jellyfish_fx.setVector3("vViewPosition", Vector3(mvp._14, mvp._24, mvp._34));
-//			jellyfish_fx.setVector3("vViewPosition", Vector3(mvp._41, mvp._42, mvp._43));
-//			jellyfish_fx.setVector3("vViewPosition", Vector3(sin(time*10) * 100, 0, cos(time*20) * 100));
 			jellyfish_fx.draw(sphere_x);
 
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
@@ -345,6 +335,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 
 #if 1
+			/* particles */
 			Matrix4x4 modelview = world * view;
 			cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
 			
