@@ -177,7 +177,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Sync sync("data\\__data_%s_%s.sync", synctimer);
 #endif
 		SyncTrack &cameraDistanceTrack = sync.getTrack("distance", "camera", 6, false);
-		SyncTrack &cameraRollTrack     = sync.getTrack("roll", "camera", 6, false);
+		SyncTrack &cameraRollTrack     = sync.getTrack("roll", "camera", 6, true);
+		SyncTrack &cameraYRotTrack     = sync.getTrack("y-rot", "camera", 6, true);
+		SyncTrack &cameraUpTrack     = sync.getTrack("up", "camera", 6, true);
+
 		SyncTrack &sobelBlendTrack     = sync.getTrack("blend", "sobel", 6, true);
 		SyncTrack &colorMapBlendTrack  = sync.getTrack("blend", "color map", 6, true);
 
@@ -188,6 +191,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		SyncTrack &jellyScaleX = sync.getTrack("scale_x", "jelly", 6, true);
 		SyncTrack &jellyScaleY = sync.getTrack("scale_y", "jelly", 6, true);
 		SyncTrack &jellyScaleZ = sync.getTrack("scale_z", "jelly", 6, true);
+
+		SyncTrack &jellySwimTrack = sync.getTrack("swim", "jelly", 6, true);
+
 
 		Surface backbuffer   = device.getRenderTarget(0);
 		Surface depthstencil = device.getDepthStencilSurface();
@@ -227,12 +233,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		engine::ParticleStreamer streamer(device);
 		engine::ParticleCloud<float> cloud;
-		for (int i = 0; i < 1024 * 8; ++i)
+		for (int i = 0; i < 1024 * 4; ++i)
 		{
-			float x = (randf() - 0.5f) * 200;
-			float z = (randf() - 0.5f) * 200;
-			float y = (randf() - 0.5f) * 200;
+			float x = (randf() - 0.5f) * 185;
+			float z = (randf() - 0.5f) * 185;
+			float y = (randf() - 0.5f) * 150;
 			float s = (randf() + 0.75f) * 0.5f;
+			cloud.particles.insert(cloud.particles.end(), engine::Particle<float>(Vector3(x, y, z), s));
+		}
+		for (int i = 0; i < 1024 * 4; ++i)
+		{
+			float x = (randf() - 0.5f) * 125;
+			float z = (randf() - 0.5f) * 150;
+			float y = (randf() - 0.5f) * 125;
+			float s = (randf() + 0.75f) * 0.35f;
 			cloud.particles.insert(cloud.particles.end(), engine::Particle<float>(Vector3(x, y, z), s));
 		}
 
@@ -286,17 +300,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device.setRenderTarget(color_hdr.getRenderTarget());
 			device.setDepthStencilSurface(depthstencil_hdr);
 */
-			time /= 2;
 			D3DXCOLOR clear_color(0.45f, 0.25f, 0.25f, 0.f);
 //			D3DXCOLOR clear_color(spectrum[0] * 1.5f, 0.f, 0.f, 0.f);
 
 			float roll = cameraRollTrack.getFloatValue() / 256;
 			roll *= (2 * M_PI);
+			float yRot = cameraYRotTrack.getFloatValue() / 256;
 			Vector3 up(float(sin(roll)), float(cos(roll)), 0.f);
 			Vector3 eye(
-				float(sin(time * 0.125f * 5)),
-				float(cos(time * 0.125f * 10)) * 0.5f,
-				float(cos(time * 0.125f * 5))
+				float(sin(yRot)),
+				float(cameraUpTrack.getFloatValue() / 256),
+				float(cos(yRot))
 			);
 			eye = normalize(eye);
 
@@ -312,13 +326,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Matrix4x4 proj;
 			proj.make_projection(60.0f, DEMO_ASPECT, 0.1f, 1000.f);
 			
+			jellyfish_fx.setMatrices(world, view, proj);
+			skybox_fx.setMatrices(world, view, proj);
 			for (int i = 0; i < 2; ++i)
 			{
 				device->Clear(0, 0, D3DCLEAR_ZBUFFER, clear_color, 1.f, 0);
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 				
-				jellyfish_fx.setMatrices(world, view, proj);
 				jellyfish_fx.setVector3("amt", Vector3(
 					jellyAmtX.getFloatValue() / 256,
 					jellyAmtY.getFloatValue() / 256,
@@ -329,66 +344,75 @@ int main(int /*argc*/, char* /*argv*/ [])
 					jellyScaleY.getFloatValue() / 256,
 					jellyScaleZ.getFloatValue() / 256)
 				);
+				jellyfish_fx.setVector3("phase", Vector3(
+					time,
+					time * 2,
+					time * 10)
+				);
 				jellyfish_fx->SetFloat("time", time);
 				math::Matrix4x4 mvp = world * view * proj;
 				jellyfish_fx.setVector3("vViewPosition", eye + at);
 				jellyfish_fx.draw(sphere_x);
 
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
-				skybox_fx.setMatrices(world, view, proj);
 				skybox_fx.draw(cube_x);
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 
 #if 1
 				/* particles */
-				Matrix4x4 modelview = world * view;
-				cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
-				
-				particle_fx.setMatrices(world, view, proj);
-				
+				float particleScroll = -jellySwimTrack.getFloatValue() / (10 * 256);
+				for (int i = 0; i < 2; ++i)
 				{
-					Vector3 up(modelview._12, modelview._22, modelview._32);
-					Vector3 left(modelview._11, modelview._21, modelview._31);
-					math::normalize(up);
-					math::normalize(left);
+					world.make_translation(Vector3(0, (math::frac(particleScroll) - i) * 150, 0));
+					Matrix4x4 modelview = world * view;
+					cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
 					
-					particle_fx->SetFloatArray("up", up, 3);
-					particle_fx->SetFloatArray("left", left, 3);
-					particle_fx->SetFloat("alpha", 0.1);
-					particle_fx->CommitChanges();
-				}
-
-				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-				device->SetRenderState(D3DRS_ZWRITEENABLE, false);
-				
-				std::list<engine::Particle<float> >::const_iterator iter = cloud.particles.begin();
-				bool iter_done = false;
-				
-				while (!iter_done)
-				{
-					streamer.begin();
-					for (int i = 0; i < 1024; ++i)
+					particle_fx.setMatrices(world, view, proj);
+					
 					{
-						streamer.add(
-							Vector3(iter->pos.x,
-									iter->pos.y,
-									iter->pos.z
-							),
-							iter->data // + (1 - fmod(beat, 1.0)) * 2
-						);
-						++iter;
-
-						if (cloud.particles.end() == iter)
-						{
-							iter_done = true;
-							break;
-						}
+						Vector3 up(modelview._12, modelview._22, modelview._32);
+						Vector3 left(modelview._11, modelview._21, modelview._31);
+						math::normalize(up);
+						math::normalize(left);
+						
+						particle_fx->SetFloatArray("up", up, 3);
+						particle_fx->SetFloatArray("left", left, 3);
+						particle_fx->SetFloat("alpha", 0.1);
+						particle_fx->CommitChanges();
 					}
-					streamer.end();
-					particle_fx.draw(streamer);
+
+					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+					device->SetRenderState(D3DRS_ZWRITEENABLE, false);
+					
+					std::list<engine::Particle<float> >::const_iterator iter = cloud.particles.begin();
+					bool iter_done = false;
+					
+					while (!iter_done)
+					{
+						streamer.begin();
+						for (int i = 0; i < 1024; ++i)
+						{
+							streamer.add(
+								Vector3(iter->pos.x,
+										iter->pos.y,
+										iter->pos.z
+								),
+								iter->data // + (1 - fmod(beat, 1.0)) * 2
+							);
+							++iter;
+
+							if (cloud.particles.end() == iter)
+							{
+								iter_done = true;
+								break;
+							}
+						}
+						streamer.end();
+						particle_fx.draw(streamer);
+					}
 				}
 				device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
@@ -398,6 +422,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				device.setDepthStencilSurface(depthstencil);
 			}
 #if 1
+			world.make_identity();
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 //			device->SetRenderState(D3DRS_ZWRITEENABLE, false);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);

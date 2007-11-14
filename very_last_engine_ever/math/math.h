@@ -28,4 +28,9 @@ namespace math
 	{
 		return floor(f + 0.5f);
 	}
+	
+	float frac(float f)
+	{
+		return f - floor(f);
+	}
 }

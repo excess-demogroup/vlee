@@ -21,14 +21,12 @@ struct VS_OUTPUT
 	float  fresnel    : TEXCOORD3;
 };
 
-float time;
 uniform float3 amt;
 uniform float3 scale;
+uniform float3 phase;
 
 float3 deform(float3 p)
 {
-	float3 phase = float3(time, time*2, time*10);
-	
 	float s = 3;
 	float3 p2 = p * scale + phase;
 	s += sin(p2.x) * amt.x;
