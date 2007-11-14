@@ -266,6 +266,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		skybox_fx->SetTexture("reflectionMap", cubemap_tex);
 		Mesh cube_x         = engine::loadMesh(device, "data/cube.X");
 
+		Effect text_fx              = engine::loadEffect(device, "data/text.fx");
+		Texture excess_outline_tex = engine::loadTexture(device, "data/excess_outline.dds");
+		Texture demotitle_tex      = engine::loadTexture(device, "data/demotitle.dds");
+
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
 		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f));
@@ -326,36 +330,51 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Matrix4x4 proj;
 			proj.make_projection(60.0f, DEMO_ASPECT, 0.1f, 1000.f);
 			
+			jellyfish_fx.setVector3("amt", Vector3(
+				jellyAmtX.getFloatValue() / 256,
+				jellyAmtY.getFloatValue() / 256,
+				jellyAmtZ.getFloatValue() / 256)
+			);
+			jellyfish_fx.setVector3("scale", Vector3(
+				jellyScaleX.getFloatValue() / 256,
+				jellyScaleY.getFloatValue() / 256,
+				jellyScaleZ.getFloatValue() / 256)
+			);
+			jellyfish_fx.setVector3("phase", Vector3(
+				time,
+				time * 2,
+				time * 10)
+			);
+			jellyfish_fx->SetFloat("time", time);
+			jellyfish_fx.setVector3("vViewPosition", eye + at);
 			jellyfish_fx.setMatrices(world, view, proj);
+
 			skybox_fx.setMatrices(world, view, proj);
+
+			text_fx->SetTexture("excess", excess_outline_tex);
+			text_fx->SetTexture("demotitle", demotitle_tex);
+			text_fx.setMatrices(world, view, proj);
+
 			for (int i = 0; i < 2; ++i)
 			{
 				device->Clear(0, 0, D3DCLEAR_ZBUFFER, clear_color, 1.f, 0);
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 				
-				jellyfish_fx.setVector3("amt", Vector3(
-					jellyAmtX.getFloatValue() / 256,
-					jellyAmtY.getFloatValue() / 256,
-					jellyAmtZ.getFloatValue() / 256)
-				);
-				jellyfish_fx.setVector3("scale", Vector3(
-					jellyScaleX.getFloatValue() / 256,
-					jellyScaleY.getFloatValue() / 256,
-					jellyScaleZ.getFloatValue() / 256)
-				);
-				jellyfish_fx.setVector3("phase", Vector3(
-					time,
-					time * 2,
-					time * 10)
-				);
-				jellyfish_fx->SetFloat("time", time);
-				math::Matrix4x4 mvp = world * view * proj;
-				jellyfish_fx.setVector3("vViewPosition", eye + at);
+
 				jellyfish_fx.draw(sphere_x);
 
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
 				skybox_fx.draw(cube_x);
+
+
+//				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+				engine::drawQuad(device, text_fx, -45, -45, 90, 90);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 
 #if 1

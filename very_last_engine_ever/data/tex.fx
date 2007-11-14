@@ -1,7 +1,7 @@
 float alpha = 1.f;
-texture tex;
 float4x4 transform;
 
+texture tex;
 sampler tex_sampler = sampler_state
 {
 	Texture = (tex);
