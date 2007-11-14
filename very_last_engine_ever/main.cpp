@@ -197,9 +197,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		/** DEMO ***/
 
+		RenderTexture color1_hdr(device, letterbox_viewport.Width / 2, letterbox_viewport.Height / 2, 1, D3DFMT_A16B16G16R16F);
+		RenderTexture color2_hdr(device, letterbox_viewport.Width / 2, letterbox_viewport.Height / 2, 1, D3DFMT_A16B16G16R16F);
+
+
 //		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE);
-		RenderTexture rt2(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
-		RenderTexture rt3(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
+//		RenderTexture rt2(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
+//		RenderTexture rt3(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
 
 		Matrix4x4 tex_transform;
 		tex_transform.make_identity();
@@ -213,7 +217,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 
 		Effect color_map_fx = engine::loadEffect(device, "data/color_map.fx");
-		Image color_image(color_msaa, color_map_fx);
+		Image color_image(color1_hdr, color_map_fx);
+//		Image color_image(color_msaa, color_map_fx);
 		Texture color_map0_tex = engine::loadTexture(device, "data/color_map0.png");
 		color_map_fx->SetTexture("color_map", color_map0_tex);
 		color_map_fx->SetFloat("texel_width", 1.0f / color_msaa.getWidth());
@@ -277,16 +282,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 			/* setup multisampled stuffz */
 			device.setRenderTarget(color_msaa.getRenderTarget());
 			device.setDepthStencilSurface(depthstencil_msaa);
-/*			
-			D3DVIEWPORT9 viewport = device.getViewport();
-			viewport.Width = 128;
-			viewport.Height = 12;
-			device.setViewport(&viewport);
+/*
+			device.setRenderTarget(color_hdr.getRenderTarget());
+			device.setDepthStencilSurface(depthstencil_hdr);
 */
 			time /= 2;
 			D3DXCOLOR clear_color(0.45f, 0.25f, 0.25f, 0.f);
 //			D3DXCOLOR clear_color(spectrum[0] * 1.5f, 0.f, 0.f, 0.f);
-			device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, clear_color, 1.f, 0);
 
 			float roll = cameraRollTrack.getFloatValue() / 256;
 			roll *= (2 * M_PI);
@@ -310,82 +312,128 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Matrix4x4 proj;
 			proj.make_projection(60.0f, DEMO_ASPECT, 0.1f, 1000.f);
 			
-			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-			
-			jellyfish_fx.setMatrices(world, view, proj);
-			jellyfish_fx.setVector3("amt", Vector3(
-				jellyAmtX.getFloatValue() / 256,
-				jellyAmtY.getFloatValue() / 256,
-				jellyAmtZ.getFloatValue() / 256)
-			);
-			jellyfish_fx.setVector3("scale", Vector3(
-				jellyScaleX.getFloatValue() / 256,
-				jellyScaleY.getFloatValue() / 256,
-				jellyScaleZ.getFloatValue() / 256)
-			);
-			jellyfish_fx->SetFloat("time", time);
-			math::Matrix4x4 mvp = world * view * proj;
-			jellyfish_fx.setVector3("vViewPosition", eye + at);
-			jellyfish_fx.draw(sphere_x);
+			for (int i = 0; i < 2; ++i)
+			{
+				device->Clear(0, 0, D3DCLEAR_ZBUFFER, clear_color, 1.f, 0);
+				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+				
+				jellyfish_fx.setMatrices(world, view, proj);
+				jellyfish_fx.setVector3("amt", Vector3(
+					jellyAmtX.getFloatValue() / 256,
+					jellyAmtY.getFloatValue() / 256,
+					jellyAmtZ.getFloatValue() / 256)
+				);
+				jellyfish_fx.setVector3("scale", Vector3(
+					jellyScaleX.getFloatValue() / 256,
+					jellyScaleY.getFloatValue() / 256,
+					jellyScaleZ.getFloatValue() / 256)
+				);
+				jellyfish_fx->SetFloat("time", time);
+				math::Matrix4x4 mvp = world * view * proj;
+				jellyfish_fx.setVector3("vViewPosition", eye + at);
+				jellyfish_fx.draw(sphere_x);
 
-			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
-			skybox_fx.setMatrices(world, view, proj);
-			skybox_fx.draw(cube_x);
-			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
+				skybox_fx.setMatrices(world, view, proj);
+				skybox_fx.draw(cube_x);
+				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 
 #if 1
-			/* particles */
-			Matrix4x4 modelview = world * view;
-			cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
-			
-			particle_fx.setMatrices(world, view, proj);
-			
-			{
-				Vector3 up(modelview._12, modelview._22, modelview._32);
-				Vector3 left(modelview._11, modelview._21, modelview._31);
-				math::normalize(up);
-				math::normalize(left);
+				/* particles */
+				Matrix4x4 modelview = world * view;
+				cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
 				
-				particle_fx->SetFloatArray("up", up, 3);
-				particle_fx->SetFloatArray("left", left, 3);
-				particle_fx->SetFloat("alpha", 0.1);
-				particle_fx->CommitChanges();
-			}
-
-			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-			device->SetRenderState(D3DRS_ZWRITEENABLE, false);
-			
-			std::list<engine::Particle<float> >::const_iterator iter = cloud.particles.begin();
-			bool iter_done = false;
-			
-			while (!iter_done)
-			{
-				streamer.begin();
-				for (int i = 0; i < 1024; ++i)
+				particle_fx.setMatrices(world, view, proj);
+				
 				{
-					streamer.add(
-						Vector3(iter->pos.x,
-								iter->pos.y,
-								iter->pos.z
-						),
-						iter->data // + (1 - fmod(beat, 1.0)) * 2
-					);
-					++iter;
-
-					if (cloud.particles.end() == iter)
-					{
-						iter_done = true;
-						break;
-					}
+					Vector3 up(modelview._12, modelview._22, modelview._32);
+					Vector3 left(modelview._11, modelview._21, modelview._31);
+					math::normalize(up);
+					math::normalize(left);
+					
+					particle_fx->SetFloatArray("up", up, 3);
+					particle_fx->SetFloatArray("left", left, 3);
+					particle_fx->SetFloat("alpha", 0.1);
+					particle_fx->CommitChanges();
 				}
-				streamer.end();
-				particle_fx.draw(streamer);
+
+				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+				device->SetRenderState(D3DRS_ZWRITEENABLE, false);
+				
+				std::list<engine::Particle<float> >::const_iterator iter = cloud.particles.begin();
+				bool iter_done = false;
+				
+				while (!iter_done)
+				{
+					streamer.begin();
+					for (int i = 0; i < 1024; ++i)
+					{
+						streamer.add(
+							Vector3(iter->pos.x,
+									iter->pos.y,
+									iter->pos.z
+							),
+							iter->data // + (1 - fmod(beat, 1.0)) * 2
+						);
+						++iter;
+
+						if (cloud.particles.end() == iter)
+						{
+							iter_done = true;
+							break;
+						}
+					}
+					streamer.end();
+					particle_fx.draw(streamer);
+				}
+				device->SetRenderState(D3DRS_ZWRITEENABLE, true);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+#endif
+
+				device.setRenderTarget(color1_hdr.getRenderTarget());
+				device.setDepthStencilSurface(depthstencil);
 			}
-			device->SetRenderState(D3DRS_ZWRITEENABLE, true);
+#if 1
+			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+//			device->SetRenderState(D3DRS_ZWRITEENABLE, false);
+			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+
+			blur_fx->SetFloat("sub", 0.5f);
+			RenderTexture render_textures[2] = { color1_hdr, color2_hdr };
+			int rtIndex = 0;
+			for (int i = 0; i < 3; i++)
+			{
+				for (int j = 0; j < 2; j++)
+				{
+					RenderTexture current_rt  = render_textures[(rtIndex + 1) & 1];
+					RenderTexture current_tex = render_textures[(rtIndex + 0) & 1];
+					
+					device.setRenderTarget(current_rt.getRenderTarget(), 0);
+					device->SetDepthStencilSurface(NULL);
+//					device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
+					
+					float dir_vec[2];
+					float dir = float(M_PI / 2 * j);
+					dir_vec[0] = cosf(dir) * (float(1 << i) / current_tex.getWidth());
+					dir_vec[1] = sinf(dir) * (float(1 << i) / current_tex.getWidth());
+					dir_vec[0] *= 3.f / 4.f;
+
+					blur_fx->SetFloatArray("dir", dir_vec, 2);
+					blur_fx->SetTexture("blur_tex", current_tex);
+
+					drawQuad(
+						device, blur_fx,
+						-1.0f, -1.0f,
+						 2.0f, 2.0f
+					);
+					blur_fx->SetFloat("sub", 0.0f);
+					rtIndex++;
+				}
+			}
 #endif
 
 			/* letterbox */
@@ -399,6 +447,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->SetFloat("sobel_fade", sobelBlendTrack.getFloatValue() * (1.f / 256));
 			color_map_fx->SetFloat("fade", colorMapBlendTrack.getFloatValue() * (1.f / 256));
 			
+			color_map_fx->SetFloat("alpha", 0.25f);
+			color_map_fx->SetTexture("tex2", color_msaa);
+
 			color_image.setPosition(-1, -1);
 			color_image.setDimension(2, 2);
 			color_image.draw(device);

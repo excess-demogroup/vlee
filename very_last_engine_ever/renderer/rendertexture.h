@@ -19,7 +19,7 @@ namespace renderer
 				shadow_surf = device.createRenderTarget(
 					width, height,
 					format, multisample,
-					0, false
+					0, false, NULL
 				);
 			}
 			texture_surf = this->getSurface(0);
@@ -38,6 +38,7 @@ namespace renderer
 		void resolve(Device &device)
 		{
 			if (multisampled) device->StretchRect(shadow_surf, NULL, texture_surf, NULL, D3DTEXF_NONE);
+//			p->GenerateMipSubLevels();
 		}
 
 		int getWidth()

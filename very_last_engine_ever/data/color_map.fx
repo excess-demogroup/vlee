@@ -19,12 +19,25 @@ sampler tex_sampler = sampler_state
 {
 	Texture = (tex);
 	MipFilter = NONE;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+};
+
+texture tex2;
+sampler tex2_sampler = sampler_state
+{
+	Texture = (tex2);
+	MipFilter = NONE;
 	MinFilter = POINT;
 	MagFilter = POINT;
 	
 	AddressU = CLAMP;
 	AddressV = CLAMP;
 };
+
 
 sampler color_map_sampler = sampler_state
 {
@@ -86,10 +99,9 @@ float luminance(float3 color)
 
 float4 pixel(VS_OUTPUT In) : COLOR
 {
-	float4 tex = tex2D(tex_sampler, In.tex);
-//	float4 edges = sobel(tex_sampler, In.tex);
-//	float4 color = lerp(tex, edges, sobel_fade);
-	float4 color = tex;
+	float4 color =
+		tex2D(tex_sampler, In.tex) * alpha
+		+ tex2D(tex2_sampler, In.tex) * 0.5;
 	
 	/* lookup in palette */
 	float lum = luminance(color.rgb);

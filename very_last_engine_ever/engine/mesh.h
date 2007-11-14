@@ -2,6 +2,7 @@
 
 #include "core/err.h"
 #include "renderer/device.h"
+#include "renderer/indexbuffer.h"
 
 #include "engine/drawable.h"
 

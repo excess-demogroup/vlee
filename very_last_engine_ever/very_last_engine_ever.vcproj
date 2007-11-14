@@ -319,6 +319,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\engine\image.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\engine\particlestreamer.cpp"
 					>
 				</File>

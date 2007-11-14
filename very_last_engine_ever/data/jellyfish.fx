@@ -102,11 +102,11 @@ PS_OUTPUT ps_main( PS_INPUT In )
 {
 	PS_OUTPUT Out;
 	
-	float4 reflection = texCUBE(reflectionMapSampler, normalize(In.reflection)) * 2;
+	float4 reflection = texCUBE(reflectionMapSampler, normalize(In.reflection)) * 1.5;
 	float4 refraction = texCUBE(reflectionMapSampler, normalize(In.refraction));
 	float fresnel = In.fresnel;
 //	float fresnel = abs(normalize(In.normal).z);
-	Out.color = lerp(reflection, refraction, fresnel) *  pow(1.0 - fresnel, 1.0);
+	Out.color = lerp(reflection, refraction, fresnel) *  pow(1.0 - fresnel * 0.75, 1.0);
 
 	return Out;
 }
