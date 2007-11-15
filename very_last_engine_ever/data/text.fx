@@ -55,11 +55,23 @@ sampler demotitle_sampler = sampler_state
 	AddressV = CLAMP;
 };
 
+float alpha1 = 1.0f;
+float alpha2 = 1.0f;
+
 float4 ps_main( PS_INPUT In ) : COLOR0
 {
-	return
-		tex2D(excess_sampler, In.texcoord0) +
-		tex2D(demotitle_sampler, In.texcoord1);
+	float4 color = 0;
+	
+	float4 tex1 = tex2D(excess_sampler, In.texcoord0);
+	float4 tex2 = tex2D(demotitle_sampler, In.texcoord1);
+	tex1.a *= alpha1;
+	tex2.a *= alpha2;
+	
+	color = tex1;
+	color.rgb = lerp(color.rgb, tex2.rgb, tex2.a);
+	color.a = saturate(tex1.a + tex2.a);
+	
+	return color;
 }
 
 technique blur_ps_vs_2_0

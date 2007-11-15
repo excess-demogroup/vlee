@@ -26,6 +26,7 @@
 #include "engine/particlecloud.h"
 
 #include "engine/textureproxy.h"
+#include "engine/spectrumdata.h"
 
 using math::Vector2;
 using math::Vector3;
@@ -198,6 +199,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		SyncTrack &jellySwimTrack = sync.getTrack("swim", "jelly", 6, true);
 
+		SyncTrack &textAlpha1Track = sync.getTrack("alpha1", "text", 6, true);
+		SyncTrack &textAlpha2Track = sync.getTrack("alpha2", "text", 6, true);
+		SyncTrack &textBlink1Track = sync.getTrack("blink1", "text", 6, true);
+		SyncTrack &textBlink2Track = sync.getTrack("blink2", "text", 6, true);
+
+		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
 
 		Surface backbuffer   = device.getRenderTarget(0);
 		Surface depthstencil = device.getDepthStencilSurface();
@@ -358,6 +365,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			skybox_fx.setMatrices(world, view, proj);
 
+			
+			int blink1_val = textBlink1Track.getIntValue();
+			float blink1 = 1.0f;
+			if (blink1_val != 0) blink1 = math::frac(time * blink1_val) > 0.5f ? 1.0f : 0.0f;
+
+			int blink2_val = textBlink2Track.getIntValue();
+			float blink2 = 1.0f;
+			if (blink2_val != 0) blink2 = math::frac(time * blink2_val) > 0.5f ? 1.0f : 0.0f;
+
+			text_fx->SetFloat("alpha1", (textAlpha1Track.getFloatValue() / 256) * blink1);
+			text_fx->SetFloat("alpha2", (textAlpha2Track.getFloatValue() / 256) * blink2);
 			text_fx->SetTexture("excess", excess_outline_tex);
 			text_fx->SetTexture("demotitle", demotitle_tex);
 			text_fx.setMatrices(world, view, proj);
@@ -515,7 +533,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			/* draw noise */
 			
-			noise_fx->SetFloat("alpha", (noiseAmtTrack.getFloatValue() + noiseFFTTrack.getFloatValue() * spectrum[4]) / 256 );
+			noise_fx->SetFloat("alpha", (noiseAmtTrack.getFloatValue() + noiseFFTTrack.getFloatValue() * noise_fft.getValue(time)) / 256 );
 			noise_fx->SetTexture("tex", noise_tex);
 			drawQuad(
 				device, noise_fx,
