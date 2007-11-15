@@ -181,8 +181,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 		SyncTrack &cameraYRotTrack     = sync.getTrack("y-rot", "camera", 6, true);
 		SyncTrack &cameraUpTrack     = sync.getTrack("up", "camera", 6, true);
 
-		SyncTrack &sobelBlendTrack     = sync.getTrack("blend", "sobel", 6, true);
 		SyncTrack &colorMapBlendTrack  = sync.getTrack("blend", "color map", 6, true);
+		SyncTrack &colorMapPalTrack  = sync.getTrack("pal", "color map", 4,   true);
+		SyncTrack &colorMapFadeTrack  = sync.getTrack("fade", "color map", 4,   true);
+
+		SyncTrack &noiseAmtTrack  = sync.getTrack("amt", "noise", 4,   true);
+		SyncTrack &noiseFFTTrack  = sync.getTrack("fft", "noise", 4,   true);
 
 		SyncTrack &jellyAmtX = sync.getTrack("amt_x", "jelly", 6, true);
 		SyncTrack &jellyAmtY = sync.getTrack("amt_y", "jelly", 6, true);
@@ -221,16 +225,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture bartikkel_tex = engine::loadTexture(device, "data/particle.png");
 		particle_fx->SetTexture("tex", bartikkel_tex);
 
+		Effect noise_fx = engine::loadEffect(device, "data/noise.fx");
+		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
 
 		Effect color_map_fx = engine::loadEffect(device, "data/color_map.fx");
 		Image color_image(color1_hdr, color_map_fx);
 //		Image color_image(color_msaa, color_map_fx);
-		Texture color_map0_tex = engine::loadTexture(device, "data/color_map0.png");
-		color_map_fx->SetTexture("color_map", color_map0_tex);
+		Texture color_maps[2];
+		
+		color_maps[0] = engine::loadTexture(device, "data/color_map0.png");
+		color_maps[1] = engine::loadTexture(device, "data/color_map1.png");
 		color_map_fx->SetFloat("texel_width", 1.0f / color_msaa.getWidth());
 		color_map_fx->SetFloat("texel_height", 1.0f / color_msaa.getHeight());
-
-
+		
 		engine::ParticleStreamer streamer(device);
 		engine::ParticleCloud<float> cloud;
 		for (int i = 0; i < 1024 * 4; ++i)
@@ -488,22 +495,36 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			color_msaa.resolve(device);
 			
-			color_map_fx->SetFloat("sobel_fade", sobelBlendTrack.getFloatValue() * (1.f / 256));
 			color_map_fx->SetFloat("fade", colorMapBlendTrack.getFloatValue() * (1.f / 256));
-			
+//			color_map_fx->SetFloat("flash", math::frac(beat));
+			color_map_fx->SetFloat("fade2", colorMapFadeTrack.getFloatValue() / 256);
 			color_map_fx->SetFloat("alpha", 0.25f);
 			color_map_fx->SetTexture("tex2", color_msaa);
+			color_map_fx->SetTexture("color_map", color_maps[colorMapPalTrack.getIntValue() % 2]);
 
 			color_image.setPosition(-1, -1);
 			color_image.setDimension(2, 2);
 			color_image.draw(device);
-			
+
 			scanlinesImage.setPosition(-1, -1);
 			scanlinesImage.setDimension(2, 2);
 
 			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+
+			/* draw noise */
+			
+			noise_fx->SetFloat("alpha", (noiseAmtTrack.getFloatValue() + noiseFFTTrack.getFloatValue() * spectrum[4]) / 256 );
+			noise_fx->SetTexture("tex", noise_tex);
+			drawQuad(
+				device, noise_fx,
+				-1.0f, -1.0f,
+				 2.0f, 2.0f,
+				 randf(), randf()
+			);
+
+			/* draw scanlines */
 			scanlinesImage.draw(device);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			
