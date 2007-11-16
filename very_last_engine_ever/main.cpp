@@ -181,10 +181,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 		SyncTrack &cameraRollTrack     = sync.getTrack("roll", "camera", 6, true);
 		SyncTrack &cameraYRotTrack     = sync.getTrack("y-rot", "camera", 6, true);
 		SyncTrack &cameraUpTrack     = sync.getTrack("up", "camera", 6, true);
+		SyncTrack &cameraShakeAmtTrack     = sync.getTrack("shake amt", "camera", 8, true);
+		SyncTrack &cameraShakeTempoTrack     = sync.getTrack("shake tempo", "camera", 6, true);
 
 		SyncTrack &colorMapBlendTrack  = sync.getTrack("blend", "color map", 6, true);
-		SyncTrack &colorMapPalTrack  = sync.getTrack("pal", "color map", 4,   true);
-		SyncTrack &colorMapFadeTrack  = sync.getTrack("fade", "color map", 4,   true);
+		SyncTrack &colorMapPalTrack    = sync.getTrack("pal",   "color map", 4,   true);
+		SyncTrack &colorMapFadeTrack   = sync.getTrack("fade",  "color map", 4,   true);
+		SyncTrack &colorMapFlashTrack  = sync.getTrack("flash", "color map", 4,   true);
 
 		SyncTrack &noiseAmtTrack  = sync.getTrack("amt", "noise", 4,   true);
 		SyncTrack &noiseFFTTrack  = sync.getTrack("fft", "noise", 4,   true);
@@ -334,7 +337,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			float camera_distance = 60 * (cameraDistanceTrack.getFloatValue() / 256);
 			eye *= camera_distance;
+			float shake_time = time * 0.125 * (cameraShakeTempoTrack.getFloatValue() / 256);
 			Vector3 at(0, 0, 0);
+			at += Vector3(
+				pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
+				pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
+				pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
+			) * 0.05 * camera_distance * (cameraShakeAmtTrack.getFloatValue() / 256);
 
 			Matrix4x4 world;
 			world.make_identity();
@@ -514,7 +523,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_msaa.resolve(device);
 			
 			color_map_fx->SetFloat("fade", colorMapBlendTrack.getFloatValue() * (1.f / 256));
-//			color_map_fx->SetFloat("flash", math::frac(beat));
+			color_map_fx->SetFloat("flash", pow(colorMapFlashTrack.getFloatValue() / 256, 2.0f));
 			color_map_fx->SetFloat("fade2", colorMapFadeTrack.getFloatValue() / 256);
 			color_map_fx->SetFloat("alpha", 0.25f);
 			color_map_fx->SetTexture("tex2", color_msaa);
