@@ -2,6 +2,8 @@
 
 // #define VJSYS
 
+#define DEVTYPE D3DDEVTYPE_HAL
+
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 600
 #define DEFAULT_FORMAT D3DFMT_X8R8G8B8;
@@ -16,7 +18,7 @@
 #if defined(NDEBUG) && !defined(SYNC)
 #define WINDOWED 0
 #else
-#define WINDOWED 1
+#define WINDOWED 0
 #endif
 
 #define DEMO_ASPECT (16.0 / 9)

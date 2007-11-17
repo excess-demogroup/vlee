@@ -24,7 +24,7 @@ VS_OUTPUT vs_main( VS_INPUT In )
 
 	Out.Pos           = mul(float4(In.Pos,  1.0), matWorldViewProjection);
 	Out.texcoord0      = In.texcoord;
-	Out.texcoord1      = (In.texcoord - 0.5) * 1.2 + 0.5;
+	Out.texcoord1      = (In.texcoord - 0.5) * 1.05 + 0.5;
 
 	return Out;
 }
