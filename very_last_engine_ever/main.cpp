@@ -156,7 +156,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 		{
 			MessageBox(NULL, "Selected mode does not support FP16 blending, demo will look crap.", "visual quality warning", MB_OK | MB_ICONWARNING);
 		}
-
+/*
+		{
+			MessageBox(NULL, "Selected mode does not support FP16 blending, demo will look crap.", "visual quality warning", MB_OK | MB_ICONWARNING);
+		}
+*/
 		/* create window */
 		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, config.getWidth(), config.getHeight(), 0, 0, GetModuleHandle(0), 0);
 		if (!win) throw FatalException("CreateWindow() failed. something is VERY spooky.");

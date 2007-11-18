@@ -18,7 +18,7 @@
 #if defined(NDEBUG) && !defined(SYNC)
 #define WINDOWED 0
 #else
-#define WINDOWED 0
+#define WINDOWED 1
 #endif
 
 #define DEMO_ASPECT (16.0 / 9)
