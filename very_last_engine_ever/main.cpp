@@ -180,7 +180,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		makeLetterboxViewport(&letterbox_viewport, config.getWidth(), config.getHeight(), config.getAspect(), DEMO_ASPECT);
 		
 		/* setup sound-playback */
-		if (!BASS_Init(config.getSoundcard(), 44100, BASS_DEVICE_LATENCY, 0, 0)) throw FatalException("failed to init bass");
+//		if (!BASS_Init(config.getSoundcard(), 44100, BASS_DEVICE_LATENCY, 0, 0)) throw FatalException("failed to init bass");
+		if (!BASS_Init(config.getSoundcard(), 44100, 0, 0, 0)) throw FatalException("failed to init bass");
 		stream = BASS_StreamCreateFile(false, "data/glitch.ogg", 0, 0, BASS_MP3_SETPOS | ((0 == config.getSoundcard()) ? BASS_STREAM_DECODE : 0));
 		if (!stream) throw FatalException("failed to open tune");
 		
@@ -231,8 +232,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		/** DEMO ***/
 
-		RenderTexture color1_hdr(device, letterbox_viewport.Width / 2, letterbox_viewport.Height / 2, 1, D3DFMT_A16B16G16R16F);
-		RenderTexture color2_hdr(device, letterbox_viewport.Width / 2, letterbox_viewport.Height / 2, 1, D3DFMT_A16B16G16R16F);
+		RenderTexture color1_hdr(device, 800 / 2, (800 / DEMO_ASPECT) / 2, 1, D3DFMT_A16B16G16R16F);
+		RenderTexture color2_hdr(device, 800 / 2, (800 / DEMO_ASPECT) / 2, 1, D3DFMT_A16B16G16R16F);
 
 
 //		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE);
@@ -315,6 +316,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 		{
 #ifndef VJSYS
 			if (!sync.doEvents()) done = true;
+#endif
+
+#ifdef DUMP_VIDEO
+			static int frame = 0;
+			BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, float(frame) / VIDEO_DUMP_FRAMERATE));
 #endif
 
 			static float last_time = 0.f;
@@ -571,6 +577,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			device->EndScene(); /* WE DONE IS! */
 			
+#ifdef DUMP_VIDEO
+			{
+				char temp[256];
+				_snprintf(temp, 256, "dump/frame%04d.tga", frame);
+				core::d3dErr(D3DXSaveSurfaceToFile(
+					temp,
+					D3DXIFF_TGA,
+					backbuffer,
+					NULL,
+					NULL
+				));
+				frame++;
+			}
+#endif
 			HRESULT res = device->Present(0, 0, 0, 0);
 
 			if (FAILED(res))

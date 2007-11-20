@@ -4,6 +4,9 @@
 
 #define DEVTYPE D3DDEVTYPE_HAL
 
+// #define DUMP_VIDEO
+#define VIDEO_DUMP_FRAMERATE 30
+
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 600
 #define DEFAULT_FORMAT D3DFMT_X8R8G8B8;
@@ -15,7 +18,7 @@
 // #define MIN_VS_VERSION D3DVS_VERSION(2, 0)
 #define MIN_VS_VERSION D3DVS_VERSION(1, 1)
 
-#if defined(NDEBUG) && !defined(SYNC)
+#if defined(NDEBUG) && !defined(SYNC) && !defined(DUMP_VIDEO)
 #define WINDOWED 0
 #else
 #define WINDOWED 1
