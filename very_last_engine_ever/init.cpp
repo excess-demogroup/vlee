@@ -8,11 +8,11 @@ using core::FatalException;
 static bool is_depth_format_ok(IDirect3D9 *direct3d, UINT Adapter, D3DFORMAT DepthFormat, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat)
 {
 	// Verify that the depth format exists
-	HRESULT hr = direct3d->CheckDeviceFormat(Adapter, D3DDEVTYPE_HAL, AdapterFormat, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, DepthFormat);
+	HRESULT hr = direct3d->CheckDeviceFormat(Adapter, DEVTYPE, AdapterFormat, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, DepthFormat);
 	if (FAILED(hr)) return false;
 
 	// Verify that the depth format is compatible
-	hr = direct3d->CheckDepthStencilMatch(Adapter, D3DDEVTYPE_HAL, AdapterFormat, BackBufferFormat, DepthFormat);
+	hr = direct3d->CheckDepthStencilMatch(Adapter, DEVTYPE, AdapterFormat, BackBufferFormat, DepthFormat);
 	return SUCCEEDED(hr);
 }
 
@@ -43,7 +43,7 @@ static const GUID kusma_laptop_bug = { 0xd7b71e3e, 0x4235, 0x11cf, 0x65, 0x6b, 0
 
 IDirect3DDevice9 *init::initD3D(IDirect3D9 *direct3d, HWND win, D3DDISPLAYMODE mode, D3DMULTISAMPLE_TYPE multisample, unsigned adapter, bool vsync) {
 	D3DCAPS9 caps;
-	direct3d->GetDeviceCaps(adapter, D3DDEVTYPE_HAL, &caps);
+	direct3d->GetDeviceCaps(adapter, DEVTYPE, &caps);
 	DWORD tnl = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 
 	if (!((caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) && (caps.VertexShaderVersion >= MIN_VS_VERSION))) {
@@ -91,8 +91,7 @@ IDirect3DDevice9 *init::initD3D(IDirect3D9 *direct3d, HWND win, D3DDISPLAYMODE m
 	present_parameters.FullScreen_RefreshRateInHz = mode.RefreshRate;
 #endif
 
-	D3DDEVTYPE devtype = D3DDEVTYPE_HAL;
-//	devtype = D3DDEVTYPE_REF;
+	D3DDEVTYPE devtype = DEVTYPE;
 
 	D3DADAPTER_IDENTIFIER9 Identifier;
 	direct3d->GetAdapterIdentifier(adapter,0,&Identifier);

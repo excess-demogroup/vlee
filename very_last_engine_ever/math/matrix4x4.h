@@ -34,6 +34,16 @@ namespace math
 		{
 			D3DXMatrixPerspectiveFovLH(this, D3DXToRadian(fov), aspect, znear, zfar);
 		}
+
+		void makeLookAt(const Vector3 &eye, const Vector3 &target, float roll)
+		{
+			D3DXVECTOR3 up(0, 1, 0);
+			D3DXMatrixLookAtLH(this, &eye, &target, &up);
+
+			Matrix4x4 rollMatrix;
+			rollMatrix.make_rotation(Vector3(0, 0, roll));
+			*this *= rollMatrix;
+		}
 	};
 
 	inline Vector3 mul(const Matrix4x4 &m, const Vector3 &v)

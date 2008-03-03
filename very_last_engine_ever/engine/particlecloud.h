@@ -1,5 +1,5 @@
 #include "../math/vector3.h"
-#include <list>
+#include <vector>
 #include <algorithm>
 
 namespace engine
@@ -37,9 +37,16 @@ namespace engine
 	public:
 		void sort(const math::Vector3 &view_vector)
 		{
-			particles.sort(ParticleComparer<T>(view_vector));
+//			particles.sort(ParticleComparer<T>(view_vector));
+			std::stable_sort(particles.begin(), particles.end(), ParticleComparer<T>(view_vector));
 		}
 
-		std::list<Particle<T> > particles;
+		void addParticle(const Particle<T> &p)
+		{
+			particles.push_back(p);
+		}
+
+		typedef std::vector<Particle<T> > ParticleContainer;
+		ParticleContainer particles;
 	};
 }

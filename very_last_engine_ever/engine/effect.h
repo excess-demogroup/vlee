@@ -3,6 +3,7 @@
 #include "drawable.h"
 #include "../renderer/device.h"
 #include "../math/matrix4x4.h"
+#include "../math/vector3.h"
 
 namespace engine
 {
@@ -22,9 +23,15 @@ namespace engine
 			worldviewprojection = p->GetParameterBySemantic(0, "WORLDVIEWPROJECTION");
 		}
 		
-		void setMatrix(D3DXHANDLE parameter, const math::Matrix4x4 &mat)
+		void setMatrix(D3DXHANDLE param, const math::Matrix4x4 &mat)
 		{
-			p->SetMatrix(parameter, &mat);
+			p->SetMatrix(param, &mat);
+		}
+		
+		void setVector3(D3DXHANDLE param, const math::Vector3 &v)
+		{
+			D3DXVECTOR4 v4(v.x, v.y, v.z, 1.0);
+			p->SetVector(param, &v4);
 		}
 		
 		void setMatrices(D3DXMATRIX world, D3DXMATRIX view, D3DXMATRIX proj)

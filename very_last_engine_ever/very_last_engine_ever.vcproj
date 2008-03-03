@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr9.lib lib/bass.lib winmm.lib"
+				AdditionalDependencies="d3dx9d.lib d3d9.lib dxerr9.lib lib/tinyxml.lib lib/bass.lib winmm.lib"
 				LinkIncremental="2"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
@@ -124,7 +124,7 @@
 				AdditionalIncludeDirectories="include;&quot;$(ProjectDir)&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="0"
-				EnableEnhancedInstructionSet="2"
+				EnableEnhancedInstructionSet="0"
 				FloatingPointModel="2"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -143,10 +143,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr9.lib lib/bass.lib winmm.lib"
+				OutputFile="$(OutDir)\demo.exe"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
-				SubSystem="1"
+				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				EntryPointSymbol="mainCRTStartup"
@@ -223,7 +224,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr9.lib lib/bass.lib winmm.lib"
+				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr9.lib lib/bass.lib lib/tinyxml.lib winmm.lib"
+				OutputFile="$(OutDir)\editor.exe"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
@@ -316,6 +318,10 @@
 				</File>
 				<File
 					RelativePath=".\engine\effect.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\image.cpp"
 					>
 				</File>
 				<File
@@ -561,6 +567,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\engine\video.h"
+					>
+				</File>
+				<File
 					RelativePath=".\engine\voxelgrid.h"
 					>
 				</File>
@@ -622,6 +632,10 @@
 				</File>
 				<File
 					RelativePath=".\scenegraph\scenegraph.h"
+					>
+				</File>
+				<File
+					RelativePath=".\scenegraph\target.h"
 					>
 				</File>
 				<File

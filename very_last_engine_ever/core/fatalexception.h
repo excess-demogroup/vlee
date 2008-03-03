@@ -9,9 +9,9 @@ namespace core
 	public:
 		FatalException(std::string str) : exception(), str(str)
 		{
-	#ifdef _DEBUG
+#ifdef _DEBUG
 			if (IsDebuggerPresent()) _CrtDbgBreak();
-	#endif
+#endif
 		}
 
 		virtual const char *what() const

@@ -2,6 +2,11 @@
 
 // #define VJSYS
 
+#define DEVTYPE D3DDEVTYPE_HAL
+
+// #define DUMP_VIDEO
+#define VIDEO_DUMP_FRAMERATE 30
+
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 600
 #define DEFAULT_FORMAT D3DFMT_X8R8G8B8;
@@ -10,20 +15,17 @@
 #define DEFAULT_MULTISAMPLE D3DMULTISAMPLE_4_SAMPLES
 
 #define NEED_STENCIL TRUE
-#define MIN_VS_VERSION D3DVS_VERSION(3, 0)
-// #define MIN_VS_VERSION D3DVS_VERSION(1, 1)
+// #define MIN_VS_VERSION D3DVS_VERSION(2, 0)
+#define MIN_VS_VERSION D3DVS_VERSION(1, 1)
 
-#if defined(NDEBUG) && !defined(SYNC)
+#if defined(NDEBUG) && !defined(SYNC) && !defined(DUMP_VIDEO)
 #define WINDOWED 0
 #else
 #define WINDOWED 1
 #endif
 
-#undef WINDOWED
-#define WINDOWED 1
-
-#define DEMO_ASPECT (4.0 / 3)
-#define BPM 208
+#define DEMO_ASPECT (16.0 / 9)
+#define BPM 150
 
 #ifdef VJSYS
 #define DEFAULT_SOUNDCARD 0

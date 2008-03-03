@@ -1,19 +1,19 @@
 string XFile = "misc\\teapot.x";
 int BCLR = 0xff202060;
 
-#define ITERATIONS 4
+float2 dir = {0.0, 0.0};
+#define SAMPLE_COUNT 8
+const float alpha[SAMPLE_COUNT] = { 0.03f, 0.075f, 0.15f, 0.3f, 0.3f, 0.15f, 0.075f, 0.03f };
 
-float3x3 texel_transform;
-float    brightness  = 1.0 / ITERATIONS;
-float2 texcoord_translate = float2(0.5, 0.5);
+// textures
+texture blur_tex;
 
-texture tex;
-sampler tex_sampler = sampler_state
+sampler blur_sampler = sampler_state
 {
-	Texture = (tex);
+	Texture = (blur_tex);
+	MipFilter = LINEAR;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
-	MipFilter = NONE;
 	
 	AddressU = CLAMP;
 	AddressV = CLAMP;
@@ -25,24 +25,28 @@ struct VS_OUTPUT
 	float2 tex  : TEXCOORD1;
 };
 
-VS_OUTPUT vertex(float4 ipos : POSITION, float2 tex  : TEXCOORD0)
+VS_OUTPUT vertex(float4 ipos : POSITION)
 {
 	VS_OUTPUT Out;
 	Out.pos = ipos;
-	Out.tex = tex;
+	Out.tex = float2(Out.pos.x * 0.5 + 0.5f + (0.5f / 256) - 4 * dir.x, -Out.pos.y * 0.5 + 0.5f + (0.5f / 256) - 4 * dir.y);
+//	Out.tex = float2(Out.pos.x * 0.5 + 0.5f - (0.5f / 256), -Out.pos.y * 0.5 + 0.5f - (0.5f / 256));
 	return Out;
 }
 
+float sub;
+
 float4 pixel(VS_OUTPUT In) : COLOR
 {
-	float4 color = 0.0;	
-	float2 tex = float2(In.tex);
-	for (int i = 0; i < ITERATIONS; i++)
+//	float4 color = tex2D(blur_sampler, In.tex);
+	float4 color = 0;
+	float2 tex = In.tex;
+	for (int i = 0; i < SAMPLE_COUNT; i++)
 	{
-		color += tex2D(tex_sampler, tex);
- 		tex = mul(texel_transform, float3(tex, 1.0));
+		color += tex2D(blur_sampler, tex) * alpha[i];
+		tex += dir;
 	}
-	return color * brightness;
+	return max(color - sub, 0.0);
 }
 
 technique blur_ps_vs_2_0

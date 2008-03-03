@@ -11,16 +11,15 @@ namespace scenegraph
 		NODE_LIGHT,
 		NODE_TRANSFORM,
 		NODE_DRAWABLE,
+		NODE_TARGET,
 	};
-
+	
 	class Node
 	{
 	public:
-
 		Node(std::string name) : parent(NULL) { }
-		
 		virtual ~Node();
-
+		
 		void addChild(Node *node)
 		{
 			children.push_back(node);
@@ -30,9 +29,9 @@ namespace scenegraph
 		{
 			return parent; // who's your daddy?!
 		}
-
+		
 		virtual NodeType getType() = 0;
-
+		
 	private:
 		std::string name;
 		

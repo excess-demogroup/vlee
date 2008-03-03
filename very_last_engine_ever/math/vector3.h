@@ -21,7 +21,8 @@ namespace math
 	
 	inline Vector3 normalize(const Vector3 &v)
 	{
-		float rcp = 1.f / length(v);
+		float len = length(v);
+		float rcp = fabs(len) > 1e-5 ? 1.0f / len : 0.0f;
 		return v * rcp;
 	}
 	
