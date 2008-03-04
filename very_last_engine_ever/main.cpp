@@ -627,12 +627,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 				Matrix4x4 mscale2;
 				mscale2.make_scaling(Vector3(5, 5, 5));
-				world.make_translation(Vector3(-5, -5, -5));
+
+				float grid_size = (1.5f + sin(time / 8)) * 32;
+				voxelMesh.setSize(grid_size);
+				// center object
+				world.make_translation(-Vector3(floor(grid_size / 2), floor(grid_size / 2), floor(grid_size / 2)));
 				cubegrid_fx.setMatrices(world * mscale2, view, proj);
-				voxelMesh.setSize((1.5f + sin(time / 8)) * 32);
 				voxelMesh.update(mrot * mscale);
 				voxelMesh.draw(device);
-
 
 #if 1
 				/* particles */
