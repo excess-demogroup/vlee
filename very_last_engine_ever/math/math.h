@@ -24,12 +24,12 @@ namespace math
 		return v0 + (v1 - v0) * t;
 	}
 
-	float round(float f)
+	inline float round(float f)
 	{
 		return floor(f + 0.5f);
 	}
 	
-	float frac(float f)
+	inline float frac(float f)
 	{
 		return f - floor(f);
 	}

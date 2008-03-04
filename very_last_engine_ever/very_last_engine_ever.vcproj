@@ -340,6 +340,14 @@
 					RelativePath=".\engine\textureproxy.cpp"
 					>
 				</File>
+				<File
+					RelativePath=".\engine\voxelgrid.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\voxelmesh.cpp"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="sync"
@@ -572,6 +580,10 @@
 				</File>
 				<File
 					RelativePath=".\engine\voxelgrid.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\voxelmesh.h"
 					>
 				</File>
 			</Filter>

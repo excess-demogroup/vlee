@@ -1,6 +1,8 @@
 #ifndef VOXELGRID_H
 #define VOXELGRID_H
 
+#include "../math/math.h"
+
 static unsigned int swizzle_3d_lut[256] = 
 {
 0x0,
@@ -265,13 +267,18 @@ static unsigned int swizzle_3d_lut[256] =
 
 namespace engine
 {
-
-	template <int grid_size>
 	class VoxelGrid
 	{
 	public:
-		VoxelGrid()
+		VoxelGrid(size_t grid_size) :
+		  distances(NULL),
+		  max_distances(NULL),
+		  min_distances(NULL),
+		  grid_size(grid_size)
 		{
+			distances = new signed char[grid_size * grid_size * grid_size];
+			max_distances = new signed char[grid_size * grid_size * grid_size];
+			min_distances = new signed char[grid_size * grid_size * grid_size];
 			memset(distances, 0, sizeof(signed char) *grid_size * grid_size * grid_size);
 			memset(max_distances, CHAR_MIN, sizeof(signed char) * grid_size * grid_size * grid_size);
 			memset(min_distances, CHAR_MAX, sizeof(signed char) * grid_size * grid_size * grid_size);
@@ -294,7 +301,7 @@ namespace engine
 			return distances[getIndex(x, y, z)];
 		}
 
-#if 0
+#if 1
 		float trilinearSample(float x, float y, float z) const
 		{
 			int ix = int(floor(x));
@@ -376,92 +383,45 @@ namespace engine
 		}
 #endif
 
-#if 1
 		float trilinearSample(int x, int y, int z) const
 		{
 			int ix = x >> 24;
 			int iy = y >> 24;
 			int iz = z >> 24;
-
+			
 			int f0 = pointSample(ix,     iy,     iz);
 			int f1 = pointSample(ix + 1, iy,     iz);
 			int f2 = pointSample(ix,     iy + 1, iz);
 			int f3 = pointSample(ix + 1, iy + 1, iz);
-
-			signed char b0 = pointSample(ix,     iy,     iz + 1);
-			signed char b1 = pointSample(ix + 1, iy,     iz + 1);
-			signed char b2 = pointSample(ix,     iy + 1, iz + 1);
-			signed char b3 = pointSample(ix + 1, iy + 1, iz + 1);
-
+			
+			int b0 = pointSample(ix,     iy,     iz + 1);
+			int b1 = pointSample(ix + 1, iy,     iz + 1);
+			int b2 = pointSample(ix,     iy + 1, iz + 1);
+			int b3 = pointSample(ix + 1, iy + 1, iz + 1);
+			
 			int ixt = (x & ((1 << 24) - 1)) >> 8;
 			int iyt = (y & ((1 << 24) - 1)) >> 8;
 			int izt = (z & ((1 << 24) - 1)) >> 8;
-
+			
 			float xt = float(ixt) / (1 << 16);
 			float yt = float(iyt) / (1 << 16);
 			float zt = float(izt) / (1 << 16);
-
+			
 			float y1, y2;
-
+			
 			/* first layer */
-//			y1 = (f0 << 16) + ((int(f1) - f0) * ixt); /* 8:24 */
-//			y2 = (f2 << 16) + ((int(f3) - f2) * ixt); /* 8:24 */
-//			float z1 = math::lerp(float(y1), float(y2), yt) / (1 << 16);
 			y1 = math::lerp(float(f0), float(f1), xt);
 			y2 = math::lerp(float(f2), float(f3), xt);
 			float z1 = math::lerp(float(y1), float(y2), yt);
-
+			
 			/* second layer */
-//			y1 = (b0 << 16) + ((int(b1) - b0) * ixt);
-//			y2 = (b2 << 16) + ((int(b3) - b2) * ixt);
-//			float z2 = math::lerp(y1, y2, yt) / (1 << 16);
 			y1 = math::lerp(float(b0), float(b1), xt);
 			y2 = math::lerp(float(b2), float(b3), xt);
 			float z2 = math::lerp(float(y1), float(y2), yt);
-
+			
 			return math::lerp(z1, z2, zt);
 		}
-#else
-		int trilinearSample(int x, int y, int z) const
-		{
-			int ix = x >> 24;
-			int iy = y >> 24;
-			int iz = z >> 24;
-
-			int f0 = pointSample(ix,     iy,     iz);
-			int f1 = pointSample(ix + 1, iy,     iz);
-			int f2 = pointSample(ix,     iy + 1, iz);
-			int f3 = pointSample(ix + 1, iy + 1, iz);
-
-			signed char b0 = pointSample(ix,     iy,     iz + 1);
-			signed char b1 = pointSample(ix + 1, iy,     iz + 1);
-			signed char b2 = pointSample(ix,     iy + 1, iz + 1);
-			signed char b3 = pointSample(ix + 1, iy + 1, iz + 1);
-
-			int ixt = (x & ((1 << 24) - 1)) >> 8; /* 16:16 */
-			int iyt = (y & ((1 << 24) - 1)) >> 8; /* 16:16 */
-			int izt = (z & ((1 << 24) - 1)) >> 8; /* 16:16 */
-
-			float xt = float(ixt) / (1 << 16);
-			float yt = float(iyt) / (1 << 16);
-			float zt = float(izt) / (1 << 16);
-
-			int y1, y2;
-
-			/* first layer */
-			y1 = (f0 << 8) + (((int(f1) - f0) * ixt) >> 8); /* 8:24 */
-			y2 = (f2 << 8) + (((int(f3) - f2) * ixt) >> 8); /* 8:24 */
-			int z1 = (y1 + (((y2 - y1) * iyt) >> 16)); /* 16:16 */
-
-			/* second layer */
-			y1 = (b0 << 16) + ((int(b1) - b0) * ixt);
-			y2 = (b2 << 16) + ((int(b3) - b2) * ixt);
-			y1 >>= 8; /* 16:16 */
-			y2 >>= 8; /* 16:16 */
-			int z2 = (y1 + (((y2 - y1) * iyt) >> 16)); /* 16:16 */
-			return (z1 + (((z2 - z1) * izt) >> 16)) / 256; /* 16:16 */
-		}
-#endif
+		
 		void setDistance(int x, int y, int z, float dist)
 		{
 			assert(x >= 0);
@@ -473,49 +433,44 @@ namespace engine
 			
 			signed char cdist = (signed char)dist;
 			distances[getIndex(x, y, z)] = cdist;
-#if 1
-			for (int zo = -1; zo <= 1; ++zo)
-			{
-				for (int yo = -1; yo <= 1; ++yo)
-				{
-					for (int xo = -1; xo <= 1; ++xo)
-					{
-						updateMinMax(x+xo, y+yo, z + zo, cdist);
-					}
-				}
-			}
-#else
+
 			updateMinMax(x,   y,   z, cdist);
-			updateMinMax(x+1, y,   z, cdist);
-			updateMinMax(x,   y+1, z, cdist);
-			updateMinMax(x+1, y+1, z, cdist);
-			updateMinMax(x,   y,   z+1, cdist);
-			updateMinMax(x+1, y,   z+1, cdist);
-			updateMinMax(x,   y+1, z+1, cdist);
-			updateMinMax(x+1, y+1, z+1, cdist);
-#endif
+			updateMinMax(x-1, y,   z, cdist);
+			updateMinMax(x,   y-1, z, cdist);
+			updateMinMax(x-1, y-1, z, cdist);
+			updateMinMax(x,   y,   z-1, cdist);
+			updateMinMax(x-1, y,   z-1, cdist);
+			updateMinMax(x,   y-1, z-1, cdist);
+			updateMinMax(x-1, y-1, z-1, cdist);
 		}
 
 		void updateMinMax(int x, int y, int z, signed char dist)
 		{
 			if (x < 0) return;
-			if (x > grid_size - 1) return;
+			if (x >= int(grid_size)) return;
 			if (y < 0) return;
-			if (y > grid_size - 1) return;
+			if (y >= int(grid_size)) return;
 			if (z < 0) return;
-			if (z > grid_size - 1) return;
+			if (z >= int(grid_size)) return;
 			
 			int index = getIndex(x, y, z);
 			if (min_distances[index] > dist) min_distances[index] = dist;
 			if (max_distances[index] < dist) max_distances[index] = dist;
 		}
 
+		size_t getSize() const { return grid_size; }
+
 	private:
-		signed char distances[grid_size * grid_size * grid_size];
+		size_t grid_size;
+		signed char *distances;
 	public:
-		signed char max_distances[grid_size * grid_size * grid_size];
-		signed char min_distances[grid_size * grid_size * grid_size];
+		signed char *max_distances;
+		signed char *min_distances;
+
+		float max_dist;
 	};
+	
+	VoxelGrid loadVoxelGrid(std::string fileName);
 }
 
 #endif /* VOXELGRID_H */

@@ -25,6 +25,9 @@
 #include "engine/particlestreamer.h"
 #include "engine/particlecloud.h"
 
+#include "engine/voxelgrid.h"
+#include "engine/voxelmesh.h"
+
 #include "engine/textureproxy.h"
 #include "engine/spectrumdata.h"
 #include "engine/video.h"
@@ -410,6 +413,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 		color_maps[1] = engine::loadTexture(device, "data/color_map1.png");
 		color_map_fx->SetFloat("texel_width", 1.0f / color_msaa.getWidth());
 		color_map_fx->SetFloat("texel_height", 1.0f / color_msaa.getHeight());
+
+		Effect cubegrid_fx = engine::loadEffect(device, "data/cubegrid.fx");
+		renderer::VolumeTexture front_tex = engine::loadVolumeTexture(device, "data/front.dds");
+		cubegrid_fx->SetTexture("front_tex", front_tex);
+
+		engine::VoxelGrid voxelGrid = engine::loadVoxelGrid("data/duck.voxel");
+		engine::VoxelMesh voxelMesh(device, cubegrid_fx, voxelGrid, 64);
 		
 		engine::ParticleStreamer streamer(device);
 		struct ParticleData
@@ -581,7 +591,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 				
 
-				jellyfish_fx.draw(sphere_x);
+//				jellyfish_fx.draw(sphere_x);
 
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
 				skybox_fx.draw(cube_x);
@@ -597,6 +607,32 @@ int main(int /*argc*/, char* /*argv*/ [])
 				device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+
+
+
+				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+
+				//			test_fx.draw(cube_x);
+
+				//			time /= 4;
+
+				Matrix4x4 mrot;
+				mrot.make_identity();
+				mrot.make_rotation(Vector3(0, time, 0));
+				mrot.make_rotation(Vector3(float(-M_PI / 2), float(M_PI - sin(time / 5)), float(M_PI + time / 3)));
+				Matrix4x4 mscale;
+				float scale = 0.75f;
+				mscale.make_scaling(Vector3(scale, scale, scale));
+
+				Matrix4x4 mscale2;
+				mscale2.make_scaling(Vector3(5, 5, 5));
+				world.make_translation(Vector3(-5, -5, -5));
+				cubegrid_fx.setMatrices(world * mscale2, view, proj);
+				voxelMesh.setSize((1.5f + sin(time / 8)) * 32);
+				voxelMesh.update(mrot * mscale);
+				voxelMesh.draw(device);
+
 
 #if 1
 				/* particles */
