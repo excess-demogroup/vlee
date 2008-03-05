@@ -340,8 +340,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		// setup timer and construct sync-device
 		BassTimer synctimer(stream, BPM, 4);
 
-		std::auto_ptr<sync::Device> syncDevice = std::auto_ptr<sync::Device>(sync::createDevice("data\\__data_%s_%s.sync", synctimer));
-		if (NULL == syncDevice.get()) throw std::string("something went wrong - failed to connect to host?");
+		std::auto_ptr<sync::Device> syncDevice = std::auto_ptr<sync::Device>(sync::createDevice("data/sync_", synctimer));
+		if (NULL == syncDevice.get()) throw FatalException("something went wrong - failed to connect to host?");
 
 		sync::Track &cameraDistanceTrack = syncDevice->getTrack("distance");
 		sync::Track &cameraRollTrack     = syncDevice->getTrack("roll");
@@ -350,10 +350,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		sync::Track &cameraShakeAmtTrack     = syncDevice->getTrack("shake amt");
 		sync::Track &cameraShakeTempoTrack     = syncDevice->getTrack("shake tempo");
 
-		sync::Track &colorMapBlendTrack  = syncDevice->getTrack("blend");
-		sync::Track &colorMapPalTrack    = syncDevice->getTrack("pal");
-		sync::Track &colorMapFadeTrack   = syncDevice->getTrack("fade");
-		sync::Track &colorMapFlashTrack  = syncDevice->getTrack("flash");
+		sync::Track &colorMapBlendTrack  = syncDevice->getTrack("cm.blend");
+		sync::Track &colorMapPalTrack    = syncDevice->getTrack("cm.pal");
+		sync::Track &colorMapFadeTrack   = syncDevice->getTrack("cm.fade");
+		sync::Track &colorMapFlashTrack  = syncDevice->getTrack("cm.flash");
 
 		sync::Track &noiseAmtTrack  = syncDevice->getTrack("amt");
 		sync::Track &noiseFFTTrack  = syncDevice->getTrack("fft");
@@ -432,11 +432,22 @@ int main(int /*argc*/, char* /*argv*/ [])
 		engine::ParticleCloud<ParticleData> cloud;
 		for (int i = 0; i < 1024 * 4; ++i)
 		{
-/*			float x = (randf() - 0.5f) * 185;
-			float z = (randf() - 0.5f) * 185;
-			float y = (randf() - 0.5f) * 150;
-			float s = (randf() + 0.75f) * 0.5f;
-			cloud.addParticle(engine::Particle<float>(Vector3(x, y, z), s)); */
+			float x = (randf() - 0.5f);
+			float z = (randf() - 0.5f);
+			float y = (randf() - 0.5f);
+			float s = (randf() + 0.75f) * 0.55f;
+			cloud.addParticle(
+				engine::Particle<ParticleData>(
+					Vector3(x, y, z) * 100,
+					ParticleData(s,
+						math::normalize(Vector3(
+						1.0f / x,
+						1.0f / y,
+						1.0f / z
+						))
+					)
+				)
+			);
 		}
 		for (int i = 0; i < 1024 * 4; ++i)
 		{
@@ -446,7 +457,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float s = (randf() + 0.75f) * 0.55f;
 			cloud.addParticle(
 				engine::Particle<ParticleData>(
-					Vector3(x, y, z) * 100,
+					Vector3(x, y, z) * 200,
 					ParticleData(s,
 					math::normalize(Vector3(
 							1.0f / x,
@@ -584,7 +595,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 			text_fx->SetTexture("excess", excess_outline_tex);
 			text_fx->SetTexture("demotitle", demotitle_tex);
 			text_fx.setMatrices(world, view, proj);
-			
+
+			voxelMesh.setSize((1.5f + sin(time / 8)) * 32);
+			float grid_size = voxelMesh.getSize();
+			Matrix4x4 mrot;
+			mrot.make_rotation(Vector3(float(-M_PI / 2), float(M_PI - sin(time / 5)), float(M_PI + time / 3)));
+			Matrix4x4 mscale;
+			mscale.make_scaling(Vector3(0.75f, 0.75f, 0.75f));
+			voxelMesh.update(mrot * mscale);
+
 			for (int i = 0; i < 2; ++i)
 			{
 				device->Clear(0, 0, D3DCLEAR_ZBUFFER, clear_color, 1.f, 0);
@@ -618,23 +637,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 				//			time /= 4;
 
-				Matrix4x4 mrot;
-				mrot.make_identity();
-				mrot.make_rotation(Vector3(0, time, 0));
-				mrot.make_rotation(Vector3(float(-M_PI / 2), float(M_PI - sin(time / 5)), float(M_PI + time / 3)));
-				Matrix4x4 mscale;
-				float scale = 0.75f;
-				mscale.make_scaling(Vector3(scale, scale, scale));
-
 				Matrix4x4 mscale2;
-				mscale2.make_scaling(Vector3(5, 5, 5));
+				mscale2.make_scaling(Vector3(10.0f / grid_size, 10.0f / grid_size, 10.0f / grid_size));
 
-				float grid_size = (1.5f + sin(time / 8)) * 32;
-				voxelMesh.setSize(grid_size);
 				// center object
-				world.make_translation(-Vector3(floor(grid_size / 2), floor(grid_size / 2), floor(grid_size / 2)));
+				Vector3 pos = Vector3(floor(grid_size / 2), floor(grid_size / 2), floor(grid_size / 2));
+				world.make_translation(-pos);
 				cubegrid_fx.setMatrices(world * mscale2, view, proj);
-				voxelMesh.update(mrot * mscale);
 				voxelMesh.draw(device);
 
 #if 1
@@ -659,7 +668,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 						particle_fx->SetFloat("alpha", 0.1f);
 						particle_fx->CommitChanges();
 					}
-
+					
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
@@ -684,13 +693,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 							);
 	//						iter->pos += iter->data.dir * 0.1f;
 	//						if (math::length(iter->pos) > 100.0f) iter->pos = Vector3(0,0,0);
-							float theta = float(p) * 0.005f;
+/*							float theta = float(p) * 0.005f;
 							float thetaa = theta - time;
 							float radius = 50.0f;
 							iter->pos = Vector3(cos(thetaa) * 3.1, cos(thetaa) * 2, sin(thetaa) * 3);
 							iter->pos = Vector3(cos(iter->pos.x - iter->pos.y * 0.93f), cos(iter->pos.y * 1.5f), sin(iter->pos.z - iter->pos.x));
-							iter->pos = normalize(iter->pos) * radius;
-							iter->data.size = 10.0f / (1 + theta);
+							iter->pos = normalize(iter->pos) * radius;  
+							iter->data.size = 10.0f / (1 + theta); */
 							
 							++iter;
 							++p;
@@ -765,7 +774,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->SetFloat("fade2", colorMapFadeTrack.getValue(beat) / 256);
 			color_map_fx->SetFloat("alpha", 0.25f);
 			color_map_fx->SetTexture("tex2", color_msaa);
-			color_map_fx->SetTexture("color_map", color_maps[(int)colorMapPalTrack.getValue(beat) % 2]);
+			color_map_fx->SetTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
 
 			color_image.setPosition(-1, -1);
 			color_image.setDimension(2, 2);

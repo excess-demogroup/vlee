@@ -35,6 +35,7 @@ namespace sync
 		};
 		
 		float  getValue(float time) const;
+		int getIntValue(float time) { return int(floor(0.5f + getValue(time))); }
 		
 		bool   isKeyFrame(size_t row) const;
 		const  KeyFrame *getKeyFrame(size_t row) const;

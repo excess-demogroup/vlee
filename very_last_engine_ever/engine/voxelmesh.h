@@ -30,6 +30,8 @@ namespace engine
 			if (size > float(maxSize)) currSize = float(maxSize);
 			else currSize = size;
 		}
+
+		float getSize() const { return currSize; }
 		
 		void update(const math::Matrix4x4 &mrot);
 		void draw(renderer::Device &device) const;
