@@ -293,11 +293,11 @@ namespace engine
 		inline signed char pointSample(int x, int y, int z) const
 		{
 			assert(x >= 0);
-			assert(x < grid_size);
+			assert(x < int(grid_size));
 			assert(y >= 0);
-			assert(y < grid_size);
+			assert(y < int(grid_size));
 			assert(z >= 0);
-			assert(z < grid_size);
+			assert(z < int(grid_size));
 			return distances[getIndex(x, y, z)];
 		}
 
@@ -425,11 +425,11 @@ namespace engine
 		void setDistance(int x, int y, int z, float dist)
 		{
 			assert(x >= 0);
-			assert(x < grid_size);
+			assert(x < int(grid_size));
 			assert(y >= 0);
-			assert(y < grid_size);
+			assert(y < int(grid_size));
 			assert(z >= 0);
-			assert(z < grid_size);
+			assert(z < int(grid_size));
 			
 			signed char cdist = (signed char)dist;
 			distances[getIndex(x, y, z)] = cdist;
