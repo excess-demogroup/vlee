@@ -506,7 +506,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 //			time = timeGetTime() / 1000.0f;
 
 #ifndef VJSYS
-//			sync.update(); //gets current timing info from the SyncTimer.
+			syncDevice->update(beat); //gets current timing info from the SyncTimer.
 #endif
 			device->BeginScene();
 			
