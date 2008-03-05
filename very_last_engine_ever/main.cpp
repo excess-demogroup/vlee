@@ -212,7 +212,9 @@ Matrix4x4 radialblur_matrix(const Texture &tex, const Vector2 &center, const flo
 	return trans1 * mat * trans2;
 }
 
-#include "sync/SyncEditor.h"
+#include "sync/device.h"
+#include "sync/basstimer.h"
+
 
 WTL::CAppModule _Module;
 
@@ -335,42 +337,41 @@ int main(int /*argc*/, char* /*argv*/ [])
 		stream = BASS_StreamCreateFile(false, "data/glitch.ogg", 0, 0, BASS_MP3_SETPOS | ((0 == config.getSoundcard()) ? BASS_STREAM_DECODE : 0));
 		if (!stream) throw FatalException("failed to open tune");
 		
-		SyncTimerBASS_Stream synctimer(stream, BPM, 4);
-		
-#ifdef SYNC
-		SyncEditor sync("data\\__data_%s_%s.sync", synctimer);
-#else
-		Sync sync("data\\__data_%s_%s.sync", synctimer);
-#endif
-		SyncTrack &cameraDistanceTrack = sync.getTrack("distance", "camera", 6, false);
-		SyncTrack &cameraRollTrack     = sync.getTrack("roll", "camera", 6, true);
-		SyncTrack &cameraYRotTrack     = sync.getTrack("y-rot", "camera", 6, true);
-		SyncTrack &cameraUpTrack     = sync.getTrack("up", "camera", 6, true);
-		SyncTrack &cameraShakeAmtTrack     = sync.getTrack("shake amt", "camera", 8, true);
-		SyncTrack &cameraShakeTempoTrack     = sync.getTrack("shake tempo", "camera", 6, true);
+		// setup timer and construct sync-device
+		BassTimer synctimer(stream, BPM, 4);
 
-		SyncTrack &colorMapBlendTrack  = sync.getTrack("blend", "color map", 6, true);
-		SyncTrack &colorMapPalTrack    = sync.getTrack("pal",   "color map", 4,   true);
-		SyncTrack &colorMapFadeTrack   = sync.getTrack("fade",  "color map", 4,   true);
-		SyncTrack &colorMapFlashTrack  = sync.getTrack("flash", "color map", 4,   true);
+		std::auto_ptr<sync::Device> syncDevice = std::auto_ptr<sync::Device>(sync::createDevice("data\\__data_%s_%s.sync", synctimer));
+		if (NULL == syncDevice.get()) throw std::string("something went wrong - failed to connect to host?");
 
-		SyncTrack &noiseAmtTrack  = sync.getTrack("amt", "noise", 4,   true);
-		SyncTrack &noiseFFTTrack  = sync.getTrack("fft", "noise", 4,   true);
+		sync::Track &cameraDistanceTrack = syncDevice->getTrack("distance");
+		sync::Track &cameraRollTrack     = syncDevice->getTrack("roll");
+		sync::Track &cameraYRotTrack     = syncDevice->getTrack("y-rot");
+		sync::Track &cameraUpTrack     = syncDevice->getTrack("up");
+		sync::Track &cameraShakeAmtTrack     = syncDevice->getTrack("shake amt");
+		sync::Track &cameraShakeTempoTrack     = syncDevice->getTrack("shake tempo");
 
-		SyncTrack &jellyAmtX = sync.getTrack("amt_x", "jelly", 6, true);
-		SyncTrack &jellyAmtY = sync.getTrack("amt_y", "jelly", 6, true);
-		SyncTrack &jellyAmtZ = sync.getTrack("amt_z", "jelly", 6, true);
+		sync::Track &colorMapBlendTrack  = syncDevice->getTrack("blend");
+		sync::Track &colorMapPalTrack    = syncDevice->getTrack("pal");
+		sync::Track &colorMapFadeTrack   = syncDevice->getTrack("fade");
+		sync::Track &colorMapFlashTrack  = syncDevice->getTrack("flash");
 
-		SyncTrack &jellyScaleX = sync.getTrack("scale_x", "jelly", 6, true);
-		SyncTrack &jellyScaleY = sync.getTrack("scale_y", "jelly", 6, true);
-		SyncTrack &jellyScaleZ = sync.getTrack("scale_z", "jelly", 6, true);
+		sync::Track &noiseAmtTrack  = syncDevice->getTrack("amt");
+		sync::Track &noiseFFTTrack  = syncDevice->getTrack("fft");
 
-		SyncTrack &jellySwimTrack = sync.getTrack("swim", "jelly", 6, true);
+		sync::Track &jellyAmtX = syncDevice->getTrack("amt_x");
+		sync::Track &jellyAmtY = syncDevice->getTrack("amt_y");
+		sync::Track &jellyAmtZ = syncDevice->getTrack("amt_z");
 
-		SyncTrack &textAlpha1Track = sync.getTrack("alpha1", "text", 6, true);
-		SyncTrack &textAlpha2Track = sync.getTrack("alpha2", "text", 6, true);
-		SyncTrack &textBlink1Track = sync.getTrack("blink1", "text", 6, true);
-		SyncTrack &textBlink2Track = sync.getTrack("blink2", "text", 6, true);
+		sync::Track &jellyScaleX = syncDevice->getTrack("scale_x");
+		sync::Track &jellyScaleY = syncDevice->getTrack("scale_y");
+		sync::Track &jellyScaleZ = syncDevice->getTrack("scale_z");
+
+		sync::Track &jellySwimTrack = syncDevice->getTrack("swim");
+
+		sync::Track &textAlpha1Track = syncDevice->getTrack("alpha1");
+		sync::Track &textAlpha2Track = syncDevice->getTrack("alpha2");
+		sync::Track &textBlink1Track = syncDevice->getTrack("blink1");
+		sync::Track &textBlink2Track = syncDevice->getTrack("blink2");
 
 		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
 
@@ -483,14 +484,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 
 #ifdef SYNC
-		sync.showEditor();
+//		sync.showEditor();
 #endif
 
 		bool done = false;
 		while (!done)
 		{
 #ifndef VJSYS
-			if (!sync.doEvents()) done = true;
+//			if (!sync.doEvents()) done = true;
 #endif
 
 #ifdef DUMP_VIDEO
@@ -500,12 +501,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			static float last_time = 0.f;
 			static float time_offset = 0.f;
-			float time = BASS_ChannelBytes2Seconds(stream, BASS_ChannelGetPosition(stream));
-			float beat = time * (float(BPM) / 60);
+			float time = synctimer.getTime();
+			float beat = synctimer.getRow();
 //			time = timeGetTime() / 1000.0f;
 
 #ifndef VJSYS
-			sync.update(); //gets current timing info from the SyncTimer.
+//			sync.update(); //gets current timing info from the SyncTimer.
 #endif
 			device->BeginScene();
 			
@@ -519,26 +520,26 @@ int main(int /*argc*/, char* /*argv*/ [])
 			D3DXCOLOR clear_color(0.45f, 0.25f, 0.25f, 0.f);
 //			D3DXCOLOR clear_color(spectrum[0] * 1.5f, 0.f, 0.f, 0.f);
 
-			float roll = cameraRollTrack.getFloatValue() / 256;
+			float roll = cameraRollTrack.getValue(beat) / 256;
 			roll *= float(2 * M_PI);
-			float yRot = cameraYRotTrack.getFloatValue() / 256;
+			float yRot = cameraYRotTrack.getValue(beat) / 256;
 			Vector3 up(float(sin(roll)), float(cos(roll)), 0.f);
 			Vector3 eye(
 				float(sin(yRot)),
-				float(cameraUpTrack.getFloatValue() / 256),
+				float(cameraUpTrack.getValue(beat) / 256),
 				float(cos(yRot))
 			);
 			eye = normalize(eye);
 
-			float camera_distance = 60 * (cameraDistanceTrack.getFloatValue() / 256);
+			float camera_distance = 60 * (cameraDistanceTrack.getValue(beat) / 256);
 			eye *= camera_distance;
-			float shake_time = time * 0.125f * (cameraShakeTempoTrack.getFloatValue() / 256);
+			float shake_time = time * 0.125f * (cameraShakeTempoTrack.getValue(beat) / 256);
 			Vector3 at(0, 0, 0);
 			at += Vector3(
 				pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
 				pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
 				pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
-			) * 0.05f * camera_distance * (cameraShakeAmtTrack.getFloatValue() / 256);
+			) * 0.05f * camera_distance * (cameraShakeAmtTrack.getValue(beat) / 256);
 
 			Matrix4x4 world;
 			world.make_identity();
@@ -549,14 +550,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 			proj.make_projection(60.0f, float(DEMO_ASPECT), 0.1f, 1000.f);
 			
 			jellyfish_fx.setVector3("amt", Vector3(
-				jellyAmtX.getFloatValue() / 256,
-				jellyAmtY.getFloatValue() / 256,
-				jellyAmtZ.getFloatValue() / 256)
+				jellyAmtX.getValue(beat) / 256,
+				jellyAmtY.getValue(beat) / 256,
+				jellyAmtZ.getValue(beat) / 256)
 			);
 			jellyfish_fx.setVector3("scale", Vector3(
-				jellyScaleX.getFloatValue() / 256,
-				jellyScaleY.getFloatValue() / 256,
-				jellyScaleZ.getFloatValue() / 256)
+				jellyScaleX.getValue(beat) / 256,
+				jellyScaleY.getValue(beat) / 256,
+				jellyScaleZ.getValue(beat) / 256)
 			);
 			jellyfish_fx.setVector3("phase", Vector3(
 				time,
@@ -570,16 +571,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 			skybox_fx.setMatrices(world, view, proj);
 
 			
-			int blink1_val = textBlink1Track.getIntValue();
+			int blink1_val = (int)textBlink1Track.getValue(beat);
 			float blink1 = 1.0f;
 			if (blink1_val != 0) blink1 = math::frac(time * blink1_val) > 0.5f ? 1.0f : 0.0f;
 
-			int blink2_val = textBlink2Track.getIntValue();
+			int blink2_val = (int)textBlink2Track.getValue(beat);
 			float blink2 = 1.0f;
 			if (blink2_val != 0) blink2 = math::frac(time * blink2_val) > 0.5f ? 1.0f : 0.0f;
 			
-			text_fx->SetFloat("alpha1", (textAlpha1Track.getFloatValue() / 256) * blink1);
-			text_fx->SetFloat("alpha2", (textAlpha2Track.getFloatValue() / 256) * blink2);
+			text_fx->SetFloat("alpha1", (textAlpha1Track.getValue(beat) / 256) * blink1);
+			text_fx->SetFloat("alpha2", (textAlpha2Track.getValue(beat) / 256) * blink2);
 			text_fx->SetTexture("excess", excess_outline_tex);
 			text_fx->SetTexture("demotitle", demotitle_tex);
 			text_fx.setMatrices(world, view, proj);
@@ -638,7 +639,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 #if 1
 				/* particles */
-				float particleScroll = 0.0f; // -jellySwimTrack.getFloatValue() / (10 * 256);
+				float particleScroll = 0.0f; // -jellySwimTrack.getValue(beat) / (10 * 256);
 				for (int i = 0; i < 1; ++i)
 				{
 					world.make_translation(Vector3(0, (math::frac(particleScroll) - i) * 150, 0));
@@ -759,12 +760,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			color_msaa.resolve(device);
 			
-			color_map_fx->SetFloat("fade", colorMapBlendTrack.getFloatValue() * (1.f / 256));
-			color_map_fx->SetFloat("flash", pow(colorMapFlashTrack.getFloatValue() / 256, 2.0f));
-			color_map_fx->SetFloat("fade2", colorMapFadeTrack.getFloatValue() / 256);
+			color_map_fx->SetFloat("fade", colorMapBlendTrack.getValue(beat) * (1.f / 256));
+			color_map_fx->SetFloat("flash", pow(colorMapFlashTrack.getValue(beat) / 256, 2.0f));
+			color_map_fx->SetFloat("fade2", colorMapFadeTrack.getValue(beat) / 256);
 			color_map_fx->SetFloat("alpha", 0.25f);
 			color_map_fx->SetTexture("tex2", color_msaa);
-			color_map_fx->SetTexture("color_map", color_maps[colorMapPalTrack.getIntValue() % 2]);
+			color_map_fx->SetTexture("color_map", color_maps[(int)colorMapPalTrack.getValue(beat) % 2]);
 
 			color_image.setPosition(-1, -1);
 			color_image.setDimension(2, 2);
@@ -779,7 +780,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			/* draw noise */
 			
-			noise_fx->SetFloat("alpha", (noiseAmtTrack.getFloatValue() + noiseFFTTrack.getFloatValue() * noise_fft.getValue(time)) / 256 );
+			noise_fx->SetFloat("alpha", (noiseAmtTrack.getValue(beat) + noiseFFTTrack.getValue(beat) * noise_fft.getValue(beat)) / 256 );
 			noise_fx->SetTexture("tex", noise_tex);
 			drawQuad(
 				device, noise_fx,

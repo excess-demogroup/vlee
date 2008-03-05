@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9d.lib d3d9.lib dxerr9.lib lib/tinyxml.lib lib/bass.lib winmm.lib"
+				AdditionalDependencies="d3dx9d.lib d3d9.lib dxerr9.lib lib/tinyxml.lib lib/bass.lib winmm.lib Ws2_32.lib"
 				LinkIncremental="2"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
@@ -142,7 +142,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr9.lib lib/bass.lib lib/tinyxml.lib winmm.lib"
+				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr9.lib lib/bass.lib lib/tinyxml.lib winmm.lib Ws2_32.lib"
 				OutputFile="$(OutDir)\demo.exe"
 				LinkIncremental="1"
 				GenerateManifest="false"
@@ -224,7 +224,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr9.lib lib/bass.lib lib/tinyxml.lib winmm.lib"
+				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr9.lib lib/bass.lib lib/tinyxml.lib winmm.lib Ws2_32.lib"
 				OutputFile="$(OutDir)\editor.exe"
 				LinkIncremental="1"
 				GenerateManifest="false"
@@ -353,14 +353,19 @@
 				Name="sync"
 				>
 				<File
-					RelativePath=".\sync\Sync.cpp"
+					RelativePath=".\sync\data.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\sync\device.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -368,7 +373,8 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -376,93 +382,50 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 						/>
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\sync\SyncConsole.cpp"
+					RelativePath=".\sync\device_client.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
+						ExcludedFromBuild="true"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
 						Name="Release|Win32"
+						ExcludedFromBuild="true"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="SyncRelease|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
 						/>
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\sync\SyncEditor.cpp"
+					RelativePath=".\sync\device_player.cpp"
 					>
 					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="SyncRelease|Win32"
+						ExcludedFromBuild="true"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
 						/>
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\sync\SyncTrack.cpp"
+					RelativePath=".\sync\network.cpp"
 					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="SyncRelease|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\sync\track.cpp"
+					>
 				</File>
 			</Filter>
 			<Filter
@@ -591,27 +554,23 @@
 				Name="sync"
 				>
 				<File
-					RelativePath=".\sync\Sync.h"
+					RelativePath=".\sync\basstimer.h"
 					>
 				</File>
 				<File
-					RelativePath=".\sync\SyncConsole.h"
+					RelativePath=".\sync\data.h"
 					>
 				</File>
 				<File
-					RelativePath=".\sync\SyncEditor.h"
+					RelativePath=".\sync\device.h"
 					>
 				</File>
 				<File
-					RelativePath=".\sync\SyncTimer.h"
+					RelativePath=".\sync\network.h"
 					>
 				</File>
 				<File
-					RelativePath=".\sync\synctrack.h"
-					>
-				</File>
-				<File
-					RelativePath=".\sync\uglyswitchhack.h"
+					RelativePath=".\sync\track.h"
 					>
 				</File>
 			</Filter>
