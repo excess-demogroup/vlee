@@ -19,7 +19,7 @@
 #define MIN_VS_VERSION D3DVS_VERSION(1, 1)
 
 #if defined(NDEBUG) && !defined(SYNC) && !defined(DUMP_VIDEO)
-#define WINDOWED 0
+#define WINDOWED 1
 #else
 #define WINDOWED 1
 #endif

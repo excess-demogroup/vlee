@@ -256,12 +256,61 @@ void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_
 		letterbox_width  = int(math::round(screen_width * aspect_change));
 		letterbox_height = screen_height;
 	}
-
+	
 	viewport->X = (screen_width  - letterbox_width ) / 2;
 	viewport->Y = (screen_height - letterbox_height) / 2;
-
+	
 	viewport->Width  = letterbox_width;
 	viewport->Height = letterbox_height;
+}
+
+#include "engine/vertexstreamer.h"
+void drawFuzz(Effect &effect, engine::VertexStreamer &streamer, double time, float scroll, float dist_amt)
+{
+	UINT passes;
+	effect->Begin(&passes, 0);
+	for (UINT pass = 0; pass < passes; ++pass)
+	{
+		effect->BeginPass( pass );
+		const int SEGS = 235;
+		streamer.begin(D3DPT_TRIANGLELIST);
+		float last_offs = 0.f;
+		for (unsigned i = 0; i < SEGS; ++i)
+		{
+			float y1 = float(i) * (1.f / SEGS);
+			float y2 = y1 + (1.f / SEGS);
+			
+			float offs;
+			offs = (randf() - 0.5f) * 0.75f;
+			offs = offs + (last_offs - offs) * 0.95f;
+			offs += float(sin(y1 * 4 - time)) * 0.025f;
+			offs += float(sin(y1 * 1.5f - time)) * 0.025f;
+			offs *= float(1 + cos(y1 * 1.25f + time));
+			offs *= dist_amt;
+			
+			streamer.uv(    D3DXVECTOR2(0.f + last_offs, 1 - y1 + scroll));
+			streamer.vertex(D3DXVECTOR3(-1, (y1 * 2) - 1, 0));
+			
+			streamer.uv(    D3DXVECTOR2( 0.f + offs, 1 - y2 + scroll));
+			streamer.vertex(D3DXVECTOR3(-1, (y2 * 2) - 1, 0));
+			
+			streamer.uv(    D3DXVECTOR2( 1.f + offs, 1 - y2 + scroll));
+			streamer.vertex(D3DXVECTOR3( 1, (y2 * 2) - 1, 0));
+			
+			streamer.uv(    D3DXVECTOR2( 0 + last_offs, 1 - y1 + scroll));
+			streamer.vertex(D3DXVECTOR3(-1, (y1 * 2) - 1, 0));
+			
+			streamer.uv(    D3DXVECTOR2( 1 + offs, 1 - y2 + scroll));
+			streamer.vertex(D3DXVECTOR3( 1, (y2 * 2) - 1, 0));
+			
+			streamer.uv(    D3DXVECTOR2( 1 + last_offs, 1 - y1 + scroll));
+			streamer.vertex(D3DXVECTOR3( 1, (y1 * 2) - 1, 0));
+			last_offs = offs;
+		}
+		streamer.end();
+		effect->EndPass();
+	}
+	effect->End();
 }
 
 int main(int /*argc*/, char* /*argv*/ [])
@@ -385,26 +434,27 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		RenderTexture color1_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
 		RenderTexture color2_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
-
+		
+		engine::VertexStreamer vertex_streamer(device);
 		scenegraph::Scene *testScene = loadScene(device, "data/test.scene");
-
+		
 //		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE);
 //		RenderTexture rt2(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
 //		RenderTexture rt3(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
-
+		
 		Matrix4x4 tex_transform;
 		tex_transform.make_identity();
 		Effect tex_fx      = engine::loadEffect(device, "data/tex.fx");
 		tex_fx->SetMatrix("transform", &tex_transform);
 		Effect blur_fx     = engine::loadEffect(device, "data/blur.fx");
-
+		
 		Effect particle_fx = engine::loadEffect(device, "data/particle.fx");
 		Texture bartikkel_tex = engine::loadTexture(device, "data/particle.png");
 		particle_fx->SetTexture("tex", bartikkel_tex);
-
+		
 		Effect noise_fx = engine::loadEffect(device, "data/noise.fx");
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
-
+		
 		Effect color_map_fx = engine::loadEffect(device, "data/color_map.fx");
 		Image color_image(color1_hdr, color_map_fx);
 //		Image color_image(color_msaa, color_map_fx);
@@ -766,7 +816,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetDepthStencilSurface(NULL);
 			device->Clear(0, 0, D3DCLEAR_TARGET, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
 			device.setViewport(&letterbox_viewport);
-
+			
 			color_msaa.resolve(device);
 			
 			color_map_fx->SetFloat("fade", colorMapBlendTrack.getValue(beat) * (1.f / 256));
@@ -775,18 +825,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->SetFloat("alpha", 0.25f);
 			color_map_fx->SetTexture("tex2", color_msaa);
 			color_map_fx->SetTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
-
+			
 			color_image.setPosition(-1, -1);
 			color_image.setDimension(2, 2);
+			
+			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
 			color_image.draw(device);
-
-			scanlinesImage.setPosition(-1, -1);
-			scanlinesImage.setDimension(2, 2);
-
+			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
+			drawFuzz(color_map_fx, vertex_streamer, time, 0.0f, 1.0f);
+			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED | D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
+			
 			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-
+			
 			/* draw noise */
 			
 			noise_fx->SetFloat("alpha", (noiseAmtTrack.getValue(beat) + noiseFFTTrack.getValue(beat) * noise_fft.getValue(beat)) / 256 );
@@ -797,8 +849,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 				 2.0f, 2.0f,
 				 randf(), randf()
 			);
-
+			
 			/* draw scanlines */
+			scanlinesImage.setPosition(-1, -1);
+			scanlinesImage.setDimension(2, 2);
 			scanlinesImage.draw(device);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			

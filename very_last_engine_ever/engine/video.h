@@ -10,6 +10,10 @@ namespace engine
 		int   getWidth();
 		int   getHeight();
 		void *nextFrame();
+		void *getFrame(float time)
+		{
+			
+		}
 		
 	private:
 		unsigned int widht, height;
@@ -25,7 +29,7 @@ namespace engine
 		void *buffer;
 		
 		static unsigned long currentHandle;
-		unsigned long getHandle() { return currentHandle++; }
+		static unsigned long getHandle() { return currentHandle++; }
 	};
 	
 //	Video loadVideo(const std::string filename);
@@ -38,6 +42,8 @@ namespace engine
 		{
 			
 		}
+		
+		void update(float time);
 	private:
 		VideoStream videoDecoder;
 	};
