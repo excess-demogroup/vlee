@@ -286,7 +286,8 @@ void drawFuzz(Effect &effect, engine::VertexStreamer &streamer, double time, flo
 			offs += float(sin(y1 * 4 - time)) * 0.025f;
 			offs += float(sin(y1 * 1.5f - time)) * 0.025f;
 			offs *= float(1 + cos(y1 * 1.25f + time));
-			offs *= dist_amt;
+			offs += (randf() - 0.5f) * 0.05f;
+			offs *= dist_amt / 2;
 			
 			streamer.uv(    D3DXVECTOR2(0.f + last_offs, 1 - y1 + scroll));
 			streamer.vertex(D3DXVECTOR3(-1, (y1 * 2) - 1, 0));

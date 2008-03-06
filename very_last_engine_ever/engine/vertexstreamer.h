@@ -1,18 +1,29 @@
 #pragma once
 
 #include "../renderer/vertexbuffer.h"
-#define VERTEX_STREAMER_VERTEX_BUFFER_SIZE 1024*2
+#define VERTEX_STREAMER_VERTEX_BUFFER_SIZE (128*1024)
 
 namespace engine
 {
-
-	class VertexStreamer {
+	class VertexStreamer
+	{
 	public:
 		VertexStreamer(renderer::Device &device) :
 			device(device),
 			data(NULL)
 		{
 			vb = device.createVertexBuffer(sizeof(Vertex) * VERTEX_STREAMER_VERTEX_BUFFER_SIZE, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, Vertex::fvf);
+		}
+		
+		int getPrimitiveOverflow()
+		{
+			switch (type)
+			{
+			case D3DPT_POINTLIST:		return 0;
+			case D3DPT_LINELIST:		return index % 2;
+			case D3DPT_TRIANGLELIST:	return index % 3;
+			default: assert(0);
+			}
 		}
 		
 		void begin(const D3DPRIMITIVETYPE type)
@@ -34,10 +45,7 @@ namespace engine
 			{
 				case D3DPT_POINTLIST:		primitive_count = index;			break;
 				case D3DPT_LINELIST:		primitive_count = index / 2;		break;
-				case D3DPT_LINESTRIP:		primitive_count = int(index) - 1;	break;
 				case D3DPT_TRIANGLELIST:	primitive_count = index / 3;		break;
-				case D3DPT_TRIANGLESTRIP:	primitive_count = int(index) - 2;	break;
-				case D3DPT_TRIANGLEFAN:		primitive_count = int(index) - 2;	break;
 				default: assert(0);
 			}
 			
@@ -66,18 +74,23 @@ namespace engine
 
 		void vertex(const D3DXVECTOR3 &pos)
 		{
-			if (index >= VERTEX_STREAMER_VERTEX_BUFFER_SIZE - 2)
-			{
-				end();
-				begin(type);
-			}
-			
+			assert(index < VERTEX_STREAMER_VERTEX_BUFFER_SIZE);
 			assert(NULL != data);
+			
 			data->pos = pos;
 			data++;
 			
 			// insert pos
 			index++;
+			
+			if (
+				(index >= VERTEX_STREAMER_VERTEX_BUFFER_SIZE - 2) && 
+				(0 == getPrimitiveOverflow())
+				)
+			{
+				end();
+				begin(type);
+			}
 		}
 		
 	private:
