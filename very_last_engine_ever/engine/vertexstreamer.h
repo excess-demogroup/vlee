@@ -22,7 +22,9 @@ namespace engine
 			case D3DPT_POINTLIST:		return 0;
 			case D3DPT_LINELIST:		return index % 2;
 			case D3DPT_TRIANGLELIST:	return index % 3;
-			default: assert(0);
+			default:
+				assert(0);
+				return 0;
 			}
 		}
 		

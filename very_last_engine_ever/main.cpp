@@ -688,6 +688,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 				//			time /= 4;
 
+#if 0
 				Matrix4x4 mscale2;
 				mscale2.make_scaling(Vector3(10.0f / grid_size, 10.0f / grid_size, 10.0f / grid_size));
 
@@ -696,6 +697,32 @@ int main(int /*argc*/, char* /*argv*/ [])
 				world.make_translation(-pos);
 				cubegrid_fx.setMatrices(world * mscale2, view, proj);
 				voxelMesh.draw(device);
+#else
+				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+				text_fx.setMatrices(world, view, proj);
+				text_fx->SetTexture("tex", bartikkel_tex);
+				UINT passes;
+				text_fx->Begin(&passes, 0);
+				float s = 1.0f;
+				for (UINT pass = 0; pass < passes; ++pass)
+				{
+					text_fx->BeginPass( pass );
+					vertex_streamer.begin(D3DPT_TRIANGLELIST);
+
+					vertex_streamer.uv(    D3DXVECTOR2( 0,  0));
+					vertex_streamer.vertex(D3DXVECTOR3(-s, -s, 0));
+
+					vertex_streamer.uv(    D3DXVECTOR2( 0, 1));
+					vertex_streamer.vertex(D3DXVECTOR3(-s, s, 0));
+
+					vertex_streamer.uv(    D3DXVECTOR2( 1, 1));
+					vertex_streamer.vertex(D3DXVECTOR3( s, s, 0));
+
+					vertex_streamer.end();
+					text_fx->EndPass();
+				}
+				text_fx->End();
+#endif
 
 #if 1
 				/* particles */
