@@ -19,15 +19,10 @@ namespace scenegraph
 		{
 			if (matrix_dirty)
 			{
-				math::Matrix4x4 mposition;
-				math::Matrix4x4 mrotation;
-				math::Matrix4x4 mscale;
-				
-				mposition.make_translation(position);
-				mrotation.make_rotation(rotation);
-				mscale.make_scaling(scale);
-				
-				matrix = mposition * mrotation * mscale;
+				matrix = 
+					math::Matrix4x4::translation(position) *
+					math::Matrix4x4::rotation(rotation) *
+					math::Matrix4x4::scaling(scale);
 				matrix_dirty = false;
 			}
 			return matrix;

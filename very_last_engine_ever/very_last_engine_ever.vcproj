@@ -126,6 +126,7 @@
 				RuntimeLibrary="0"
 				EnableEnhancedInstructionSet="0"
 				FloatingPointModel="2"
+				OpenMP="true"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
@@ -145,7 +146,7 @@
 				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr9.lib lib/bass.lib lib/tinyxml.lib winmm.lib Ws2_32.lib"
 				OutputFile="$(OutDir)\demo.exe"
 				LinkIncremental="1"
-				GenerateManifest="false"
+				GenerateManifest="true"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -443,6 +444,10 @@
 					RelativePath=".\scenegraph\node.cpp"
 					>
 				</File>
+				<File
+					RelativePath=".\scenegraph\sceneloader.cpp"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="renderer"
@@ -603,6 +608,10 @@
 				</File>
 				<File
 					RelativePath=".\scenegraph\scenegraph.h"
+					>
+				</File>
+				<File
+					RelativePath=".\scenegraph\sceneloader.h"
 					>
 				</File>
 				<File

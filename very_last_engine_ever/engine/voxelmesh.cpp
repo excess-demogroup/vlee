@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "voxelmesh.h"
 #include "../math/vector3.h"
+#include <omp.h>
 
 using namespace engine;
 using math::Vector3;
@@ -53,37 +54,37 @@ void VoxelMesh::fillGrid(math::Matrix4x4 mrot)
 {
 	int igrid_min_size = int(floor(currSize) / 2);
 	int igrid_max_size = int(ceil(currSize) / 2);
-
+	
 #if 0
 	igrid_min_size /= 4;
 	igrid_max_size /= 4;
 #endif
-
+	
 	float translate = float(voxelGrid.getSize()) / 2;
 	float scale = float(voxelGrid.getSize()) / 2;
-
+	
 	math::Matrix4x4 mtranslate, mscale;
-	mtranslate.make_translation(math::Vector3(translate, translate, translate));
-	mscale.make_scaling(math::Vector3(scale, scale, scale));
+	mtranslate = math::Matrix4x4::translation(math::Vector3(translate, translate, translate));
+	mscale.makeScaling(math::Vector3(scale, scale, scale));
 	mrot *= mscale * mtranslate;
-
+	
 	float grid_size_rcp = 1.0f / (currSize / 2);
-
+	
 	Vector3 dx = Vector3(mrot._11, mrot._12, mrot._13) * grid_size_rcp;
 	Vector3 dy = Vector3(mrot._21, mrot._22, mrot._23) * grid_size_rcp;
 	Vector3 dz = Vector3(mrot._31, mrot._32, mrot._33) * grid_size_rcp;
-
+	
 	Vector3 pz(
 		float(-igrid_min_size) * grid_size_rcp,
 		float(-igrid_min_size) * grid_size_rcp,
 		float(-igrid_min_size) * grid_size_rcp
 		);
 	pz = math::mul(mrot, pz);
-
+	
 	int dx_x = int(dx.x * (1 << 24));
 	int dx_y = int(dx.y * (1 << 24));
 	int dx_z = int(dx.z * (1 << 24));
-
+	
 	// find the lowest and highest min/max values that can contribute to a result
 	int min_threshold = SCHAR_MIN;
 	int max_threshold  = SCHAR_MAX;
@@ -93,10 +94,11 @@ void VoxelMesh::fillGrid(math::Matrix4x4 mrot)
 		if (size > 0.0f) min_threshold = std::max(min_threshold, i);
 		if (size < 1.0f) max_threshold = std::min(max_threshold, i);
 	}
-
+	
+#pragma omp parallel for
 	for (int z = -igrid_min_size; z < igrid_max_size; ++z)
 	{
-		Vector3 py = pz;
+		Vector3 py = pz + dz * (z + igrid_min_size);
 		for (int y = -igrid_min_size; y < igrid_max_size; ++y)
 		{
 			int px_x = int(py.x * (1 << 24));
@@ -150,8 +152,9 @@ void VoxelMesh::fillGrid(math::Matrix4x4 mrot)
 			}
 			py += dy;
 		}
-		pz += dz;
+//		pz += dz;
 	}
+
 }
 
 size_t VoxelMesh::updateDynamicVertexBuffer(renderer::VertexBuffer &vb)
@@ -165,6 +168,7 @@ size_t VoxelMesh::updateDynamicVertexBuffer(renderer::VertexBuffer &vb)
 
 
 	BYTE *dst = (BYTE*)vb.lock(0, igrid_size * igrid_size * igrid_size * (4 * 3), 0);
+#pragma omp parallel for
 	for (int z = 0; z < igrid_size; ++z)
 	{
 		for (int y = 0; y < igrid_size; ++y)
@@ -196,56 +200,69 @@ size_t VoxelMesh::updateDynamicVertexBuffer(renderer::VertexBuffer &vb)
 					}
 				}
 
-				*dst++ = x; *dst++ = y; *dst++ = z;
-				*dst++ = size;
+				int sizes[6];
+				sizes[0] = z < igrid_size - 1 ? at(x, y, z+1) : 0; // +z
+				sizes[1] = z > 0 ?              at(x, y, z-1) : 0; // -z
 
-				/* neighbour info: 6 centers, 12 edges, 8 corners */
-				/* x = center, y = even edge, z = odd edge, w = */
-				/* tc0 - x y z w */
-				/* tc1 - x y z w */
-				/* tc2 - x y z w */
-				/* tc3 - x y z w */
-				/* tc4 - x y z w */
-				/* tc5 - x y z w */
-				/* tc6 - x y z w */
+				sizes[2] = y < igrid_size - 1 ? at(x, y+1, z) : 0; // +y
+				sizes[3] = y > 0 ?              at(x, y-1, z) : 0; // -y
 
-				/* fill in centre faces */
-				*dst++ = z < igrid_size - 1 ? at(x, y, z+1) : 0; // +z
-				*dst++ = z > 0 ?              at(x, y, z-1) : 0; // -z
+				sizes[4] = x < igrid_size - 1 ? at(x+1, y, z) : 0; // +x
+				sizes[5] = x > 0 ?              at(x-1, y, z) : 0; // -x
 
-				*dst++ = y < igrid_size - 1 ? at(x, y+1, z) : 0; // +y
-				*dst++ = y > 0 ?              at(x, y-1, z) : 0; // -y
+#pragma omp critical
+				{
 
-				*dst++ = x < igrid_size - 1 ? at(x+1, y, z) : 0; // +x
-				*dst++ = x > 0 ?              at(x-1, y, z) : 0; // -x
+					*dst++ = x; *dst++ = y; *dst++ = z;
+					*dst++ = size;
 
-#if 0
-				/* fill in edge faces */
-				// front layer (z+1)
-				*dst++ = (y < igrid_size - 1 && z < igrid_size - 1) ? grid[z+1][y+1][x] : 0; // +y +z
-				*dst++ = (y > 0              && z < igrid_size - 1) ? grid[z+1][y-1][x] : 0; // -y +z
-				*dst++ = (x < igrid_size - 1 && z < igrid_size - 1) ? grid[z+1][y][x+1] : 0; // +x +z
-				*dst++ = (x > 0              && z < igrid_size - 1) ? grid[z+1][y][x-1] : 0; // -x +z
+					/* neighbour info: 6 centers, 12 edges, 8 corners */
+					/* x = center, y = even edge, z = odd edge, w = */
+					/* tc0 - x y z w */
+					/* tc1 - x y z w */
+					/* tc2 - x y z w */
+					/* tc3 - x y z w */
+					/* tc4 - x y z w */
+					/* tc5 - x y z w */
+					/* tc6 - x y z w */
 
-				// middle layer (z)
-				*dst++ = (x > 0              && y > 0             ) ? grid[z][y-1][x-1] : 0; // -x -y
-				*dst++ = (x < igrid_size - 1 && y > 0             ) ? grid[z][y-1][x+1] : 0; // +x -y
-				*dst++ = (x > 0              && y < igrid_size - 1) ? grid[z][y+1][x-1] : 0; // -x +y
-				*dst++ = (x < igrid_size - 1 && y < igrid_size - 1) ? grid[z][y+1][x+1] : 0; // +x +y
+					/* fill in centre faces */
+					*dst++ = sizes[0];
+					*dst++ = sizes[1];
 
-				// bottom layer (z-1)
-				*dst++ = (y < igrid_size - 1 && z > 0             ) ? grid[z-1][y+1][x] : 0; // +y -z
-				*dst++ = (y > 0              && z > 0             ) ? grid[z-1][y-1][x] : 0; // -y -z
-				*dst++ = (x < igrid_size - 1 && z > 0             ) ? grid[z-1][y][x+1] : 0; // +x -z
-				*dst++ = (x > 0              && z > 0             ) ? grid[z-1][y][x-1] : 0; // -x -z
-#endif
+					*dst++ = sizes[2];
+					*dst++ = sizes[3];
 
-				/* fill in corners (?) */
+					*dst++ = sizes[4];
+					*dst++ = sizes[5];
 
-				*dst++ = 128;
-				*dst++ = 128;
+	#if 0
+					/* fill in edge faces */
+					// front layer (z+1)
+					*dst++ = (y < igrid_size - 1 && z < igrid_size - 1) ? grid[z+1][y+1][x] : 0; // +y +z
+					*dst++ = (y > 0              && z < igrid_size - 1) ? grid[z+1][y-1][x] : 0; // -y +z
+					*dst++ = (x < igrid_size - 1 && z < igrid_size - 1) ? grid[z+1][y][x+1] : 0; // +x +z
+					*dst++ = (x > 0              && z < igrid_size - 1) ? grid[z+1][y][x-1] : 0; // -x +z
 
-				cubes++;
+					// middle layer (z)
+					*dst++ = (x > 0              && y > 0             ) ? grid[z][y-1][x-1] : 0; // -x -y
+					*dst++ = (x < igrid_size - 1 && y > 0             ) ? grid[z][y-1][x+1] : 0; // +x -y
+					*dst++ = (x > 0              && y < igrid_size - 1) ? grid[z][y+1][x-1] : 0; // -x +y
+					*dst++ = (x < igrid_size - 1 && y < igrid_size - 1) ? grid[z][y+1][x+1] : 0; // +x +y
+
+					// bottom layer (z-1)
+					*dst++ = (y < igrid_size - 1 && z > 0             ) ? grid[z-1][y+1][x] : 0; // +y -z
+					*dst++ = (y > 0              && z > 0             ) ? grid[z-1][y-1][x] : 0; // -y -z
+					*dst++ = (x < igrid_size - 1 && z > 0             ) ? grid[z-1][y][x+1] : 0; // +x -z
+					*dst++ = (x > 0              && z > 0             ) ? grid[z-1][y][x-1] : 0; // -x -z
+	#endif
+
+					/* fill in corners (?) */
+
+					*dst++ = 128;
+					*dst++ = 128;
+					cubes++;
+				}
 			}
 		}
 	}

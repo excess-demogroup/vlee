@@ -91,12 +91,13 @@ VS_OUTPUT vertex(
 	return Out;
 }
 
-float4 pixel(VS_OUTPUT In) : COLOR
+float4x4 hatch_transform;
+float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 {
 //	float4 color = float4(In.uv,1,1);
-
+	
 	float front_dist = In.front_dist;
-
+	
 	float u = In.uv.x;
 	float v = In.uv.y;
 	
@@ -105,6 +106,10 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	float l = (In.light * ao) + (ao * 0.1);
 	
 	float4 color = float4(l, l, l, 1.0);
+	
+	float2 hatch = mul(vpos, hatch_transform);
+	float hatch_amt = frac(hatch.x + hatch.y) > 0.5 ? 0.0 : 1.0;
+	color.g += hatch_amt;
 	
 	return color;
 //	return lerp(color, float4(0,0,0,0), In.fog);
@@ -115,6 +120,6 @@ technique schvoi
 	pass P0
 	{
 		VertexShader = compile vs_2_0 vertex();
-		PixelShader  = compile ps_2_0 pixel();
+		PixelShader  = compile ps_3_0 pixel();
 	}
 }

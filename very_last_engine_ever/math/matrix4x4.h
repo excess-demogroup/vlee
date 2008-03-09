@@ -10,22 +10,51 @@ namespace math
 		Matrix4x4() {}
 		Matrix4x4(const Matrix4x4 &mat) : D3DXMATRIX(mat) { }
 		Matrix4x4(const D3DXMATRIX &mat) : D3DXMATRIX(mat) { }
-
-		void make_identity()
+		
+		static Matrix4x4 identity()
+		{
+			Matrix4x4 ret;
+			ret.makeIdentity();
+			return ret;
+		}
+		
+		static Matrix4x4 translation(const Vector3 &translate)
+		{
+			Matrix4x4 ret;
+			ret.makeTranslation(translate);
+			return ret;
+		}
+		
+		static Matrix4x4 rotation(const Vector3 &rotate)
+		{
+			Matrix4x4 ret;
+			ret.makeRotation(rotate);
+			return ret;
+		}
+		
+		static Matrix4x4 scaling(const Vector3 &scale)
+		{
+			Matrix4x4 ret;
+			ret.makeScaling(scale);
+			return ret;
+		}
+		
+		void makeIdentity()
 		{
 			D3DXMatrixIdentity(this);
 		}
-
-		void make_translation(const Vector3 &translate)
+		
+		void makeTranslation(const Vector3 &translate)
 		{
 			D3DXMatrixTranslation(this, translate.x, translate.y, translate.z);
 		}
-		void make_rotation(const Vector3 &rotation)
+		
+		void makeRotation(const Vector3 &rotation)
 		{
 			D3DXMatrixRotationYawPitchRoll(this, rotation.x, rotation.y, rotation.z);
 		}
 
-		void make_scaling(const Vector3 &scale)
+		void makeScaling(const Vector3 &scale)
 		{
 			D3DXMatrixScaling(this, scale.x, scale.y, scale.z);
 		}
@@ -39,10 +68,7 @@ namespace math
 		{
 			D3DXVECTOR3 up(0, 1, 0);
 			D3DXMatrixLookAtLH(this, &eye, &target, &up);
-
-			Matrix4x4 rollMatrix;
-			rollMatrix.make_rotation(Vector3(0, 0, roll));
-			*this *= rollMatrix;
+			*this *= rotation(Vector3(0, 0, roll));;
 		}
 	};
 

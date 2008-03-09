@@ -3,19 +3,17 @@
 		<prs_transform>
 			<position name="#pos" x="0.0" y="0.0" z="0.0" />
 			<children>
-				<target name="voxel" x="0.0" y="0.0" z="0.0" />
-				<mesh file="data/test.x" />
+				<target name="test" x="0.0" y="0.0" z="0.0" />
+				<mesh file="test.x" />
 			</children>
 		</prs_transform>
 		<prs_transform>
-			<position x="0.0" y="0.0" z="0.0" />
-<!--
+			<position x="0.0" y="0.0" z="10.0" />
 			<children>
-				<target_camera name="cam1" target="voxel">
+<!--				<target_camera name="cam1" target="voxel">
 					<fov name="#fov" value="100.0" />
-				</target_camera>
+				</target_camera> -->
 			</children>
--->
 		</prs_transform>
 	</children>
 </scene>

@@ -46,166 +46,20 @@ using engine::Effect;
 using engine::Image;
 using engine::Anim;
 
-#include "scenegraph/scene.h"
-#include "scenegraph/prstransform.h"
-#include "scenegraph/meshnode.h"
-#include "scenegraph/target.h"
-#include "tinyxml.h"
-
-using scenegraph::Node;
-using scenegraph::Scene;
-using scenegraph::PrsTransform;
-using scenegraph::MeshNode;
-
-static void loadChildren(renderer::Device &device, Node *graphNode, TiXmlElement *xmlElem);
-
-static float loadFloat(TiXmlElement *elem, const char *name, float default_val)
-{
-	const char *ret = elem->Attribute(name);
-	if (!ret) return default_val;
-	return float(atof(ret));
-}
-
-static std::string loadString(TiXmlElement *elem, const char *name, const std::string &defaultString = "")
-{
-	const char *ret = elem->Attribute(name);
-	if (NULL == ret) return defaultString;
-	return ret;
-}
-
-static math::Vector3 loadVector3(TiXmlNode* node)
-{
-	TiXmlElement *elem = node->ToElement();
-	assert(NULL != elem);
-	
-	return Vector3(
-		loadFloat(elem, "x", 0),
-		loadFloat(elem, "y", 0),
-		loadFloat(elem, "z", 0)
-	);
-}
-
-static Node *loadPrsTransform(renderer::Device &device, TiXmlElement *xmlElem)
-{
-	PrsTransform *ret = new PrsTransform(loadString(xmlElem, "name"));
-	
-	ret->setPosition(Vector3(0, 0, 0));
-	ret->setRotation(Vector3(0, 0, 0));
-	ret->setScale(Vector3(1, 1, 1));
-	
-	TiXmlNode* curr = xmlElem->FirstChild();
-	while (curr)
-	{
-		if (curr->Type() == TiXmlNode::ELEMENT)
-		{
-			TiXmlElement *currElem = curr->ToElement();
-			assert(NULL != currElem);
-			
-			if      (strcmp(curr->Value(), "position") == 0) ret->setPosition(loadVector3(currElem));
-			else if (strcmp(curr->Value(), "children") == 0) loadChildren(device, ret, currElem);
-			else throw std::string("unknown element \"") + curr->Value() + std::string("\"");
-		}
-		curr = xmlElem->IterateChildren(curr);
-	}
-	
-	return ret;
-}
-
-static Node *loadMesh(renderer::Device &device, TiXmlElement *xmlElem)
-{
-	std::string fileName = loadString(xmlElem, "file");
-	engine::loadMesh(device, fileName);
-	
-	MeshNode *ret = new scenegraph::MeshNode(loadString(xmlElem, "name"), NULL, NULL);
-	return ret;
-}
-
-static Node *loadTarget(TiXmlElement *xmlElem)
-{
-	scenegraph::Target *ret = new scenegraph::Target(loadString(xmlElem, "name"));
-	ret->setTarget(loadVector3(xmlElem));
-	
-	return ret;
-}
-
-static void loadChildren(renderer::Device &device, Node *graphNode, TiXmlElement *xmlElem)
-{
-	TiXmlNode* curr = xmlElem->FirstChild();
-	while (curr)
-	{
-		if (curr->Type() == TiXmlNode::ELEMENT)
-		{
-			TiXmlElement *currElem = curr->ToElement();
-			assert(NULL != currElem);
-			
-			Node *newChild = NULL;
-			if      (strcmp(curr->Value(), "prs_transform") == 0) newChild = loadPrsTransform(device, currElem);
-			else if (strcmp(curr->Value(), "mesh") == 0)          newChild = loadMesh(device, currElem);
-			else if (strcmp(curr->Value(), "target") == 0)        newChild = loadTarget(currElem);
-			else throw std::string("unknown element \"") + curr->Value() + std::string("\"");
-			
-			assert(NULL != newChild);
-			graphNode->addChild(newChild);
-		}
-		curr = xmlElem->IterateChildren(curr);
-	}
-}
-
-Scene *loadScene(renderer::Device &device, const std::string filename)
-{
-	Scene *scene = new Scene(filename);
-	TiXmlDocument doc;
-	try
-	{
-		if (!doc.LoadFile(filename.c_str()))
-		{
-			if (doc.ErrorRow() > 0)
-			{
-				char temp[256];
-				_snprintf(temp, 256, "error at line %d: %s", doc.ErrorRow(), doc.ErrorDesc());
-				throw std::string(temp);
-			}
-			else throw std::string(doc.ErrorDesc());
-		}
-		
-		TiXmlElement *xmlRoot = doc.RootElement();
-		if (strcmp(xmlRoot->Value(), "scene") != 0) throw std::string("invalid root node \"") + xmlRoot->Value() + std::string("\"");
-		
-		TiXmlNode* curr = xmlRoot->FirstChild();
-		while (curr)
-		{
-			if (curr->Type() == TiXmlNode::ELEMENT)
-			{
-				TiXmlElement *currElem = curr->ToElement();
-				assert(NULL != currElem);
-				
-				if      (strcmp(curr->Value(), "children") == 0) loadChildren(device, scene, currElem);
-				else throw std::string("unknown element \"") + curr->Value() + std::string("\"");
-			}
-			curr = xmlRoot->IterateChildren(curr);
-		}
-		
-		return scene;
-	}
-	catch (const std::string &str)
-	{
-		delete scene;
-		throw core::FatalException("Failed to load scene \"" + filename + "\":\n"+ str);
-	}
-}
+#include "scenegraph/sceneloader.h"
 
 Matrix4x4 radialblur_matrix(const Texture &tex, const Vector2 &center, const float amt = 1.01)
 {
 	Matrix4x4 trans1;
-	trans1.make_identity();
+	trans1.makeIdentity();
 	trans1._13 = 0.5f - center.x / 2;
 	trans1._23 = 0.5f - center.y / 2;
 	
 	Matrix4x4 mat;
-	mat.make_scaling(Vector3(amt, amt, 1));
+	mat.makeScaling(Vector3(amt, amt, 1));
 	
 	Matrix4x4 trans2;
-	trans2.make_identity();
+	trans2.makeIdentity();
 	trans2._13 = -(0.5f - center.x / 2);
 	trans2._23 = -(0.5f - center.y / 2);
 	
@@ -220,6 +74,8 @@ WTL::CAppModule _Module;
 
 using namespace core;
 using namespace scenegraph;
+
+using sync::Track;
 
 HWND win = 0;
 HSTREAM stream = 0;
@@ -265,7 +121,7 @@ void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_
 }
 
 #include "engine/vertexstreamer.h"
-void drawFuzz(Effect &effect, engine::VertexStreamer &streamer, double time, float scroll, float dist_amt)
+void drawFuzz(Effect &effect, engine::VertexStreamer &streamer, float time, float hardness, float xdist_amt, float ydist_amt)
 {
 	UINT passes;
 	effect->Begin(&passes, 0);
@@ -274,39 +130,43 @@ void drawFuzz(Effect &effect, engine::VertexStreamer &streamer, double time, flo
 		effect->BeginPass( pass );
 		const int SEGS = 235;
 		streamer.begin(D3DPT_TRIANGLELIST);
-		float last_offs = 0.f;
+		float last_xoffs = 0.f;
+		float last_yoffs = 0.f;
 		for (unsigned i = 0; i < SEGS; ++i)
 		{
 			float y1 = float(i) * (1.f / SEGS);
 			float y2 = y1 + (1.f / SEGS);
 			
-			float offs;
-			offs = (randf() - 0.5f) * 0.75f;
-			offs = offs + (last_offs - offs) * 0.95f;
-			offs += float(sin(y1 * 4 - time)) * 0.025f;
-			offs += float(sin(y1 * 1.5f - time)) * 0.025f;
-			offs *= float(1 + cos(y1 * 1.25f + time));
-			offs += (randf() - 0.5f) * 0.05f;
-			offs *= dist_amt / 2;
-			
-			streamer.uv(    D3DXVECTOR2(0.f + last_offs, 1 - y1 + scroll));
+			float xoffs = 0.0f;
+//			xoffs = (randf() - 0.5f) * 0.75f;
+			xoffs += sinf(y1 * float(M_PI) + time);
+			xoffs += sinf(y1 * 4.2f * float(M_PI) + time) * 0.5f;
+			xoffs += fmod(tan(cos(y1) * 18.7f * float(M_PI) + time), 0.9f) * 0.25f * hardness;
+			xoffs *= 0.05f * xdist_amt;
+
+			float yoffs = 0.0f;
+			yoffs += fmodf(tanf(y1 * float(M_PI) * 4 + time), 0.9f) * hardness;
+			yoffs *= 0.05f * ydist_amt;
+
+			streamer.uv(    D3DXVECTOR2(0.f + last_xoffs, 1 - y1 + last_yoffs));
 			streamer.vertex(D3DXVECTOR3(-1, (y1 * 2) - 1, 0));
 			
-			streamer.uv(    D3DXVECTOR2( 0.f + offs, 1 - y2 + scroll));
+			streamer.uv(    D3DXVECTOR2( 0.f + xoffs, 1 - y2 + yoffs));
 			streamer.vertex(D3DXVECTOR3(-1, (y2 * 2) - 1, 0));
 			
-			streamer.uv(    D3DXVECTOR2( 1.f + offs, 1 - y2 + scroll));
+			streamer.uv(    D3DXVECTOR2( 1.f + xoffs, 1 - y2 + yoffs));
 			streamer.vertex(D3DXVECTOR3( 1, (y2 * 2) - 1, 0));
 			
-			streamer.uv(    D3DXVECTOR2( 0 + last_offs, 1 - y1 + scroll));
+			streamer.uv(    D3DXVECTOR2( 0 + last_xoffs, 1 - y1 + last_yoffs));
 			streamer.vertex(D3DXVECTOR3(-1, (y1 * 2) - 1, 0));
 			
-			streamer.uv(    D3DXVECTOR2( 1 + offs, 1 - y2 + scroll));
+			streamer.uv(    D3DXVECTOR2( 1 + xoffs, 1 - y2 + yoffs));
 			streamer.vertex(D3DXVECTOR3( 1, (y2 * 2) - 1, 0));
 			
-			streamer.uv(    D3DXVECTOR2( 1 + last_offs, 1 - y1 + scroll));
+			streamer.uv(    D3DXVECTOR2( 1 + last_xoffs, 1 - y1 + last_yoffs));
 			streamer.vertex(D3DXVECTOR3( 1, (y1 * 2) - 1, 0));
-			last_offs = offs;
+			last_xoffs = xoffs;
+			last_yoffs = yoffs;
 		}
 		streamer.end();
 		effect->EndPass();
@@ -316,7 +176,7 @@ void drawFuzz(Effect &effect, engine::VertexStreamer &streamer, double time, flo
 
 int main(int /*argc*/, char* /*argv*/ [])
 {
-#ifndef NDEBUG
+#ifdef _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
 	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
@@ -348,21 +208,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 			}
 		}
 #endif
-
+		
 		if (FAILED(direct3d->CheckDeviceFormat(config.getAdapter(), DEVTYPE, config.getMode().Format, D3DUSAGE_QUERY_FILTER, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F)))
 		{
 			MessageBox(NULL, "Selected mode does not support FP16 texture-filtering, demo will look crap.", "visual quality warning", MB_OK | MB_ICONWARNING);
 		}
-
+		
 		if (FAILED(direct3d->CheckDeviceFormat(config.getAdapter(), DEVTYPE, config.getMode().Format, D3DUSAGE_QUERY_POSTPIXELSHADER_BLENDING, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F)))
 		{
 			MessageBox(NULL, "Selected mode does not support FP16 blending, demo will look crap.", "visual quality warning", MB_OK | MB_ICONWARNING);
 		}
-/*
-		{
-			MessageBox(NULL, "Selected mode does not support FP16 blending, demo will look crap.", "visual quality warning", MB_OK | MB_ICONWARNING);
-		}
-*/
+		
 		/* create window */
 		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, config.getWidth(), config.getHeight(), 0, 0, GetModuleHandle(0), 0);
 		if (!win) throw FatalException("CreateWindow() failed. something is VERY spooky.");
@@ -382,69 +238,53 @@ int main(int /*argc*/, char* /*argv*/ [])
 		makeLetterboxViewport(&letterbox_viewport, config.getWidth(), config.getHeight(), config.getAspect(), float(DEMO_ASPECT));
 		
 		/* setup sound-playback */
-//		if (!BASS_Init(config.getSoundcard(), 44100, BASS_DEVICE_LATENCY, 0, 0)) throw FatalException("failed to init bass");
 		if (!BASS_Init(config.getSoundcard(), 44100, 0, 0, 0)) throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/glitch.ogg", 0, 0, BASS_MP3_SETPOS | ((0 == config.getSoundcard()) ? BASS_STREAM_DECODE : 0));
+		stream = BASS_StreamCreateFile(false, "data/soundtrack.ogg", 0, 0, BASS_MP3_SETPOS | ((0 == config.getSoundcard()) ? BASS_STREAM_DECODE : 0));
 		if (!stream) throw FatalException("failed to open tune");
 		
 		// setup timer and construct sync-device
 		BassTimer synctimer(stream, BPM, 4);
-
-		std::auto_ptr<sync::Device> syncDevice = std::auto_ptr<sync::Device>(sync::createDevice("data/sync_", synctimer));
+		
+		std::auto_ptr<sync::Device> syncDevice = std::auto_ptr<sync::Device>(sync::createDevice("data/sync", synctimer));
 		if (NULL == syncDevice.get()) throw FatalException("something went wrong - failed to connect to host?");
-
-		sync::Track &cameraDistanceTrack = syncDevice->getTrack("distance");
-		sync::Track &cameraRollTrack     = syncDevice->getTrack("roll");
-		sync::Track &cameraYRotTrack     = syncDevice->getTrack("y-rot");
-		sync::Track &cameraUpTrack     = syncDevice->getTrack("up");
-		sync::Track &cameraShakeAmtTrack     = syncDevice->getTrack("shake amt");
-		sync::Track &cameraShakeTempoTrack     = syncDevice->getTrack("shake tempo");
-
-		sync::Track &colorMapBlendTrack  = syncDevice->getTrack("cm.blend");
-		sync::Track &colorMapPalTrack    = syncDevice->getTrack("cm.pal");
-		sync::Track &colorMapFadeTrack   = syncDevice->getTrack("cm.fade");
-		sync::Track &colorMapFlashTrack  = syncDevice->getTrack("cm.flash");
-
-		sync::Track &noiseAmtTrack  = syncDevice->getTrack("amt");
-		sync::Track &noiseFFTTrack  = syncDevice->getTrack("fft");
-
-		sync::Track &jellyAmtX = syncDevice->getTrack("amt_x");
-		sync::Track &jellyAmtY = syncDevice->getTrack("amt_y");
-		sync::Track &jellyAmtZ = syncDevice->getTrack("amt_z");
-
-		sync::Track &jellyScaleX = syncDevice->getTrack("scale_x");
-		sync::Track &jellyScaleY = syncDevice->getTrack("scale_y");
-		sync::Track &jellyScaleZ = syncDevice->getTrack("scale_z");
-
-		sync::Track &jellySwimTrack = syncDevice->getTrack("swim");
-
-		sync::Track &textAlpha1Track = syncDevice->getTrack("alpha1");
-		sync::Track &textAlpha2Track = syncDevice->getTrack("alpha2");
-		sync::Track &textBlink1Track = syncDevice->getTrack("blink1");
-		sync::Track &textBlink2Track = syncDevice->getTrack("blink2");
-
+		
+		Track &cameraDistanceTrack = syncDevice->getTrack("cam.dist");
+		Track &cameraRollTrack     = syncDevice->getTrack("cam.roll");
+		Track &cameraYRotTrack     = syncDevice->getTrack("cam.y-rot");
+		Track &cameraUpTrack     = syncDevice->getTrack("cam.up");
+		Track &cameraShakeAmtTrack     = syncDevice->getTrack("cam.shake.amt");
+		Track &cameraShakeTempoTrack     = syncDevice->getTrack("cam.shake.tempo");
+		
+		Track &colorMapBlendTrack  = syncDevice->getTrack("cm.blend");
+		Track &colorMapPalTrack    = syncDevice->getTrack("cm.pal");
+		Track &colorMapFadeTrack   = syncDevice->getTrack("cm.fade");
+		Track &colorMapFlashTrack  = syncDevice->getTrack("cm.flash");
+		
+		Track &noiseAmtTrack  = syncDevice->getTrack("noise.amt");
+		Track &noiseFFTTrack  = syncDevice->getTrack("noise.fft");
+		
 		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
-
+		
 		Surface backbuffer   = device.getRenderTarget(0);
 		Surface depthstencil = device.getDepthStencilSurface();
 		
 		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8, config.getMultisample());
 		Surface depthstencil_msaa = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8, config.getMultisample());
-
+		
 		/** DEMO ***/
-
+		
 		RenderTexture color1_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
 		RenderTexture color2_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
 		
 		engine::VertexStreamer vertex_streamer(device);
-		scenegraph::Scene *testScene = loadScene(device, "data/test.scene");
+		scenegraph::Scene *testScene = scenegraph::loadScene(device, "data/test.scene");
 		
 //		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE);
 //		RenderTexture rt2(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
 //		RenderTexture rt3(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
 		
 		Matrix4x4 tex_transform;
-		tex_transform.make_identity();
+		tex_transform.makeIdentity();
 		Effect tex_fx      = engine::loadEffect(device, "data/tex.fx");
 		tex_fx->SetMatrix("transform", &tex_transform);
 		Effect blur_fx     = engine::loadEffect(device, "data/blur.fx");
@@ -465,11 +305,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 		color_maps[1] = engine::loadTexture(device, "data/color_map1.png");
 		color_map_fx->SetFloat("texel_width", 1.0f / color_msaa.getWidth());
 		color_map_fx->SetFloat("texel_height", 1.0f / color_msaa.getHeight());
-
+		
 		Effect cubegrid_fx = engine::loadEffect(device, "data/cubegrid.fx");
 		renderer::VolumeTexture front_tex = engine::loadVolumeTexture(device, "data/front.dds");
 		cubegrid_fx->SetTexture("front_tex", front_tex);
-
+		
 		engine::VoxelGrid voxelGrid = engine::loadVoxelGrid("data/duck.voxel");
 		engine::VoxelMesh voxelMesh(device, cubegrid_fx, voxelGrid, 64);
 		
@@ -519,43 +359,29 @@ int main(int /*argc*/, char* /*argv*/ [])
 					)
 				);
 		}
-
-
+		
 		Image scanlinesImage(engine::loadTexture(device, "data/scanlines.png"), tex_fx);
-
+		
 		renderer::CubeTexture cubemap_tex = engine::loadCubeTexture(device, "data/stpeters_cross3.dds");
 /*
 		Effect test_fx = engine::loadEffect(device, "data/test.fx");
 		test_fx->SetTexture("env", cube);
 */
-		Effect jellyfish_fx = engine::loadEffect(device, "data/jellyfish.fx");
-		jellyfish_fx->SetTexture("reflectionMap", cubemap_tex);
-		Mesh sphere_x       = engine::loadMesh(device, "data/sphere2.x");
-
 		Effect skybox_fx = engine::loadEffect(device, "data/skybox.fx");
 		skybox_fx->SetTexture("reflectionMap", cubemap_tex);
 		Mesh cube_x         = engine::loadMesh(device, "data/cube.X");
-
+		
 		Effect text_fx              = engine::loadEffect(device, "data/text.fx");
 		Texture excess_outline_tex = engine::loadTexture(device, "data/excess_outline.dds");
 		Texture demotitle_tex      = engine::loadTexture(device, "data/demotitle.dds");
-
+		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 20.0f));
-
-
-#ifdef SYNC
-//		sync.showEditor();
-#endif
-
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f));
+		
 		bool done = false;
 		while (!done)
 		{
-#ifndef VJSYS
-//			if (!sync.doEvents()) done = true;
-#endif
-
 #ifdef DUMP_VIDEO
 			static int frame = 0;
 			BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, float(frame) / VIDEO_DUMP_FRAMERATE));
@@ -604,55 +430,21 @@ int main(int /*argc*/, char* /*argv*/ [])
 			) * 0.05f * camera_distance * (cameraShakeAmtTrack.getValue(beat) / 256);
 
 			Matrix4x4 world;
-			world.make_identity();
+			world.makeIdentity();
 
 			Matrix4x4 view;
 			view.makeLookAt(eye + at, at, roll);
 			Matrix4x4 proj;
 			proj.make_projection(60.0f, float(DEMO_ASPECT), 0.1f, 1000.f);
 			
-			jellyfish_fx.setVector3("amt", Vector3(
-				jellyAmtX.getValue(beat) / 256,
-				jellyAmtY.getValue(beat) / 256,
-				jellyAmtZ.getValue(beat) / 256)
-			);
-			jellyfish_fx.setVector3("scale", Vector3(
-				jellyScaleX.getValue(beat) / 256,
-				jellyScaleY.getValue(beat) / 256,
-				jellyScaleZ.getValue(beat) / 256)
-			);
-			jellyfish_fx.setVector3("phase", Vector3(
-				time,
-				time * 2,
-				time * 10)
-			);
-			jellyfish_fx->SetFloat("time", time);
-			jellyfish_fx.setVector3("vViewPosition", eye + at);
-			jellyfish_fx.setMatrices(world, view, proj);
-
 			skybox_fx.setMatrices(world, view, proj);
-
 			
-			int blink1_val = (int)textBlink1Track.getValue(beat);
-			float blink1 = 1.0f;
-			if (blink1_val != 0) blink1 = math::frac(time * blink1_val) > 0.5f ? 1.0f : 0.0f;
-
-			int blink2_val = (int)textBlink2Track.getValue(beat);
-			float blink2 = 1.0f;
-			if (blink2_val != 0) blink2 = math::frac(time * blink2_val) > 0.5f ? 1.0f : 0.0f;
-			
-			text_fx->SetFloat("alpha1", (textAlpha1Track.getValue(beat) / 256) * blink1);
-			text_fx->SetFloat("alpha2", (textAlpha2Track.getValue(beat) / 256) * blink2);
-			text_fx->SetTexture("excess", excess_outline_tex);
-			text_fx->SetTexture("demotitle", demotitle_tex);
-			text_fx.setMatrices(world, view, proj);
-
 			voxelMesh.setSize((1.5f + sin(time / 8)) * 32);
 			float grid_size = voxelMesh.getSize();
 			Matrix4x4 mrot;
-			mrot.make_rotation(Vector3(float(-M_PI / 2), float(M_PI - sin(time / 5)), float(M_PI + time / 3)));
+			mrot.makeRotation(Vector3(float(-M_PI / 2), float(M_PI - sin(time / 5)), float(M_PI + time / 3)));
 			Matrix4x4 mscale;
-			mscale.make_scaling(Vector3(0.75f, 0.75f, 0.75f));
+			mscale.makeScaling(Vector3(0.75f, 0.75f, 0.75f));
 			voxelMesh.update(mrot * mscale);
 
 			for (int i = 0; i < 2; ++i)
@@ -662,24 +454,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 				
 
-//				jellyfish_fx.draw(sphere_x);
-
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
 				skybox_fx.draw(cube_x);
-
-
-//				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-				device->SetRenderState(D3DRS_ZWRITEENABLE, false);
-				engine::drawQuad(device, text_fx, -45, -45, 90, 90);
-				device->SetRenderState(D3DRS_ZWRITEENABLE, true);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-
-
 
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
@@ -688,15 +464,49 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 				//			time /= 4;
 
-#if 0
+#if 1
 				Matrix4x4 mscale2;
-				mscale2.make_scaling(Vector3(10.0f / grid_size, 10.0f / grid_size, 10.0f / grid_size));
-
+				mscale2.makeScaling(Vector3(10.0f / grid_size, 10.0f / grid_size, 10.0f / grid_size));
+				
 				// center object
 				Vector3 pos = Vector3(floor(grid_size / 2), floor(grid_size / 2), floor(grid_size / 2));
-				world.make_translation(-pos);
+				world = math::Matrix4x4::translation(-pos);
 				cubegrid_fx.setMatrices(world * mscale2, view, proj);
+				
+				float planearray[4];
+				Matrix4x4 hatchTransform;
+				
+				planearray[0] = sin(time);
+				planearray[1] = cos(time);
+				planearray[2] = 0;
+				planearray[3] = 0;
+				device->SetClipPlane(0, planearray);
+				hatchTransform = Matrix4x4::scaling(Vector3(
+					25.0f / device.getRenderTarget().getDesc().Width,
+					25.0f / device.getRenderTarget().getDesc().Width,
+					1)
+				);
+				cubegrid_fx.setMatrix("hatch_transform", hatchTransform);
+				cubegrid_fx->CommitChanges();
+				
+				device->SetRenderState( D3DRS_CLIPPLANEENABLE, D3DCLIPPLANE0 );
 				voxelMesh.draw(device);
+				
+				planearray[0] *= -1;
+				planearray[1] *= -1;
+				planearray[2] *= -1;
+				device->SetClipPlane(0, planearray);
+				
+				hatchTransform = Matrix4x4::scaling(Vector3(
+					15.0f / device.getRenderTarget().getDesc().Width,
+					15.0f / device.getRenderTarget().getDesc().Width,
+					1)
+					) * Matrix4x4::rotation(Vector3(0, 0, M_PI / 2));
+				cubegrid_fx.setMatrix("hatch_transform", hatchTransform);
+				cubegrid_fx->CommitChanges();
+				
+				voxelMesh.draw(device);
+				device->SetRenderState( D3DRS_CLIPPLANEENABLE, 0 );
 #else
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 				text_fx.setMatrices(world, view, proj);
@@ -724,12 +534,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 				text_fx->End();
 #endif
 
-#if 1
+#if 0
 				/* particles */
 				float particleScroll = 0.0f; // -jellySwimTrack.getValue(beat) / (10 * 256);
 				for (int i = 0; i < 1; ++i)
 				{
-					world.make_translation(Vector3(0, (math::frac(particleScroll) - i) * 150, 0));
+					world = math::Matrix4x4::translation(Vector3(0, (math::frac(particleScroll) - i) * 150, 0));
 					Matrix4x4 modelview = world * view;
 					cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
 					
@@ -800,7 +610,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				device.setDepthStencilSurface(depthstencil);
 			}
 #if 1
-			world.make_identity();
+			world.makeIdentity();
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 //			device->SetRenderState(D3DRS_ZWRITEENABLE, false);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
@@ -824,10 +634,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 					dir_vec[0] = cosf(dir) * (float(1 << i) / current_tex.getWidth());
 					dir_vec[1] = sinf(dir) * (float(1 << i) / current_tex.getWidth());
 					dir_vec[0] *= 3.f / 4.f;
-
+					
 					blur_fx->SetFloatArray("dir", dir_vec, 2);
 					blur_fx->SetTexture("blur_tex", current_tex);
-
+					
 					drawQuad(
 						device, blur_fx,
 						-1.0f, -1.0f,
@@ -838,7 +648,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				}
 			}
 #endif
-
+			
 			/* letterbox */
 			device.setRenderTarget(backbuffer);
 			device->SetDepthStencilSurface(NULL);
@@ -858,9 +668,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_image.setDimension(2, 2);
 			
 			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
-			color_image.draw(device);
+//			color_image.draw(device);
+			drawFuzz(color_map_fx, vertex_streamer,  time, 1.0f, 1.0f, 0.5f);
 			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
-			drawFuzz(color_map_fx, vertex_streamer, time, 0.0f, 1.0f);
+			drawFuzz(color_map_fx, vertex_streamer, -time, 0.0f, 0.25f, 0.0f);
 			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED | D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
 			
 			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
