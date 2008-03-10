@@ -298,6 +298,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect noise_fx = engine::loadEffect(device, "data/noise.fx");
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
 		
+		Texture desaturate_tex = engine::loadTexture(device, "data/desaturate.png");
 		Effect color_map_fx = engine::loadEffect(device, "data/color_map.fx");
 		Image color_image(color1_hdr, color_map_fx);
 //		Image color_image(color_msaa, color_map_fx);
@@ -617,7 +618,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 //			device->SetRenderState(D3DRS_ZWRITEENABLE, false);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 
-			blur_fx->SetFloat("sub", 0.5f);
+			blur_fx->SetFloat("sub", 0.0f);
 			RenderTexture render_textures[2] = { color1_hdr, color2_hdr };
 			int rtIndex = 0;
 			for (int i = 0; i < 3; i++)
@@ -663,8 +664,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->SetFloat("flash", pow(colorMapFlashTrack.getValue(beat), 2.0f));
 			color_map_fx->SetFloat("fade2", colorMapFadeTrack.getValue(beat));
 			color_map_fx->SetFloat("alpha", 0.25f);
+			color_map_fx->SetTexture("tex", color2_hdr);
 			color_map_fx->SetTexture("tex2", color_msaa);
 			color_map_fx->SetTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
+			color_map_fx->SetTexture("desaturate", desaturate_tex);
 			
 			color_image.setPosition(-1, -1);
 			color_image.setDimension(2, 2);

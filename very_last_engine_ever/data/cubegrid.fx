@@ -107,9 +107,9 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 	
 	float4 color = float4(l, l, l, 1.0);
 	
-	float2 hatch = mul(vpos, hatch_transform);
+/*	float2 hatch = mul(vpos, hatch_transform);
 	float hatch_amt = frac(hatch.x + hatch.y) > 0.5 ? 0.0 : 1.0;
-	color.g += hatch_amt;
+	color.g += hatch_amt; */
 	
 	return color;
 //	return lerp(color, float4(0,0,0,0), In.fog);

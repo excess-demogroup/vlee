@@ -14,6 +14,7 @@
 #include <windows.h>
 #include <shellapi.h>
 #include <mmsystem.h>
+#include <omp.h>
 
 #ifndef NDEBUG
 #define CRTDBG_MAP_ALLOC

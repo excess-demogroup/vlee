@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "voxelmesh.h"
 #include "../math/vector3.h"
-#include <omp.h>
 
 using namespace engine;
 using math::Vector3;

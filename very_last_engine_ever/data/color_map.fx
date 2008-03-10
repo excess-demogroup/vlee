@@ -41,6 +41,18 @@ sampler tex2_sampler = sampler_state
 	AddressV = CLAMP;
 };
 
+texture desaturate;
+sampler desaturate_sampler = sampler_state
+{
+	Texture = (desaturate);
+	MipFilter = NONE;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+};
+
 
 sampler color_map_sampler = sampler_state
 {
@@ -108,9 +120,17 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	
 	/* lookup in palette */
 	float lum = luminance(color.rgb);
-	float4 pal_color = tex2D(color_map_sampler, lum);
+//	float lum = (color.r + color.g + color.b) / 3;
 	
-	return (lerp(color, pal_color, fade) + flash) * fade2;
+	float pal_sel = tex2D(desaturate_sampler, In.tex);
+//	float pal_sel = 1 - length(In.tex - 0.5) * 1.5;
+	
+	float3 pal_color = tex2D(color_map_sampler, float2(lum, pal_sel)).rgb;
+	color.rgb = lerp(color.rgb, pal_color, fade);
+
+//	float3 delta = color - lum;
+//	color.rgb += delta * pal_sel;
+	return color + flash;
 }
 
 technique blur_ps_vs_2_0
