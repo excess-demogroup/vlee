@@ -130,7 +130,7 @@ float4 pixel(VS_OUTPUT In) : COLOR
 
 //	float3 delta = color - lum;
 //	color.rgb += delta * pal_sel;
-	return color + flash;
+	return color * fade2 + flash;
 }
 
 technique blur_ps_vs_2_0
