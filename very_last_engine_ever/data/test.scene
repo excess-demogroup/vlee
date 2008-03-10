@@ -10,9 +10,12 @@
 		<prs_transform>
 			<position x="0.0" y="0.0" z="10.0" />
 			<children>
-<!--				<target_camera name="cam1" target="voxel">
-					<fov name="#fov" value="100.0" />
-				</target_camera> -->
+<!--			<look_at_transform target="voxel" roll="0.0">
+					<camera name="cam1">
+						<fov name="#fov" value="100.0" />
+					</camera> 
+				</look_at_transform>
+				-->
 			</children>
 		</prs_transform>
 	</children>
