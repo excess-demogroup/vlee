@@ -259,6 +259,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &colorMapPalTrack    = syncDevice->getTrack("cm.pal");
 		Track &colorMapFadeTrack   = syncDevice->getTrack("cm.fade");
 		Track &colorMapFlashTrack  = syncDevice->getTrack("cm.flash");
+		Track &colorMapDistortXTrack  = syncDevice->getTrack("cm.dist.x");
+		Track &colorMapDistortYTrack  = syncDevice->getTrack("cm.dist.y");
 		
 		Track &noiseAmtTrack  = syncDevice->getTrack("noise.amt");
 		Track &noiseFFTTrack  = syncDevice->getTrack("noise.fft");
@@ -408,26 +410,26 @@ int main(int /*argc*/, char* /*argv*/ [])
 			D3DXCOLOR clear_color(0.45f, 0.25f, 0.25f, 0.f);
 //			D3DXCOLOR clear_color(spectrum[0] * 1.5f, 0.f, 0.f, 0.f);
 
-			float roll = cameraRollTrack.getValue(beat) / 256;
+			float roll = cameraRollTrack.getValue(beat);
 			roll *= float(2 * M_PI);
-			float yRot = cameraYRotTrack.getValue(beat) / 256;
+			float yRot = cameraYRotTrack.getValue(beat);
 			Vector3 up(float(sin(roll)), float(cos(roll)), 0.f);
 			Vector3 eye(
 				float(sin(yRot)),
-				float(cameraUpTrack.getValue(beat) / 256),
+				float(cameraUpTrack.getValue(beat)),
 				float(cos(yRot))
 			);
 			eye = normalize(eye);
 
-			float camera_distance = 60 * (cameraDistanceTrack.getValue(beat) / 256);
+			float camera_distance = 60 * (cameraDistanceTrack.getValue(beat));
 			eye *= camera_distance;
-			float shake_time = time * 0.125f * (cameraShakeTempoTrack.getValue(beat) / 256);
+			float shake_time = time * 0.125f * (cameraShakeTempoTrack.getValue(beat));
 			Vector3 at(0, 0, 0);
 			at += Vector3(
 				pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
 				pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
 				pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
-			) * 0.05f * camera_distance * (cameraShakeAmtTrack.getValue(beat) / 256);
+			) * 0.05f * camera_distance * (cameraShakeAmtTrack.getValue(beat));
 
 			Matrix4x4 world;
 			world.makeIdentity();
@@ -657,9 +659,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			color_msaa.resolve(device);
 			
-			color_map_fx->SetFloat("fade", colorMapBlendTrack.getValue(beat) * (1.f / 256));
-			color_map_fx->SetFloat("flash", pow(colorMapFlashTrack.getValue(beat) / 256, 2.0f));
-			color_map_fx->SetFloat("fade2", colorMapFadeTrack.getValue(beat) / 256);
+			color_map_fx->SetFloat("fade", colorMapBlendTrack.getValue(beat));
+			color_map_fx->SetFloat("flash", pow(colorMapFlashTrack.getValue(beat), 2.0f));
+			color_map_fx->SetFloat("fade2", colorMapFadeTrack.getValue(beat));
 			color_map_fx->SetFloat("alpha", 0.25f);
 			color_map_fx->SetTexture("tex2", color_msaa);
 			color_map_fx->SetTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
@@ -669,9 +671,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
 //			color_image.draw(device);
-			drawFuzz(color_map_fx, vertex_streamer,  time, 1.0f, 1.0f, 0.5f);
+			drawFuzz(color_map_fx, vertex_streamer,  time, 1.0f, colorMapDistortXTrack.getValue(beat), colorMapDistortYTrack.getValue(beat));
 			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
-			drawFuzz(color_map_fx, vertex_streamer, -time, 0.0f, 0.25f, 0.0f);
+			drawFuzz(color_map_fx, vertex_streamer, -time, 0.0f, colorMapDistortXTrack.getValue(beat), 0.0f);
 			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED | D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
 			
 			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
@@ -680,7 +682,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			/* draw noise */
 			
-			noise_fx->SetFloat("alpha", (noiseAmtTrack.getValue(beat) + noiseFFTTrack.getValue(beat) * noise_fft.getValue(beat)) / 256 );
+			noise_fx->SetFloat("alpha", (noiseAmtTrack.getValue(beat) + noiseFFTTrack.getValue(beat) * noise_fft.getValue(beat)));
 			noise_fx->SetTexture("tex", noise_tex);
 			drawQuad(
 				device, noise_fx,
