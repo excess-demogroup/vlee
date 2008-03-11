@@ -174,6 +174,20 @@ void drawFuzz(Effect &effect, engine::VertexStreamer &streamer, float time, floa
 	effect->End();
 }
 
+Surface loadSurface(renderer::Device &device, std::string fileName)
+{
+	D3DXIMAGE_INFO srcInfo;
+	core::d3dErr(D3DXGetImageInfoFromFile(fileName.c_str(), &srcInfo));
+	
+	IDirect3DSurface9 *surface = NULL;
+	core::d3dErr(device->CreateOffscreenPlainSurface(srcInfo.Width, srcInfo.Height, D3DFMT_A8R8G8B8, D3DPOOL_SCRATCH, &surface, NULL));
+	core::d3dErr(D3DXLoadSurfaceFromFile(surface, NULL, NULL, fileName.c_str(), NULL, D3DX_FILTER_NONE, NULL, NULL));
+	
+	Surface surface_wrapper;
+	surface_wrapper.Attach(surface);
+	return surface_wrapper;
+}
+
 int main(int /*argc*/, char* /*argv*/ [])
 {
 #ifdef _DEBUG
@@ -374,9 +388,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 		skybox_fx->SetTexture("reflectionMap", cubemap_tex);
 		Mesh cube_x         = engine::loadMesh(device, "data/cube.X");
 		
-		Effect text_fx              = engine::loadEffect(device, "data/text.fx");
+		Effect tex_trans_fx              = engine::loadEffect(device, "data/tex_trans.fx");
 		Texture excess_outline_tex = engine::loadTexture(device, "data/excess_outline.dds");
 		Texture demotitle_tex      = engine::loadTexture(device, "data/demotitle.dds");
+
+		Surface logo_surf = loadSurface(device, "data/logo.png");
+		Texture bar_tex = engine::loadTexture(device, "data/bar.png");
+
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -493,7 +511,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				cubegrid_fx->CommitChanges();
 				
 				device->SetRenderState( D3DRS_CLIPPLANEENABLE, D3DCLIPPLANE0 );
-				voxelMesh.draw(device);
+//				voxelMesh.draw(device);
 				
 				planearray[0] *= -1;
 				planearray[1] *= -1;
@@ -508,7 +526,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				cubegrid_fx.setMatrix("hatch_transform", hatchTransform);
 				cubegrid_fx->CommitChanges();
 				
-				voxelMesh.draw(device);
+//				voxelMesh.draw(device);
 				device->SetRenderState( D3DRS_CLIPPLANEENABLE, 0 );
 #else
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
@@ -537,7 +555,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				text_fx->End();
 #endif
 
-#if 0
+#if 1
 				/* particles */
 				float particleScroll = 0.0f; // -jellySwimTrack.getValue(beat) / (10 * 256);
 				for (int i = 0; i < 1; ++i)
@@ -605,6 +623,38 @@ int main(int /*argc*/, char* /*argv*/ [])
 						particle_fx.draw(streamer);
 					}
 				}
+				D3DLOCKED_RECT rect;
+				if (!FAILED(logo_surf->LockRect(&rect, NULL, D3DLOCK_READONLY)))
+				{
+					tex_trans_fx->SetTexture("tex", bar_tex);
+					tex_trans_fx->SetFloat("alpha", 1.0f);
+
+					unsigned int *data = (unsigned int*)rect.pBits;
+					for (size_t y = 0; y < logo_surf.getDesc().Height; ++y)
+					{
+						for (size_t x = 0; x < logo_surf.getDesc().Width; ++x)
+						{
+							unsigned int color = ((unsigned int*)((char*)rect.pBits + rect.Pitch * y))[x];
+							if ((color & 0xFFFFFF) != 0)
+							{
+								tex_trans_fx.setMatrices(
+									Matrix4x4::translation(Vector3(x * 0.1f, y * -0.1f + 3 / std::max((int(y) - 10) + time * 4, 0.0f), 0)) *
+									Matrix4x4::rotation(Vector3(cos(time - x * 0.1) / (time + 1), sin(time + y * 0.15) / (time + 1), 0)) * 
+									Matrix4x4::translation(Vector3(0, 0, 4 - 4 / (time + 1))),
+									view,
+									proj);
+								drawQuad(
+									device, tex_trans_fx,
+									-0.2f, 0.1f,
+									0.2f, -0.1f,
+									0, 0
+									);
+							}
+						}
+					}
+					logo_surf->UnlockRect();
+				}
+
 				device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 #endif
@@ -698,6 +748,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			scanlinesImage.setPosition(-1, -1);
 			scanlinesImage.setDimension(2, 2);
 			scanlinesImage.draw(device);
+
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			
 			device->EndScene(); /* WE DONE IS! */

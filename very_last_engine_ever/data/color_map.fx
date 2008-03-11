@@ -125,11 +125,11 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	float pal_sel = tex2D(desaturate_sampler, In.tex);
 //	float pal_sel = 1 - length(In.tex - 0.5) * 1.5;
 	
-	float3 pal_color = tex2D(color_map_sampler, float2(lum, pal_sel)).rgb;
+	float3 pal_color = tex2D(color_map_sampler, float2(lum, 1.0 * pal_sel)).rgb;
 	color.rgb = lerp(color.rgb, pal_color, fade);
-
+	
 //	float3 delta = color - lum;
-//	color.rgb += delta * pal_sel;
+//	color.rgb += delta * (1-pal_sel);
 	return color * fade2 + flash;
 }
 
