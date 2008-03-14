@@ -41,7 +41,7 @@ void Explosion::draw(engine::Effect &effect, int time) {
 
 void Explosion::updateGraphics(int time) {
 	ExplosionVertex* data = NULL;
-	data = (ExplosionVertex*) vb.lock(0, sizeof(ExplosionVertex) * EXPLOSION_BUFFER_SIZE, D3DLOCK_DISCARD);
+	data = (ExplosionVertex*) vb.lock(0, sizeof(ExplosionVertex) * EXPLOSION_BUFFER_SIZE, 0);
 	assert(NULL != data);
 
 	//transformation
@@ -83,7 +83,7 @@ void Explosion::updateGraphics(int time) {
 	}
 	//create additional fragments
 	int countStop = min(count+(unsigned)time,(unsigned)(EXPLOSION_ANIMATION_LENGTH+EXPLOSION_INIT_TRIANGLE_COUNT));
-	for (int i = count-1; i < countStop; ++i) {
+	for (int i = count; i < countStop; ++i) {
 		float s = 0;
 		s			   = notRandf(time+i+1);
 		Vector2 uv1	   = Vector2(0,0);
