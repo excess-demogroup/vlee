@@ -35,14 +35,14 @@ void VoxelMesh::draw(renderer::Device &device) const
 	
 	/* draw */
 	UINT passes;
-	effect->Begin(&passes, 0);
+	effect.p->Begin(&passes, 0);
 	for (UINT pass = 0; pass < passes; ++pass)
 	{
-		effect->BeginPass( pass );
+		effect.p->BeginPass( pass );
 		device->DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6 * 4, 0, 6 * 2);
-		effect->EndPass();
+		effect.p->EndPass();
 	}
-	effect->End();
+	effect.p->End();
 
 	/* back to normal */
 	device->SetStreamSourceFreq(0, 1);

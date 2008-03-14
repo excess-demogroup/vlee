@@ -1,13 +1,13 @@
 #include "stdafx.h"
 #include "image.h"
 
-void engine::drawQuad(renderer::Device &device, Effect &fx, float x, float y, float w, float h, float s_nudge, float t_nudge)
+void engine::drawQuad(renderer::Device &device, Effect *fx, float x, float y, float w, float h, float s_nudge, float t_nudge)
 {
 	UINT passes;
-	fx->Begin(&passes, 0);
+	(*fx)->Begin(&passes, 0);
 	for (unsigned j = 0; j < passes; ++j)
 	{
-		fx->BeginPass(j);
+		(*fx)->BeginPass(j);
 		float verts[] =
 		{
 			x,     y,     0, 0 + s_nudge, 1 + t_nudge,
@@ -18,15 +18,15 @@ void engine::drawQuad(renderer::Device &device, Effect &fx, float x, float y, fl
 		
 		device->SetFVF(D3DFVF_XYZ | D3DFVF_TEX1);
 		core::d3dErr(device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 5));
-		fx->EndPass();
+		(*fx)->EndPass();
 	}
-	fx->End();
+	(*fx)->End();
 }
 
 void engine::Image::draw(renderer::Device &device)
 {
 	device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-	eff->SetTexture("tex", tex);
+	eff->setTexture("tex", tex);
 	float s_nudge = 0.0f, t_nudge = 0.0f;
 	float x_nudge = 0.0f, y_nudge = 0.0f;
 

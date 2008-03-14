@@ -2,10 +2,10 @@
 
 namespace scenegraph
 {
-	class Drawable : public Node
+	class DrawableNode : public Node
 	{
 	public:
-		Drawable(std::string name) : Node(name) { }
+		DrawableNode(std::string name) : Node(name) { }
 		NodeType getType() { return NODE_DRAWABLE; }
 		
 		virtual bool isTransparent() = 0;

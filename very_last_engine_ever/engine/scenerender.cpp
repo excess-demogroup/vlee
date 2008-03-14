@@ -1,9 +1,51 @@
 #include "stdafx.h"
 #include "scenerender.h"
 
+#include "../scenegraph/transform.h"
+#include "../scenegraph/drawable.h"
+#include "../scenegraph/meshnode.h"
+
+#include <stack>
+
 using namespace engine;
+using namespace scenegraph;
 
-void SceneRenderer::draw() {
+void SceneRenderer::visit(Node *node, math::Matrix4x4 world)
+{
+	switch (node->getType())
+	{
+	case NODE_TRANSFORM:
+		printf("transform: %p\n", node);
+		world = reinterpret_cast<Transform*>(node)->getTransform() * world;
+		for (int i = 0; i < 4; ++i)
+		{
+			for (int j = 0; j < 4; ++j)
+			{
+				printf("%f ", world.m[i][j]);
+			}
+			printf("\n");
+		}
+		break;
 
+	case NODE_DRAWABLE:
+		{
+			printf("drawable: %p - %p\n", node, reinterpret_cast<MeshNode*>(node)->effect->p);
+			MeshNode *mesh = reinterpret_cast<MeshNode*>(node);
+			mesh->effect->setMatrices(world, view, projection);
+			mesh->effect->commitChanges();
+			mesh->draw();
+		}
+		break;
+
+	default: break;
+	}
+	
+	for (Node::child_iterator i = node->beginChildren(); i != node->endChildren(); ++i) visit(*i, world);
+}
+
+void SceneRenderer::draw()
+{
+	printf("\n");
+	visit(scene, math::Matrix4x4::identity());
 }
 

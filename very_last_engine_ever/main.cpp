@@ -123,13 +123,13 @@ void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_
 }
 
 #include "engine/vertexstreamer.h"
-void drawFuzz(Effect &effect, engine::VertexStreamer &streamer, float time, float hardness, float xdist_amt, float ydist_amt)
+void drawFuzz(Effect *effect, engine::VertexStreamer &streamer, float time, float hardness, float xdist_amt, float ydist_amt)
 {
 	UINT passes;
-	effect->Begin(&passes, 0);
+	(*effect)->Begin(&passes, 0);
 	for (UINT pass = 0; pass < passes; ++pass)
 	{
-		effect->BeginPass( pass );
+		(*effect)->BeginPass( pass );
 		const int SEGS = 235;
 		streamer.begin(D3DPT_TRIANGLELIST);
 		float last_xoffs = 0.f;
@@ -171,9 +171,9 @@ void drawFuzz(Effect &effect, engine::VertexStreamer &streamer, float time, floa
 			last_yoffs = yoffs;
 		}
 		streamer.end();
-		effect->EndPass();
+		(*effect)->EndPass();
 	}
-	effect->End();
+	(*effect)->End();
 }
 
 Surface loadSurface(renderer::Device &device, std::string fileName)
@@ -303,36 +303,34 @@ int main(int /*argc*/, char* /*argv*/ [])
 //		RenderTexture rt2(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
 //		RenderTexture rt3(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
 		
-		Matrix4x4 tex_transform;
-		tex_transform.makeIdentity();
-		Effect tex_fx      = engine::loadEffect(device, "data/tex.fx");
-		tex_fx->SetMatrix("transform", &tex_transform);
-		Effect blur_fx     = engine::loadEffect(device, "data/blur.fx");
+		Effect *tex_fx      = engine::loadEffect(device, "data/tex.fx");
+		tex_fx->setMatrix("transform", Matrix4x4::identity());
+		Effect *blur_fx     = engine::loadEffect(device, "data/blur.fx");
 		
-		Effect particle_fx = engine::loadEffect(device, "data/particle.fx");
+		Effect *particle_fx = engine::loadEffect(device, "data/particle.fx");
 		Texture bartikkel_tex = engine::loadTexture(device, "data/particle.png");
-		particle_fx->SetTexture("tex", bartikkel_tex);
+		particle_fx->setTexture("tex", bartikkel_tex);
 		
-		Effect noise_fx = engine::loadEffect(device, "data/noise.fx");
+		Effect *noise_fx = engine::loadEffect(device, "data/noise.fx");
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
 		
 		Texture desaturate_tex = engine::loadTexture(device, "data/desaturate.png");
-		Effect color_map_fx = engine::loadEffect(device, "data/color_map.fx");
+		Effect *color_map_fx = engine::loadEffect(device, "data/color_map.fx");
 		Image color_image(color1_hdr, color_map_fx);
 //		Image color_image(color_msaa, color_map_fx);
 		Texture color_maps[2];
 		
 		color_maps[0] = engine::loadTexture(device, "data/color_map0.png");
 		color_maps[1] = engine::loadTexture(device, "data/color_map1.png");
-		color_map_fx->SetFloat("texel_width", 1.0f / color_msaa.getWidth());
-		color_map_fx->SetFloat("texel_height", 1.0f / color_msaa.getHeight());
+		color_map_fx->setFloat("texel_width", 1.0f / color_msaa.getWidth());
+		color_map_fx->setFloat("texel_height", 1.0f / color_msaa.getHeight());
 		
-		Effect cubegrid_fx = engine::loadEffect(device, "data/cubegrid.fx");
+		Effect *cubegrid_fx = engine::loadEffect(device, "data/cubegrid.fx");
 		renderer::VolumeTexture front_tex = engine::loadVolumeTexture(device, "data/front.dds");
-		cubegrid_fx->SetTexture("front_tex", front_tex);
+		cubegrid_fx->setTexture("front_tex", front_tex);
 		
 		engine::VoxelGrid voxelGrid = engine::loadVoxelGrid("data/duck.voxel");
-		engine::VoxelMesh voxelMesh(device, cubegrid_fx, voxelGrid, 64);
+		engine::VoxelMesh voxelMesh(device, *cubegrid_fx, voxelGrid, 64);
 
 		engine::ParticleStreamer streamer(device);
 
@@ -382,9 +380,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 				);
 		}
 
-		Effect explosion_fx = engine::loadEffect(device, "data/explosion.fx");
+		Effect *explosion_fx = engine::loadEffect(device, "data/explosion.fx");
 		Texture explosion_tex = engine::loadTexture(device, "data/explosion.png");
-		explosion_fx->SetTexture("explosion_tex", explosion_tex);
+		explosion_fx->setTexture("explosion_tex", explosion_tex);
 		engine::Explosion explosion = engine::Explosion(device, Vector3(0.1f, 0.1f, 0.1f), Vector3(-2.9f, 0.1f, 2.5f));
 
 		Image scanlinesImage(engine::loadTexture(device, "data/scanlines.png"), tex_fx);
@@ -394,11 +392,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect test_fx = engine::loadEffect(device, "data/test.fx");
 		test_fx->SetTexture("env", cube);
 */
-		Effect skybox_fx = engine::loadEffect(device, "data/skybox.fx");
-		skybox_fx->SetTexture("reflectionMap", cubemap_tex);
-		Mesh cube_x         = engine::loadMesh(device, "data/cube.X");
+		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
+		skybox_fx->setTexture("reflectionMap", cubemap_tex);
+		Mesh *cube_x         = engine::loadMesh(device, "data/cube.X");
 		
-		Effect tex_trans_fx              = engine::loadEffect(device, "data/tex_trans.fx");
+		Effect *tex_trans_fx       = engine::loadEffect(device, "data/tex_trans.fx");
 		Texture excess_outline_tex = engine::loadTexture(device, "data/excess_outline.dds");
 		Texture demotitle_tex      = engine::loadTexture(device, "data/demotitle.dds");
 
@@ -465,10 +463,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			Matrix4x4 view;
 			view.makeLookAt(eye + at, at, roll);
-			Matrix4x4 proj;
-			proj.make_projection(60.0f, float(DEMO_ASPECT), 0.1f, 1000.f);
+			Matrix4x4 proj = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 0.1f, 1000.f);
 			
-			skybox_fx.setMatrices(world, view, proj);
+			skybox_fx->setMatrices(world, view, proj);
 			
 			voxelMesh.setSize((1.5f + sin(time / 8)) * 32);
 			float grid_size = voxelMesh.getSize();
@@ -486,7 +483,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				
 
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
-				skybox_fx.draw(cube_x);
+				skybox_fx->draw(*cube_x);
 
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
@@ -543,8 +540,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 				//				world = math::Matrix4x4::translation(Vector3(0, 0, 20));
 				/* explosion */
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-				explosion_fx.setMatrices(world, view, proj);
-				explosion.draw(explosion_fx, explosionTrack.getIntValue(beat));
+				explosion_fx->setMatrices(world, view, proj);
+				explosion.draw(*explosion_fx, explosionTrack.getIntValue(beat));
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 
 
@@ -557,7 +554,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					Matrix4x4 modelview = world * view;
 					cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
 					
-					particle_fx.setMatrices(world, view, proj);
+					particle_fx->setMatrices(world, view, proj);
 					
 					{
 						Vector3 up(modelview._12, modelview._22, modelview._32);
@@ -565,10 +562,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 						math::normalize(up);
 						math::normalize(left);
 						
-						particle_fx->SetFloatArray("up", up, 3);
-						particle_fx->SetFloatArray("left", left, 3);
-						particle_fx->SetFloat("alpha", 0.1f);
-						particle_fx->CommitChanges();
+						particle_fx->setFloatArray("up", up, 3);
+						particle_fx->setFloatArray("left", left, 3);
+						particle_fx->setFloat("alpha", 0.1f);
+						particle_fx->commitChanges();
 					}
 					
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
@@ -613,14 +610,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 							}
 						}
 						streamer.end();
-						particle_fx.draw(streamer);
+						particle_fx->draw(streamer);
 					}
 				}
 				D3DLOCKED_RECT rect;
 				if (!FAILED(logo_surf->LockRect(&rect, NULL, D3DLOCK_READONLY)))
 				{
-					tex_trans_fx->SetTexture("tex", bar_tex);
-					tex_trans_fx->SetFloat("alpha", 1.0f);
+					tex_trans_fx->setTexture("tex", bar_tex);
+					tex_trans_fx->setFloat("alpha", 1.0f);
 
 					unsigned int *data = (unsigned int*)rect.pBits;
 					for (size_t y = 0; y < logo_surf.getDesc().Height; ++y)
@@ -630,7 +627,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 							unsigned int color = ((unsigned int*)((char*)rect.pBits + rect.Pitch * y))[x];
 							if ((color & 0xFFFFFF) != 0)
 							{
-								tex_trans_fx.setMatrices(
+								tex_trans_fx->setMatrices(
 									Matrix4x4::translation(Vector3(x * 0.1f, y * -0.1f + 3 / std::max((int(y) - 10) + time * 4, 0.0f), 0)) *
 									Matrix4x4::rotation(Vector3(cos(time - x * 0.1) / (time + 1), sin(time + y * 0.15) / (time + 1), 0)) * 
 									Matrix4x4::translation(Vector3(0, 0, 4 - 4 / (time + 1))),
@@ -661,7 +658,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 //			device->SetRenderState(D3DRS_ZWRITEENABLE, false);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 
-			blur_fx->SetFloat("sub", 0.0f);
+			blur_fx->setFloat("sub", 0.0f);
 			RenderTexture render_textures[2] = { color1_hdr, color2_hdr };
 			int rtIndex = 0;
 			for (int i = 0; i < 3; i++)
@@ -681,15 +678,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 					dir_vec[1] = sinf(dir) * (float(1 << i) / current_tex.getWidth());
 					dir_vec[0] *= 3.f / 4.f;
 					
-					blur_fx->SetFloatArray("dir", dir_vec, 2);
-					blur_fx->SetTexture("blur_tex", current_tex);
+					blur_fx->setFloatArray("dir", dir_vec, 2);
+					blur_fx->setTexture("blur_tex", current_tex);
 					
 					drawQuad(
 						device, blur_fx,
 						-1.0f, -1.0f,
 						 2.0f, 2.0f
 					);
-					blur_fx->SetFloat("sub", 0.0f);
+					blur_fx->setFloat("sub", 0.0f);
 					rtIndex++;
 				}
 			}
@@ -703,14 +700,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			color_msaa.resolve(device);
 			
-			color_map_fx->SetFloat("fade", colorMapBlendTrack.getValue(beat));
-			color_map_fx->SetFloat("flash", pow(colorMapFlashTrack.getValue(beat), 2.0f));
-			color_map_fx->SetFloat("fade2", colorMapFadeTrack.getValue(beat));
-			color_map_fx->SetFloat("alpha", 0.25f);
-			color_map_fx->SetTexture("tex", color2_hdr);
-			color_map_fx->SetTexture("tex2", color_msaa);
-			color_map_fx->SetTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
-			color_map_fx->SetTexture("desaturate", desaturate_tex);
+			color_map_fx->setFloat("fade", colorMapBlendTrack.getValue(beat));
+			color_map_fx->setFloat("flash", pow(colorMapFlashTrack.getValue(beat), 2.0f));
+			color_map_fx->setFloat("fade2", colorMapFadeTrack.getValue(beat));
+			color_map_fx->setFloat("alpha", 0.25f);
+			color_map_fx->setTexture("tex", color2_hdr);
+			color_map_fx->setTexture("tex2", color_msaa);
+			color_map_fx->setTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
+			color_map_fx->setTexture("desaturate", desaturate_tex);
 			
 			color_image.setPosition(-1, -1);
 			color_image.setDimension(2, 2);
@@ -728,8 +725,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			/* draw noise */
 			
-			noise_fx->SetFloat("alpha", (noiseAmtTrack.getValue(beat) + noiseFFTTrack.getValue(beat) * noise_fft.getValue(beat)));
-			noise_fx->SetTexture("tex", noise_tex);
+			noise_fx->setFloat("alpha", (noiseAmtTrack.getValue(beat) + noiseFFTTrack.getValue(beat) * noise_fft.getValue(beat)));
+			noise_fx->setTexture("tex", noise_tex);
 			drawQuad(
 				device, noise_fx,
 				-1.0f, -1.0f,

@@ -35,7 +35,7 @@ namespace scenegraph
 			/* recalculate matrix if needed */
 			if (projection_dirty)
 			{
-				projection.make_projection(fov, aspect, znear, zfar);
+				projection.makeProjection(fov, aspect, znear, zfar);
 				projection_dirty = false;
 			}
 			

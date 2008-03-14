@@ -10,16 +10,16 @@
 
 namespace engine
 {
-	void drawQuad(renderer::Device &device, Effect &fx, float x, float y, float w, float h, float s_nudge = 0.0f, float t_nudge = 0.0f);
+	void drawQuad(renderer::Device &device, Effect *fx, float x, float y, float w, float h, float s_nudge = 0.0f, float t_nudge = 0.0f);
 	
 	class Image
 	{
 	public:
-		Image() : x(0), y(0), w(1), h(1)
+		Image() : x(0), y(0), w(1), h(1), eff(NULL)
 		{
 		}
 
-		Image(renderer::Texture &tex, Effect &eff) :
+		Image(renderer::Texture &tex, Effect *eff) :
 			x(0), y(0),
 			w(1), h(1),
 			tex(tex), eff(eff)
@@ -44,7 +44,7 @@ namespace engine
 		float w, h;
 
 		renderer::Texture tex;
-		Effect  eff;
+		Effect *eff;
 	};
 
 

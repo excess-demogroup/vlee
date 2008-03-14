@@ -32,8 +32,8 @@ void TriangleEffect::draw(engine::Effect &effect, engine::VertexStreamer &stream
 
 		effect->SetMatrix(effect->GetParameterBySemantic(0, "ROTATION"), &mrot2);
 		float dir_vec[2];
-		dir_vec[0] = cosf(D3DXToRadian((unsigned)beat/60%360)) * (float(1 << 2000) / 30);
-		dir_vec[1] = sinf(D3DXToRadian((unsigned)beat/60%360)) * (float(1 << 2000) / 30);
+		dir_vec[0] = cosf(D3DXToRadian((unsigned)beat/60%360)) * (1.0f / 30);
+		dir_vec[1] = sinf(D3DXToRadian((unsigned)beat/60%360)) * (1.0f / 30);
 
 		effect->SetFloatArray("dir", dir_vec, 2);
 

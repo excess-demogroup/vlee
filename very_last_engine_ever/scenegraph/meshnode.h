@@ -6,11 +6,11 @@
 
 namespace scenegraph
 {
-	class MeshNode : public Drawable
+	class MeshNode : public DrawableNode
 	{
 	public:
 		MeshNode(std::string name, engine::Mesh *mesh, engine::Effect *effect) :
-			Drawable(name),
+			DrawableNode(name),
 			mesh(mesh),
 			effect(effect),
 			transparent(false)
@@ -23,6 +23,8 @@ namespace scenegraph
 		
 		void draw()
 		{
+			assert(NULL != effect);
+			assert(NULL != mesh);
 			effect->draw(*mesh);
 		}
 		

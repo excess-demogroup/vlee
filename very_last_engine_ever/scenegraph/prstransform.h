@@ -1,6 +1,8 @@
 #pragma once
 
 #include "transform.h"
+#include "../math/vector3.h"
+#include "../math/quaternion.h"
 
 namespace scenegraph
 {
@@ -19,10 +21,17 @@ namespace scenegraph
 		{
 			if (matrix_dirty)
 			{
+#if 0
 				matrix = 
 					math::Matrix4x4::translation(position) *
 					math::Matrix4x4::rotation(rotation) *
 					math::Matrix4x4::scaling(scale);
+#else
+				matrix = 
+					math::Matrix4x4::scaling(scale) *
+					math::Matrix4x4::rotation(rotation) *
+					math::Matrix4x4::translation(position);
+#endif
 				matrix_dirty = false;
 			}
 			return matrix;
@@ -34,7 +43,7 @@ namespace scenegraph
 			this->matrix_dirty = true;
 		}
 		
-		void setRotation(math::Vector3 &rot)
+		void setRotation(math::Quaternion &rot)
 		{
 			this->rotation = rot;
 			this->matrix_dirty = true;
@@ -48,7 +57,7 @@ namespace scenegraph
 		
 	private:
 		math::Vector3 position;
-		math::Vector3 rotation;
+		math::Quaternion rotation;
 		math::Vector3 scale;
 		
 		math::Matrix4x4 matrix;

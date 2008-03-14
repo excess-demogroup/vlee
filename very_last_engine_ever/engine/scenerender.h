@@ -2,6 +2,7 @@
 
 #include "../scenegraph/scene.h"
 #include "../scenegraph/camera.h"
+#include "../math/matrix4x4.h"
 
 namespace engine
 {
@@ -14,11 +15,14 @@ namespace engine
 
 		}
 
+		void visit(scenegraph::Node *node, math::Matrix4x4 world);
 		void draw();
 
 	private:
 		scenegraph::Scene *scene;
 		scenegraph::Camera *camera;
+	public:
+		math::Matrix4x4 view, projection;
 	};
 
 }

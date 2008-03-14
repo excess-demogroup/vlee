@@ -17,7 +17,7 @@ namespace scenegraph
 	class Node
 	{
 	public:
-		Node(std::string name) : parent(NULL) { }
+		Node(std::string name) /*: parent(NULL)  */{ }
 		virtual ~Node();
 		
 		void addChild(Node *node)
@@ -25,17 +25,24 @@ namespace scenegraph
 			children.push_back(node);
 		}
 		
-		Node *getParent() const
+/*		Node *getParent() const
 		{
 			return parent; // who's your daddy?!
-		}
+		} */
 		
 		virtual NodeType getType() = 0;
+		
+		typedef std::list<Node*>::iterator       child_iterator;
+		typedef std::list<Node*>::const_iterator child_const_iterator;
+		child_iterator beginChildren() { return children.begin(); }
+		child_iterator endChildren()   { return children.end();   }
+		child_const_iterator beginChildren() const { return children.begin(); }
+		child_const_iterator endChildren()   const { return children.end();   }
 		
 	private:
 		std::string name;
 		
-		Node *parent;
+//		Node *parent;
 		std::list<Node*> children;
 	};
 }

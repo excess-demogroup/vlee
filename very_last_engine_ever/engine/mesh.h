@@ -52,11 +52,15 @@ namespace engine
 		}
 	};
 
-	inline Mesh loadMesh(renderer::Device &device, std::string filename)
+	inline Mesh *loadMesh(renderer::Device &device, std::string filename)
 	{
-		Mesh mesh;
+		ID3DXMesh *mesh = NULL;
 		HRESULT hr = D3DXLoadMeshFromX(filename.c_str(), 0, device, 0, 0, 0, 0, &mesh);
 		if (FAILED(hr)) throw core::FatalException(std::string("failed to load mesh \"") + filename + std::string("\"\n\n") + core::d3dGetError(hr));
-		return mesh;
+		assert(NULL != mesh);
+		
+		Mesh *mesh_wrapper = new Mesh;
+		mesh_wrapper->Attach(mesh);
+		return mesh_wrapper;
 	}
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vector3.h"
+#include "quaternion.h"
 
 namespace math
 {
@@ -32,6 +33,13 @@ namespace math
 			return ret;
 		}
 		
+		static Matrix4x4 rotation(const Quaternion &rotate)
+		{
+			Matrix4x4 ret;
+			D3DXMatrixRotationQuaternion(&ret, &rotate);
+			return ret;
+		}
+		
 		static Matrix4x4 scaling(const Vector3 &scale)
 		{
 			Matrix4x4 ret;
@@ -39,6 +47,13 @@ namespace math
 			return ret;
 		}
 		
+		static Matrix4x4 projection(float fov, float aspect, float znear, float zfar)
+		{
+			Matrix4x4 ret;
+			ret.makeProjection(fov, aspect, znear, zfar);
+			return ret;
+		}
+
 		void makeIdentity()
 		{
 			D3DXMatrixIdentity(this);
@@ -59,7 +74,7 @@ namespace math
 			D3DXMatrixScaling(this, scale.x, scale.y, scale.z);
 		}
 		
-		void make_projection(float fov, float aspect, float znear, float zfar)
+		void makeProjection(float fov, float aspect, float znear, float zfar)
 		{
 			D3DXMatrixPerspectiveFovLH(this, D3DXToRadian(fov), aspect, znear, zfar);
 		}

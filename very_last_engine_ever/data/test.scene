@@ -1,40 +1,27 @@
 <scene name="test">
-	<children>
-		<prs_transform>
-			<position name="#pos" x="0.0" y="0.0" z="0.0" />
-			<children>
-				<target name="test" x="0.0" y="0.0" z="0.0" />
-				<mesh file="cube.x" />
-			</children>
-		</prs_transform>
-		<prs_transform>
-			<position x="0.0" y="0.0" z="10.0" />
-			<children>
-<!--			<look_at_transform target="voxel" roll="0.0">
-					<camera name="cam1">
-						<fov name="#fov" value="100.0" />
-					</camera> 
-				</look_at_transform>
-				-->
-			</children>
-		</prs_transform>
-	</children>
+    <children>
+        <prs_transform name="Teapot02-node_transform">
+            <position x="0.000000" y="0.000000" z="0.000000" />
+            <rotation x="-44.999992" y="0.000027" z="44.999996" />
+            <scale x="0.999999" y="1.000000" z="0.999999" />
+            <children>
+                <prs_transform name="Teapot02-node_PIVOT_transform">
+                    <position x="-2.154260" y="-15.850300" z="0.000000" />
+                    <rotation x="-0.000000" y="0.000000" z="-0.000000" />
+                    <scale x="1.000000" y="1.000000" z="1.000000" />
+                    <children>
+                        <mesh name="Teapot02-node_PIVOT_mesh_0" file="Teapot02-mesh_0.x" />
+                    </children>
+                </prs_transform>
+            </children>
+        </prs_transform>
+        <prs_transform name="Teapot01-node_transform">
+            <position x="32.546001" y="0.000000" z="-26.180300" />
+            <rotation x="-0.000000" y="0.000000" z="-0.000000" />
+            <scale x="1.000000" y="1.000000" z="1.000000" />
+            <children>
+                <mesh name="Teapot01-node_mesh_0" file="Teapot01-mesh_0.x" />
+            </children>
+        </prs_transform>
+    </children>
 </scene>
-
-<!--
-<scene name="test">
-	<children>
-		<prs_transform>
-			<position_x val="0.0" />
-			<position_y val="0.0">
-				<key time="0.0" val="0.0" />
-				<key time="8.0" val="1.0" />
-			</position_y>
-			
-			<children>
-				<object name="test_obj" mesh="test.x" />
-			</children>
-		</prs_transform>
-	</children>
-</scene>
--->
