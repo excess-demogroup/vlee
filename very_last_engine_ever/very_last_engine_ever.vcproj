@@ -322,6 +322,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\engine\explosion.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\engine\image.cpp"
 					>
 				</File>
@@ -339,6 +343,10 @@
 				</File>
 				<File
 					RelativePath=".\engine\textureproxy.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\triangleeffect.cpp"
 					>
 				</File>
 				<File
@@ -507,6 +515,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\engine\explosion.h"
+					>
+				</File>
+				<File
 					RelativePath=".\engine\image.h"
 					>
 				</File>
@@ -536,6 +548,10 @@
 				</File>
 				<File
 					RelativePath=".\engine\textureproxy.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\triangleeffect.h"
 					>
 				</File>
 				<File
@@ -692,6 +708,10 @@
 				</File>
 				<File
 					RelativePath=".\math\matrix4x4.h"
+					>
+				</File>
+				<File
+					RelativePath=".\math\notrand.h"
 					>
 				</File>
 				<File

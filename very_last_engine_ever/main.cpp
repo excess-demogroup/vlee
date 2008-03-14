@@ -25,6 +25,8 @@
 #include "engine/particlestreamer.h"
 #include "engine/particlecloud.h"
 
+#include "engine/explosion.h"
+
 #include "engine/voxelgrid.h"
 #include "engine/voxelmesh.h"
 
@@ -279,6 +281,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &noiseAmtTrack  = syncDevice->getTrack("noise.amt");
 		Track &noiseFFTTrack  = syncDevice->getTrack("noise.fft");
 		
+		sync::Track &explosionTrack = syncDevice->getTrack("explosion");
+
 		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
 		
 		Surface backbuffer   = device.getRenderTarget(0);
@@ -329,8 +333,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		engine::VoxelGrid voxelGrid = engine::loadVoxelGrid("data/duck.voxel");
 		engine::VoxelMesh voxelMesh(device, cubegrid_fx, voxelGrid, 64);
-		
+
 		engine::ParticleStreamer streamer(device);
+
 		struct ParticleData
 		{
 			ParticleData(float size, const Vector3 &dir) : size(size), dir(dir) {}
@@ -376,7 +381,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 					)
 				);
 		}
-		
+
+		Effect explosion_fx = engine::loadEffect(device, "data/explosion.fx");
+		Texture explosion_tex = engine::loadTexture(device, "data/explosion.png");
+		explosion_fx->SetTexture("explosion_tex", explosion_tex);
+		engine::Explosion explosion = engine::Explosion(device, Vector3(0.1f, 0.1f, 0.1f), Vector3(-2.9f, 0.1f, 2.5f));
+
 		Image scanlinesImage(engine::loadTexture(device, "data/scanlines.png"), tex_fx);
 		
 		renderer::CubeTexture cubemap_tex = engine::loadCubeTexture(device, "data/stpeters_cross3.dds");
@@ -485,7 +495,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 				//			time /= 4;
 
-#if 1
+#if 0
 				Matrix4x4 mscale2;
 				mscale2.makeScaling(Vector3(10.0f / grid_size, 10.0f / grid_size, 10.0f / grid_size));
 				
@@ -528,32 +538,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 				
 //				voxelMesh.draw(device);
 				device->SetRenderState( D3DRS_CLIPPLANEENABLE, 0 );
-#else
-				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-				text_fx.setMatrices(world, view, proj);
-				text_fx->SetTexture("tex", bartikkel_tex);
-				UINT passes;
-				text_fx->Begin(&passes, 0);
-				float s = 1.0f;
-				for (UINT pass = 0; pass < passes; ++pass)
-				{
-					text_fx->BeginPass( pass );
-					vertex_streamer.begin(D3DPT_TRIANGLELIST);
-
-					vertex_streamer.uv(    D3DXVECTOR2( 0,  0));
-					vertex_streamer.vertex(D3DXVECTOR3(-s, -s, 0));
-
-					vertex_streamer.uv(    D3DXVECTOR2( 0, 1));
-					vertex_streamer.vertex(D3DXVECTOR3(-s, s, 0));
-
-					vertex_streamer.uv(    D3DXVECTOR2( 1, 1));
-					vertex_streamer.vertex(D3DXVECTOR3( s, s, 0));
-
-					vertex_streamer.end();
-					text_fx->EndPass();
-				}
-				text_fx->End();
 #endif
+
+				//				world = math::Matrix4x4::translation(Vector3(0, 0, 20));
+				/* explosion */
+				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+				explosion_fx.setMatrices(world, view, proj);
+				explosion.draw(explosion_fx, explosionTrack.getIntValue(beat));
+				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+
 
 #if 1
 				/* particles */
