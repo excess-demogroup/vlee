@@ -1,5 +1,20 @@
 <scene name="test">
     <children>
+        <prs_transform name="Camera01.Target-node_transform">
+            <position x="-0.000014" y="-10.728000" z="10.728000" />
+            <rotation x="-45.000000" y="0.000000" z="0.000000" />
+            <scale x="1.000000" y="1.000000" z="1.000000" />
+        </prs_transform>
+        <prs_transform name="Camera01-node_transform">
+            <position x="0.000000" y="0.000000" z="-100.000000" />
+            <rotation x="5.533865" y="0.000000" z="0.000000" />
+            <scale x="1.000000" y="1.000000" z="1.000000" />
+            <children>
+<!--                <target_transform node="Camera01.Target-node">
+                    <camera name="Camera01-camera" fov="60.000000" znear="1.000000" zfar="1000.000000" />
+                </target_transform> -->
+            </children>
+        </prs_transform>
         <prs_transform name="Teapot01-node_transform">
             <position x="32.546001" y="0.000000" z="26.180300" />
             <rotation x="35.264393" y="-29.999983" z="-54.735584" />

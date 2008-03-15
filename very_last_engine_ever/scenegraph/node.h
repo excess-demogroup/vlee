@@ -17,7 +17,7 @@ namespace scenegraph
 	class Node
 	{
 	public:
-		Node(std::string name) /*: parent(NULL)  */{ }
+		Node(const std::string &name) : name(name) { assert(name.length() > 0); }
 		virtual ~Node();
 		
 		void addChild(Node *node)
@@ -25,10 +25,25 @@ namespace scenegraph
 			children.push_back(node);
 		}
 		
-/*		Node *getParent() const
+		Node *findChild(const std::string &name)
 		{
-			return parent; // who's your daddy?!
-		} */
+			child_iterator i;
+			for (i = beginChildren(); i != endChildren(); ++i)
+			{
+				printf("looking for \"%s\", checking \"%s\"\n", name.c_str(), (*i)->name.c_str());
+				if ((*i)->name == name) return *i;
+			}
+			
+			// not found, iterate through all children
+			for (i = beginChildren(); i != endChildren(); ++i)
+			{
+				Node *n = (*i)->findChild(name);
+				if (NULL != n) return n;
+			}
+			
+			// nothing found
+			return NULL;
+		}
 		
 		virtual NodeType getType() = 0;
 		
@@ -40,9 +55,8 @@ namespace scenegraph
 		child_const_iterator endChildren()   const { return children.end();   }
 		
 	private:
-		std::string name;
+		const std::string name;
 		
-//		Node *parent;
 		std::list<Node*> children;
 	};
 }

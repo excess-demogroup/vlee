@@ -4,7 +4,10 @@
 #include "../engine/mesh.h"
 
 #include "node.h"
+
 #include "prstransform.h"
+#include "targettransform.h"
+
 #include "meshnode.h"
 #include "target.h"
 
@@ -100,6 +103,29 @@ public:
 		return ret;
 	}
 
+	std::map<scenegraph::TargetTransform*, std::string> targetmap;
+	Node *loadTargetTransform(renderer::Device &device, TiXmlElement *xmlElem)
+	{
+		TargetTransform *ret = new TargetTransform(loadString(xmlElem, "name"));
+		targetmap[ret] = loadString(xmlElem, "target");
+		
+		TiXmlNode* curr = xmlElem->FirstChild();
+		while (curr)
+		{
+			if (curr->Type() == TiXmlNode::ELEMENT)
+			{
+				TiXmlElement *currElem = curr->ToElement();
+				assert(NULL != currElem);
+				const char *val = curr->Value();
+				if (strcmp(val, "children") == 0) loadChildren(device, ret, currElem);
+				else throw std::string("unknown element \"") + val + std::string("\"");
+			}
+			curr = xmlElem->IterateChildren(curr);
+		}
+		
+		return ret;
+	}
+
 	Node *loadMesh(renderer::Device &device, TiXmlElement *xmlElem)
 	{
 		std::string fileName = loadString(xmlElem, "file");
@@ -133,19 +159,10 @@ public:
 				
 				Node *newChild = NULL;
 				const char *val = curr->Value();
-				if      (strcmp(val, "prs_transform") == 0)
-				{
-					newChild = loadPrsTransform(device, currElem);
-					printf("load transform: %p\n", newChild);
-				}
-				else if (strcmp(val, "mesh") == 0)
-				{
-					newChild = loadMesh(device, currElem);
-					void *effect = reinterpret_cast<MeshNode*>(newChild)->effect->p;
-
-					printf("load drawable: %p - %p\n", newChild, reinterpret_cast<MeshNode*>(newChild)->effect->p);
-				}
-				else if (strcmp(val, "target") == 0)        newChild = loadTarget(currElem);
+				if      (strcmp(val, "prs_transform") == 0)    newChild = loadPrsTransform(device, currElem);
+				else if (strcmp(val, "target_transform") == 0) newChild = loadTargetTransform(device, currElem);
+				else if (strcmp(val, "mesh") == 0)             newChild = loadMesh(device, currElem);
+				else if (strcmp(val, "target") == 0)           newChild = loadTarget(currElem);
 				else throw std::string("unknown element \"") + val + std::string("\"");
 				
 				assert(NULL != newChild);
@@ -192,6 +209,11 @@ Scene *scenegraph::loadScene(renderer::Device &device, const std::string filenam
 			curr = xmlRoot->IterateChildren(curr);
 		}
 		
+		std::map<scenegraph::TargetTransform*, std::string>::iterator i;
+		for (i = sceneLoader.targetmap.begin(); i != sceneLoader.targetmap.end(); ++i)
+		{
+			i->first->setTarget(scene->findTarget(i->second));
+		}
 		return scene;
 	}
 	catch (const std::string &str)

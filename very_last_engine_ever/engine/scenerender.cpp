@@ -15,13 +15,11 @@ void SceneRenderer::visit(Node *node, math::Matrix4x4 world)
 	switch (node->getType())
 	{
 	case NODE_TRANSFORM:
-		printf("transform: %p\n", node);
 		world = reinterpret_cast<Transform*>(node)->getTransform() * world;
 		break;
 
 	case NODE_DRAWABLE:
 		{
-			printf("drawable: %p - %p\n", node, reinterpret_cast<MeshNode*>(node)->effect->p);
 			MeshNode *mesh = reinterpret_cast<MeshNode*>(node);
 			if (NULL != mesh->effect)
 			{
