@@ -1,26 +1,34 @@
 <scene name="test">
     <children>
-        <prs_transform name="Teapot02-node_transform">
-            <position x="0.000000" y="0.000000" z="0.000000" />
-            <rotation x="-44.999992" y="0.000027" z="44.999996" />
-            <scale x="0.999999" y="1.000000" z="0.999999" />
-            <children>
-                <prs_transform name="Teapot02-node_PIVOT_transform">
-                    <position x="-2.154260" y="-15.850300" z="0.000000" />
-                    <rotation x="-0.000000" y="0.000000" z="-0.000000" />
-                    <scale x="1.000000" y="1.000000" z="1.000000" />
-                    <children>
-                        <mesh name="Teapot02-node_PIVOT_mesh_0" file="Teapot02-mesh_0.x" />
-                    </children>
-                </prs_transform>
-            </children>
-        </prs_transform>
         <prs_transform name="Teapot01-node_transform">
-            <position x="32.546001" y="0.000000" z="-26.180300" />
-            <rotation x="-0.000000" y="0.000000" z="-0.000000" />
-            <scale x="1.000000" y="1.000000" z="1.000000" />
+            <position x="32.546001" y="0.000000" z="26.180300" />
+            <rotation x="35.264393" y="-29.999983" z="-54.735584" />
+            <scale x="1.000000" y="0.999999" z="0.999999" />
             <children>
                 <mesh name="Teapot01-node_mesh_0" file="Teapot01-mesh_0.x" />
+                <prs_transform name="Teapot02-node_transform">
+                    <position x="-29.363100" y="-29.363100" z="4.501250" />
+                    <rotation x="-80.264458" y="29.999990" z="-9.735610" />
+                    <scale x="1.000000" y="1.000000" z="1.000000" />
+                    <children>
+                        <prs_transform name="Teapot02-node_PIVOT_transform">
+                            <position x="-2.154260" y="-15.850300" z="-0.000000" />
+                            <rotation x="-0.000000" y="0.000000" z="0.000000" />
+                            <scale x="1.000000" y="1.000000" z="1.000000" />
+                            <children>
+                                <mesh name="Teapot02-node_PIVOT_mesh_0" file="Teapot02-mesh_0.x" />
+                            </children>
+                        </prs_transform>
+                        <prs_transform name="Teapot03-node_transform">
+                            <position x="-58.673698" y="-60.000801" z="-22.976400" />
+                            <rotation x="-98.698975" y="-14.477457" z="-28.170544" />
+                            <scale x="1.000000" y="1.000000" z="1.000000" />
+                            <children>
+                                <mesh name="Teapot03-node_mesh_0" file="Teapot03-mesh_0.x" />
+                            </children>
+                        </prs_transform>
+                    </children>
+                </prs_transform>
             </children>
         </prs_transform>
     </children>

@@ -68,7 +68,7 @@ namespace math
 		{
 			D3DXMatrixRotationYawPitchRoll(this, rotation.x, rotation.y, rotation.z);
 		}
-
+		
 		void makeScaling(const Vector3 &scale)
 		{
 			D3DXMatrixScaling(this, scale.x, scale.y, scale.z);
@@ -78,7 +78,7 @@ namespace math
 		{
 			D3DXMatrixPerspectiveFovLH(this, D3DXToRadian(fov), aspect, znear, zfar);
 		}
-
+		
 		void makeLookAt(const Vector3 &eye, const Vector3 &target, float roll)
 		{
 			D3DXVECTOR3 up(0, 1, 0);

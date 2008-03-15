@@ -297,7 +297,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		RenderTexture color2_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
 		
 		engine::VertexStreamer vertex_streamer(device);
+
+		// load a scene we can render, yes
 		scenegraph::Scene *testScene = scenegraph::loadScene(device, "data/test.scene");
+		engine::SceneRenderer testRenderer(testScene, NULL);
 		
 //		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE);
 //		RenderTexture rt2(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
@@ -457,12 +460,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 				pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
 				pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
 			) * 0.05f * camera_distance * (cameraShakeAmtTrack.getValue(beat));
-
+			
+			eye = Vector3(0, 0, -100);
+			at = Vector3(0, 0, 0);
+			
 			Matrix4x4 world;
 			world.makeIdentity();
-
+			
 			Matrix4x4 view;
-			view.makeLookAt(eye + at, at, roll);
+			view.makeLookAt(eye, at, roll);
 			Matrix4x4 proj = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 0.1f, 1000.f);
 			
 			skybox_fx->setMatrices(world, view, proj);
@@ -473,7 +479,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			mrot.makeRotation(Vector3(float(-M_PI / 2), float(M_PI - sin(time / 5)), float(M_PI + time / 3)));
 			Matrix4x4 mscale;
 			mscale.makeScaling(Vector3(0.75f, 0.75f, 0.75f));
-			voxelMesh.update(mrot * mscale);
+/*			voxelMesh.update(mrot * mscale); */
 
 			for (int i = 0; i < 2; ++i)
 			{
@@ -489,8 +495,34 @@ int main(int /*argc*/, char* /*argv*/ [])
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 
 				//			test_fx.draw(cube_x);
-
 				//			time /= 4;
+
+				{
+					float scale = 1.0f / 100;
+					testRenderer.view       = view * Matrix4x4::scaling(Vector3(scale, scale, scale));
+					testRenderer.projection = proj; // math::Matrix4x4::projection(60.0f, 16.0f / 9, 1.0f, 1000.0f);
+					testRenderer.draw();
+					
+					device->SetTransform(D3DTS_VIEW, &view);
+					device->SetTransform(D3DTS_PROJECTION, &proj);
+					device->SetRenderState(D3DRS_LIGHTING, false);
+					device->SetRenderState(D3DRS_ZENABLE, false);
+					vertex_streamer.begin(D3DPT_LINELIST);
+					vertex_streamer.diffuse(0xFFFF0000);
+					vertex_streamer.vertex(Vector3(0, 0, 0));
+					vertex_streamer.vertex(Vector3(10, 0, 0));
+
+					vertex_streamer.diffuse(0xFF00FF00);
+					vertex_streamer.vertex(Vector3(0, 0, 0));
+					vertex_streamer.vertex(Vector3(0, 10, 0));
+
+					vertex_streamer.diffuse(0xFF0000FF);
+					vertex_streamer.vertex(Vector3(0, 0, 0));
+					vertex_streamer.vertex(Vector3(0, 0, 10));
+
+					vertex_streamer.end();
+					device->SetRenderState(D3DRS_ZENABLE, true);
+				}
 
 #if 0
 				Matrix4x4 mscale2;
@@ -537,13 +569,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 				device->SetRenderState( D3DRS_CLIPPLANEENABLE, 0 );
 #endif
 
+#if 0
 				//				world = math::Matrix4x4::translation(Vector3(0, 0, 20));
 				/* explosion */
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 				explosion_fx->setMatrices(world, view, proj);
 				explosion.draw(*explosion_fx, explosionTrack.getIntValue(beat));
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-
+#endif
 
 #if 1
 				/* particles */
@@ -708,7 +741,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setTexture("tex2", color_msaa);
 			color_map_fx->setTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
 			color_map_fx->setTexture("desaturate", desaturate_tex);
-			
+
 			color_image.setPosition(-1, -1);
 			color_image.setDimension(2, 2);
 			

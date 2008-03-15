@@ -9,7 +9,15 @@ namespace math
 		
 		Quaternion(float x, float y, float z)
 		{
-			D3DXQuaternionRotationYawPitchRoll(this, x, y, z);
+			Vector3 xaxis(1, 0, 0), yaxis(0, 1, 0), zaxis(0, 0, 1);
+			Quaternion xrot, yrot, zrot;
+			D3DXQuaternionRotationAxis(&xrot, &xaxis, x);
+			D3DXQuaternionRotationAxis(&yrot, &yaxis, y);
+			D3DXQuaternionRotationAxis(&zrot, &zaxis, z);
+			*this = identity();
+			*this *= xrot;
+			*this *= yrot;
+			*this *= zrot;
 		}
 		
 		static Quaternion identity()
