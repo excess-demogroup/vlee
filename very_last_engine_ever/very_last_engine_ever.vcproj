@@ -453,6 +453,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\scenegraph\scene.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\scenegraph\sceneloader.cpp"
 					>
 				</File>

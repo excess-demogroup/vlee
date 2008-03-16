@@ -503,7 +503,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 				{
 					testRenderer.view       = view;
 					testRenderer.projection = proj; // math::Matrix4x4::projection(60.0f, 16.0f / 9, 1.0f, 1000.0f);
-
+					
+					testScene->anim(beat);
 					scenegraph::Camera *cam = testScene->findCamera("Camera01-camera");
 					if (NULL != cam)
 					{

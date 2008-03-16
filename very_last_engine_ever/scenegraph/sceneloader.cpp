@@ -53,11 +53,10 @@ static std::string getPathName(const std::string &fileName)
 
 Quaternion vector3ToQuaternion(const Vector3 &v)
 {
-	printf("rot: %f %f %f\n", v.x * (M_PI / 180), v.y * (M_PI / 180), v.z * (M_PI / 180));
 	return Quaternion(
-		float(v.x * (M_PI / 180)),
-		float(v.y * (M_PI / 180)),
-		float(v.z * (M_PI / 180))
+		float(v.x),
+		float(v.y),
+		float(v.z)
 	);
 }
 
@@ -66,9 +65,11 @@ class SceneLoader
 private:
 	const std::string filename;
 	const std::string basename;
+	Scene *scene;
 	
 public:
-	SceneLoader(const std::string filename) :
+	SceneLoader(Scene* scene, const std::string filename) :
+		scene(scene),
 		filename(filename),
 		basename(getPathName(filename))
 	{}
@@ -80,6 +81,39 @@ public:
 		ret->setPosition(Vector3(0, 0, 0));
 		ret->setRotation(Quaternion::identity());
 		ret->setScale(Vector3(1, 1, 1));
+
+		std::string animFilename = loadString(xmlElem, "keys");
+		printf("anim: %s\n", animFilename.c_str());
+		if (!animFilename.empty())
+		{
+			FILE *fp = fopen((basename + animFilename).c_str(), "rb");
+			if (NULL == fp) throw std::string("failed to load animation \"") + basename + animFilename + "\"";
+			
+			PrsAnim animTrack;
+			
+			size_t count = 0;
+			fread(&count, sizeof(size_t), 1, fp);
+			for (size_t i = 0; i < count; ++i)
+			{
+				float time;
+				math::Vector3 position;
+				math::Vector3 rotation;
+				math::Vector3 scale;
+				
+				fread(&time,     sizeof(float), 1, fp);
+				fread(&position, sizeof(float), 3, fp);
+				fread(&rotation, sizeof(float), 3, fp);
+				fread(&scale,    sizeof(float), 3, fp);
+				
+				animTrack.setPosKeyFrame(time, position);
+				animTrack.setRotKeyFrame(time, vector3ToQuaternion(rotation));
+				animTrack.setScaleKeyFrame(time, scale);
+			}
+			
+			scene->addPrsAnim(ret, animTrack);
+			fclose(fp);
+			fp = NULL;
+		}
 		
 		TiXmlNode* curr = xmlElem->FirstChild();
 		while (curr)
@@ -91,7 +125,7 @@ public:
 				
 				const char *val = curr->Value();
 				if      (strcmp(val, "position") == 0) ret->setPosition(loadVector3(currElem));
-				else if (strcmp(val, "rotation") == 0) ret->setRotation(vector3ToQuaternion(loadVector3(currElem)));
+				else if (strcmp(val, "rotation") == 0) ret->setRotation(vector3ToQuaternion(loadVector3(currElem) * (M_PI / 180)));
 				else if (strcmp(val, "scale")    == 0) ret->setScale(loadVector3(currElem));
 				else if (strcmp(val, "children") == 0) loadChildren(device, ret, currElem);
 				else throw std::string("unknown element \"") + val + std::string("\"");
@@ -193,7 +227,7 @@ Scene *scenegraph::loadScene(renderer::Device &device, const std::string filenam
 			else throw std::string(doc.ErrorDesc());
 		}
 		
-		SceneLoader sceneLoader(filename);
+		SceneLoader sceneLoader(scene, filename);
 		
 		TiXmlElement *xmlRoot = doc.RootElement();
 		if (strcmp(xmlRoot->Value(), "scene") != 0) throw std::string("invalid root node \"") + xmlRoot->Value() + std::string("\"");
