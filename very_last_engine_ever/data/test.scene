@@ -31,9 +31,9 @@
                 </prs_transform>
             </children>
         </prs_transform>
-        <prs_transform name="Camera01-node_transform">
-            <position x="0.000000" y="0.000000" z="-100.000000" />
-            <rotation x="0.000003" y="0.000000" z="0.000000" />
+        <prs_transform name="Camera01-node_transform" keys="Camera01-node_transform.keys">
+            <position x="88.527901" y="11.320300" z="-45.107201" />
+            <rotation x="6.499980" y="-63.000046" z="0.000000" />
             <scale x="1.000000" y="1.000000" z="1.000000" />
             <children>
                 <target_transform name="Camera01-camera_lookat" target="Camera01.Target-node_transform">

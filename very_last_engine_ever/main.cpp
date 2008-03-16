@@ -504,7 +504,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					testRenderer.view       = view;
 					testRenderer.projection = proj; // math::Matrix4x4::projection(60.0f, 16.0f / 9, 1.0f, 1000.0f);
 					
-					testScene->anim(beat);
+					testScene->anim(beat * 4);
 					scenegraph::Camera *cam = testScene->findCamera("Camera01-camera");
 					if (NULL != cam)
 					{
@@ -512,7 +512,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 						Vector3 trans = camView.getTranslation();
 						camView = camView.inverse();
 						testRenderer.view = camView;
-						printf("tranz!!! %f %f %f\n", trans.x, trans.y, trans.z);
 						testRenderer.projection = cam->getProjection();
 					}
 
