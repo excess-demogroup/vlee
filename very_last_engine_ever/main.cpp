@@ -322,8 +322,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		Texture desaturate_tex = engine::loadTexture(device, "data/desaturate.png");
 		Effect *color_map_fx = engine::loadEffect(device, "data/color_map.fx");
-//		Image color_image(color1_hdr, color_map_fx);
-		Image color_image(color_msaa, color_map_fx);
 		Texture color_maps[2];
 		
 		color_maps[0] = engine::loadTexture(device, "data/color_map0.png");
@@ -473,6 +471,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Matrix4x4 view;
 			view.makeLookAt(eye, at, roll);
 			Matrix4x4 proj = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 0.1f, 1000.f);
+
+
+			testScene->anim(fmod(beat * 2, 100));
+			scenegraph::Camera *cam = testScene->findCamera("Camera01-camera");
+			if (NULL != cam)
+			{
+				Matrix4x4 camView = cam->getAbsoluteTransform();
+				Vector3 trans = camView.getTranslation();
+				view = camView.inverse();
+				proj = cam->getProjection();
+			}
+
 			
 			skybox_fx->setMatrices(world, view, proj);
 			
@@ -503,18 +513,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 				{
 					testRenderer.view       = view;
 					testRenderer.projection = proj; // math::Matrix4x4::projection(60.0f, 16.0f / 9, 1.0f, 1000.0f);
-					
-					testScene->anim(beat * 4);
-					scenegraph::Camera *cam = testScene->findCamera("Camera01-camera");
-					if (NULL != cam)
-					{
-						Matrix4x4 camView = cam->getAbsoluteTransform();
-						Vector3 trans = camView.getTranslation();
-						camView = camView.inverse();
-						testRenderer.view = camView;
-						testRenderer.projection = cam->getProjection();
-					}
-
 					testRenderer.draw();
 					
 					device->SetTransform(D3DTS_VIEW, &view);
@@ -756,12 +754,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
 			color_map_fx->setTexture("desaturate", desaturate_tex);
 
-			color_image.setPosition(-1, -1);
-			color_image.setDimension(2, 2);
-			
-#if 0
-			color_image.draw(device);
-#else
 			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
 			drawFuzz(color_map_fx, vertex_streamer,  time, 1.0f, colorMapDistortXTrack.getValue(beat), colorMapDistortYTrack.getValue(beat),
 				0.5f / letterbox_viewport.Width, 0.5f / letterbox_viewport.Height);
@@ -769,7 +761,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			drawFuzz(color_map_fx, vertex_streamer, -time, 0.0f, colorMapDistortXTrack.getValue(beat), 0.0f,
 				0.5f / letterbox_viewport.Width, 0.5f / letterbox_viewport.Height);
 			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED | D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
-#endif
 
 			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
@@ -787,9 +778,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			);
 			
 			/* draw scanlines */
-/*			scanlinesImage.setPosition(-1, -1);
+			scanlinesImage.setPosition(-1, -1);
 			scanlinesImage.setDimension(2, 2);
-			scanlinesImage.draw(device); */
+			scanlinesImage.draw(device);
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			
