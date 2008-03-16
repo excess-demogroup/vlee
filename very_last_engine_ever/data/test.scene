@@ -23,7 +23,7 @@
                 <mesh name="Teapot01-node_mesh_0" file="Teapot01-mesh_0.x" />
                 <prs_transform name="Teapot02-node_transform">
                     <position x="-29.363100" y="-29.363100" z="4.501250" />
-                    <rotation x="-80.264458" y="29.999990" z="-9.735610" />
+                    <rotation x="-80.264404" y="30.000008" z="-9.735624" />
                     <scale x="1.000000" y="1.000000" z="1.000000" />
                     <children>
                         <prs_transform name="Teapot02-node_PIVOT_transform">
@@ -36,8 +36,8 @@
                         </prs_transform>
                         <prs_transform name="Teapot03-node_transform">
                             <position x="-58.673698" y="-60.000801" z="-22.976400" />
-                            <rotation x="-98.698975" y="-14.477457" z="-28.170544" />
-                            <scale x="1.000000" y="1.000000" z="1.000000" />
+                            <rotation x="-98.699356" y="-14.477552" z="-28.170597" />
+                            <scale x="1.000002" y="1.000002" z="1.000001" />
                             <children>
                                 <mesh name="Teapot03-node_mesh_0" file="Teapot03-mesh_0.x" />
                             </children>

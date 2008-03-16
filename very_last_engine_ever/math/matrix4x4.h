@@ -54,6 +54,14 @@ namespace math
 			return ret;
 		}
 
+		static Matrix4x4 lookAt(const Vector3 &eye, const Vector3 &target, float roll)
+		{
+			Matrix4x4 ret;
+			ret.makeLookAt(eye, target, roll);
+			return ret;
+		}
+
+
 		void makeIdentity()
 		{
 			D3DXMatrixIdentity(this);

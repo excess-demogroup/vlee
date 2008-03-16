@@ -11,7 +11,5 @@ namespace scenegraph
 		Transform(std::string name) : Node(name) {}
 		
 		virtual NodeType getType() { return NODE_TRANSFORM; }
-		
-		virtual math::Matrix4x4 getTransform() = 0;
 	};
 }

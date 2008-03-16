@@ -28,27 +28,28 @@ void engine::Image::draw(renderer::Device &device)
 	device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 	eff->setTexture("tex", tex);
 	float s_nudge = 0.0f, t_nudge = 0.0f;
-	float x_nudge = 0.0f, y_nudge = 0.0f;
 
 	/* get render target */
 	renderer::Surface rt = device.getRenderTarget();
 	
+#if 0
 	/* get viewport description */
 	D3DVIEWPORT9 viewport = device.getViewport();
 
 	/* setup nudge */
-	x_nudge = -0.5f / (float(viewport.Width)  / 2);
-	y_nudge =  0.5f / (float(viewport.Height) / 2);
+	float x_nudge = -0.5f / (float(viewport.Width)  / 2);
+	float y_nudge =  0.5f / (float(viewport.Height) / 2);
+#endif
 
-	tex.getLevelDesc();
+	D3DSURFACE_DESC tex_desc = tex.getLevelDesc();
 
 	/* get texture description */
-	D3DSURFACE_DESC tex_desc;
-	tex->GetLevelDesc(0, &tex_desc);
-
+/*	D3DSURFACE_DESC tex_desc;
+	tex->GetLevelDesc(0, &tex_desc); */
+	
 	/* setup nudge */
-	s_nudge = 0.0f / tex_desc.Width;
-	t_nudge = 0.0f / tex_desc.Height;
+	s_nudge = 0.5f / tex_desc.Width;
+	t_nudge = 0.5f / tex_desc.Height;
 
 	/* draw quad */
 	drawQuad(

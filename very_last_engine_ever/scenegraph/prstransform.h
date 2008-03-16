@@ -17,7 +17,7 @@ namespace scenegraph
 			matrix_dirty(true)
 		{}
 		
-		math::Matrix4x4 getTransform()
+		math::Matrix4x4 getLocalTransform()
 		{
 			if (matrix_dirty)
 			{

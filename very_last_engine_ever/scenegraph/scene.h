@@ -2,7 +2,6 @@
 
 #include "node.h"
 #include "camera.h"
-#include "target.h"
 
 namespace scenegraph
 {
@@ -17,10 +16,10 @@ namespace scenegraph
 		{
 			return findNodeByType<Camera, NODE_CAMERA>(name);
 		}
-		
-		Target *findTarget(std::string name)
+
+		Node *findNode(const std::string &name)
 		{
-			return findNodeByType<Target, NODE_TARGET>(name);
+			return findChild(name);
 		}
 		
 	private:

@@ -9,7 +9,6 @@
 #include "targettransform.h"
 
 #include "meshnode.h"
-#include "target.h"
 
 #include "../math/vector3.h"
 
@@ -138,15 +137,7 @@ public:
 		
 		return ret;
 	}
-
-	Node *loadTarget(TiXmlElement *xmlElem)
-	{
-		scenegraph::Target *ret = new scenegraph::Target(loadString(xmlElem, "name"));
-		ret->setTarget(loadVector3(xmlElem));
-		
-		return ret;
-	}
-
+	
 	void loadChildren(renderer::Device &device, Node *graphNode, TiXmlElement *xmlElem)
 	{
 		TiXmlNode* curr = xmlElem->FirstChild();
@@ -162,7 +153,6 @@ public:
 				if      (strcmp(val, "prs_transform") == 0)    newChild = loadPrsTransform(device, currElem);
 				else if (strcmp(val, "target_transform") == 0) newChild = loadTargetTransform(device, currElem);
 				else if (strcmp(val, "mesh") == 0)             newChild = loadMesh(device, currElem);
-				else if (strcmp(val, "target") == 0)           newChild = loadTarget(currElem);
 				else throw std::string("unknown element \"") + val + std::string("\"");
 				
 				assert(NULL != newChild);
@@ -212,7 +202,7 @@ Scene *scenegraph::loadScene(renderer::Device &device, const std::string filenam
 		std::map<scenegraph::TargetTransform*, std::string>::iterator i;
 		for (i = sceneLoader.targetmap.begin(); i != sceneLoader.targetmap.end(); ++i)
 		{
-			i->first->setTarget(scene->findTarget(i->second));
+			i->first->setTarget(scene->findNode(i->second));
 		}
 		return scene;
 	}

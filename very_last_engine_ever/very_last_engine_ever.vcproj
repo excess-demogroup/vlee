@@ -631,10 +631,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\scenegraph\target.h"
-					>
-				</File>
-				<File
 					RelativePath=".\scenegraph\transform.h"
 					>
 				</File>

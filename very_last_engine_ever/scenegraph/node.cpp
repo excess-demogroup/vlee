@@ -13,6 +13,6 @@ Node::~Node()
 /*	std::list<Node*>::iterator i;
 	for (i = children.begin(); i != children.end(); ++i)
 	{
-		(*i)->parent = 0;
+		(*i)->parent = NULL;
 	} */
 }
