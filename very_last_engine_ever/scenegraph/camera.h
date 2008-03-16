@@ -10,7 +10,7 @@ namespace scenegraph
 	public:
 		Camera(std::string name) :
 			Node(name),
-			fov(60.0f), aspect(4.0f / 3),
+			fov(60.0f), aspect(16.0f / 9),
 			znear(1.0f), zfar(1000.0f),
 			projection_dirty(true)
 		{
@@ -21,6 +21,18 @@ namespace scenegraph
 		void setFov(float fov)
 		{
 			this->fov = fov;
+			projection_dirty = true;
+		}
+		
+		void setZNear(float znear)
+		{
+			this->znear = znear;
+			projection_dirty = true;
+		}
+		
+		void setZFar(float zfar)
+		{
+			this->zfar = zfar;
 			projection_dirty = true;
 		}
 		

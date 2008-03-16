@@ -28,7 +28,7 @@ namespace scenegraph
 		}
 		
 		void setParent(Node *node) { parent = node; }
-		Node *getParent() { return parent; }
+		Node *getParent() const { return parent; }
 		
 		Node *findChild(const std::string &name)
 		{
@@ -53,7 +53,7 @@ namespace scenegraph
 		virtual NodeType getType() = 0;
 		virtual math::Matrix4x4 getLocalTransform() { return math::Matrix4x4::identity(); };
 
-		math::Matrix4x4 getAbsoluteTransform()
+		virtual math::Matrix4x4 getAbsoluteTransform()
 		{
 			math::Matrix4x4 absoluteTransform = getLocalTransform();
 			
@@ -62,6 +62,7 @@ namespace scenegraph
 			{
 				curr = curr->parent;
 				absoluteTransform *= curr->getLocalTransform();
+//				absoluteTransform = curr->getLocalTransform() * absoluteTransform;
 			}
 			
 			return absoluteTransform;

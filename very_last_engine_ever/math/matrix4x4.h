@@ -60,8 +60,7 @@ namespace math
 			ret.makeLookAt(eye, target, roll);
 			return ret;
 		}
-
-
+		
 		void makeIdentity()
 		{
 			D3DXMatrixIdentity(this);
@@ -92,6 +91,18 @@ namespace math
 			D3DXVECTOR3 up(0, 1, 0);
 			D3DXMatrixLookAtLH(this, &eye, &target, &up);
 			*this *= rotation(Vector3(0, 0, roll));;
+		}
+		
+		Matrix4x4 inverse() const
+		{
+			Matrix4x4 res;
+			D3DXMatrixInverse(&res, NULL, this);
+			return res;
+		}
+		
+		Vector3 getTranslation() const
+		{
+			return Vector3(_41, _42, _43);
 		}
 	};
 

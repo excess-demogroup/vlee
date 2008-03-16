@@ -124,7 +124,19 @@ public:
 		
 		return ret;
 	}
-
+	
+	Node *loadCamera(TiXmlElement *xmlElem)
+	{
+		std::string fileName = loadString(xmlElem, "file");
+		
+		Camera *ret = new Camera(loadString(xmlElem, "name"));
+		ret->setFov(loadFloat(xmlElem, "fov", 60.0f));
+		ret->setZNear(loadFloat(xmlElem, "znear", 0.1f));
+		ret->setZFar(loadFloat(xmlElem, "zfar", 1000.0f));
+		
+		return ret;
+	}
+	
 	Node *loadMesh(renderer::Device &device, TiXmlElement *xmlElem)
 	{
 		std::string fileName = loadString(xmlElem, "file");
@@ -153,6 +165,7 @@ public:
 				if      (strcmp(val, "prs_transform") == 0)    newChild = loadPrsTransform(device, currElem);
 				else if (strcmp(val, "target_transform") == 0) newChild = loadTargetTransform(device, currElem);
 				else if (strcmp(val, "mesh") == 0)             newChild = loadMesh(device, currElem);
+				else if (strcmp(val, "camera") == 0)           newChild = loadCamera(currElem);
 				else throw std::string("unknown element \"") + val + std::string("\"");
 				
 				assert(NULL != newChild);
@@ -202,7 +215,9 @@ Scene *scenegraph::loadScene(renderer::Device &device, const std::string filenam
 		std::map<scenegraph::TargetTransform*, std::string>::iterator i;
 		for (i = sceneLoader.targetmap.begin(); i != sceneLoader.targetmap.end(); ++i)
 		{
-			i->first->setTarget(scene->findNode(i->second));
+			Node *target = scene->findNode(i->second);
+			if (NULL == target) throw std::string("Could not find target node \"") + i->second + "\"";
+			i->first->setTarget(target);
 		}
 		return scene;
 	}

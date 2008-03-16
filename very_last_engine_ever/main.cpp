@@ -123,7 +123,7 @@ void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_
 }
 
 #include "engine/vertexstreamer.h"
-void drawFuzz(Effect *effect, engine::VertexStreamer &streamer, float time, float hardness, float xdist_amt, float ydist_amt)
+void drawFuzz(Effect *effect, engine::VertexStreamer &streamer, float time, float hardness, float xdist_amt, float ydist_amt, float s_nudge = 0.0f, float t_nudge = 0.0f)
 {
 	UINT passes;
 	(*effect)->Begin(&passes, 0);
@@ -150,22 +150,22 @@ void drawFuzz(Effect *effect, engine::VertexStreamer &streamer, float time, floa
 			yoffs += fmodf(tanf(y1 * float(M_PI) * 4 + time), 0.9f) * hardness;
 			yoffs *= 0.05f * ydist_amt;
 
-			streamer.uv(    D3DXVECTOR2(0.f + last_xoffs, 1 - y1 + last_yoffs));
+			streamer.uv(    D3DXVECTOR2(0.f + last_xoffs + s_nudge, 1 - y1 + last_yoffs + t_nudge));
 			streamer.vertex(D3DXVECTOR3(-1, (y1 * 2) - 1, 0));
 			
-			streamer.uv(    D3DXVECTOR2( 0.f + xoffs, 1 - y2 + yoffs));
+			streamer.uv(    D3DXVECTOR2( 0.f + xoffs + s_nudge, 1 - y2 + yoffs + t_nudge));
 			streamer.vertex(D3DXVECTOR3(-1, (y2 * 2) - 1, 0));
 			
-			streamer.uv(    D3DXVECTOR2( 1.f + xoffs, 1 - y2 + yoffs));
+			streamer.uv(    D3DXVECTOR2( 1.f + xoffs + s_nudge, 1 - y2 + yoffs + t_nudge));
 			streamer.vertex(D3DXVECTOR3( 1, (y2 * 2) - 1, 0));
 			
-			streamer.uv(    D3DXVECTOR2( 0 + last_xoffs, 1 - y1 + last_yoffs));
+			streamer.uv(    D3DXVECTOR2( 0 + last_xoffs + s_nudge, 1 - y1 + last_yoffs + t_nudge));
 			streamer.vertex(D3DXVECTOR3(-1, (y1 * 2) - 1, 0));
 			
-			streamer.uv(    D3DXVECTOR2( 1 + xoffs, 1 - y2 + yoffs));
+			streamer.uv(    D3DXVECTOR2( 1 + xoffs + s_nudge, 1 - y2 + yoffs + t_nudge));
 			streamer.vertex(D3DXVECTOR3( 1, (y2 * 2) - 1, 0));
 			
-			streamer.uv(    D3DXVECTOR2( 1 + last_xoffs, 1 - y1 + last_yoffs));
+			streamer.uv(    D3DXVECTOR2( 1 + last_xoffs + s_nudge, 1 - y1 + last_yoffs + t_nudge));
 			streamer.vertex(D3DXVECTOR3( 1, (y1 * 2) - 1, 0));
 			last_xoffs = xoffs;
 			last_yoffs = yoffs;
@@ -301,6 +301,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		// load a scene we can render, yes
 		scenegraph::Scene *testScene = scenegraph::loadScene(device, "data/test.scene");
 		engine::SceneRenderer testRenderer(testScene, NULL);
+
+		scenegraph::Node *testNode = testScene->findChild("Camera01-node_transform");
+		assert(NULL != testNode);
 		
 //		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE);
 //		RenderTexture rt2(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
@@ -319,8 +322,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		Texture desaturate_tex = engine::loadTexture(device, "data/desaturate.png");
 		Effect *color_map_fx = engine::loadEffect(device, "data/color_map.fx");
-		Image color_image(color1_hdr, color_map_fx);
-//		Image color_image(color_msaa, color_map_fx);
+//		Image color_image(color1_hdr, color_map_fx);
+		Image color_image(color_msaa, color_map_fx);
 		Texture color_maps[2];
 		
 		color_maps[0] = engine::loadTexture(device, "data/color_map0.png");
@@ -498,9 +501,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 				//			time /= 4;
 
 				{
-					float scale = 1.0f / 100;
-					testRenderer.view       = view * Matrix4x4::scaling(Vector3(scale, scale, scale));
+					testRenderer.view       = view;
 					testRenderer.projection = proj; // math::Matrix4x4::projection(60.0f, 16.0f / 9, 1.0f, 1000.0f);
+
+					scenegraph::Camera *cam = testScene->findCamera("Camera01-camera");
+					if (NULL != cam)
+					{
+						Matrix4x4 camView = cam->getAbsoluteTransform();
+						Vector3 trans = camView.getTranslation();
+						camView = camView.inverse();
+						testRenderer.view = camView;
+						printf("tranz!!! %f %f %f\n", trans.x, trans.y, trans.z);
+						testRenderer.projection = cam->getProjection();
+					}
+
 					testRenderer.draw();
 					
 					device->SetTransform(D3DTS_VIEW, &view);
@@ -745,13 +759,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_image.setPosition(-1, -1);
 			color_image.setDimension(2, 2);
 			
+#if 0
+			color_image.draw(device);
+#else
 			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
-//			color_image.draw(device);
-			drawFuzz(color_map_fx, vertex_streamer,  time, 1.0f, colorMapDistortXTrack.getValue(beat), colorMapDistortYTrack.getValue(beat));
+			drawFuzz(color_map_fx, vertex_streamer,  time, 1.0f, colorMapDistortXTrack.getValue(beat), colorMapDistortYTrack.getValue(beat),
+				0.5f / letterbox_viewport.Width, 0.5f / letterbox_viewport.Height);
 			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
-			drawFuzz(color_map_fx, vertex_streamer, -time, 0.0f, colorMapDistortXTrack.getValue(beat), 0.0f);
+			drawFuzz(color_map_fx, vertex_streamer, -time, 0.0f, colorMapDistortXTrack.getValue(beat), 0.0f,
+				0.5f / letterbox_viewport.Width, 0.5f / letterbox_viewport.Height);
 			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED | D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
-			
+#endif
+
 			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
@@ -768,9 +787,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			);
 			
 			/* draw scanlines */
-			scanlinesImage.setPosition(-1, -1);
+/*			scanlinesImage.setPosition(-1, -1);
 			scanlinesImage.setDimension(2, 2);
-			scanlinesImage.draw(device);
+			scanlinesImage.draw(device); */
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			
