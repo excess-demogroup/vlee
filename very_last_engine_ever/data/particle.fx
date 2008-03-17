@@ -15,6 +15,7 @@ float3 fog_color = float3(1, 1, 1);
 
 
 float4x4 WorldViewProjection : WORLDVIEWPROJECTION;
+float4x4 WorldView : WORLDVIEW;
 
 // textures
 texture tex;
@@ -41,7 +42,7 @@ struct VS_OUTPUT
 {
 	float4 pos : POSITION;
 	float2 tex : TEXCOORD0;
-	float  fog : TEXCOORD1;
+	float4 l : TEXCOORD1;
 };
 
 VS_OUTPUT vertex(VS_INPUT In)
@@ -49,19 +50,36 @@ VS_OUTPUT vertex(VS_INPUT In)
 	VS_OUTPUT Out;
 	In.pos += left * In.tex.x * In.size;
 	In.pos += up   * In.tex.y * In.size;
-	Out.pos  = mul(float4(In.pos,  1), WorldViewProjection);
 	
-	Out.fog = clamp(1.0f / (Out.pos.z / 10), 0.0, 1.0);
+	float3 center = mul(In.pos.xyz, WorldView);
+	Out.l.xyz = normalize(-center);
+	Out.l.w   = 1.0 / ((length(center) + 1) / 50);
+	
+	Out.pos   = mul(float4(In.pos,  1), WorldViewProjection);
 	
 	Out.tex = float2(In.tex.x * 0.5, -In.tex.y * 0.5);
 	Out.tex += float2(0.5f, 0.5f);
+	
 	return Out;
 }
 
-float4 pixel(VS_OUTPUT In) : COLOR
+struct PS_OUTPUT
 {
-	float4 col = tex2D(tex_samp, In.tex);
-	return float4(col.xyz, col.a * In.fog);
+	float4 col : COLOR;
+};
+
+PS_OUTPUT pixel(VS_OUTPUT In)
+{
+	PS_OUTPUT output;
+	float4 texcol = tex2D(tex_samp, In.tex);
+	clip(texcol.a - 0.5);
+	
+//	float3 normal = normalize(texcol.xyz * 2 - 1);
+	float3 normal = texcol.xyz * 2 - 1;
+	
+	output.col.rgb = max(dot(normal, In.l.xyz), 0) * In.l.w; //  * 10 * In.fog;
+	output.col.a = texcol.a;
+	return output;
 }
 
 technique blur_ps_vs_2_0

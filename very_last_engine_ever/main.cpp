@@ -297,7 +297,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		RenderTexture color2_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
 		
 		engine::VertexStreamer vertex_streamer(device);
-
+		
 		// load a scene we can render, yes
 		scenegraph::Scene *testScene = scenegraph::loadScene(device, "data/test.scene");
 		engine::SceneRenderer testRenderer(testScene, NULL);
@@ -314,7 +314,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *blur_fx     = engine::loadEffect(device, "data/blur.fx");
 		
 		Effect *particle_fx = engine::loadEffect(device, "data/particle.fx");
-		Texture bartikkel_tex = engine::loadTexture(device, "data/particle.png");
+		Texture bartikkel_tex = engine::loadTexture(device, "data/spherenormal.png");
 		particle_fx->setTexture("tex", bartikkel_tex);
 		
 		Effect *noise_fx = engine::loadEffect(device, "data/noise.fx");
@@ -345,15 +345,26 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Vector3 dir;
 		};
 		engine::ParticleCloud<ParticleData> cloud;
-		for (int i = 0; i < 1024 * 4; ++i)
+		for (int i = 0; i < 12 * 1024; ++i)
 		{
-			float x = (randf() - 0.5f);
-			float z = (randf() - 0.5f);
-			float y = (randf() - 0.5f);
-			float s = (randf() + 0.75f) * 0.55f;
+			float x, y, z;
+			do {
+				x = (randf() - 0.5f) * 2;
+				z = (randf() - 0.5f) * 2;
+				y = (randf() - 0.5f) * 2;
+			} while ((x * x + y * y + z * z) > 1.0f || (fabs(x) < 1e-5 && fabs(y) < 1e-5 && fabs(z) < 1e-5));
+
+			float dist = randf();
+			dist = pow(dist, 5.0f);
+			dist += 0.01f;
+			x *= dist;
+			y *= dist;
+			z *= dist;
+
+			float s = (randf() + 0.5f) * 0.45f;
 			cloud.addParticle(
 				engine::Particle<ParticleData>(
-					Vector3(x, y, z) * 100,
+					Vector3(x, y, z) * 200,
 					ParticleData(s,
 						math::normalize(Vector3(
 						1.0f / x,
@@ -364,12 +375,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 				)
 			);
 		}
-		for (int i = 0; i < 1024 * 4; ++i)
+/*		for (int i = 0; i < 4 * 1024; ++i)
 		{
 			float x = (randf() - 0.5f);
 			float z = (randf() - 0.5f);
 			float y = (randf() - 0.5f);
-			float s = (randf() + 0.75f) * 0.55f;
+			float s = (randf() + 0.5f) * 0.45f;
 			cloud.addParticle(
 				engine::Particle<ParticleData>(
 					Vector3(x, y, z) * 200,
@@ -382,7 +393,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 						)
 					)
 				);
-		}
+		} */
 
 		Effect *explosion_fx = engine::loadEffect(device, "data/explosion.fx");
 		Texture explosion_tex = engine::loadTexture(device, "data/explosion.png");
@@ -452,18 +463,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 			);
 			eye = normalize(eye);
 
-			float camera_distance = 60 * (cameraDistanceTrack.getValue(beat));
+			float camera_distance = 360 * (cameraDistanceTrack.getValue(beat));
 			eye *= camera_distance;
 			float shake_time = time * 0.125f * (cameraShakeTempoTrack.getValue(beat));
 			Vector3 at(0, 0, 0);
+			
+			eye = Vector3(sin(beat * 0.005f), 0, -cos(beat * 0.005f)) * 80;
+			at = Vector3(20, 0, 0);
+			eye -= at;
+			
 			at += Vector3(
 				pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
 				pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
 				pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
-			) * 0.05f * camera_distance * (cameraShakeAmtTrack.getValue(beat));
-			
-			eye = Vector3(0, 0, -100);
-			at = Vector3(0, 0, 0);
+				) * 0.05f * camera_distance * (cameraShakeAmtTrack.getValue(beat));
 			
 			Matrix4x4 world;
 			world.makeIdentity();
@@ -471,18 +484,22 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Matrix4x4 view;
 			view.makeLookAt(eye, at, roll);
 			Matrix4x4 proj = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 0.1f, 1000.f);
-
-
-			testScene->anim(fmod(beat * 2, 100));
+			
+			
+/*			testScene->anim(fmod(beat, 100));
 			scenegraph::Camera *cam = testScene->findCamera("Camera01-camera");
 			if (NULL != cam)
 			{
 				Matrix4x4 camView = cam->getAbsoluteTransform();
-				Vector3 trans = camView.getTranslation();
+				camView *= Matrix4x4::rotation(math::Quaternion(
+					(pow(sin(shake_time * 15 - cos(shake_time * 20)), 3) / 100) * cameraShakeAmtTrack.getValue(beat),
+					(pow(cos(shake_time * 15 - sin(shake_time * 21)), 3) / 100) * cameraShakeAmtTrack.getValue(beat),
+					0
+					)
+				);
 				view = camView.inverse();
 				proj = cam->getProjection();
-			}
-
+			} */
 			
 			skybox_fx->setMatrices(world, view, proj);
 			
@@ -513,27 +530,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				{
 					testRenderer.view       = view;
 					testRenderer.projection = proj; // math::Matrix4x4::projection(60.0f, 16.0f / 9, 1.0f, 1000.0f);
-					testRenderer.draw();
-					
-					device->SetTransform(D3DTS_VIEW, &view);
-					device->SetTransform(D3DTS_PROJECTION, &proj);
-					device->SetRenderState(D3DRS_LIGHTING, false);
-					device->SetRenderState(D3DRS_ZENABLE, false);
-					vertex_streamer.begin(D3DPT_LINELIST);
-					vertex_streamer.diffuse(0xFFFF0000);
-					vertex_streamer.vertex(Vector3(0, 0, 0));
-					vertex_streamer.vertex(Vector3(10, 0, 0));
-
-					vertex_streamer.diffuse(0xFF00FF00);
-					vertex_streamer.vertex(Vector3(0, 0, 0));
-					vertex_streamer.vertex(Vector3(0, 10, 0));
-
-					vertex_streamer.diffuse(0xFF0000FF);
-					vertex_streamer.vertex(Vector3(0, 0, 0));
-					vertex_streamer.vertex(Vector3(0, 0, 10));
-
-					vertex_streamer.end();
-					device->SetRenderState(D3DRS_ZENABLE, true);
+//					testRenderer.draw();
 				}
 
 #if 0
@@ -595,9 +592,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 				float particleScroll = 0.0f; // -jellySwimTrack.getValue(beat) / (10 * 256);
 				for (int i = 0; i < 1; ++i)
 				{
-					world = math::Matrix4x4::translation(Vector3(0, (math::frac(particleScroll) - i) * 150, 0));
+//					world = math::Matrix4x4::translation(Vector3(0, (math::frac(particleScroll) - i) * 150, 0));
+//					world = math::Matrix4x4::translation(Vector3(0, 0, 0));
+
 					Matrix4x4 modelview = world * view;
-					cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
+//					cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
 					
 					particle_fx->setMatrices(world, view, proj);
 					
@@ -617,10 +616,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-					device->SetRenderState(D3DRS_ZWRITEENABLE, false);
+//					device->SetRenderState(D3DRS_ZWRITEENABLE, false);
 					
 					engine::ParticleCloud<ParticleData>::ParticleContainer::iterator iter = cloud.particles.begin();
 					bool iter_done = false;
+					
+					float explode = std::max((beat - 255) * 0.25f, 0.0f);
+					explode *= explode;
 					
 					int p = 0;
 					while (!iter_done)
@@ -628,22 +630,22 @@ int main(int /*argc*/, char* /*argv*/ [])
 						streamer.begin();
 						for (int i = 0; i < 1024; ++i)
 						{
-							streamer.add(
-								Vector3(iter->pos.x,
-										iter->pos.y,
-										iter->pos.z
-								),
-								iter->data.size // + (1 - fmod(beat, 1.0)) * 2
-							);
-	//						iter->pos += iter->data.dir * 0.1f;
-	//						if (math::length(iter->pos) > 100.0f) iter->pos = Vector3(0,0,0);
-/*							float theta = float(p) * 0.005f;
+							Vector3 pos = iter->pos;
+							pos = pos + normalize(pos) * explode;
+							float size = iter->data.size;
+
+
+							streamer.add(pos, size);
+							
+/*							iter->pos += iter->data.dir * 0.1f;
+							if (math::length(iter->pos) > 100.0f) iter->pos = Vector3(0,0,0); */
+/*							float theta = float(p) * 0.05f;
 							float thetaa = theta - time;
 							float radius = 50.0f;
-							iter->pos = Vector3(cos(thetaa) * 3.1, cos(thetaa) * 2, sin(thetaa) * 3);
+							iter->pos = Vector3(cos(thetaa) * 3.13, cos(thetaa) * 2.93, sin(thetaa) * 3.1);
 							iter->pos = Vector3(cos(iter->pos.x - iter->pos.y * 0.93f), cos(iter->pos.y * 1.5f), sin(iter->pos.z - iter->pos.x));
-							iter->pos = normalize(iter->pos) * radius;  
-							iter->data.size = 10.0f / (1 + theta); */
+							iter->pos = normalize(iter->pos) * radius; */
+//							iter->data.size = 10.0f / (1 + theta);
 							
 							++iter;
 							++p;
@@ -664,6 +666,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 					tex_trans_fx->setTexture("tex", bar_tex);
 					tex_trans_fx->setFloat("alpha", 1.0f);
 
+					float anim = std::max(beat - 64, 0.0f) / 4;
+
+					float scale = 10;
+					Matrix4x4 world = Matrix4x4::scaling(math::Vector3(scale, scale, scale));
+					world = Matrix4x4::translation(Vector3(2, 0, 0)) * world;
+
 					unsigned int *data = (unsigned int*)rect.pBits;
 					for (size_t y = 0; y < logo_surf.getDesc().Height; ++y)
 					{
@@ -673,9 +681,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 							if ((color & 0xFFFFFF) != 0)
 							{
 								tex_trans_fx->setMatrices(
-									Matrix4x4::translation(Vector3(x * 0.1f, y * -0.1f + 3 / std::max((int(y) - 10) + time * 4, 0.0f), 0)) *
-									Matrix4x4::rotation(Vector3(cos(time - x * 0.1) / (time + 1), sin(time + y * 0.15) / (time + 1), 0)) * 
-									Matrix4x4::translation(Vector3(0, 0, 4 - 4 / (time + 1))),
+									
+									Matrix4x4::translation(Vector3(x * 0.1f, y * -0.1f + 3 / std::max((int(y) - 10) + anim * 4, 0.0f), 0)) *
+									world *
+									Matrix4x4::rotation(Vector3(cos(anim - x * 0.1) / (anim + 1), sin(anim + y * 0.15) / (anim + 1), 0)) * 
+									Matrix4x4::translation(Vector3(0, 0, 4 - 4 / (anim + 1))),
 									view,
 									proj);
 								drawQuad(
@@ -751,7 +761,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setFloat("alpha", 0.25f);
 			color_map_fx->setTexture("tex", color2_hdr);
 			color_map_fx->setTexture("tex2", color_msaa);
-			color_map_fx->setTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
+//			color_map_fx->setTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
+			color_map_fx->setTexture("color_map", color_maps[0]);
 			color_map_fx->setTexture("desaturate", desaturate_tex);
 
 			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
