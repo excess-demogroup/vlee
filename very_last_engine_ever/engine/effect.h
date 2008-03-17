@@ -25,6 +25,8 @@ namespace engine
 			projection = p->GetParameterBySemantic(0, "PROJECTION");
 			worldview  = p->GetParameterBySemantic(0, "WORLDVIEW");
 			worldviewprojection = p->GetParameterBySemantic(0, "WORLDVIEWPROJECTION");
+			viewPos   = p->GetParameterBySemantic(0, "VIEWPOSITION");
+			viewDir   = p->GetParameterBySemantic(0, "VIEWDIRECTION");
 		}
 
 		void commitChanges()
@@ -73,20 +75,23 @@ namespace engine
 			p->SetTexture(param, texture);
 		}
 		
-		void setMatrices(D3DXMATRIX world, D3DXMATRIX view, D3DXMATRIX proj)
+		void setMatrices(const math::Matrix4x4 &world, const math::Matrix4x4 &view, const math::Matrix4x4 &proj)
 		{
 			assert( NULL != p );
-			D3DXMATRIX world_view_proj;
+			math::Matrix4x4 world_view_proj;
 			world_view_proj = world * view * proj;
 			
-			D3DXMATRIX world_view;
+			math::Matrix4x4 world_view;
 			world_view = world * view;
+			math::Matrix4x4 world_view_inv = world_view.inverse();
 			
 			if (this->world != NULL) setMatrix(this->world,      world);
-			setMatrix(this->view,       view);
-			setMatrix(this->projection, proj);
-			setMatrix(this->worldview,  world_view);
-			setMatrix(this->worldviewprojection, world_view_proj);
+			if (this->view  != NULL) setMatrix(this->view,       view);
+			if (this->projection != NULL) setMatrix(this->projection, proj);
+			if (this->worldview != NULL) setMatrix(this->worldview,  world_view);
+			if (this->worldviewprojection != NULL) setMatrix(this->worldviewprojection, world_view_proj);
+			if (this->viewPos != NULL) setVector3(this->viewPos,  world_view_inv.getTranslation());
+			if (this->viewDir != NULL) setVector3(this->viewDir,  world_view.getZAxis());
 		}
 
 		void draw(Drawable &d)
@@ -104,6 +109,7 @@ namespace engine
 		}
 
 		D3DXHANDLE world, view, projection, worldview, worldviewprojection;
+		D3DXHANDLE viewPos, viewDir;
 	};
 
 	Effect *loadEffect(renderer::Device &device, std::string filename);

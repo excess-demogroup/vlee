@@ -178,7 +178,7 @@ public:
 		MeshNode *ret = new MeshNode(
 			loadString(xmlElem, "name"),
 			engine::loadMesh(device, basename + fileName),
-			engine::loadEffect(device, basename + "tex_trans.fx")
+			engine::loadEffect(device, basename + "phong.fx")
 		);
 		
 		return ret;

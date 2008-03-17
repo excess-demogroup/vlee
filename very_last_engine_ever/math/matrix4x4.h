@@ -104,6 +104,11 @@ namespace math
 		{
 			return Vector3(_41, _42, _43);
 		}
+		
+		Vector3 getZAxis() const
+		{
+			return Vector3(_13, _23, _33);
+		}
 	};
 
 	inline Vector3 mul(const Matrix4x4 &m, const Vector3 &v)

@@ -317,6 +317,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture bartikkel_tex = engine::loadTexture(device, "data/spherenormal.png");
 		particle_fx->setTexture("tex", bartikkel_tex);
 		
+		Effect *particle2_fx = engine::loadEffect(device, "data/particle2.fx");
+		Texture lightparticle_tex = engine::loadTexture(device, "data/lightparticle.png");
+		particle2_fx->setTexture("tex", lightparticle_tex);
+		
 		Effect *noise_fx = engine::loadEffect(device, "data/noise.fx");
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
 		
@@ -375,25 +379,37 @@ int main(int /*argc*/, char* /*argv*/ [])
 				)
 			);
 		}
-/*		for (int i = 0; i < 4 * 1024; ++i)
+		engine::ParticleCloud<ParticleData> cloud2;
+		for (int i = 0; i < 4 * 1024; ++i)
 		{
-			float x = (randf() - 0.5f);
-			float z = (randf() - 0.5f);
-			float y = (randf() - 0.5f);
-			float s = (randf() + 0.5f) * 0.45f;
-			cloud.addParticle(
+			float x, y, z;
+			do {
+				x = (randf() - 0.5f) * 2;
+				z = (randf() - 0.5f) * 2;
+				y = (randf() - 0.5f) * 2;
+			} while ((x * x + y * y + z * z) > 1.0f || (fabs(x) < 1e-5 && fabs(y) < 1e-5 && fabs(z) < 1e-5));
+			
+			float dist = randf();
+			dist = pow(dist, 32.0f);
+			dist += 0.01f;
+			x *= dist;
+			y *= dist;
+			z *= dist;
+			
+			float s = (randf() + 0.75f) * 0.55f;
+			cloud2.addParticle(
 				engine::Particle<ParticleData>(
-					Vector3(x, y, z) * 200,
+					Vector3(x, y, z) * 75,
 					ParticleData(s,
-					math::normalize(Vector3(
-							1.0f / x,
-							1.0f / y,
-							1.0f / z
-							))
-						)
+						math::normalize(Vector3(
+						1.0f / x,
+						1.0f / y,
+						1.0f / z
+						))
 					)
-				);
-		} */
+				)
+			);
+		}
 
 		Effect *explosion_fx = engine::loadEffect(device, "data/explosion.fx");
 		Texture explosion_tex = engine::loadTexture(device, "data/explosion.png");
@@ -476,7 +492,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
 				pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
 				pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
-				) * 0.05f * camera_distance * (cameraShakeAmtTrack.getValue(beat));
+				) * 0.05f * math::length(eye - at) * (cameraShakeAmtTrack.getValue(beat));
 			
 			Matrix4x4 world;
 			world.makeIdentity();
@@ -517,21 +533,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 				
-
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
 				skybox_fx->draw(*cube_x);
-
+				
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 
-				//			test_fx.draw(cube_x);
-				//			time /= 4;
+				//	test_fx.draw(cube_x);
+				//	time /= 4;
 
-				{
+/*				{
 					testRenderer.view       = view;
 					testRenderer.projection = proj; // math::Matrix4x4::projection(60.0f, 16.0f / 9, 1.0f, 1000.0f);
-//					testRenderer.draw();
-				}
+					testRenderer.draw();
+				} */
 
 #if 0
 				Matrix4x4 mscale2;
@@ -589,15 +604,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 #if 1
 				/* particles */
-				float particleScroll = 0.0f; // -jellySwimTrack.getValue(beat) / (10 * 256);
-				for (int i = 0; i < 1; ++i)
 				{
-//					world = math::Matrix4x4::translation(Vector3(0, (math::frac(particleScroll) - i) * 150, 0));
-//					world = math::Matrix4x4::translation(Vector3(0, 0, 0));
-
 					Matrix4x4 modelview = world * view;
 //					cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
-					
 					particle_fx->setMatrices(world, view, proj);
 					
 					{
@@ -613,7 +622,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					}
 					
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
 					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 //					device->SetRenderState(D3DRS_ZWRITEENABLE, false);
@@ -621,8 +630,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 					engine::ParticleCloud<ParticleData>::ParticleContainer::iterator iter = cloud.particles.begin();
 					bool iter_done = false;
 					
-					float explode = std::max((beat - 255) * 0.25f, 0.0f);
+					float explode = std::max((beat - 255) * 0.5f, 0.0f);
 					explode *= explode;
+					particle_fx->setFloat("overbright", std::min(explode, 1.0f));
 					
 					int p = 0;
 					while (!iter_done)
@@ -631,22 +641,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 						for (int i = 0; i < 1024; ++i)
 						{
 							Vector3 pos = iter->pos;
-							pos = pos + normalize(pos) * explode;
+							pos = pos + pos * pow(1.0f / math::length(pos), 1.75f) * explode;
 							float size = iter->data.size;
 
-
 							streamer.add(pos, size);
-							
-/*							iter->pos += iter->data.dir * 0.1f;
-							if (math::length(iter->pos) > 100.0f) iter->pos = Vector3(0,0,0); */
-/*							float theta = float(p) * 0.05f;
-							float thetaa = theta - time;
-							float radius = 50.0f;
-							iter->pos = Vector3(cos(thetaa) * 3.13, cos(thetaa) * 2.93, sin(thetaa) * 3.1);
-							iter->pos = Vector3(cos(iter->pos.x - iter->pos.y * 0.93f), cos(iter->pos.y * 1.5f), sin(iter->pos.z - iter->pos.x));
-							iter->pos = normalize(iter->pos) * radius; */
-//							iter->data.size = 10.0f / (1 + theta);
-							
 							++iter;
 							++p;
 
@@ -660,6 +658,62 @@ int main(int /*argc*/, char* /*argv*/ [])
 						particle_fx->draw(streamer);
 					}
 				}
+
+				/* particles */
+				{
+					Matrix4x4 modelview = world * view;
+					//					cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
+					particle2_fx->setMatrices(world, view, proj);
+
+					{
+						Vector3 up(modelview._12, modelview._22, modelview._32);
+						Vector3 left(modelview._11, modelview._21, modelview._31);
+						math::normalize(up);
+						math::normalize(left);
+
+						particle2_fx->setFloatArray("up", up, 3);
+						particle2_fx->setFloatArray("left", left, 3);
+						particle2_fx->setFloat("alpha", 0.1f);
+						particle2_fx->commitChanges();
+					}
+
+					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+					device->SetRenderState(D3DRS_ZWRITEENABLE, false);
+
+					engine::ParticleCloud<ParticleData>::ParticleContainer::iterator iter = cloud2.particles.begin();
+					bool iter_done = false;
+					
+					float explode = std::max((beat - 255), 0.0f) * 0.2;
+					explode *= explode;
+					
+					int p = 0;
+					while (!iter_done)
+					{
+						streamer.begin();
+						for (int i = 0; i < 1024; ++i)
+						{
+							Vector3 pos = iter->pos;
+							pos = pos + pos * pow(1.0f / math::length(pos), 1.75f) * explode;
+							float size = iter->data.size;
+							
+							streamer.add(pos, size);
+							++iter;
+							++p;
+							
+							if (cloud2.particles.end() == iter)
+							{
+								iter_done = true;
+								break;
+							}
+						}
+						streamer.end();
+						particle2_fx->draw(streamer);
+					}
+				}
+
 				D3DLOCKED_RECT rect;
 				if (!FAILED(logo_surf->LockRect(&rect, NULL, D3DLOCK_READONLY)))
 				{
@@ -713,7 +767,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 //			device->SetRenderState(D3DRS_ZWRITEENABLE, false);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 
-			blur_fx->setFloat("sub", 0.0f);
+			blur_fx->setFloat("sub", 0.25f);
 			RenderTexture render_textures[2] = { color1_hdr, color2_hdr };
 			int rtIndex = 0;
 			for (int i = 0; i < 3; i++)
@@ -759,7 +813,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setFloat("flash", pow(colorMapFlashTrack.getValue(beat), 2.0f));
 			color_map_fx->setFloat("fade2", colorMapFadeTrack.getValue(beat));
 			color_map_fx->setFloat("alpha", 0.25f);
-			color_map_fx->setTexture("tex", color2_hdr);
+			color_map_fx->setTexture("tex", color1_hdr);
 			color_map_fx->setTexture("tex2", color_msaa);
 //			color_map_fx->setTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
 			color_map_fx->setTexture("color_map", color_maps[0]);
