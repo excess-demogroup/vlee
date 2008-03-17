@@ -14,20 +14,22 @@ namespace engine
 {
 	class Explosion {
 		#define EXPLOSION_ANIMATION_LENGTH 200
-		#define EXPLOSION_INIT_TRIANGLE_COUNT 1600
-		#define EXPLOSION_MAX_RADIUS 1.5f
+		#define EXPLOSION_INIT_TRIANGLE_COUNT 200
+		#define EXPLOSION_MAX_RADIUS 3.5f
 		#define EXPLOSION_CONE_FACTOR 0.48f
 
 		#define SIZE_PERCENTAGE_RND_MIN 25
 		#define SIZE_PERCENTAGE_RND_MAX 50
 
 		#define EXPLOSION_BUFFER_SIZE (3*EXPLOSION_ANIMATION_LENGTH + 3*(EXPLOSION_INIT_TRIANGLE_COUNT))
-		#define EXPLOSIONFVF (D3DFVF_XYZ | D3DFVF_TEX0 | D3DFVF_TEX1 | D3DFVF_TEX2 | D3DFVF_TEX3 | D3DFVF_TEX4)
+		#define EXPLOSIONFVF (D3DFVF_XYZ | D3DFVF_TEX6 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE3(1) | \
+			D3DFVF_TEXCOORDSIZE3(2) | D3DFVF_TEXCOORDSIZE1(3) | D3DFVF_TEXCOORDSIZE1(4) | D3DFVF_TEXCOORDSIZE1(5))
 
 		struct ExplosionVertex {
 			D3DXVECTOR3 pos;
 			D3DXVECTOR2 uv;
 			D3DXVECTOR3 dir;
+			D3DXVECTOR3 initPos;
 			float       index;
 			float       size;
 			float       weight;
@@ -57,6 +59,8 @@ namespace engine
 		renderer::VertexBuffer vb;
 
 		int count;
+
+		int rotCounter;
 
 		Vector3 begin;
 		Vector3 end;

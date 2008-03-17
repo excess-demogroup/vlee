@@ -20,8 +20,8 @@ sampler explosion_sampler = sampler_state
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
 	
-//	AddressU  = CLAMP;
-//	AddressV  = CLAMP;
+	AddressU  = CLAMP;
+	AddressV  = CLAMP;
 };
 
 struct VS_OUTPUT 
@@ -31,12 +31,13 @@ struct VS_OUTPUT
 };
 struct VS_INPUT 
 {
-   float4 pos   : POSITION0;
-   float2 tex   : TEXCOORD0;
-   float4 dir   : TEXCOORD1;
-   float index  : TEXCOORD2;
-   float size   : TEXCOORD3;
-   float weight : TEXCOORD4;
+   float4 pos     : POSITION0;
+   float2 tex     : TEXCOORD0;
+   float3 dir     : TEXCOORD1;
+   float3 initPos : TEXCOORD2;
+   float index    : TEXCOORD3;
+   float size     : TEXCOORD4;
+   float weight   : TEXCOORD5;
 };
 
 
@@ -50,13 +51,10 @@ VS_OUTPUT vertex(VS_INPUT In)
 {
     VS_OUTPUT Out;
 
-    float4 pos = In.pos+In.dir*(dstep*(time+In.index));
-
-    Out.pos = mul(pos, worldpos);
+    Out.pos = mul(In.pos, worldpos)+float4(In.dir, 0.0)*(dstep*(time+In.index));
     Out.pos = mul(Out.pos, View);
     Out.pos = mul(Out.pos, Projection);
 
- 
     Out.tex = float2(In.tex.x * 0.5, -In.tex.y * 0.5);
     Out.tex += float2(0.5f, 0.5f);   
     return(Out);

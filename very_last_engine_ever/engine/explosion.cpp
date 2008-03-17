@@ -13,6 +13,7 @@ void Explosion::setupParameters(Vector3 &begin, Vector3 &end) {
 	this->begin = begin;
 	this->end = end;
 	mworld.makeTranslation(begin);
+	rotCounter = 0;
 }
 
 void Explosion::draw(engine::Effect &effect, int time) {
@@ -48,39 +49,22 @@ void Explosion::updateGraphics(int time) {
 	Matrix4x4 mrot;
 	Matrix4x4 mscale;
 	for (int i = 0; i < count; ++i) {
-		mrot.makeRotation(Vector3(D3DXToRadian(time%2+1),D3DXToRadian(time%2+1),D3DXToRadian(time%2+1)));
-		bool scaling = false;
-		float newsize = 1.0f;
-		if (data->size < 1.0f) {
-			mscale.makeScaling(Vector3(1+(1-data->size)*dStep,1+(1-data->size)*dStep,1+(1-data->size)*dStep));
-			newsize += (1-data->size)*dStep;
-			scaling = true;
-		}
-
-		if (scaling) {
-			data->size	   = newsize;
-			data->pos      = mul(mrot, mul(mscale,data->pos));
+		if (i <EXPLOSION_INIT_TRIANGLE_COUNT ) {
+			Vector3 axis = cross(end-begin, data->dir);
+			D3DXMatrixRotationAxis(&mrot, &axis, rotCounter/data->weight*0.05f);
 		} else {
-			data->pos      = mul(mrot, data->pos);
+			D3DXMatrixRotationAxis(&mrot, &data->dir, rotCounter/data->weight*0.05f);
 		}
+		data->pos      = mul(mrot, data->initPos);
 		data++;
 
-		if (scaling) {
-			data->size	   = newsize;
-			data->pos      = mul(mrot, mul(mscale,data->pos));
-		} else {
-			data->pos      = mul(mrot, data->pos);
-		}
+		data->pos      = mul(mrot, data->initPos);
 		data++;
 
-		if (scaling) {
-			data->size	   = newsize;
-			data->pos      = mul(mrot, mul(mscale,data->pos));
-		} else {
-			data->pos      = mul(mrot, data->pos);
-		}
+		data->pos      = mul(mrot, data->initPos);
 		data++;
 	}
+	rotCounter++;
 	//create additional fragments
 	int countStop = min(count+(unsigned)time,(unsigned)(EXPLOSION_ANIMATION_LENGTH+EXPLOSION_INIT_TRIANGLE_COUNT));
 	for (int i = count; i < countStop; ++i) {
@@ -97,7 +81,12 @@ void Explosion::updateGraphics(int time) {
 		Vector2 uv3	   = Vector2(1,1);
 		Vector3 pos3   = Vector3(s,s,0);
 
-		float weight   = math::length(pos1)+math::length(pos2)+math::length(pos3); 
+		Vector3 avg = (pos1 + pos2 + pos3)/3;
+		pos1 -= avg;
+		pos2 -= avg;
+		pos3 -= avg;
+
+		float weight   = 0.5 * math::length(cross(pos3 - pos1, pos2 - pos1)); 
 		float size	   = notRandf(time+3);
 
 		Matrix4x4 minitrot;
@@ -105,7 +94,8 @@ void Explosion::updateGraphics(int time) {
 
 		data->uv       = uv1;
 		data->pos      = mul(minitrot,pos1);
-		data->dir	   = (end*(dStep*(i-EXPLOSION_INIT_TRIANGLE_COUNT)))-begin;
+		data->initPos  = mul(minitrot,pos1);
+		data->dir	   = (end-begin)*(dStep*(i-EXPLOSION_INIT_TRIANGLE_COUNT));
 		data->index    = (float) (i-EXPLOSION_INIT_TRIANGLE_COUNT);
 		data->size     = size;
 		data->weight   = weight;
@@ -113,7 +103,8 @@ void Explosion::updateGraphics(int time) {
 
 		data->uv       = uv2;
 		data->pos      = mul(minitrot,pos2);
-		data->dir	   = (end*(dStep*(i-EXPLOSION_INIT_TRIANGLE_COUNT)))-begin;
+		data->initPos  = mul(minitrot,pos2);
+		data->dir	   = (end-begin)*(dStep*(i-EXPLOSION_INIT_TRIANGLE_COUNT));
 		data->index    = (float) (i-EXPLOSION_INIT_TRIANGLE_COUNT);
 		data->size     = size;
 		data->weight   = weight;
@@ -121,7 +112,8 @@ void Explosion::updateGraphics(int time) {
 
 		data->uv       = uv3;
 		data->pos      = mul(minitrot,pos3);
-		data->dir	   = (end*(dStep*(i-EXPLOSION_INIT_TRIANGLE_COUNT)))-begin;
+		data->initPos  = mul(minitrot,pos3);
+		data->dir	   = (end-begin)*(dStep*(i-EXPLOSION_INIT_TRIANGLE_COUNT));
 		data->index    = (float) (i-EXPLOSION_INIT_TRIANGLE_COUNT);
 		data->size     = size;
 		data->weight   = weight;
@@ -154,16 +146,24 @@ void Explosion::generateGraphics() {
 		Vector2 uv3	   = Vector2(1,1);
 		Vector3 pos3   = Vector3(s,s,0);
 		
-		float weight   = math::length(pos1)+math::length(pos2)+math::length(pos3); 
+		float weight   = 0.5 * math::length(cross(pos3 - pos1, pos2 - pos1)); 
 		float size	   = notRandf(i+3);
 
+		Vector3 avg = (pos1 + pos2 + pos3)/3;
+		pos1 -= avg;
+		pos2 -= avg;
+		pos3 -= avg;
+
 		Vector3 dir    = end - begin;		Vector3 axisX  = normalize(findOrthogonal(dir));		Vector3 axisY  = normalize(cross(dir, axisX));		float r        = EXPLOSION_MAX_RADIUS * pow(notRandf(i+1), EXPLOSION_CONE_FACTOR);		float theta    = (float)(2.0f*M_PI*notRandf(i+2)); 		float z        = 1.0f - sqrt(notRandf(i+3));		Vector3 newend = r*z*cos(theta) * axisX + r*z*sin(theta) * axisY + z*dir + begin;
+		//Vector3 newend = Vector3(begin.x+4.0f,begin.y,begin.z);
+
 
 		Matrix4x4 mrotz;
 		mrotz.makeRotation(Vector3(D3DXToRadian(360*notRandf(i+5)),D3DXToRadian(360*notRandf(i+6)),D3DXToRadian(360*notRandf(i+7))));
 
 		data->uv       = uv1;
 		data->pos      = mul(mrotz,pos1);
+		data->initPos  = mul(mrotz,pos1);
 		data->dir	   = newend-begin;
 		data->index    = (float) 0;
 		data->size     = size;
@@ -172,6 +172,7 @@ void Explosion::generateGraphics() {
 
 		data->uv       = uv2;
 		data->pos      = mul(mrotz,pos2);
+		data->initPos  = mul(mrotz,pos2);
 		data->dir	   = newend-begin;
 		data->index    = (float) 0;
 		data->size     = size;
@@ -180,6 +181,7 @@ void Explosion::generateGraphics() {
 
 		data->uv       = uv3;
 		data->pos      = mul(mrotz,pos3);
+		data->initPos  = mul(mrotz,pos3);
 		data->dir	   = newend-begin;
 		data->index    = (float) 0;
 		data->size     = size;
