@@ -65,7 +65,7 @@ struct PS_OUTPUT
 PS_OUTPUT pixel(VS_OUTPUT In)
 {
 	PS_OUTPUT output;
-	output.col = tex2D(tex_samp, In.tex);
+	output.col = tex2D(tex_samp, In.tex) * alpha;
 	return output;
 }
 

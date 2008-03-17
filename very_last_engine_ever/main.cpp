@@ -10,6 +10,8 @@
 #include "math/vector3.h"
 #include "math/matrix4x4.h"
 #include "math/math.h"
+#include "math/notrand.h"
+
 #include "renderer/device.h"
 #include "renderer/surface.h"
 #include "renderer/texture.h"
@@ -439,11 +441,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *tunelle_fx = engine::loadEffect(device, "data/tunelle.fx");
 		tunelle_fx->setTexture("tex", engine::loadTexture(device, "data/tunelle.dds"));
 		Mesh *tunelle_x = engine::loadMesh(device, "data/tunelle.x");
-
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 30.0f));
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f));
 		
 		bool done = false;
 		while (!done)
@@ -473,7 +474,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 */
 			D3DXCOLOR clear_color(0.45f, 0.25f, 0.25f, 0.f);
 //			D3DXCOLOR clear_color(spectrum[0] * 1.5f, 0.f, 0.f, 0.f);
-
+			
+			float tunelle_scale = math::clamp((beat - (255 + 32)) * 0.5f, 0.0f, 1.0f);
+			
 			float roll = cameraRollTrack.getValue(beat);
 			roll *= float(2 * M_PI);
 			float yRot = cameraYRotTrack.getValue(beat);
@@ -506,7 +509,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
 				pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
 				pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
-				) * 0.05f * math::length(eye - at) * (cameraShakeAmtTrack.getValue(beat));
+				) * 0.025f * math::length(eye - at) * (cameraShakeAmtTrack.getValue(beat));
 			
 			Matrix4x4 world;
 			world.makeIdentity();
@@ -567,17 +570,35 @@ int main(int /*argc*/, char* /*argv*/ [])
 					testRenderer.draw();
 				} */
 				
-				for (int i = 0; i < 20; ++i)
+				for (int i = 0; i < 30; ++i)
 				{
-					Matrix4x4 world = Matrix4x4::rotation(math::Quaternion(M_PI / 2, M_PI / 2, 0));
+					float rot = (beat > (256 + 128)) ? ((beat - (256 + 128)) / 8) : 0;
+					rot *= 2;
+					Matrix4x4 world = Matrix4x4::rotation(Vector3((math::notRandf(i) - 0.5f) * rot, 0, 0));
+					world *= Matrix4x4::rotation(math::Quaternion(M_PI / 2, M_PI / 2, 0));
 //					world = Matrix4x4::rotation(math::Quaternion(0, M_PI, 0)) * world;
 					world *= Matrix4x4::translation(Vector3(-i * 300, 0, 0));
-					float scale = 0.25f * math::clamp((beat - (255 + 32)) * 0.5f, 0.0f, 1.0f);
-					world *= Matrix4x4::scaling(Vector3(scale, scale, scale));
+					float tunelle_scale2 = tunelle_scale * 0.25;
+					world *= Matrix4x4::scaling(Vector3(tunelle_scale2, tunelle_scale2, tunelle_scale2));
 					tunelle_fx->setMatrices(world, view, proj);
 					tunelle_fx->commitChanges();
 					tunelle_fx->draw(tunelle_x);
 				}
+				
+/*				for (int i = 0; i < 15; ++i)
+				{
+					float rot = (beat > (256 + 128)) ? ((beat - (256 + 128)) / 8) : 0;
+					Matrix4x4 world = Matrix4x4::rotation(Vector3((math::notRandf(i) - 0.5f) * rot, 0, 0));
+					world *= Matrix4x4::rotation(math::Quaternion(M_PI / 2, M_PI / 2, 0));
+					//					world = Matrix4x4::rotation(math::Quaternion(0, M_PI, 0)) * world;
+					world *= Matrix4x4::translation(Vector3(-i * 300, 0, 0));
+					float tunelle_scale2 = tunelle_scale * 0.25 * 0.75;
+					world *= Matrix4x4::scaling(Vector3(tunelle_scale2, tunelle_scale2, tunelle_scale2));
+					tunelle_fx->setMatrices(world, view, proj);
+					tunelle_fx->commitChanges();
+					tunelle_fx->draw(tunelle_x);
+				} */
+
 				
 #if 0
 				Matrix4x4 mscale2;
@@ -692,6 +713,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					Matrix4x4 modelview = world * view;
 					//					cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
 					particle2_fx->setMatrices(world, view, proj);
+					particle2_fx->setFloat("alpha", 1.0f - tunelle_scale);
 					
 					Vector3 up(modelview._12, modelview._22, modelview._32);
 					Vector3 left(modelview._11, modelview._21, modelview._31);
@@ -700,7 +722,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 					particle2_fx->setFloatArray("up", up, 3);
 					particle2_fx->setFloatArray("left", left, 3);
-					particle2_fx->setFloat("alpha", 0.1f);
 					particle2_fx->commitChanges();
 					
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
