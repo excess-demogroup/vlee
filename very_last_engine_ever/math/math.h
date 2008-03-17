@@ -14,7 +14,7 @@ namespace math
 	inline T smoothstep(T edge0, T edge1, float x)
 	{
 		x = (x - edge0) / (edge1 - edge0);
-		T t = clamp(x, 0, 1);
+		float t = clamp(x, 0.0f, 1.0f);
 		return t * t * (3 - 2 * t);
 	}
 

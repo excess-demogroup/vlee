@@ -493,6 +493,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 			eye = Vector3(sin(beat * 0.005f), 0, -cos(beat * 0.005f)) * 80;
 			at = Vector3(20, 0, 0);
 			eye -= at;
+
+			float eye2_scroll = -((beat - (255 + 32)) * 8) + (64 + 8);
+			Vector3 eye2 = Vector3(eye2_scroll, 0, 0);
+			Vector3 at2 = eye2 + Vector3(-1, 0, 0);
+			
+			float cam_blend = math::smoothstep(0.0f, 1.0f, (beat - (255 + 32)) / 8);
+			eye = math::lerp(eye, eye2, cam_blend);
+			at = math::lerp(at, at2, cam_blend);
 			
 			at += Vector3(
 				pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
@@ -523,8 +531,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 				proj = cam->getProjection();
 			} */
 			
-			skybox_fx->setMatrices(world, view, proj);
-			skybox_fx->commitChanges();
+			{
+				float scale = 10;
+				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
+				skybox_fx->setMatrices(world, view, proj);
+				skybox_fx->commitChanges();
+			}
 			
 			voxelMesh.setSize((1.5f + sin(time / 8)) * 32);
 			float grid_size = voxelMesh.getSize();
@@ -560,8 +572,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					Matrix4x4 world = Matrix4x4::rotation(math::Quaternion(M_PI / 2, M_PI / 2, 0));
 //					world = Matrix4x4::rotation(math::Quaternion(0, M_PI, 0)) * world;
 					world *= Matrix4x4::translation(Vector3(-i * 300, 0, 0));
-					float explode = math::clamp((beat - (255 + 48)) * 0.5f, 0.0f, 1.0f);
-					float scale = 0.25f * explode;
+					float scale = 0.25f * math::clamp((beat - (255 + 32)) * 0.5f, 0.0f, 1.0f);
 					world *= Matrix4x4::scaling(Vector3(scale, scale, scale));
 					tunelle_fx->setMatrices(world, view, proj);
 					tunelle_fx->commitChanges();
