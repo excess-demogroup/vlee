@@ -94,7 +94,7 @@ namespace engine
 			if (this->viewDir != NULL) setVector3(this->viewDir,  world_view.getZAxis());
 		}
 
-		void draw(Drawable &d)
+		void draw(Drawable *d)
 		{
 //			assert( NULL != p );
 			UINT passes = 0;
@@ -102,7 +102,7 @@ namespace engine
 			for (unsigned j = 0; j < passes; ++j)
 			{
 				p->BeginPass(j);
-				d.draw();
+				d->draw();
 				p->EndPass();
 			}
 			p->End();

@@ -295,15 +295,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		RenderTexture color1_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
 		RenderTexture color2_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
-		
+
+/*		RenderTexture depth(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_R32F); */
+
 		engine::VertexStreamer vertex_streamer(device);
 		
 		// load a scene we can render, yes
 		scenegraph::Scene *testScene = scenegraph::loadScene(device, "data/test.scene");
 		engine::SceneRenderer testRenderer(testScene, NULL);
 
-		scenegraph::Node *testNode = testScene->findChild("Camera01-node_transform");
-		assert(NULL != testNode);
+/*		scenegraph::Node *testNode = testScene->findChild("Camera01-node_transform");
+		assert(NULL != testNode); */
 		
 //		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE);
 //		RenderTexture rt2(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
@@ -434,10 +436,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Surface logo_surf = loadSurface(device, "data/logo.png");
 		Texture bar_tex = engine::loadTexture(device, "data/bar.png");
 
+		Effect *tunelle_fx = engine::loadEffect(device, "data/tunelle.fx");
+		tunelle_fx->setTexture("tex", engine::loadTexture(device, "data/tunelle.dds"));
+		Mesh *tunelle_x = engine::loadMesh(device, "data/tunelle.x");
+
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f));
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 30.0f));
 		
 		bool done = false;
 		while (!done)
@@ -478,7 +484,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				float(cos(yRot))
 			);
 			eye = normalize(eye);
-
+			
 			float camera_distance = 360 * (cameraDistanceTrack.getValue(beat));
 			eye *= camera_distance;
 			float shake_time = time * 0.125f * (cameraShakeTempoTrack.getValue(beat));
@@ -518,6 +524,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			} */
 			
 			skybox_fx->setMatrices(world, view, proj);
+			skybox_fx->commitChanges();
 			
 			voxelMesh.setSize((1.5f + sin(time / 8)) * 32);
 			float grid_size = voxelMesh.getSize();
@@ -534,7 +541,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 				
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
-				skybox_fx->draw(*cube_x);
+				skybox_fx->draw(cube_x);
 				
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
@@ -547,7 +554,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 					testRenderer.projection = proj; // math::Matrix4x4::projection(60.0f, 16.0f / 9, 1.0f, 1000.0f);
 					testRenderer.draw();
 				} */
-
+				
+				for (int i = 0; i < 20; ++i)
+				{
+					Matrix4x4 world = Matrix4x4::rotation(math::Quaternion(M_PI / 2, M_PI / 2, 0));
+//					world = Matrix4x4::rotation(math::Quaternion(0, M_PI, 0)) * world;
+					world *= Matrix4x4::translation(Vector3(-i * 300, 0, 0));
+					float explode = math::clamp((beat - (255 + 48)) * 0.5f, 0.0f, 1.0f);
+					float scale = 0.25f * explode;
+					world *= Matrix4x4::scaling(Vector3(scale, scale, scale));
+					tunelle_fx->setMatrices(world, view, proj);
+					tunelle_fx->commitChanges();
+					tunelle_fx->draw(tunelle_x);
+				}
+				
 #if 0
 				Matrix4x4 mscale2;
 				mscale2.makeScaling(Vector3(10.0f / grid_size, 10.0f / grid_size, 10.0f / grid_size));
@@ -609,17 +629,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 //					cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
 					particle_fx->setMatrices(world, view, proj);
 					
-					{
-						Vector3 up(modelview._12, modelview._22, modelview._32);
-						Vector3 left(modelview._11, modelview._21, modelview._31);
-						math::normalize(up);
-						math::normalize(left);
-						
-						particle_fx->setFloatArray("up", up, 3);
-						particle_fx->setFloatArray("left", left, 3);
-						particle_fx->setFloat("alpha", 0.1f);
-						particle_fx->commitChanges();
-					}
+					Vector3 up(modelview._12, modelview._22, modelview._32);
+					Vector3 left(modelview._11, modelview._21, modelview._31);
+					math::normalize(up);
+					math::normalize(left);
+					
+					particle_fx->setFloatArray("up", up, 3);
+					particle_fx->setFloatArray("left", left, 3);
+					particle_fx->commitChanges();
 					
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
@@ -643,11 +660,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 							Vector3 pos = iter->pos;
 							pos = pos + pos * pow(1.0f / math::length(pos), 1.75f) * explode;
 							float size = iter->data.size;
-
+							
 							streamer.add(pos, size);
 							++iter;
 							++p;
-
+							
 							if (cloud.particles.end() == iter)
 							{
 								iter_done = true;
@@ -655,38 +672,36 @@ int main(int /*argc*/, char* /*argv*/ [])
 							}
 						}
 						streamer.end();
-						particle_fx->draw(streamer);
+						particle_fx->draw(&streamer);
 					}
 				}
-
+				
 				/* particles */
 				{
 					Matrix4x4 modelview = world * view;
 					//					cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
 					particle2_fx->setMatrices(world, view, proj);
+					
+					Vector3 up(modelview._12, modelview._22, modelview._32);
+					Vector3 left(modelview._11, modelview._21, modelview._31);
+					math::normalize(up);
+					math::normalize(left);
 
-					{
-						Vector3 up(modelview._12, modelview._22, modelview._32);
-						Vector3 left(modelview._11, modelview._21, modelview._31);
-						math::normalize(up);
-						math::normalize(left);
-
-						particle2_fx->setFloatArray("up", up, 3);
-						particle2_fx->setFloatArray("left", left, 3);
-						particle2_fx->setFloat("alpha", 0.1f);
-						particle2_fx->commitChanges();
-					}
-
+					particle2_fx->setFloatArray("up", up, 3);
+					particle2_fx->setFloatArray("left", left, 3);
+					particle2_fx->setFloat("alpha", 0.1f);
+					particle2_fx->commitChanges();
+					
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
 					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
 					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 					device->SetRenderState(D3DRS_ZWRITEENABLE, false);
-
+					
 					engine::ParticleCloud<ParticleData>::ParticleContainer::iterator iter = cloud2.particles.begin();
 					bool iter_done = false;
 					
-					float explode = std::max((beat - 255), 0.0f) * 0.2;
+					float explode = std::max((beat - 255), 0.0f) * 0.2f;
 					explode *= explode;
 					
 					int p = 0;
@@ -710,22 +725,22 @@ int main(int /*argc*/, char* /*argv*/ [])
 							}
 						}
 						streamer.end();
-						particle2_fx->draw(streamer);
+						particle2_fx->draw(&streamer);
 					}
 				}
-
+				
 				D3DLOCKED_RECT rect;
 				if (!FAILED(logo_surf->LockRect(&rect, NULL, D3DLOCK_READONLY)))
 				{
 					tex_trans_fx->setTexture("tex", bar_tex);
 					tex_trans_fx->setFloat("alpha", 1.0f);
-
+					
 					float anim = std::max(beat - 64, 0.0f) / 4;
-
+					
 					float scale = 10;
 					Matrix4x4 world = Matrix4x4::scaling(math::Vector3(scale, scale, scale));
 					world = Matrix4x4::translation(Vector3(2, 0, 0)) * world;
-
+					
 					unsigned int *data = (unsigned int*)rect.pBits;
 					for (size_t y = 0; y < logo_surf.getDesc().Height; ++y)
 					{
@@ -753,11 +768,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 					}
 					logo_surf->UnlockRect();
 				}
-
+				
 				device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 #endif
-
+				
 				device.setRenderTarget(color1_hdr.getRenderTarget());
 				device.setDepthStencilSurface(depthstencil);
 			}
@@ -818,7 +833,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 //			color_map_fx->setTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
 			color_map_fx->setTexture("color_map", color_maps[0]);
 			color_map_fx->setTexture("desaturate", desaturate_tex);
-
+			
 			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
 			drawFuzz(color_map_fx, vertex_streamer,  time, 1.0f, colorMapDistortXTrack.getValue(beat), colorMapDistortYTrack.getValue(beat),
 				0.5f / letterbox_viewport.Width, 0.5f / letterbox_viewport.Height);
@@ -826,7 +841,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			drawFuzz(color_map_fx, vertex_streamer, -time, 0.0f, colorMapDistortXTrack.getValue(beat), 0.0f,
 				0.5f / letterbox_viewport.Width, 0.5f / letterbox_viewport.Height);
 			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED | D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
-
+			
 			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
@@ -846,7 +861,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			scanlinesImage.setPosition(-1, -1);
 			scanlinesImage.setDimension(2, 2);
 			scanlinesImage.draw(device);
-
+			
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			
 			device->EndScene(); /* WE DONE IS! */
@@ -866,7 +881,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			}
 #endif
 			HRESULT res = device->Present(0, 0, 0, 0);
-
+			
 			if (FAILED(res))
 			{
 				throw FatalException(std::string(DXGetErrorString9(res)) + std::string(" : ") + std::string(DXGetErrorDescription9(res)));

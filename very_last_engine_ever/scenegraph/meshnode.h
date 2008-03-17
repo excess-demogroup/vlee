@@ -25,7 +25,7 @@ namespace scenegraph
 		{
 			assert(NULL != effect);
 			assert(NULL != mesh);
-			effect->draw(*mesh);
+			effect->draw(mesh);
 		}
 		
 		bool transparent;
