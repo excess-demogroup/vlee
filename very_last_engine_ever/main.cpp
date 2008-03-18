@@ -289,6 +289,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &textAnimTrack  = syncDevice->getTrack("text.anim");
 		Track &textBlinkTrack  = syncDevice->getTrack("text.blink");
 
+		Track &voxelResTrack  = syncDevice->getTrack("voxel.res");
+		Track &voxelAnimTrack  = syncDevice->getTrack("voxel.anim");
+
 		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
 		
 		Surface backbuffer   = device.getRenderTarget(0);
@@ -552,10 +555,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 //			if (tunelle_scale > )
 			
-			voxelMesh.setSize((1.25f + cos(beat / 16)) * 32);
+			voxelMesh.setSize(voxelResTrack.getValue(beat));
 			float grid_size = voxelMesh.getSize();
 			Matrix4x4 mrot;
-			mrot.makeRotation(Vector3(float(-M_PI / 2), float(M_PI - sin(time / 5)), float(M_PI + time / 3)));
+			float voxelAnim = voxelAnimTrack.getValue(beat);
+			mrot.makeRotation(Vector3(float(voxelAnim / 4), float(M_PI - sin(voxelAnim / 5)), float(M_PI + voxelAnim / 3)));
 			Matrix4x4 mscale = Matrix4x4::scaling(Vector3(0.75f, 0.75f, 0.75f));
 			voxelMesh.update(mrot);
 			
@@ -805,7 +809,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 						int ystop = std::min(ystart + line_height, int(logo_surf.getDesc().Height));
 						unsigned int *data = (unsigned int*)rect.pBits;
 						
-						for (size_t y = ystart; y < ystop; ++y)
+						for (int y = ystart; y < ystop; ++y)
 						{
 							int ly = y - ystart;
 							for (size_t x = 0; x < logo_surf.getDesc().Width; ++x)
@@ -874,6 +878,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 						device, blur_fx,
 						-1.0f, -1.0f,
 						 2.0f, 2.0f
+/*						-0.5f / current_tex.getWidth(),
+						-0.5f / current_tex.getHeight() */
 					);
 					blur_fx->setFloat("sub", 0.0f);
 					rtIndex++;
