@@ -19,9 +19,6 @@ sampler explosion_sampler = sampler_state
 	MipFilter = LINEAR;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
-	
-	AddressU  = CLAMP;
-	AddressV  = CLAMP;
 };
 
 struct VS_OUTPUT 
@@ -51,7 +48,7 @@ VS_OUTPUT vertex(VS_INPUT In)
 {
     VS_OUTPUT Out;
 
-    Out.pos = mul(In.pos, worldpos)+float4(In.dir, 0.0)*(dstep*(time+In.index));
+    Out.pos = mul(In.pos, worldpos) + float4(In.dir, 0.0) * (dstep*time);
     Out.pos = mul(Out.pos, View);
     Out.pos = mul(Out.pos, Projection);
 

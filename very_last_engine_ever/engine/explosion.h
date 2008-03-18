@@ -13,10 +13,10 @@ using math::Matrix4x4;
 namespace engine
 {
 	class Explosion {
-		#define EXPLOSION_ANIMATION_LENGTH 200
-		#define EXPLOSION_INIT_TRIANGLE_COUNT 200
-		#define EXPLOSION_MAX_RADIUS 3.5f
-		#define EXPLOSION_CONE_FACTOR 0.48f
+		#define EXPLOSION_ANIMATION_LENGTH 1600
+		#define EXPLOSION_INIT_TRIANGLE_COUNT 1600
+		#define EXPLOSION_MAX_RADIUS 5.5f
+		#define EXPLOSION_CONE_FACTOR 0.5f
 
 		#define SIZE_PERCENTAGE_RND_MIN 25
 		#define SIZE_PERCENTAGE_RND_MAX 50
@@ -59,7 +59,7 @@ namespace engine
 		renderer::VertexBuffer vb;
 
 		int count;
-
+		int lastTime;
 		int rotCounter;
 
 		Vector3 begin;

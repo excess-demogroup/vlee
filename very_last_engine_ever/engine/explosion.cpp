@@ -14,6 +14,7 @@ void Explosion::setupParameters(Vector3 &begin, Vector3 &end) {
 	this->end = end;
 	mworld.makeTranslation(begin);
 	rotCounter = 0;
+	lastTime = 0;
 }
 
 void Explosion::draw(engine::Effect &effect, int time) {
@@ -47,24 +48,34 @@ void Explosion::updateGraphics(int time) {
 
 	//transformation
 	Matrix4x4 mrot;
-	Matrix4x4 mscale;
+	Matrix4x4 mtrans;
 	for (int i = 0; i < count; ++i) {
 		if (i <EXPLOSION_INIT_TRIANGLE_COUNT ) {
 			Vector3 axis = cross(end-begin, data->dir);
-			D3DXMatrixRotationAxis(&mrot, &axis, rotCounter/data->weight*0.05f);
+			D3DXMatrixRotationAxis(&mrot, &axis, rotCounter/data->weight*0.02f);
+			if (lastTime-time != 0) data->pos      = mul(mrot, data->initPos);
+			data++;
+
+			if (lastTime-time != 0) data->pos      = mul(mrot, data->initPos);
+			data++;
+
+			if (lastTime-time != 0) data->pos      = mul(mrot, data->initPos);
+			data++;
 		} else {
-			D3DXMatrixRotationAxis(&mrot, &data->dir, rotCounter/data->weight*0.05f);
+			D3DXMatrixRotationAxis(&mrot, &data->dir, rotCounter/data->weight*0.02f);
+			
+			if (lastTime-time != 0) data->pos      = mul(mrot, data->initPos);
+			data++;
+
+			if (lastTime-time != 0) data->pos      = mul(mrot, data->initPos);
+			data++;
+
+			if (lastTime-time != 0) data->pos      = mul(mrot, data->initPos);
+			data++;
 		}
-		data->pos      = mul(mrot, data->initPos);
-		data++;
-
-		data->pos      = mul(mrot, data->initPos);
-		data++;
-
-		data->pos      = mul(mrot, data->initPos);
-		data++;
 	}
 	rotCounter++;
+/*
 	//create additional fragments
 	int countStop = min(count+(unsigned)time,(unsigned)(EXPLOSION_ANIMATION_LENGTH+EXPLOSION_INIT_TRIANGLE_COUNT));
 	for (int i = count; i < countStop; ++i) {
@@ -95,7 +106,7 @@ void Explosion::updateGraphics(int time) {
 		data->uv       = uv1;
 		data->pos      = mul(minitrot,pos1);
 		data->initPos  = mul(minitrot,pos1);
-		data->dir	   = (end-begin)*(dStep*(i-EXPLOSION_INIT_TRIANGLE_COUNT));
+		data->dir	   = end-begin;
 		data->index    = (float) (i-EXPLOSION_INIT_TRIANGLE_COUNT);
 		data->size     = size;
 		data->weight   = weight;
@@ -104,7 +115,7 @@ void Explosion::updateGraphics(int time) {
 		data->uv       = uv2;
 		data->pos      = mul(minitrot,pos2);
 		data->initPos  = mul(minitrot,pos2);
-		data->dir	   = (end-begin)*(dStep*(i-EXPLOSION_INIT_TRIANGLE_COUNT));
+		data->dir	   = end-begin;
 		data->index    = (float) (i-EXPLOSION_INIT_TRIANGLE_COUNT);
 		data->size     = size;
 		data->weight   = weight;
@@ -113,17 +124,18 @@ void Explosion::updateGraphics(int time) {
 		data->uv       = uv3;
 		data->pos      = mul(minitrot,pos3);
 		data->initPos  = mul(minitrot,pos3);
-		data->dir	   = (end-begin)*(dStep*(i-EXPLOSION_INIT_TRIANGLE_COUNT));
+		data->dir	   = end-begin;
 		data->index    = (float) (i-EXPLOSION_INIT_TRIANGLE_COUNT);
 		data->size     = size;
 		data->weight   = weight;
 		data++;
 	}
 	count = countStop;
-
+*/
 
 	vb.unlock();
 	data = NULL;
+	lastTime = time;
 }
 
 void Explosion::generateGraphics() {
