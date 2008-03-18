@@ -518,7 +518,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			Matrix4x4 view;
 			view.makeLookAt(eye, at, roll);
-			Matrix4x4 proj = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 0.1f, 1000.f);
+			Matrix4x4 proj = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 1.0f, 10000.f);
 			
 			
 /*			testScene->anim(fmod(beat, 100));
