@@ -498,7 +498,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			at = Vector3(20, 0, 0);
 			eye -= at;
 			
-			float eye2_scroll = -((beat - (255 + 32)) * 8) + (64 + 8);
+			float eye2_scroll_temp = -((beat - (255 + 32)) * 8) + (64 + 8);
+			float eye2_scroll = fmod(eye2_scroll_temp, 75.0f);
+			float eye2_scroll2 = floor(eye2_scroll_temp / 75.0f);
 			Vector3 eye2 = Vector3(eye2_scroll, 0, 0);
 			Vector3 at2 = eye2 + Vector3(-10, 0, 0);
 			
@@ -518,7 +520,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			Matrix4x4 view;
 			view.makeLookAt(eye, at, roll);
-			Matrix4x4 proj = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 1.0f, 10000.f);
+			Matrix4x4 proj = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 1.0f, 100000.f);
 			
 			
 /*			testScene->anim(fmod(beat, 100));
@@ -537,8 +539,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			} */
 			
 			{
-				float scale = 10;
+				float scale = 100;
 				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
+//				Matrix4x4 world = Matrix4x4::translation(-eye);
 				skybox_fx->setMatrices(world, view, proj);
 				skybox_fx->commitChanges();
 			}
@@ -554,6 +557,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			for (int i = 0; i < 2; ++i)
 			{
+				device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 				device->Clear(0, 0, D3DCLEAR_ZBUFFER, clear_color, 1.f, 0);
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
@@ -577,7 +581,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				{
 					float rot = (beat > (256 + 128)) ? ((beat - (256 + 128)) / 8) : 0;
 					rot *= 2;
-					Matrix4x4 world = Matrix4x4::rotation(Vector3((math::notRandf(i) - 0.5f) * rot, 0, 0));
+					Matrix4x4 world = Matrix4x4::rotation(Vector3((math::notRandf(i - eye2_scroll2) - 0.5f) * rot, 0, 0));
 					world *= Matrix4x4::rotation(math::Quaternion(M_PI / 2, M_PI / 2, 0));
 //					world = Matrix4x4::rotation(math::Quaternion(0, M_PI, 0)) * world;
 					world *= Matrix4x4::translation(Vector3(-i * 300, 0, 0));
