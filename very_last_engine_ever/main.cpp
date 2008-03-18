@@ -341,11 +341,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 		renderer::VolumeTexture front_tex = engine::loadVolumeTexture(device, "data/front.dds");
 		cubegrid_fx->setTexture("front_tex", front_tex);
 		
-		engine::VoxelGrid voxelGrid = engine::loadVoxelGrid("data/duck.voxel");
-		engine::VoxelMesh voxelMesh(device, *cubegrid_fx, voxelGrid, 64);
-
+		engine::VoxelGrid voxelGrid = engine::loadVoxelGrid("data/spikeball.voxel");
+		engine::VoxelMesh voxelMesh(device, cubegrid_fx, voxelGrid, 64);
+		voxelMesh.update(Matrix4x4::identity());
+		
 		engine::ParticleStreamer streamer(device);
-
+		
 		struct ParticleData
 		{
 			ParticleData(float size, const Vector3 &dir) : size(size), dir(dir) {}
@@ -496,15 +497,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 			eye = Vector3(sin(beat * 0.005f), 0, -cos(beat * 0.005f)) * 80;
 			at = Vector3(20, 0, 0);
 			eye -= at;
-
+			
 			float eye2_scroll = -((beat - (255 + 32)) * 8) + (64 + 8);
 			Vector3 eye2 = Vector3(eye2_scroll, 0, 0);
-			Vector3 at2 = eye2 + Vector3(-1, 0, 0);
+			Vector3 at2 = eye2 + Vector3(-10, 0, 0);
 			
 			float cam_blend = math::smoothstep(0.0f, 1.0f, (beat - (255 + 32)) / 8);
 			eye = math::lerp(eye, eye2, cam_blend);
 			at = math::lerp(at, at2, cam_blend);
 			
+			Vector3 orig_at = at;
 			at += Vector3(
 				pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
 				pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
@@ -541,14 +543,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 				skybox_fx->commitChanges();
 			}
 			
-			voxelMesh.setSize((1.5f + sin(time / 8)) * 32);
+//			if (tunelle_scale > )
+			
+			voxelMesh.setSize((1.25 + cos(beat / 16)) * 32);
 			float grid_size = voxelMesh.getSize();
 			Matrix4x4 mrot;
 			mrot.makeRotation(Vector3(float(-M_PI / 2), float(M_PI - sin(time / 5)), float(M_PI + time / 3)));
-			Matrix4x4 mscale;
-			mscale.makeScaling(Vector3(0.75f, 0.75f, 0.75f));
-/*			voxelMesh.update(mrot * mscale); */
-
+			Matrix4x4 mscale = Matrix4x4::scaling(Vector3(0.75f, 0.75f, 0.75f));
+			voxelMesh.update(mrot);
+			
 			for (int i = 0; i < 2; ++i)
 			{
 				device->Clear(0, 0, D3DCLEAR_ZBUFFER, clear_color, 1.f, 0);
@@ -578,7 +581,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					world *= Matrix4x4::rotation(math::Quaternion(M_PI / 2, M_PI / 2, 0));
 //					world = Matrix4x4::rotation(math::Quaternion(0, M_PI, 0)) * world;
 					world *= Matrix4x4::translation(Vector3(-i * 300, 0, 0));
-					float tunelle_scale2 = tunelle_scale * 0.25;
+					float tunelle_scale2 = tunelle_scale * 0.25f;
 					world *= Matrix4x4::scaling(Vector3(tunelle_scale2, tunelle_scale2, tunelle_scale2));
 					tunelle_fx->setMatrices(world, view, proj);
 					tunelle_fx->commitChanges();
@@ -599,6 +602,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 					tunelle_fx->draw(tunelle_x);
 				} */
 
+				if (true) {
+					Matrix4x4 mscale2;
+					mscale2 = Matrix4x4::translation(-Vector3(floor(grid_size / 2), floor(grid_size / 2), floor(grid_size / 2)));
+					mscale2 *= Matrix4x4::scaling(Vector3(10.0f / grid_size, 10.0f / grid_size, 10.0f / grid_size));
+					
+					Matrix4x4 world = Matrix4x4::translation(orig_at);
+					
+					cubegrid_fx->setMatrices(mscale2 * world, view, proj);
+//					cubegrid_fx.setMatrices(world * mscale2, view, proj);
+					cubegrid_fx->commitChanges();
+					voxelMesh.draw(device);
+				}
 				
 #if 0
 				Matrix4x4 mscale2;

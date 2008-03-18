@@ -14,7 +14,7 @@ namespace engine
 	class VoxelMesh
 	{
 	public:
-		VoxelMesh(renderer::Device &device, engine::Effect &effect, const VoxelGrid &voxelGrid, size_t maxSize) :
+		VoxelMesh(renderer::Device &device, engine::Effect *effect, const VoxelGrid &voxelGrid, size_t maxSize) :
 		  effect(effect),
 		  voxelGrid(voxelGrid),
 		  maxSize(maxSize),
@@ -74,7 +74,7 @@ namespace engine
 		size_t cubes;
 		renderer::VertexBuffer static_vb;
 		renderer::IndexBuffer ib;
-		engine::Effect &effect;
+		engine::Effect *effect;
 		int vbSelector;
 	};
 }
