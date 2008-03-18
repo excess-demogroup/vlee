@@ -285,6 +285,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		sync::Track &explosionTrack = syncDevice->getTrack("explosion");
 
+		Track &textLineTrack  = syncDevice->getTrack("text.line");
+		Track &textAnimTrack  = syncDevice->getTrack("text.anim");
+		Track &textBlinkTrack  = syncDevice->getTrack("text.blink");
+
 		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
 		
 		Surface backbuffer   = device.getRenderTarget(0);
@@ -500,7 +504,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			float eye2_scroll_temp = -((beat - (255 + 32)) * 8) + (64 + 8);
 			float eye2_scroll = fmod(eye2_scroll_temp, 75.0f);
-			float eye2_scroll2 = floor(eye2_scroll_temp / 75.0f);
+			int eye2_scroll2 = int(floor(eye2_scroll_temp / 75.0f));
 			Vector3 eye2 = Vector3(eye2_scroll, 0, 0);
 			Vector3 at2 = eye2 + Vector3(-10, 0, 0);
 			
@@ -548,7 +552,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 //			if (tunelle_scale > )
 			
-			voxelMesh.setSize((1.25 + cos(beat / 16)) * 32);
+			voxelMesh.setSize((1.25f + cos(beat / 16)) * 32);
 			float grid_size = voxelMesh.getSize();
 			Matrix4x4 mrot;
 			mrot.makeRotation(Vector3(float(-M_PI / 2), float(M_PI - sin(time / 5)), float(M_PI + time / 3)));
@@ -780,44 +784,54 @@ int main(int /*argc*/, char* /*argv*/ [])
 					}
 				}
 				
-				D3DLOCKED_RECT rect;
-				if (!FAILED(logo_surf->LockRect(&rect, NULL, D3DLOCK_READONLY)))
+				int blinkVal = textBlinkTrack.getIntValue(beat);
+				if ((blinkVal == 0) || (math::frac(beat / blinkVal) > 0.5f))
 				{
-					tex_trans_fx->setTexture("tex", bar_tex);
-					tex_trans_fx->setFloat("alpha", 1.0f);
-					
-					float anim = std::max(beat - 64, 0.0f) / 4;
-					
-					float scale = 10;
-					Matrix4x4 world = Matrix4x4::scaling(math::Vector3(scale, scale, scale));
-					world = Matrix4x4::translation(Vector3(2, 0, 0)) * world;
-					
-					unsigned int *data = (unsigned int*)rect.pBits;
-					for (size_t y = 0; y < logo_surf.getDesc().Height; ++y)
+					D3DLOCKED_RECT rect;
+					if (!FAILED(logo_surf->LockRect(&rect, NULL, D3DLOCK_READONLY)))
 					{
-						for (size_t x = 0; x < logo_surf.getDesc().Width; ++x)
+						tex_trans_fx->setTexture("tex", bar_tex);
+						tex_trans_fx->setFloat("alpha", 1.0f);
+						
+						int line = textLineTrack.getIntValue(beat);
+						float anim = textAnimTrack.getValue(beat);
+						
+						float scale = 10;
+						Matrix4x4 world = Matrix4x4::scaling(math::Vector3(scale, scale, scale));
+						world = Matrix4x4::translation(Vector3(2, 0, 0)) * world;
+						
+						const int line_height = 8;
+						int ystart = line * line_height;
+						int ystop = std::min(ystart + line_height, int(logo_surf.getDesc().Height));
+						unsigned int *data = (unsigned int*)rect.pBits;
+						
+						for (size_t y = ystart; y < ystop; ++y)
 						{
-							unsigned int color = ((unsigned int*)((char*)rect.pBits + rect.Pitch * y))[x];
-							if ((color & 0xFFFFFF) != 0)
+							int ly = y - ystart;
+							for (size_t x = 0; x < logo_surf.getDesc().Width; ++x)
 							{
-								tex_trans_fx->setMatrices(
-									
-									Matrix4x4::translation(Vector3(x * 0.1f, y * -0.1f + 3 / std::max((int(y) - 10) + anim * 4, 0.0f), 0)) *
-									world *
-									Matrix4x4::rotation(Vector3(cos(anim - x * 0.1) / (anim + 1), sin(anim + y * 0.15) / (anim + 1), 0)) * 
-									Matrix4x4::translation(Vector3(0, 0, 4 - 4 / (anim + 1))),
-									view,
-									proj);
-								drawQuad(
-									device, tex_trans_fx,
-									-0.2f, 0.1f,
-									0.2f, -0.1f,
-									0, 0
-									);
+								unsigned int color = ((unsigned int*)((char*)rect.pBits + rect.Pitch * y))[x];
+								if ((color & 0xFFFFFF) != 0)
+								{
+									tex_trans_fx->setMatrices(
+										
+										Matrix4x4::translation(Vector3(x * 0.1f, ly * -0.1f + 3 / std::max((int(ly) - 10) + anim * 4, 0.0f), 0)) *
+										world *
+										Matrix4x4::rotation(Vector3(cos(anim - x * 0.1) / (anim + 1), sin(anim + ly * 0.15) / (anim + 1), 0)) * 
+										Matrix4x4::translation(Vector3(0, 0, 4 - 4 / (anim + 1))),
+										view,
+										proj);
+									drawQuad(
+										device, tex_trans_fx,
+										-0.2f, 0.1f,
+										0.2f, -0.1f,
+										0, 0
+										);
+								}
 							}
 						}
+						logo_surf->UnlockRect();
 					}
-					logo_surf->UnlockRect();
 				}
 				
 				device->SetRenderState(D3DRS_ZWRITEENABLE, true);
