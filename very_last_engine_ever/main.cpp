@@ -950,7 +950,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					Effect *effect = tex_trans_fx;
 
 					float flip = math::clamp((beat - 0x510) / 16, 0.0f, 1.0f);
-					float letterFlip = math::clamp((beat - 0x520) / 16, 0.0f, 1.0f);
+					float letterFlip = ((beat - 0x520) / 16) - 1.0f;
 
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
@@ -970,8 +970,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 							float x1 = float(i) / 15;
 							float x2 = float(i + 1) / 15;
 							
-							Matrix4x4 letterTransform = Matrix4x4::rotation(math::Quaternion(0, letterFlip * M_PI, 0));
-							letterTransform *= Matrix4x4::translation(Vector3((i - (15.0f / 2)) * 1.5, 0, 0));
+							float currLetterFlip = math::clamp(((letterFlip * 15) + i) / 15, 0.0f, 1.0f);
+							Matrix4x4 letterTransform = Matrix4x4::rotation(math::Quaternion(0, currLetterFlip * M_PI, 0));
+							letterTransform *= Matrix4x4::translation(Vector3((i - (14.0f / 2)) * 1.6, 0, 0));
 							letterTransform *= Matrix4x4::scaling(Vector3(7, 7, 7));
 							letterTransform *= Matrix4x4::rotation(math::Quaternion(0, flip * M_PI, 0));
 							
