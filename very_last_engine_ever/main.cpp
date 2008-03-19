@@ -553,11 +553,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Mesh *greeble_bars_x = engine::loadMesh(device, "data/greeble_bars.x");
 		Effect *greeble_bars_fx = engine::loadEffect(device, "data/greeble_bars.fx");
 		greeble_bars_fx->setTexture("tex", bar_tex);
-
-
+		
+		Texture title_end_tex = engine::loadTexture(device, "data/title_end.png");
+		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0*30.0f));
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 5.75*30.0f));
 		
 		bool done = false;
 		while (!done)
@@ -624,23 +625,33 @@ int main(int /*argc*/, char* /*argv*/ [])
 				proj = cam->getProjection();
 			} */
 			
-			bool introEnabled = true;
+			bool introEnabled = false;
 			bool korridorEnabled = false;
 			bool greebleKubeEnabled = false;
+			bool endTextEnabled = false;
 			
 			if (beat > 0x280)
 			{
 				introEnabled = false;
 				korridorEnabled = true;
 				greebleKubeEnabled = false;
+				endTextEnabled = false;
 			}
 			if (beat > 0x480)
 			{
 				introEnabled = false;
 				korridorEnabled = false;
 				greebleKubeEnabled = true;
+				endTextEnabled = false;
 			}
-			
+			if (beat > 0x500)
+			{
+				introEnabled = false;
+				korridorEnabled = false;
+				greebleKubeEnabled = false;
+				endTextEnabled = true;
+			}
+
 			float grid_size = 0.0f;
 			int eye2_scroll2 = 0;
 			float tunelle_scale = math::clamp((beat - (256 + 32)) * 0.5f, 0.0f, 1.0f);
@@ -718,6 +729,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 				greeble_bars_fx->commitChanges();
 			}
 			
+			if (endTextEnabled)
+			{
+				eye = Vector3(0, 0, -100);
+				at = Vector3(0, 0, 0);
+				Matrix4x4 view = Matrix4x4::lookAt(eye, at, roll);
+				Matrix4x4 world = Matrix4x4::identity();
+				
+				tex_trans_fx->setMatrices(world, view, proj);
+			}
+
 			// render
 			for (int i = 0; i < 2; ++i)
 			{
@@ -919,6 +940,76 @@ int main(int /*argc*/, char* /*argv*/ [])
 					greeble_bars_fx->draw(greeble_bars_x);
 					device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+				}
+
+				if (endTextEnabled)
+				{
+					tex_trans_fx->setTexture("tex", title_end_tex);
+//					tex_trans_fx->setFloat("alpha", 0.1f);
+					tex_trans_fx->commitChanges();
+					Effect *effect = tex_trans_fx;
+
+					float flip = math::clamp((beat - 0x510) / 16, 0.0f, 1.0f);
+					float letterFlip = math::clamp((beat - 0x520) / 16, 0.0f, 1.0f);
+
+					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+					device->SetRenderState(D3DRS_ZWRITEENABLE, false);
+
+					UINT passes = 0;
+					(*effect)->Begin(&passes, 0);
+					for (UINT pass = 0; pass < passes; ++pass)
+					{
+						(*effect)->BeginPass( pass );
+						vertex_streamer.begin(D3DPT_TRIANGLELIST);
+						
+						for (unsigned i = 0; i < 15; ++i)
+						{
+							float x1 = float(i) / 15;
+							float x2 = float(i + 1) / 15;
+							
+							Matrix4x4 letterTransform = Matrix4x4::rotation(math::Quaternion(0, letterFlip * M_PI, 0));
+							letterTransform *= Matrix4x4::translation(Vector3((i - (15.0f / 2)) * 1.5, 0, 0));
+							letterTransform *= Matrix4x4::scaling(Vector3(7, 7, 7));
+							letterTransform *= Matrix4x4::rotation(math::Quaternion(0, flip * M_PI, 0));
+							
+							Vector3 letterPos = Vector3(0, 0, 0);
+							
+							// bottom left
+							vertex_streamer.uv(Vector2(x1, 1.0f));
+							vertex_streamer.vertex(math::mul(letterTransform, letterPos + Vector3(-1.0f, -1.0f, 0.0f)));
+							
+							// top right
+							vertex_streamer.uv(Vector2(x2, 0.0f));
+							vertex_streamer.vertex(math::mul(letterTransform, letterPos + Vector3( 1.0f,  1.0f, 0.0f)));
+							
+							// bottom right
+							vertex_streamer.uv(Vector2(x2, 1.0f));
+							vertex_streamer.vertex(math::mul(letterTransform, letterPos + Vector3( 1.0f, -1.0f, 0.0f)));
+							
+							// top right
+							vertex_streamer.uv(Vector2(x2, 0.0f));
+							vertex_streamer.vertex(math::mul(letterTransform, letterPos + Vector3( 1.0f,  1.0f, 0.0f)));
+							
+							// bottom left
+							vertex_streamer.uv(Vector2(x1, 1.0f));
+							vertex_streamer.vertex(math::mul(letterTransform, letterPos + Vector3(-1.0f, -1.0f, 0.0f)));
+							
+							// top left
+							vertex_streamer.uv(Vector2(x1, 0.0f));
+							vertex_streamer.vertex(math::mul(letterTransform, letterPos + Vector3(-1.0f,  1.0f, 0.0f)));
+						}
+						vertex_streamer.end();
+						(*effect)->EndPass();
+					}
+					(*effect)->End();
+					device->SetRenderState(D3DRS_ZWRITEENABLE, true);
+					device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+
+//					title_end_tex
 				}
 
 #if 0
