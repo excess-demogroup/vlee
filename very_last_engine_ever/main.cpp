@@ -214,9 +214,6 @@ void drawParticleExplosion(renderer::Device &device, engine::ParticleStreamer &s
 	particle_fx->setFloatArray("left", left, 3);
 	particle_fx->commitChanges();
 	
-	device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-//	device->SetRenderState(D3DRS_ZWRITEENABLE, false);
-	
 	engine::ParticleCloud<ParticleData>::ParticleContainer::iterator iter = blackCloud.particles.begin();
 	bool iter_done = false;
 
@@ -227,6 +224,42 @@ void drawParticleExplosion(renderer::Device &device, engine::ParticleStreamer &s
 		{
 			Vector3 pos = iter->pos;
 			pos = pos + pos * pow(1.0f / math::length(pos), 1.75f) * explode;
+			float size = iter->data.size;
+
+			streamer.add(pos, size);
+			++iter;
+
+			if (blackCloud.particles.end() == iter)
+			{
+				iter_done = true;
+				break;
+			}
+		}
+		streamer.end();
+		particle_fx->draw(&streamer);
+	}
+}
+
+void drawParticleField(renderer::Device &device, engine::ParticleStreamer &streamer, Effect *particle_fx, ParticleCloud<ParticleData> &blackCloud, const Matrix4x4 &modelview)
+{
+	Vector3 up(modelview._12, modelview._22, modelview._32);
+	Vector3 left(modelview._11, modelview._21, modelview._31);
+	math::normalize(up);
+	math::normalize(left);
+
+	particle_fx->setFloatArray("up", up, 3);
+	particle_fx->setFloatArray("left", left, 3);
+	particle_fx->commitChanges();
+
+	engine::ParticleCloud<ParticleData>::ParticleContainer::iterator iter = blackCloud.particles.begin();
+	bool iter_done = false;
+
+	while (!iter_done)
+	{
+		streamer.begin();
+		for (int i = 0; i < 1024; ++i)
+		{
+			Vector3 pos = iter->pos;
 			float size = iter->data.size;
 
 			streamer.add(pos, size);
@@ -630,18 +663,29 @@ int main(int /*argc*/, char* /*argv*/ [])
 			} */
 			
 			bool introEnabled = false;
+			bool splinesEnabled = false;
 			bool korridorEnabled = false;
+			bool growEnabled = false;
 			bool greebleKubeEnabled = false;
 			bool endTextEnabled = false;
 			bool greetingsEnabled = false;
 			
-			if (beat < 0x280)
+			if (beat < 0x200)
 			{
 				introEnabled = true;
+//				splinesEnabled = beat >= 0x1C0;
+			}
+			else if (beat < 0x280)
+			{
+				splinesEnabled = true;
+			}
+			else if (beat < 0x400)
+			{
+				korridorEnabled = true;
 			}
 			else if (beat < 0x480)
 			{
-				korridorEnabled = true;
+				growEnabled = true;
 			}
 			else if (beat < 0x500)
 			{
@@ -655,7 +699,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			{
 				endTextEnabled = true;
 			}
-
+			
 			float grid_size = 0.0f;
 			int eye2_scroll2 = 0;
 			float tunelle_scale = math::clamp((beat - (256 + 32)) * 0.5f, 0.0f, 1.0f);
@@ -733,7 +777,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				greeble_bars_fx->commitChanges();
 			}
 			
-			if (endTextEnabled || greetingsEnabled)
+			if (endTextEnabled)
 			{
 				eye = Vector3(0, 0, -100);
 				at = Vector3(0, 0, 0);
@@ -880,20 +924,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 					/* particles */
 					{
+						// cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
 						Matrix4x4 modelview = world * view;
-						//					cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
+						
 						korridor_particles_fx->setMatrices(world, view, proj);
 						korridor_particles_fx->setFloat("alpha", 1.0f);
 						korridor_particles_fx->setMatrix("spherelight_transform", spherelight_transform.inverse());
-
-						Vector3 up(modelview._12, modelview._22, modelview._32);
-						Vector3 left(modelview._11, modelview._21, modelview._31);
-						math::normalize(up);
-						math::normalize(left);
-
-						korridor_particles_fx->setFloatArray("up", up, 3);
-						korridor_particles_fx->setFloatArray("left", left, 3);
-						korridor_particles_fx->commitChanges();
 
 						device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 						device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
@@ -901,34 +937,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 						device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 						device->SetRenderState(D3DRS_ZWRITEENABLE, false);
 
-						engine::ParticleCloud<ParticleData>::ParticleContainer::iterator iter = korridorParticles.particles.begin();
-						bool iter_done = false;
-
-						float explode = std::max((beat - 255), 0.0f) * 0.2f;
-						explode *= explode;
-
-						int p = 0;
-						while (!iter_done)
-						{
-							streamer.begin();
-							for (int i = 0; i < 1024; ++i)
-							{
-								Vector3 pos = iter->pos;
-								float size = iter->data.size;
-
-								streamer.add(pos, size);
-								++iter;
-								++p;
-
-								if (korridorParticles.particles.end() == iter)
-								{
-									iter_done = true;
-									break;
-								}
-							}
-							streamer.end();
-							korridor_particles_fx->draw(&streamer);
-						}
+						drawParticleField(device, streamer, korridor_particles_fx, korridorParticles, modelview);
 					}
 				}
 
@@ -1075,7 +1084,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 #endif
 
 #if 0
-
 				/* explosion */
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
@@ -1086,40 +1094,41 @@ int main(int /*argc*/, char* /*argv*/ [])
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 #endif
 
-#if 0
-				/* splines */
-				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-				world.makeIdentity();
-				Matrix4x4 modelview = world * view;
-				ccbs_fx->setMatrices(world, view, proj);
 
-				Vector3 up(modelview._12, modelview._22, modelview._32);
-				Vector3 left(modelview._11, modelview._21, modelview._31);
-				math::normalize(up);
-				math::normalize(left);
+				if (splinesEnabled)
+				{
+					/* splines */
+					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+					world.makeIdentity();
+					Matrix4x4 modelview = world * view;
+					ccbs_fx->setMatrices(world, view, proj);
 
-				ccbs_fx->setFloatArray("up", up, 3);
-				ccbs_fx->setFloatArray("left", left, 3);
-				ccbs_fx->commitChanges();
-				ccbs_fx->setMatrices(world, view, proj);
-				ccbs.draw(*ccbs_fx, beat);
-				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+					Vector3 up(modelview._12, modelview._22, modelview._32);
+					Vector3 left(modelview._11, modelview._21, modelview._31);
+					math::normalize(up);
+					math::normalize(left);
 
-#endif
+					ccbs_fx->setFloatArray("up", up, 3);
+					ccbs_fx->setFloatArray("left", left, 3);
+					ccbs_fx->commitChanges();
+					ccbs_fx->setMatrices(world, view, proj);
+					ccbs.draw(*ccbs_fx, beat);
+					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+					device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+				}
+				
 
-#if 0
-				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-				grow_fx->setMatrices(world, view, proj);
-				grow.draw(*grow_fx, growTrack.getIntValue(beat));
-				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-#endif
-#if 0
-#endif
+				if (growEnabled)
+				{
+					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+					grow_fx->setMatrices(world, view, proj);
+					grow.draw(*grow_fx, growTrack.getIntValue(beat));
+					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+				}
 				
 				device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
