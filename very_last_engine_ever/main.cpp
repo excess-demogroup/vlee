@@ -544,10 +544,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *korridor_particles_fx = engine::loadEffect(device, "data/korridor_particles.fx");
 		korridor_particles_fx->setTexture("tex", lightparticle_tex);
 		korridor_particles_fx->setTexture("spherelight", korridor_spherelight);
+
+		Mesh *greeble_cube_x = engine::loadMesh(device, "data/greeble_cube.x");
+		Effect *greeble_cube_fx = engine::loadEffect(device, "data/greeble_cube.fx");
+		greeble_cube_fx->setTexture("lightmap", engine::loadTexture(device, "data/greeble_cube_lightmap.png"));
+		greeble_cube_fx->setTexture("env", engine::loadCubeTexture(device, "data/greeble_cube_env.dds"));
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 30.0f));
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 5*30.0f));
 		
 		bool done = false;
 		while (!done)
@@ -616,46 +621,37 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			bool introEnabled = true;
 			bool korridorEnabled = false;
-
-			if (beat > 512)
+			bool greebleKubeEnabled = false;
+			
+			if (beat > 0x280)
 			{
 				introEnabled = false;
 				korridorEnabled = true;
+				greebleKubeEnabled = false;
 			}
-
-			
-			Matrix4x4 spherelight_transform = Matrix4x4::rotation(math::Quaternion(time, time, 0));
-			spherelight_transform *= Matrix4x4::translation(Vector3(0, 0, sin(time) * 25));
-			
-			if (korridorEnabled)
+			if (beat > 0x480)
 			{
-				float scale = 10;
-				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
-				korridor_fx->setMatrices(world, view, proj);
-				korridor_fx->setMatrix("spherelight_transform", spherelight_transform.inverse());
-				korridor_fx->commitChanges();
-				
-				float s = 10;
-				korridor_sphere_fx->setMatrices(spherelight_transform * Matrix4x4::scaling(Vector3(s,s,s)), view, proj);
-				korridor_sphere_fx->commitChanges();
+				introEnabled = false;
+				korridorEnabled = false;
+				greebleKubeEnabled = true;
 			}
 			
 			float grid_size = 0.0f;
 			int eye2_scroll2 = 0;
-			float tunelle_scale = math::clamp((beat - (255 + 32)) * 0.5f, 0.0f, 1.0f);
+			float tunelle_scale = math::clamp((beat - (256 + 32)) * 0.5f, 0.0f, 1.0f);
 			if (introEnabled)
 			{
 				eye = Vector3(sin(beat * 0.005f), 0, -cos(beat * 0.005f)) * 80;
 				at = Vector3(20, 0, 0);
 				eye -= at;
 				
-				float eye2_scroll_temp = -((beat - (255 + 32)) * 8) + (64 + 8);
+				float eye2_scroll_temp = -((beat - (256 + 32)) * 8) + (64 + 8);
 				float eye2_scroll = fmod(eye2_scroll_temp, 75.0f);
 				eye2_scroll2 = int(floor(eye2_scroll_temp / 75.0f));
 				Vector3 eye2 = Vector3(eye2_scroll, 0, 0);
 				Vector3 at2 = eye2 + Vector3(-10, 0, 0);
 				
-				float cam_blend = math::smoothstep(0.0f, 1.0f, (beat - (255 + 32)) / 8);
+				float cam_blend = math::smoothstep(0.0f, 1.0f, (beat - (256 + 32)) / 8);
 				eye = math::lerp(eye, eye2, cam_blend);
 				at = math::lerp(at, at2, cam_blend);
 				
@@ -685,6 +681,36 @@ int main(int /*argc*/, char* /*argv*/ [])
 				voxelMesh.update(mrot);
 			}
 			
+			Matrix4x4 spherelight_transform = Matrix4x4::rotation(math::Quaternion(time, time, 0));
+			spherelight_transform *= Matrix4x4::translation(Vector3(0, 0, sin(time) * 25));
+			if (korridorEnabled)
+			{
+				float scale = 10;
+				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
+				korridor_fx->setMatrices(world, view, proj);
+				korridor_fx->setMatrix("spherelight_transform", spherelight_transform.inverse());
+				korridor_fx->commitChanges();
+
+				float s = 10;
+				korridor_sphere_fx->setMatrices(spherelight_transform * Matrix4x4::scaling(Vector3(s,s,s)), view, proj);
+				korridor_sphere_fx->commitChanges();
+			}
+
+			if (greebleKubeEnabled)
+			{
+				eye = Vector3(sin(beat * 0.05f), 0, -cos(beat * 0.05f)) * 80;
+				at = Vector3(20, 0, 0);
+				eye -= at;
+				
+				Matrix4x4 view = Matrix4x4::lookAt(eye, at, roll);
+				
+				float scale = 1.0f;
+				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
+				greeble_cube_fx->setMatrices(world, view, proj);
+				greeble_cube_fx->commitChanges();
+			}
+			
+			// render
 			for (int i = 0; i < 2; ++i)
 			{
 				device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
@@ -873,6 +899,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 						}
 					}
 				}
+
+				if (greebleKubeEnabled)
+				{
+					greeble_cube_fx->draw(greeble_cube_x);
+				}
+
 #if 0
 				Matrix4x4 mscale2;
 				mscale2.makeScaling(Vector3(10.0f / grid_size, 10.0f / grid_size, 10.0f / grid_size));
