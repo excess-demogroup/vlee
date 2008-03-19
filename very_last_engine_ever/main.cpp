@@ -554,6 +554,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *greeble_bars_fx = engine::loadEffect(device, "data/greeble_bars.fx");
 		greeble_bars_fx->setTexture("tex", bar_tex);
 		
+		Anim greetingsAnim = engine::loadAnim(device, "data/greetings/");
+		Image greetingsImage(greetingsAnim.getTexture(0), tex_fx);
+		
 		Texture title_end_tex = engine::loadTexture(device, "data/title_end.png");
 		Image titleEndSubtextImage(engine::loadTexture(device, "data/title_end_subtext.png"), tex_fx);
 		
@@ -849,7 +852,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 									if ((color & 0xFFFFFF) != 0)
 									{
 										tex_trans_fx->setMatrices(
-
 											Matrix4x4::translation(Vector3(x * 0.1f, ly * -0.1f + 3 / std::max((int(ly) - 10) + anim * 4, 0.0f), 0)) *
 											world *
 											Matrix4x4::rotation(Vector3(cos(anim - x * 0.1) / (anim + 1), sin(anim + ly * 0.15) / (anim + 1), 0)) * 
@@ -868,11 +870,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 							logo_surf->UnlockRect();
 						}
 					}
-
 				}
 				
 				if (korridorEnabled)
 				{
+					device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
 					korridor_fx->draw(korridor_x);
 					korridor_sphere_fx->draw(korridor_sphere_x);
 

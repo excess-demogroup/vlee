@@ -39,6 +39,12 @@ namespace engine
 			this->w = w;
 			this->h = h;
 		}
+		
+		void setTexture(renderer::Texture &tex)
+		{
+			this->tex = tex;
+		}
+		
 	private:
 		float x, y;
 		float w, h;
