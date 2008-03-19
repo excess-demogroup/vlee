@@ -547,7 +547,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f));
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 30.0f));
 		
 		bool done = false;
 		while (!done)
@@ -614,8 +614,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 				proj = cam->getProjection();
 			} */
 			
-			bool introEnabled = false;
-			bool korridorEnabled = true;
+			bool introEnabled = true;
+			bool korridorEnabled = false;
+
+			if (beat > 512)
+			{
+				introEnabled = false;
+				korridorEnabled = true;
+			}
+
 			
 			Matrix4x4 spherelight_transform = Matrix4x4::rotation(math::Quaternion(time, time, 0));
 			spherelight_transform *= Matrix4x4::translation(Vector3(0, 0, sin(time) * 25));
@@ -743,7 +750,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 					// white particles
 					{
 						// whiteCloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
-						float explode = std::max((beat - 255), 0.0f) * 0.2f;
+						float explode = std::max((beat - 255), 0.0f) * 0.5f;
+//						explode *= explode;
 						Matrix4x4 modelview = world * view;
 						
 						device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
