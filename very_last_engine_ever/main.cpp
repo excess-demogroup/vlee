@@ -555,6 +555,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		greeble_bars_fx->setTexture("tex", bar_tex);
 		
 		Texture title_end_tex = engine::loadTexture(device, "data/title_end.png");
+		Image titleEndSubtextImage(engine::loadTexture(device, "data/title_end_subtext.png"), tex_fx);
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -1006,6 +1007,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 						(*effect)->EndPass();
 					}
 					(*effect)->End();
+	
+					titleEndSubtextImage.setPosition(-1, -1);
+					titleEndSubtextImage.setDimension(2, 2);
+					titleEndSubtextImage.draw(device);
+
 					device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 					device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
