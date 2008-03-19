@@ -562,7 +562,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 5.75*30.0f));
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0*30.0f));
 		
 		bool done = false;
 		while (!done)
@@ -633,26 +633,26 @@ int main(int /*argc*/, char* /*argv*/ [])
 			bool korridorEnabled = false;
 			bool greebleKubeEnabled = false;
 			bool endTextEnabled = false;
+			bool greetingsEnabled = false;
 			
-			if (beat > 0x280)
+			if (beat < 0x280)
 			{
-				introEnabled = false;
+				introEnabled = true;
+			}
+			else if (beat < 0x480)
+			{
 				korridorEnabled = true;
-				greebleKubeEnabled = false;
-				endTextEnabled = false;
 			}
-			if (beat > 0x480)
+			else if (beat < 0x500)
 			{
-				introEnabled = false;
-				korridorEnabled = false;
+				greetingsEnabled = true;
+			}
+			else if (beat < 0x580)
+			{
 				greebleKubeEnabled = true;
-				endTextEnabled = false;
 			}
-			if (beat > 0x500)
+			else
 			{
-				introEnabled = false;
-				korridorEnabled = false;
-				greebleKubeEnabled = false;
 				endTextEnabled = true;
 			}
 
@@ -733,7 +733,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				greeble_bars_fx->commitChanges();
 			}
 			
-			if (endTextEnabled)
+			if (endTextEnabled || greetingsEnabled)
 			{
 				eye = Vector3(0, 0, -100);
 				at = Vector3(0, 0, 0);
@@ -944,7 +944,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 					device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				}
-
+				
+				if (greetingsEnabled)
+				{
+					greetingsImage.setTexture(greetingsAnim.getTexture(int(beat) % greetingsAnim.getTextureCount() ));
+					greetingsImage.setPosition(-1, -1);
+					greetingsImage.setDimension(2, 2);
+					greetingsImage.draw(device);
+				}
+				
 				if (endTextEnabled)
 				{
 					tex_trans_fx->setTexture("tex", title_end_tex);
@@ -952,8 +960,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 					tex_trans_fx->commitChanges();
 					Effect *effect = tex_trans_fx;
 
-					float flip = math::clamp((beat - 0x510) / 16, 0.0f, 1.0f);
-					float letterFlip = ((beat - 0x520) / 16) - 1.0f;
+					float flip = math::clamp((beat - 0x590) / 16, 0.0f, 1.0f);
+					float letterFlip = ((beat - 0x5A0) / 16) - 1.0f;
 
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
