@@ -80,7 +80,7 @@ VS_OUTPUT vertex(float4 ipos : POSITION, float2 tex  : TEXCOORD0)
 }
 
 float texel_width = 1.f / 800;
-float texel_height = 1.f / 600;
+float texel_height = 1.f / 450;
 
 float4 sobel(sampler samp, float2 uv)
 {
@@ -112,7 +112,7 @@ float luminance(float3 color)
 		(color.b * 0.114);
 }
 
-float2 bloom_nudge = float2(0.5 / 400, 0.5 / 300);
+float2 bloom_nudge = float2(0.5 / 400, 0.5 / 225);
 
 float4 pixel(VS_OUTPUT In) : COLOR
 {

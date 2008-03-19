@@ -194,6 +194,55 @@ Surface loadSurface(renderer::Device &device, std::string fileName)
 	return surface_wrapper;
 }
 
+struct ParticleData
+{
+	ParticleData(float size, const Vector3 &dir) : size(size), dir(dir) {}
+	float size;
+	Vector3 dir;
+};
+using engine::ParticleCloud;
+
+void drawParticleExplosion(renderer::Device &device, engine::ParticleStreamer &streamer, Effect *particle_fx, ParticleCloud<ParticleData> &blackCloud, float explode, const Matrix4x4 &modelview)
+{
+	Vector3 up(modelview._12, modelview._22, modelview._32);
+	Vector3 left(modelview._11, modelview._21, modelview._31);
+	math::normalize(up);
+	math::normalize(left);
+	
+	particle_fx->setFloat("overbright", std::min(explode, 1.0f));
+	particle_fx->setFloatArray("up", up, 3);
+	particle_fx->setFloatArray("left", left, 3);
+	particle_fx->commitChanges();
+	
+	device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+//	device->SetRenderState(D3DRS_ZWRITEENABLE, false);
+	
+	engine::ParticleCloud<ParticleData>::ParticleContainer::iterator iter = blackCloud.particles.begin();
+	bool iter_done = false;
+
+	while (!iter_done)
+	{
+		streamer.begin();
+		for (int i = 0; i < 1024; ++i)
+		{
+			Vector3 pos = iter->pos;
+			pos = pos + pos * pow(1.0f / math::length(pos), 1.75f) * explode;
+			float size = iter->data.size;
+
+			streamer.add(pos, size);
+			++iter;
+
+			if (blackCloud.particles.end() == iter)
+			{
+				iter_done = true;
+				break;
+			}
+		}
+		streamer.end();
+		particle_fx->draw(&streamer);
+	}
+}
+
 int main(int /*argc*/, char* /*argv*/ [])
 {
 #ifdef _DEBUG
@@ -287,14 +336,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		Track &explosionTrack = syncDevice->getTrack("explosion");
 		Track &growTrack = syncDevice->getTrack("growfield");
-
+		
 		Track &textLineTrack  = syncDevice->getTrack("text.line");
 		Track &textAnimTrack  = syncDevice->getTrack("text.anim");
 		Track &textBlinkTrack  = syncDevice->getTrack("text.blink");
-
+		
 		Track &voxelResTrack  = syncDevice->getTrack("voxel.res");
 		Track &voxelAnimTrack  = syncDevice->getTrack("voxel.anim");
-
+		
 		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
 		
 		Surface backbuffer   = device.getRenderTarget(0);
@@ -307,15 +356,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		RenderTexture color1_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
 		RenderTexture color2_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
-
+		
 /*		RenderTexture depth(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_R32F); */
-
+		
 		engine::VertexStreamer vertex_streamer(device);
 		
 		// load a scene we can render, yes
 		scenegraph::Scene *testScene = scenegraph::loadScene(device, "data/test.scene");
 		engine::SceneRenderer testRenderer(testScene, NULL);
-
+		
 /*		scenegraph::Node *testNode = testScene->findChild("Camera01-node_transform");
 		assert(NULL != testNode); */
 		
@@ -357,13 +406,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		engine::ParticleStreamer streamer(device);
 		
-		struct ParticleData
-		{
-			ParticleData(float size, const Vector3 &dir) : size(size), dir(dir) {}
-			float size;
-			Vector3 dir;
-		};
-		engine::ParticleCloud<ParticleData> cloud;
+		engine::ParticleCloud<ParticleData> blackCloud;
 		for (int i = 0; i < 12 * 1024; ++i)
 		{
 			float x, y, z;
@@ -381,7 +424,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			z *= dist;
 
 			float s = (randf() + 0.5f) * 0.45f;
-			cloud.addParticle(
+			blackCloud.addParticle(
 				engine::Particle<ParticleData>(
 					Vector3(x, y, z) * 200,
 					ParticleData(s,
@@ -394,7 +437,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 				)
 			);
 		}
-		engine::ParticleCloud<ParticleData> cloud2;
+		
+		engine::ParticleCloud<ParticleData> whiteCloud;
 		for (int i = 0; i < 4 * 1024; ++i)
 		{
 			float x, y, z;
@@ -412,7 +456,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			z *= dist;
 			
 			float s = (randf() + 0.75f) * 0.55f;
-			cloud2.addParticle(
+			whiteCloud.addParticle(
 				engine::Particle<ParticleData>(
 					Vector3(x, y, z) * 75,
 					ParticleData(s,
@@ -424,6 +468,31 @@ int main(int /*argc*/, char* /*argv*/ [])
 					)
 				)
 			);
+		}
+
+		engine::ParticleCloud<ParticleData> korridorParticles;
+		for (int i = 0; i < 64 * 1024; ++i)
+		{
+			float x, y, z;
+			do {
+				x = (randf() - 0.5f) * 2;
+				z = (randf() - 0.5f) * 2;
+				y = (randf() - 0.5f) * 2;
+			} while ((x * x + y * y + z * z) > 1.0f || (fabs(x) < 1e-5 && fabs(y) < 1e-5 && fabs(z) < 1e-5));
+
+			float s = (randf() + 0.55f) * 0.25f;
+			korridorParticles.addParticle(
+				engine::Particle<ParticleData>(
+				Vector3(x, y, z) * 100,
+				ParticleData(s,
+				math::normalize(Vector3(
+				1.0f / x,
+				1.0f / y,
+				1.0f / z
+				))
+				)
+				)
+				);
 		}
 
 		Effect *explosion_fx = engine::loadEffect(device, "data/explosion.fx");
@@ -453,13 +522,28 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *tex_trans_fx       = engine::loadEffect(device, "data/tex_trans.fx");
 		Texture excess_outline_tex = engine::loadTexture(device, "data/excess_outline.dds");
 		Texture demotitle_tex      = engine::loadTexture(device, "data/demotitle.dds");
-
+		
 		Surface logo_surf = loadSurface(device, "data/logo.png");
 		Texture bar_tex = engine::loadTexture(device, "data/bar.png");
-
+		
 		Effect *tunelle_fx = engine::loadEffect(device, "data/tunelle.fx");
 		tunelle_fx->setTexture("tex", engine::loadTexture(device, "data/tunelle.dds"));
 		Mesh *tunelle_x = engine::loadMesh(device, "data/tunelle.x");
+		
+		Mesh *korridor_x = engine::loadMesh(device, "data/korridor.x");
+		Effect *korridor_fx = engine::loadEffect(device, "data/korridor.fx");
+		korridor_fx->setTexture("diffuse", engine::loadTexture(device, "data/korridor_diffuse.png"));
+		korridor_fx->setTexture("lightmap", engine::loadTexture(device, "data/korridor_lightmap.png"));
+		renderer::CubeTexture korridor_spherelight = engine::loadCubeTexture(device, "data/korridor_spherelight.dds");
+		korridor_fx->setTexture("spherelight", korridor_spherelight);
+
+		Mesh *korridor_sphere_x = engine::loadMesh(device, "data/korridor_sphere.x");
+		Effect *korridor_sphere_fx = engine::loadEffect(device, "data/korridor_sphere.fx");
+		korridor_sphere_fx->setTexture("lightmap", engine::loadTexture(device, "data/korridor_sphere_lightmap.png"));
+
+		Effect *korridor_particles_fx = engine::loadEffect(device, "data/korridor_particles.fx");
+		korridor_particles_fx->setTexture("tex", lightparticle_tex);
+		korridor_particles_fx->setTexture("spherelight", korridor_spherelight);
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -487,14 +571,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			/* setup multisampled stuffz */
 			device.setRenderTarget(color_msaa.getRenderTarget());
 			device.setDepthStencilSurface(depthstencil_msaa);
-/*
-			device.setRenderTarget(color_hdr.getRenderTarget());
-			device.setDepthStencilSurface(depthstencil_hdr);
-*/
-			D3DXCOLOR clear_color(0.45f, 0.25f, 0.25f, 0.f);
-//			D3DXCOLOR clear_color(spectrum[0] * 1.5f, 0.f, 0.f, 0.f);
 			
-			float tunelle_scale = math::clamp((beat - (255 + 32)) * 0.5f, 0.0f, 1.0f);
+			D3DXCOLOR clear_color(0.45f, 0.25f, 0.25f, 0.f);
 			
 			float roll = cameraRollTrack.getValue(beat);
 			roll *= float(2 * M_PI);
@@ -512,35 +590,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float shake_time = time * 0.125f * (cameraShakeTempoTrack.getValue(beat));
 			Vector3 at(0, 0, 0);
 			
-			eye = Vector3(sin(beat * 0.005f), 0, -cos(beat * 0.005f)) * 80;
-			at = Vector3(20, 0, 0);
-			eye -= at;
-			
-			float eye2_scroll_temp = -((beat - (255 + 32)) * 8) + (64 + 8);
-			float eye2_scroll = fmod(eye2_scroll_temp, 75.0f);
-			int eye2_scroll2 = int(floor(eye2_scroll_temp / 75.0f));
-			Vector3 eye2 = Vector3(eye2_scroll, 0, 0);
-			Vector3 at2 = eye2 + Vector3(-10, 0, 0);
-			
-			float cam_blend = math::smoothstep(0.0f, 1.0f, (beat - (255 + 32)) / 8);
-			eye = math::lerp(eye, eye2, cam_blend);
-			at = math::lerp(at, at2, cam_blend);
-			
-			Vector3 orig_at = at;
-			at += Vector3(
-				pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
-				pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
-				pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
-				) * 0.025f * math::length(eye - at) * (cameraShakeAmtTrack.getValue(beat));
-
 			at = Vector3(0, 0, 0);
 			eye = Vector3(0, 0, -4);
+			Vector3 orig_at = at;
 			
-			Matrix4x4 world;
-			world.makeIdentity();
-			
-			Matrix4x4 view;
-			view.makeLookAt(eye, at, roll);
+			Matrix4x4 world = Matrix4x4::identity();
+			Matrix4x4 view = Matrix4x4::lookAt(eye, at, roll);
 			Matrix4x4 proj = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 1.0f, 100000.f);
 			
 			
@@ -559,23 +614,69 @@ int main(int /*argc*/, char* /*argv*/ [])
 				proj = cam->getProjection();
 			} */
 			
+			bool introEnabled = false;
+			bool korridorEnabled = true;
+			
+			Matrix4x4 spherelight_transform = Matrix4x4::rotation(math::Quaternion(time, time, 0));
+			spherelight_transform *= Matrix4x4::translation(Vector3(0, 0, sin(time) * 25));
+			
+			if (korridorEnabled)
 			{
-				float scale = 100;
+				float scale = 10;
 				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
-//				Matrix4x4 world = Matrix4x4::translation(-eye);
-				skybox_fx->setMatrices(world, view, proj);
-				skybox_fx->commitChanges();
+				korridor_fx->setMatrices(world, view, proj);
+				korridor_fx->setMatrix("spherelight_transform", spherelight_transform.inverse());
+				korridor_fx->commitChanges();
+				
+				float s = 10;
+				korridor_sphere_fx->setMatrices(spherelight_transform * Matrix4x4::scaling(Vector3(s,s,s)), view, proj);
+				korridor_sphere_fx->commitChanges();
 			}
 			
-//			if (tunelle_scale > )
-			
-			voxelMesh.setSize(voxelResTrack.getValue(beat));
-			float grid_size = voxelMesh.getSize();
-			Matrix4x4 mrot;
-			float voxelAnim = voxelAnimTrack.getValue(beat);
-			mrot.makeRotation(Vector3(float(voxelAnim / 4), float(M_PI - sin(voxelAnim / 5)), float(M_PI + voxelAnim / 3)));
-			Matrix4x4 mscale = Matrix4x4::scaling(Vector3(0.75f, 0.75f, 0.75f));
-			voxelMesh.update(mrot);
+			float grid_size = 0.0f;
+			int eye2_scroll2 = 0;
+			float tunelle_scale = math::clamp((beat - (255 + 32)) * 0.5f, 0.0f, 1.0f);
+			if (introEnabled)
+			{
+				eye = Vector3(sin(beat * 0.005f), 0, -cos(beat * 0.005f)) * 80;
+				at = Vector3(20, 0, 0);
+				eye -= at;
+				
+				float eye2_scroll_temp = -((beat - (255 + 32)) * 8) + (64 + 8);
+				float eye2_scroll = fmod(eye2_scroll_temp, 75.0f);
+				eye2_scroll2 = int(floor(eye2_scroll_temp / 75.0f));
+				Vector3 eye2 = Vector3(eye2_scroll, 0, 0);
+				Vector3 at2 = eye2 + Vector3(-10, 0, 0);
+				
+				float cam_blend = math::smoothstep(0.0f, 1.0f, (beat - (255 + 32)) / 8);
+				eye = math::lerp(eye, eye2, cam_blend);
+				at = math::lerp(at, at2, cam_blend);
+				
+				orig_at = at;
+				at += Vector3(
+					pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
+					pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
+					pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
+					) * 0.025f * math::length(eye - at) * (cameraShakeAmtTrack.getValue(beat));
+				view.makeLookAt(eye, at, roll);
+				
+				particle_fx->setMatrices(world, view, proj);
+				particle2_fx->setMatrices(world, view, proj);
+				particle2_fx->setFloat("alpha", 1.0f - tunelle_scale);
+				
+				float scale = 100;
+				world = Matrix4x4::scaling(Vector3(scale, scale, scale));
+				skybox_fx->setMatrices(world, view, proj);
+				skybox_fx->commitChanges();
+				
+				voxelMesh.setSize(voxelResTrack.getValue(beat));
+				grid_size = voxelMesh.getSize();
+				Matrix4x4 mrot;
+				float voxelAnim = voxelAnimTrack.getValue(beat);
+				mrot.makeRotation(Vector3(float(voxelAnim / 4), float(M_PI - sin(voxelAnim / 5)), float(M_PI + voxelAnim / 3)));
+				Matrix4x4 mscale = Matrix4x4::scaling(Vector3(0.75f, 0.75f, 0.75f));
+				voxelMesh.update(mrot);
+			}
 			
 			for (int i = 0; i < 2; ++i)
 			{
@@ -598,37 +699,23 @@ int main(int /*argc*/, char* /*argv*/ [])
 					testRenderer.projection = proj; // math::Matrix4x4::projection(60.0f, 16.0f / 9, 1.0f, 1000.0f);
 					testRenderer.draw();
 				} */
-#if 0				
-				for (int i = 0; i < 30; ++i)
+				if (introEnabled)
 				{
-					float rot = (beat > (256 + 128)) ? ((beat - (256 + 128)) / 8) : 0;
-					rot *= 2;
-					Matrix4x4 world = Matrix4x4::rotation(Vector3((math::notRandf(i - eye2_scroll2) - 0.5f) * rot, 0, 0));
-					world *= Matrix4x4::rotation(math::Quaternion(M_PI / 2, M_PI / 2, 0));
-//					world = Matrix4x4::rotation(math::Quaternion(0, M_PI, 0)) * world;
-					world *= Matrix4x4::translation(Vector3(-i * 300, 0, 0));
-					float tunelle_scale2 = tunelle_scale * 0.25f;
-					world *= Matrix4x4::scaling(Vector3(tunelle_scale2, tunelle_scale2, tunelle_scale2));
-					tunelle_fx->setMatrices(world, view, proj);
-					tunelle_fx->commitChanges();
-					tunelle_fx->draw(tunelle_x);
-				}
-#endif				
-/*				for (int i = 0; i < 15; ++i)
-				{
-					float rot = (beat > (256 + 128)) ? ((beat - (256 + 128)) / 8) : 0;
-					Matrix4x4 world = Matrix4x4::rotation(Vector3((math::notRandf(i) - 0.5f) * rot, 0, 0));
-					world *= Matrix4x4::rotation(math::Quaternion(M_PI / 2, M_PI / 2, 0));
-					//					world = Matrix4x4::rotation(math::Quaternion(0, M_PI, 0)) * world;
-					world *= Matrix4x4::translation(Vector3(-i * 300, 0, 0));
-					float tunelle_scale2 = tunelle_scale * 0.25 * 0.75;
-					world *= Matrix4x4::scaling(Vector3(tunelle_scale2, tunelle_scale2, tunelle_scale2));
-					tunelle_fx->setMatrices(world, view, proj);
-					tunelle_fx->commitChanges();
-					tunelle_fx->draw(tunelle_x);
-				} */
-
-				if (true) {
+					// series of tubes
+					for (int i = 0; i < 30; ++i)
+					{
+						float rot = (beat > (256 + 128)) ? ((beat - (256 + 128)) / 8) : 0;
+						rot *= 2;
+						Matrix4x4 world = Matrix4x4::rotation(Vector3((math::notRandf(i - eye2_scroll2) - 0.5f) * rot, 0, 0));
+						world *= Matrix4x4::rotation(math::Quaternion(M_PI / 2, M_PI / 2, 0));
+						world *= Matrix4x4::translation(Vector3(-i * 300, 0, 0));
+						float tunelle_scale2 = tunelle_scale * 0.25f;
+						world *= Matrix4x4::scaling(Vector3(tunelle_scale2, tunelle_scale2, tunelle_scale2));
+						tunelle_fx->setMatrices(world, view, proj);
+						tunelle_fx->commitChanges();
+						tunelle_fx->draw(tunelle_x);
+					}
+					
 					Matrix4x4 mscale2;
 					mscale2 = Matrix4x4::translation(-Vector3(floor(grid_size / 2), floor(grid_size / 2), floor(grid_size / 2)));
 					mscale2 *= Matrix4x4::scaling(Vector3(10.0f / grid_size, 10.0f / grid_size, 10.0f / grid_size));
@@ -636,11 +723,148 @@ int main(int /*argc*/, char* /*argv*/ [])
 					Matrix4x4 world = Matrix4x4::translation(orig_at);
 					
 					cubegrid_fx->setMatrices(mscale2 * world, view, proj);
-//					cubegrid_fx.setMatrices(world * mscale2, view, proj);
 					cubegrid_fx->commitChanges();
 					voxelMesh.draw(device);
+
+					// black particles
+					{
+						//blackCloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
+						float explode = std::max((beat - 255) * 0.5f, 0.0f);
+						explode *= explode;
+						Matrix4x4 modelview = world * view;
+						
+						device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+						device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+						device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+						
+						drawParticleExplosion(device, streamer, particle_fx, blackCloud, explode, modelview);
+					}
+					
+					// white particles
+					{
+						// whiteCloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
+						float explode = std::max((beat - 255), 0.0f) * 0.2f;
+						Matrix4x4 modelview = world * view;
+						
+						device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+						device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+						device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+						device->SetRenderState(D3DRS_ZWRITEENABLE, false);
+						
+						drawParticleExplosion(device, streamer, particle2_fx, whiteCloud, explode, modelview);
+					}
+					
+					// text-plotter
+					int blinkVal = textBlinkTrack.getIntValue(beat);
+					if ((blinkVal == 0) || (math::frac(beat / blinkVal) > 0.5f))
+					{
+						D3DLOCKED_RECT rect;
+						if (!FAILED(logo_surf->LockRect(&rect, NULL, D3DLOCK_READONLY)))
+						{
+							tex_trans_fx->setTexture("tex", bar_tex);
+							tex_trans_fx->setFloat("alpha", 1.0f);
+
+							int line = textLineTrack.getIntValue(beat);
+							float anim = textAnimTrack.getValue(beat);
+
+							float scale = 10;
+							Matrix4x4 world = Matrix4x4::scaling(math::Vector3(scale, scale, scale));
+							world = Matrix4x4::translation(Vector3(2, 0, 0)) * world;
+
+							const int line_height = 8;
+							int ystart = line * line_height;
+							int ystop = std::min(ystart + line_height, int(logo_surf.getDesc().Height));
+							unsigned int *data = (unsigned int*)rect.pBits;
+
+							for (int y = ystart; y < ystop; ++y)
+							{
+								int ly = y - ystart;
+								for (size_t x = 0; x < logo_surf.getDesc().Width; ++x)
+								{
+									unsigned int color = ((unsigned int*)((char*)rect.pBits + rect.Pitch * y))[x];
+									if ((color & 0xFFFFFF) != 0)
+									{
+										tex_trans_fx->setMatrices(
+
+											Matrix4x4::translation(Vector3(x * 0.1f, ly * -0.1f + 3 / std::max((int(ly) - 10) + anim * 4, 0.0f), 0)) *
+											world *
+											Matrix4x4::rotation(Vector3(cos(anim - x * 0.1) / (anim + 1), sin(anim + ly * 0.15) / (anim + 1), 0)) * 
+											Matrix4x4::translation(Vector3(0, 0, 4 - 4 / (anim + 1))),
+											view,
+											proj);
+										drawQuad(
+											device, tex_trans_fx,
+											-0.2f, 0.1f,
+											0.2f, -0.1f,
+											0, 0
+											);
+									}
+								}
+							}
+							logo_surf->UnlockRect();
+						}
+					}
+
 				}
 				
+				if (korridorEnabled)
+				{
+					korridor_fx->draw(korridor_x);
+					korridor_sphere_fx->draw(korridor_sphere_x);
+
+					/* particles */
+					{
+						Matrix4x4 modelview = world * view;
+						//					cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
+						korridor_particles_fx->setMatrices(world, view, proj);
+						korridor_particles_fx->setFloat("alpha", 1.0f);
+						korridor_particles_fx->setMatrix("spherelight_transform", spherelight_transform.inverse());
+
+						Vector3 up(modelview._12, modelview._22, modelview._32);
+						Vector3 left(modelview._11, modelview._21, modelview._31);
+						math::normalize(up);
+						math::normalize(left);
+
+						korridor_particles_fx->setFloatArray("up", up, 3);
+						korridor_particles_fx->setFloatArray("left", left, 3);
+						korridor_particles_fx->commitChanges();
+
+						device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+						device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+						device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+						device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+						device->SetRenderState(D3DRS_ZWRITEENABLE, false);
+
+						engine::ParticleCloud<ParticleData>::ParticleContainer::iterator iter = korridorParticles.particles.begin();
+						bool iter_done = false;
+
+						float explode = std::max((beat - 255), 0.0f) * 0.2f;
+						explode *= explode;
+
+						int p = 0;
+						while (!iter_done)
+						{
+							streamer.begin();
+							for (int i = 0; i < 1024; ++i)
+							{
+								Vector3 pos = iter->pos;
+								float size = iter->data.size;
+
+								streamer.add(pos, size);
+								++iter;
+								++p;
+
+								if (korridorParticles.particles.end() == iter)
+								{
+									iter_done = true;
+									break;
+								}
+							}
+							streamer.end();
+							korridor_particles_fx->draw(&streamer);
+						}
+					}
+				}
 #if 0
 				Matrix4x4 mscale2;
 				mscale2.makeScaling(Vector3(10.0f / grid_size, 10.0f / grid_size, 10.0f / grid_size));
@@ -723,174 +947,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 #endif
 
-#if 1
+#if 0
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 				grow_fx->setMatrices(world, view, proj);
 				grow.draw(*grow_fx, growTrack.getIntValue(beat));
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 #endif
-
 #if 0
-				/* particles */
-				{
-					Matrix4x4 modelview = world * view;
-//					cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
-					particle_fx->setMatrices(world, view, proj);
-					
-					Vector3 up(modelview._12, modelview._22, modelview._32);
-					Vector3 left(modelview._11, modelview._21, modelview._31);
-					math::normalize(up);
-					math::normalize(left);
-					
-					particle_fx->setFloatArray("up", up, 3);
-					particle_fx->setFloatArray("left", left, 3);
-					particle_fx->commitChanges();
-					
-					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-//					device->SetRenderState(D3DRS_ZWRITEENABLE, false);
-					
-					engine::ParticleCloud<ParticleData>::ParticleContainer::iterator iter = cloud.particles.begin();
-					bool iter_done = false;
-					
-					float explode = std::max((beat - 255) * 0.5f, 0.0f);
-					explode *= explode;
-					particle_fx->setFloat("overbright", std::min(explode, 1.0f));
-					
-					int p = 0;
-					while (!iter_done)
-					{
-						streamer.begin();
-						for (int i = 0; i < 1024; ++i)
-						{
-							Vector3 pos = iter->pos;
-							pos = pos + pos * pow(1.0f / math::length(pos), 1.75f) * explode;
-							float size = iter->data.size;
-							
-							streamer.add(pos, size);
-							++iter;
-							++p;
-							
-							if (cloud.particles.end() == iter)
-							{
-								iter_done = true;
-								break;
-							}
-						}
-						streamer.end();
-						particle_fx->draw(&streamer);
-					}
-				}
-				
-				/* particles */
-				{
-					Matrix4x4 modelview = world * view;
-					//					cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
-					particle2_fx->setMatrices(world, view, proj);
-					particle2_fx->setFloat("alpha", 1.0f - tunelle_scale);
-					
-					Vector3 up(modelview._12, modelview._22, modelview._32);
-					Vector3 left(modelview._11, modelview._21, modelview._31);
-					math::normalize(up);
-					math::normalize(left);
-
-					particle2_fx->setFloatArray("up", up, 3);
-					particle2_fx->setFloatArray("left", left, 3);
-					particle2_fx->commitChanges();
-					
-					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-					device->SetRenderState(D3DRS_ZWRITEENABLE, false);
-					
-					engine::ParticleCloud<ParticleData>::ParticleContainer::iterator iter = cloud2.particles.begin();
-					bool iter_done = false;
-					
-					float explode = std::max((beat - 255), 0.0f) * 0.2f;
-					explode *= explode;
-					
-					int p = 0;
-					while (!iter_done)
-					{
-						streamer.begin();
-						for (int i = 0; i < 1024; ++i)
-						{
-							Vector3 pos = iter->pos;
-							pos = pos + pos * pow(1.0f / math::length(pos), 1.75f) * explode;
-							float size = iter->data.size;
-							
-							streamer.add(pos, size);
-							++iter;
-							++p;
-							
-							if (cloud2.particles.end() == iter)
-							{
-								iter_done = true;
-								break;
-							}
-						}
-						streamer.end();
-						particle2_fx->draw(&streamer);
-					}
-				}
-				
-				int blinkVal = textBlinkTrack.getIntValue(beat);
-				if ((blinkVal == 0) || (math::frac(beat / blinkVal) > 0.5f))
-				{
-					D3DLOCKED_RECT rect;
-					if (!FAILED(logo_surf->LockRect(&rect, NULL, D3DLOCK_READONLY)))
-					{
-						tex_trans_fx->setTexture("tex", bar_tex);
-						tex_trans_fx->setFloat("alpha", 1.0f);
-						
-						int line = textLineTrack.getIntValue(beat);
-						float anim = textAnimTrack.getValue(beat);
-						
-						float scale = 10;
-						Matrix4x4 world = Matrix4x4::scaling(math::Vector3(scale, scale, scale));
-						world = Matrix4x4::translation(Vector3(2, 0, 0)) * world;
-						
-						const int line_height = 8;
-						int ystart = line * line_height;
-						int ystop = std::min(ystart + line_height, int(logo_surf.getDesc().Height));
-						unsigned int *data = (unsigned int*)rect.pBits;
-						
-						for (int y = ystart; y < ystop; ++y)
-						{
-							int ly = y - ystart;
-							for (size_t x = 0; x < logo_surf.getDesc().Width; ++x)
-							{
-								unsigned int color = ((unsigned int*)((char*)rect.pBits + rect.Pitch * y))[x];
-								if ((color & 0xFFFFFF) != 0)
-								{
-									tex_trans_fx->setMatrices(
-										
-										Matrix4x4::translation(Vector3(x * 0.1f, ly * -0.1f + 3 / std::max((int(ly) - 10) + anim * 4, 0.0f), 0)) *
-										world *
-										Matrix4x4::rotation(Vector3(cos(anim - x * 0.1) / (anim + 1), sin(anim + ly * 0.15) / (anim + 1), 0)) * 
-										Matrix4x4::translation(Vector3(0, 0, 4 - 4 / (anim + 1))),
-										view,
-										proj);
-									drawQuad(
-										device, tex_trans_fx,
-										-0.2f, 0.1f,
-										0.2f, -0.1f,
-										0, 0
-										);
-								}
-							}
-						}
-						logo_surf->UnlockRect();
-					}
-				}
+#endif
 				
 				device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-#endif
 				
 				device.setRenderTarget(color1_hdr.getRenderTarget());
 				device.setDepthStencilSurface(depthstencil);
@@ -927,9 +995,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 					drawQuad(
 						device, blur_fx,
 						-1.0f, -1.0f,
-						 2.0f, 2.0f
-/*						-0.5f / current_tex.getWidth(),
-						-0.5f / current_tex.getHeight() */
+						 2.0f, 2.0f,
+						0.5f / current_tex.getWidth(),
+						0.5f / current_tex.getHeight()
 					);
 					blur_fx->setFloat("sub", 0.0f);
 					rtIndex++;
