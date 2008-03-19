@@ -536,23 +536,28 @@ int main(int /*argc*/, char* /*argv*/ [])
 		korridor_fx->setTexture("lightmap", engine::loadTexture(device, "data/korridor_lightmap.png"));
 		renderer::CubeTexture korridor_spherelight = engine::loadCubeTexture(device, "data/korridor_spherelight.dds");
 		korridor_fx->setTexture("spherelight", korridor_spherelight);
-
+		
 		Mesh *korridor_sphere_x = engine::loadMesh(device, "data/korridor_sphere.x");
 		Effect *korridor_sphere_fx = engine::loadEffect(device, "data/korridor_sphere.fx");
 		korridor_sphere_fx->setTexture("lightmap", engine::loadTexture(device, "data/korridor_sphere_lightmap.png"));
-
+		
 		Effect *korridor_particles_fx = engine::loadEffect(device, "data/korridor_particles.fx");
 		korridor_particles_fx->setTexture("tex", lightparticle_tex);
 		korridor_particles_fx->setTexture("spherelight", korridor_spherelight);
-
+		
 		Mesh *greeble_cube_x = engine::loadMesh(device, "data/greeble_cube.x");
 		Effect *greeble_cube_fx = engine::loadEffect(device, "data/greeble_cube.fx");
 		greeble_cube_fx->setTexture("lightmap", engine::loadTexture(device, "data/greeble_cube_lightmap.png"));
 		greeble_cube_fx->setTexture("env", engine::loadCubeTexture(device, "data/greeble_cube_env.dds"));
 		
+		Mesh *greeble_bars_x = engine::loadMesh(device, "data/greeble_bars.x");
+		Effect *greeble_bars_fx = engine::loadEffect(device, "data/greeble_bars.fx");
+		greeble_bars_fx->setTexture("tex", bar_tex);
+
+
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 5*30.0f));
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0*30.0f));
 		
 		bool done = false;
 		while (!done)
@@ -708,6 +713,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
 				greeble_cube_fx->setMatrices(world, view, proj);
 				greeble_cube_fx->commitChanges();
+				
+				greeble_bars_fx->setMatrices(world, view, proj);
+				greeble_bars_fx->commitChanges();
 			}
 			
 			// render
@@ -903,6 +911,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 				if (greebleKubeEnabled)
 				{
 					greeble_cube_fx->draw(greeble_cube_x);
+					
+					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+					greeble_bars_fx->draw(greeble_bars_x);
+					device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				}
 
 #if 0
