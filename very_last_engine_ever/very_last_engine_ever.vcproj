@@ -318,11 +318,19 @@
 					>
 				</File>
 				<File
+					RelativePath=".\engine\ccbsplines.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\engine\effect.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\engine\explosion.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\grow.cpp"
 					>
 				</File>
 				<File
@@ -507,6 +515,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\engine\ccbsplines.h"
+					>
+				</File>
+				<File
 					RelativePath=".\engine\demo.h"
 					>
 				</File>
@@ -520,6 +532,10 @@
 				</File>
 				<File
 					RelativePath=".\engine\explosion.h"
+					>
+				</File>
+				<File
+					RelativePath=".\engine\grow.h"
 					>
 				</File>
 				<File

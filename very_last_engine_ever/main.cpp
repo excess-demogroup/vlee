@@ -28,6 +28,8 @@
 #include "engine/particlecloud.h"
 
 #include "engine/explosion.h"
+#include "engine/ccbsplines.h"
+#include "engine/grow.h"
 
 #include "engine/voxelgrid.h"
 #include "engine/voxelmesh.h"
@@ -283,7 +285,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &noiseAmtTrack  = syncDevice->getTrack("noise.amt");
 		Track &noiseFFTTrack  = syncDevice->getTrack("noise.fft");
 		
-		sync::Track &explosionTrack = syncDevice->getTrack("explosion");
+		Track &explosionTrack = syncDevice->getTrack("explosion");
+		Track &growTrack = syncDevice->getTrack("growfield");
 
 		Track &textLineTrack  = syncDevice->getTrack("text.line");
 		Track &textAnimTrack  = syncDevice->getTrack("text.anim");
@@ -426,7 +429,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *explosion_fx = engine::loadEffect(device, "data/explosion.fx");
 		Texture explosion_tex = engine::loadTexture(device, "data/explosion.png");
 		explosion_fx->setTexture("explosion_tex", explosion_tex);
-		engine::Explosion explosion = engine::Explosion(device, Vector3(0.1f, 0.1f, 0.1f), Vector3(-2.9f, 0.1f, 2.5f));
+		engine::Explosion explosion = engine::Explosion(device, Vector3(0.1f, 0.1f, 4.1f), Vector3(8.0f, 0.1f, 32.1f));
+
+		Effect *ccbs_fx = engine::loadEffect(device, "data/ccbs.fx");
+		Texture ccbs_tex = engine::loadTexture(device, "data/red_particle.png");
+		ccbs_fx->setTexture("ccbs_tex", ccbs_tex);
+		engine::CCBSplines ccbs = engine::CCBSplines(device);
+
+		Effect *grow_fx = engine::loadEffect(device, "data/grow.fx");
+		engine::Grow grow = engine::Grow(vertex_streamer, Vector3(-3.8f,-2.f,0.f), Vector3(-0.5f,-2.f,0.f));
 
 		Image scanlinesImage(engine::loadTexture(device, "data/scanlines.png"), tex_fx);
 		
@@ -521,6 +532,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 				pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
 				pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
 				) * 0.025f * math::length(eye - at) * (cameraShakeAmtTrack.getValue(beat));
+
+			at = Vector3(0, 0, 0);
+			eye = Vector3(0, 0, -4);
 			
 			Matrix4x4 world;
 			world.makeIdentity();
@@ -584,7 +598,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					testRenderer.projection = proj; // math::Matrix4x4::projection(60.0f, 16.0f / 9, 1.0f, 1000.0f);
 					testRenderer.draw();
 				} */
-				
+#if 0				
 				for (int i = 0; i < 30; ++i)
 				{
 					float rot = (beat > (256 + 128)) ? ((beat - (256 + 128)) / 8) : 0;
@@ -599,7 +613,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					tunelle_fx->commitChanges();
 					tunelle_fx->draw(tunelle_x);
 				}
-				
+#endif				
 /*				for (int i = 0; i < 15; ++i)
 				{
 					float rot = (beat > (256 + 128)) ? ((beat - (256 + 128)) / 8) : 0;
@@ -673,15 +687,51 @@ int main(int /*argc*/, char* /*argv*/ [])
 #endif
 
 #if 0
-				//				world = math::Matrix4x4::translation(Vector3(0, 0, 20));
+
 				/* explosion */
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 				explosion_fx->setMatrices(world, view, proj);
 				explosion.draw(*explosion_fx, explosionTrack.getIntValue(beat));
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 #endif
 
+#if 0
+				/* splines */
+				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+				world.makeIdentity();
+				Matrix4x4 modelview = world * view;
+				ccbs_fx->setMatrices(world, view, proj);
+
+				Vector3 up(modelview._12, modelview._22, modelview._32);
+				Vector3 left(modelview._11, modelview._21, modelview._31);
+				math::normalize(up);
+				math::normalize(left);
+
+				ccbs_fx->setFloatArray("up", up, 3);
+				ccbs_fx->setFloatArray("left", left, 3);
+				ccbs_fx->commitChanges();
+				ccbs_fx->setMatrices(world, view, proj);
+				ccbs.draw(*ccbs_fx, beat);
+				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+
+#endif
+
 #if 1
+				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+				grow_fx->setMatrices(world, view, proj);
+				grow.draw(*grow_fx, growTrack.getIntValue(beat));
+				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+#endif
+
+#if 0
 				/* particles */
 				{
 					Matrix4x4 modelview = world * view;
