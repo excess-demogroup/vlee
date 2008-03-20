@@ -640,7 +640,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 3.8*30.0f));
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 5.2*30.0f));
 		
 		bool done = false;
 		while (!done)
@@ -734,7 +734,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			{
 				greetingsEnabled = true;
 			}
-			else if (beat < 0x500)
+			else if (beat < 0x480)
 			{
 				skyboxEnabled = true;
 				growEnabled = true;
@@ -1005,11 +1005,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 					Matrix4x4 world = Matrix4x4::identity();
 					greeble_cube_fx->setMatrices(world, view, proj);
 					greeble_cube_fx->commitChanges();
-
-					if (false)
+					
+					if (beat < 0x500)
 					{
 						greeble_cube_fx->draw(greeble_cube_x);
-
+						
 						device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 						device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
 						device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
