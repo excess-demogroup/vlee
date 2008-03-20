@@ -724,18 +724,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 				skyboxEnabled = true;
 				splinesEnabled = true;
 			}
-			else if (beat < 0x400)
+			else if (beat < 0x3C0)
 			{
 				korridorEnabled = true;
 			}
-			else if (beat < 0x480)
+			else if (beat < 0x400)
 			{
-				skyboxEnabled = true;
-				growEnabled = true;
+				greetingsEnabled = true;
 			}
 			else if (beat < 0x500)
 			{
-				greetingsEnabled = true;
+				skyboxEnabled = true;
+				growEnabled = true;
 			}
 			else if (beat < 0x600)
 			{
