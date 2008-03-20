@@ -640,7 +640,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 5.8*30.0f));
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 3.8*30.0f));
 		
 		bool done = false;
 		while (!done)
@@ -793,12 +793,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 			spherelight_transform *= Matrix4x4::translation(Vector3(0, 0, sin(time) * 25));
 			if (korridorEnabled)
 			{
+				eye = Vector3(sin(beat * 0.05f) * 50, -cos(beat * 0.05f) * 50, 0);
+				at = eye + Vector3(0, 0, -20);
+				view = Matrix4x4::lookAt(eye, at, roll);
+				
 				float scale = 10;
 				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
 				korridor_fx->setMatrices(world, view, proj);
 				korridor_fx->setMatrix("spherelight_transform", spherelight_transform.inverse());
 				korridor_fx->commitChanges();
-
+				
 				float s = 10;
 				korridor_sphere_fx->setMatrices(spherelight_transform * Matrix4x4::scaling(Vector3(s,s,s)), view, proj);
 				korridor_sphere_fx->commitChanges();
