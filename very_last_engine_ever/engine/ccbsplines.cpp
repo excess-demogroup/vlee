@@ -18,12 +18,12 @@ void CCBSplines::draw(engine::Effect &effect, double time) {
 	effect->End();
 }
 
-void CCBSplines::drawFrame(engine::Effect &effect, double stime) {
-	static int time = 1; time++;
+void CCBSplines::drawFrame(engine::Effect &effect, double time) {
+	time *= 2;
 	ps.begin();
 	for (int i = 0; i < CSLOOP; ++i) {
 		for (int c = time; c < time+CSLOD; ++c)
-			ps.add(loops[i].vectors[c%(CSNK*CSLOD)], 0.3f);
+			ps.add(loops[i].vectors[c%(CSNK*CSLOD)], 0.5f);
 	}
 	ps.end();
 	ps.draw();
@@ -42,8 +42,7 @@ void CCBSplines::generateSplineLoops() {
 
 void CCBSplines::generateKnots(int mod, CCBSplineLoop& sl) {
 	for (int i = 0; i < CSNK; ++i) {
-		sl.knots[i] = Vector3((rand() * (1.f / RAND_MAX))*5.f-2.5f,(rand() * (1.f / RAND_MAX))*5.f-2.5f,(rand() * (1.f / RAND_MAX))*5.f-2.5f);
-		//sl.knots[i] = Vector3(notRandf(i+mod+1)*5.f-2.5f,notRandf(i+mod+2)*5.f-2.5f,notRandf(i+mod+3)*5.f-2.5f);
+		sl.knots[i] = Vector3((rand() * (1.f / RAND_MAX))*5.f-2.5f, (rand() * (1.f / RAND_MAX))*3.5f-1.75f, (rand() * (1.f / RAND_MAX))*5.f-2.5f);
 	}
 }
 
