@@ -145,32 +145,32 @@ void Grow::generateSplineLoops() {
 		Vector3 heading;
 		if (c == 0) {
 			float r = (rand() * (1.f / RAND_MAX));
-			root    = Vector3(start.x-r    , start.y-r, start.z);
-			heading = Vector3(start.x+3.f+r, start.y+5.f, start.z-r*5);
-		} else if (c == 1*SCLUSTER) {
-			float r = (rand() * (1.f / RAND_MAX));
-			root    = Vector3(start.x+6.f+r, start.y-r    , start.z);
-			heading = Vector3(start.x+5.f-r, start.y+5.f, start.z-r*5);
-		} else if (c == 2*SCLUSTER) {
-			float r = (rand() * (1.f / RAND_MAX));
 			root    = Vector3(start.x+3.f, start.y-3.f, start.z-1.f);
 			heading = Vector3(start.x+4.f, start.y+5.f, start.z-3.f);
-		} else if (c == 3*SCLUSTER) {
+		} else if (c == 1*SCLUSTER) {
 			float r = (rand() * (1.f / RAND_MAX));
 			root    = Vector3(start.x+2.f, start.y, start.z+3.f);
 			heading = Vector3(start.x+4.f, start.y+6.f, start.z-8.f);
+		} else if (c == 2*SCLUSTER) {
+			float r = (rand() * (1.f / RAND_MAX));
+			root    = Vector3(start.x-r    , start.y-r, start.z);
+			heading = Vector3(start.x+3.f+r, start.y+7.f, start.z-r*5);
+		} else if (c == 3*SCLUSTER) {
+			float r = (rand() * (1.f / RAND_MAX));
+			root    = Vector3(start.x+6.f+r, start.y-r    , start.z);
+			heading = Vector3(start.x+5.f-r, start.y+7.f, start.z-r*5);
 		} else if (c == 4*SCLUSTER) {
 			float r = (rand() * (1.f / RAND_MAX));
 			root    = Vector3(start.x+1.f, start.y-3*r, start.z-1.f);
-			heading = Vector3(start.x+4.f, start.y+8.f, start.z+4.f);
+			heading = Vector3(start.x+4.f, start.y+10.f, start.z+4.f);
 		} else if (c == 5*SCLUSTER) {
 			float r = (rand() * (1.f / RAND_MAX));
 			root    = Vector3(start.x+4.f, start.y    , start.z+3.f);
-			heading = Vector3(start.x+4.f, start.y+4.f+r, start.z-4.f);
+			heading = Vector3(start.x+4.f, start.y+6.f+r, start.z-4.f);
 		} else {
 			float r = (rand() * (1.f / RAND_MAX));
 			root    = Vector3(start.x+3.f, start.y-1.f    , start.z+1.f);
-			heading = Vector3(start.x+6.5f, start.y+5.f, start.z+3.f);
+			heading = Vector3(start.x+6.5f, start.y+7.f, start.z+3.f);
 		}
 
 		root.x += cos (rand() * (1.f / RAND_MAX));

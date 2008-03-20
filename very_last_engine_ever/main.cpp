@@ -595,7 +595,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		engine::CCBSplines ccbs = engine::CCBSplines(device);
 
 		Effect *grow_fx = engine::loadEffect(device, "data/grow.fx");
-		engine::Grow grow = engine::Grow(vertex_streamer, Vector3(-3.8f,-2.f,0.f), Vector3(-0.5f,-2.f,0.f));
+		engine::Grow grow = engine::Grow(vertex_streamer, Vector3(-3.8f,-2.f,0.f));
 
 		Image scanlinesImage(engine::loadTexture(device, "data/scanlines.png"), tex_fx);
 		
@@ -1286,7 +1286,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 					grow_fx->setMatrices(world, view, proj);
-					grow.draw(*grow_fx, growTrack.getIntValue(beat));
+					grow.draw(*grow_fx, beat, growTrack.getIntValue(beat));
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				}
 				

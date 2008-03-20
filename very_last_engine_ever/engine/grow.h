@@ -18,7 +18,7 @@ namespace engine
 
 		#define SLERPFACTOR	50	//num of lerps between each lod
 
-		#define SSYNCMAX 0x7b	// animationlength
+		#define SSYNCMAX 0x80	// animationlength
 
 		struct CCBSplineLoop {
 			Vector3* knots[SNK];
