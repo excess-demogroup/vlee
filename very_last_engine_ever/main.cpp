@@ -376,7 +376,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		Track &voxelResTrack  = syncDevice->getTrack("voxel.res");
 		Track &voxelAnimTrack  = syncDevice->getTrack("voxel.anim");
-		
+
+		Track &greetGroupTrack  = syncDevice->getTrack("greet.group");
+
+
 		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
 		
 		Surface backbuffer   = device.getRenderTarget(0);
@@ -640,7 +643,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 5.2*30.0f));
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 3.8*30.0f));
 		
 		bool done = false;
 		while (!done)
@@ -1053,10 +1056,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 				
 				if (greetingsEnabled)
 				{
-					greetingsImage.setTexture(greetingsAnim.getTexture(int(beat) % greetingsAnim.getTextureCount() ));
+					Texture &tex = greetingsAnim.getTexture(greetGroupTrack.getIntValue(beat) % greetingsAnim.getTextureCount());
+/*					greetingsImage.setTexture(tex);
 					greetingsImage.setPosition(-1, -1);
 					greetingsImage.setDimension(2, 2);
-					greetingsImage.draw(device);
+					greetingsImage.draw(device); */
+
+					tex_fx->setTexture("tex", tex);
+					drawFuzz( tex_fx, vertex_streamer,  time, 1.0f,
+						colorMapDistortXTrack.getValue(beat), colorMapDistortYTrack.getValue(beat),
+						0.5f / letterbox_viewport.Width, 0.5f / letterbox_viewport.Height
+					);
 				}
 				
 				if (endTextEnabled)
