@@ -587,6 +587,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *greeble_bars_fx = engine::loadEffect(device, "data/greeble_bars.fx");
 		greeble_bars_fx->setTexture("tex", bar_tex);
 		
+		Mesh *greeble_sprengt_debris_x = engine::loadMesh(device, "data/greeble_sprengt_debris.x");
+		Mesh *greeble_sprengt_cube_x = engine::loadMesh(device, "data/greeble_sprengt_cube.x");
+		Mesh *greeble_sprengt_inside_x = engine::loadMesh(device, "data/greeble_sprengt_inside.x");
+		
 		Anim greetingsAnim = engine::loadAnim(device, "data/greetings/");
 		Image greetingsImage(greetingsAnim.getTexture(0), tex_fx);
 		
@@ -595,7 +599,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0*30.0f));
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 5.8*30.0f));
 		
 		bool done = false;
 		while (!done)
@@ -646,7 +650,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Matrix4x4 view = Matrix4x4::lookAt(eye, at, roll);
 			Matrix4x4 proj = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 1.0f, 100000.f);
 			
-			
 /*			testScene->anim(fmod(beat, 100));
 			scenegraph::Camera *cam = testScene->findCamera("Camera01-camera");
 			if (NULL != cam)
@@ -662,6 +665,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				proj = cam->getProjection();
 			} */
 			
+			bool skyboxEnabled = false;
 			bool introEnabled = false;
 			bool splinesEnabled = false;
 			bool korridorEnabled = false;
@@ -672,11 +676,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			if (beat < 0x200)
 			{
+				skyboxEnabled = true;
 				introEnabled = true;
 //				splinesEnabled = beat >= 0x1C0;
 			}
 			else if (beat < 0x280)
 			{
+				skyboxEnabled = true;
 				splinesEnabled = true;
 			}
 			else if (beat < 0x400)
@@ -685,6 +691,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			}
 			else if (beat < 0x480)
 			{
+				skyboxEnabled = true;
 				growEnabled = true;
 			}
 			else if (beat < 0x500)
@@ -693,6 +700,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			}
 			else if (beat < 0x580)
 			{
+				skyboxEnabled = true;
 				greebleKubeEnabled = true;
 			}
 			else
@@ -731,11 +739,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 				particle2_fx->setMatrices(world, view, proj);
 				particle2_fx->setFloat("alpha", 1.0f - tunelle_scale);
 				
-				float scale = 100;
-				world = Matrix4x4::scaling(Vector3(scale, scale, scale));
-				skybox_fx->setMatrices(world, view, proj);
-				skybox_fx->commitChanges();
-				
 				voxelMesh.setSize(voxelResTrack.getValue(beat));
 				grid_size = voxelMesh.getSize();
 				Matrix4x4 mrot;
@@ -762,17 +765,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			if (greebleKubeEnabled)
 			{
-				eye = Vector3(sin(beat * 0.05f), 0, -cos(beat * 0.05f)) * 80;
+				eye = Vector3(sin(beat * 0.05f), 0, -cos(beat * 0.05f)) * 120;
 				at = Vector3(20, 0, 0);
 				eye -= at;
 				
-				Matrix4x4 view = Matrix4x4::lookAt(eye, at, roll);
+				view = Matrix4x4::lookAt(eye, at, roll);
 				
-				float scale = 1.0f;
-				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
-				greeble_cube_fx->setMatrices(world, view, proj);
-				greeble_cube_fx->commitChanges();
-				
+				Matrix4x4 world = Matrix4x4::identity();
 				greeble_bars_fx->setMatrices(world, view, proj);
 				greeble_bars_fx->commitChanges();
 			}
@@ -787,19 +786,29 @@ int main(int /*argc*/, char* /*argv*/ [])
 				tex_trans_fx->setMatrices(world, view, proj);
 			}
 
+			if (skyboxEnabled)
+			{
+				float scale = 100;
+				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
+				skybox_fx->setMatrices(world, view, proj);
+				skybox_fx->commitChanges();
+			}
+
 			// render
 			for (int i = 0; i < 2; ++i)
 			{
-				device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
-				device->Clear(0, 0, D3DCLEAR_ZBUFFER, clear_color, 1.f, 0);
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 				
-				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
-				skybox_fx->draw(cube_x);
-				
-				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+				if (skyboxEnabled)
+				{
+					device->Clear(0, 0, D3DCLEAR_ZBUFFER, clear_color, 1.f, 0);
+					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
+					skybox_fx->draw(cube_x);
+					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+				}
+				else device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, clear_color, 1.f, 0);
+
 
 				//	test_fx.draw(cube_x);
 				//	time /= 4;
@@ -943,15 +952,32 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 				if (greebleKubeEnabled)
 				{
-					greeble_cube_fx->draw(greeble_cube_x);
-					
-					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-					greeble_bars_fx->draw(greeble_bars_x);
-					device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+					Matrix4x4 world = Matrix4x4::identity();
+					greeble_cube_fx->setMatrices(world, view, proj);
+					greeble_cube_fx->commitChanges();
+
+					if (false)
+					{
+						greeble_cube_fx->draw(greeble_cube_x);
+
+						device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+						device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+						device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+						device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+						greeble_bars_fx->draw(greeble_bars_x);
+						device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+						device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+					}
+					else
+					{
+						greeble_cube_fx->draw(greeble_sprengt_cube_x);
+						
+						float explode = beat - 0x500;
+						world = Matrix4x4::rotation(math::Quaternion(explode / 20, explode / 30, 0));
+						world *= Matrix4x4::translation(Vector3(1 * explode, -1 * explode, -1 * explode));
+						greeble_cube_fx->setMatrices(world, view, proj);
+						greeble_cube_fx->draw(greeble_sprengt_debris_x);
+					}
 				}
 				
 				if (greetingsEnabled)
