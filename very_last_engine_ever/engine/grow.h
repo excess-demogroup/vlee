@@ -10,9 +10,12 @@ namespace engine
 {
 	class Grow {
 	public:
-		#define SNK 20		//num of knots per spline loop
-		#define SLOD 40		//level of detail per knot
-		#define	SLOOP 150	//num of spline loops
+		#define SNK 15			//num of knots per spline loop
+		#define SLOD 4			//level of detail per knot
+		#define	SLOOP 50		//num of spline loops
+		#define SLERPFACTOR	50	//num of lerps between each lod
+
+		#define SSYNCMAX 4000	// num in tracker the gives "complete animation"
 
 		struct CCBSplineLoop {
 			Vector3* knots[SNK];
@@ -23,9 +26,9 @@ namespace engine
 			generateSplineLoops();
 		}
 
-		void draw(engine::Effect &effect, int time);
+		void draw(engine::Effect &effect, float time);
 	private:
-		void drawFrame(engine::Effect &effect, int time);
+		void drawFrame(engine::Effect &effect, float time);
 
 		void generateSplineLoops();
 		void generateKnots(int mod, CCBSplineLoop& sl);
@@ -35,7 +38,6 @@ namespace engine
 		CCBSplineLoop* loops[SLOOP];
 		Vector3& start;
 		Vector3& stop;
-		float len;
 
 	};
 }
