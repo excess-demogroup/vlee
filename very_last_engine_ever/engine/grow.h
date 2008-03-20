@@ -10,34 +10,42 @@ namespace engine
 {
 	class Grow {
 	public:
-		#define SNK 15			//num of knots per spline loop
-		#define SLOD 4			//level of detail per knot
-		#define	SLOOP 50		//num of spline loops
+		#define SNK 30			  //num of knots per spline loop
+		#define SLOD 20			  //level of detail per knot
+		#define	SLOOP 350		  //num of spline loops
+		#define SCLUSTER (SLOOP/7)//num of SLOOPs clusters together
+		
+
 		#define SLERPFACTOR	50	//num of lerps between each lod
 
-		#define SSYNCMAX 4000	// num in tracker the gives "complete animation"
+		#define SSYNCMAX 0x7b	// animationlength
 
 		struct CCBSplineLoop {
 			Vector3* knots[SNK];
 			Vector3* vectors[SNK*SLOD];
 		};
 
-		Grow(VertexStreamer& vs, Vector3& start, Vector3& stop) : vs(vs), start(start), stop(stop) {
+		Grow(VertexStreamer& vs, Vector3& start) : vs(vs), start(start) {
 			generateSplineLoops();
 		}
 
-		void draw(engine::Effect &effect, float time);
+		void draw(engine::Effect &effect, float time, int part);
 	private:
-		void drawFrame(engine::Effect &effect, float time);
+		void drawFrame(engine::Effect &effect, float time, int part);
 
 		void generateSplineLoops();
-		void generateKnots(int mod, CCBSplineLoop& sl);
+		void generateKnots(Vector3& root, Vector3& heading, CCBSplineLoop& sl);
 		void generateSplines(CCBSplineLoop& sl);
 
 		VertexStreamer& vs;
 		CCBSplineLoop* loops[SLOOP];
 		Vector3& start;
-		Vector3& stop;
 
+		float st0;
+		float st2;
+		float st3;
+		float st4;
+		float st5;
+		float st6;
 	};
 }
