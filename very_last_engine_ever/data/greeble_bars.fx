@@ -31,9 +31,15 @@ VS_OUTPUT vertex(float3 ipos : POSITION, float2 tex  : TEXCOORD0)
 	return Out;
 }
 
+float scroll = 0.0;
+
 float4 pixel(VS_OUTPUT In) : COLOR
 {
-	return tex2D(tex_sampler, In.tex) / 2;
+	float4 color = tex2D(tex_sampler, In.tex);
+	
+	float scrolly = floor(In.tex.y) + scroll * 2;
+	clip(-scrolly);
+	return color;
 }
 
 technique blur_ps_vs_2_0

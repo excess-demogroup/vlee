@@ -390,6 +390,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &sphereRotZTrack = syncDevice->getTrack("sphere.rot.z");
 		Track &sphereOffsetTrack = syncDevice->getTrack("sphere.offs");
 
+		Track &vuAmountTrack = syncDevice->getTrack("vu.amount");
+
 		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
 		
 		Surface backbuffer   = device.getRenderTarget(0);
@@ -854,13 +856,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			if (greebleKubeEnabled)
 			{
-				eye = Vector3(sin(beat * 0.05f), 0, -cos(beat * 0.05f)) * 120;
+				eye = Vector3(sin(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
+					cameraUpTrack.getValue(beat),
+					-cos(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat));
+
 				at = Vector3(20, 0, 0);
 				eye -= at;
 				
 				view = Matrix4x4::lookAt(eye, at, roll);
 				
 				Matrix4x4 world = Matrix4x4::identity();
+				greeble_bars_fx->setFloat("scroll", vuAmountTrack.getValue(beat));
 				greeble_bars_fx->setMatrices(world, view, proj);
 				greeble_bars_fx->commitChanges();
 			}
