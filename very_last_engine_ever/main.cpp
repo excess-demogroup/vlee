@@ -352,7 +352,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		Track &cameraDistanceTrack = syncDevice->getTrack("cam.dist");
 		Track &cameraRollTrack     = syncDevice->getTrack("cam.roll");
+		Track &cameraXRotTrack     = syncDevice->getTrack("cam.x-rot");
 		Track &cameraYRotTrack     = syncDevice->getTrack("cam.y-rot");
+		Track &cameraZRotTrack     = syncDevice->getTrack("cam.z-rot");
 		Track &cameraUpTrack     = syncDevice->getTrack("cam.up");
 		Track &cameraShakeAmtTrack     = syncDevice->getTrack("cam.shake.amt");
 		Track &cameraShakeTempoTrack     = syncDevice->getTrack("cam.shake.tempo");
@@ -379,6 +381,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Track &greetGroupTrack  = syncDevice->getTrack("greet.group");
 		Track &beatTrack = syncDevice->getTrack("beat.image");
+
+		Track &spherePosXTrack = syncDevice->getTrack("sphere.pos.x");
+		Track &spherePosYTrack = syncDevice->getTrack("sphere.pos.y");
+		Track &spherePosZTrack = syncDevice->getTrack("sphere.pos.z");
+		Track &sphereRotXTrack = syncDevice->getTrack("sphere.rot.x");
+		Track &sphereRotYTrack = syncDevice->getTrack("sphere.rot.y");
+		Track &sphereRotZTrack = syncDevice->getTrack("sphere.rot.z");
+		Track &sphereOffsetTrack = syncDevice->getTrack("sphere.offs");
 
 		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
 		
@@ -560,14 +570,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 				engine::Particle<ParticleData>(
 				Vector3(x, y * 2, z) * 55,
 				ParticleData(s,
-				math::normalize(Vector3(
-				1.0f / x,
-				1.0f / y,
-				1.0f / z
-				))
+					math::normalize(Vector3(
+					1.0f / x,
+					1.0f / y,
+					1.0f / z
+					))
+					)
 				)
-				)
-				);
+			);
 		}
 
 		Effect *explosion_fx = engine::loadEffect(device, "data/explosion.fx");
@@ -646,7 +656,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 2.8*30.0f));
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f));
 		
 		bool done = false;
 		while (!done)
@@ -765,6 +775,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float tunelle_scale = math::clamp((beat - (256 + 32)) * 0.5f, 0.0f, 1.0f);
 			if (introEnabled)
 			{
+
+/*				Track &cameraDistanceTrack = syncDevice->getTrack("cam.dist");
+				Track &cameraRollTrack     = syncDevice->getTrack("cam.roll");
+				Track &cameraYRotTrack     = syncDevice->getTrack("cam.y-rot");
+				Track &cameraZRotTrack     = syncDevice->getTrack("cam.z-rot"); */
+
 				eye = Vector3(sin(beat * 0.005f), 0, -cos(beat * 0.005f)) * 80;
 				at = Vector3(20, 0, 0);
 				eye -= at;
@@ -772,8 +788,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 				float eye2_scroll_temp = -((beat - (256 + 32)) * 8) + (64 + 8);
 				float eye2_scroll = fmod(eye2_scroll_temp, 75.0f);
 				eye2_scroll2 = int(floor(eye2_scroll_temp / 75.0f));
+
 				Vector3 eye2 = Vector3(eye2_scroll, 0, 0);
-				Vector3 at2 = eye2 + Vector3(-10, 0, 0);
+				Vector3 at2 = Vector3(
+					eye2_scroll - 10,
+					sin(cameraXRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
+					cos(cameraXRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat));
 				
 				float cam_blend = math::smoothstep(0.0f, 1.0f, (beat - (256 + 32)) / 8);
 				eye = math::lerp(eye, eye2, cam_blend);
@@ -803,12 +823,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Matrix4x4 spherelight_transform = Matrix4x4::identity();
 			if (korridorEnabled)
 			{
-				Vector3 spherelightPos(0, sin(beat * 0.1f) * 10, 0);
-				spherelight_transform = Matrix4x4::rotation(math::Quaternion(time, time, 0));
+				Vector3 spherelightPos(
+					spherePosXTrack.getValue(beat),
+					spherePosYTrack.getValue(beat),
+					spherePosZTrack.getValue(beat));
+				spherelight_transform = Matrix4x4::rotation(math::Quaternion(
+					sphereRotXTrack.getValue(beat) * (M_PI / 180),
+					sphereRotYTrack.getValue(beat) * (M_PI / 180),
+					sphereRotZTrack.getValue(beat) * (M_PI / 180)));
 				spherelight_transform *= Matrix4x4::translation(spherelightPos);
 				
-				eye = Vector3(sin(beat * 0.05f) * 50, 0, -cos(beat * 0.05f) * 50);
-				at = spherelightPos * 10;
+				eye = Vector3(sin(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
+							cameraUpTrack.getValue(beat),
+							-cos(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat));
+				at = spherelightPos * 10 + Vector3(0, sphereOffsetTrack.getValue(beat), 0);
 				view = Matrix4x4::lookAt(eye, at, roll);
 				
 				float scale = 10;
