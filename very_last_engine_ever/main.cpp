@@ -378,7 +378,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &voxelAnimTrack  = syncDevice->getTrack("voxel.anim");
 
 		Track &greetGroupTrack  = syncDevice->getTrack("greet.group");
-
+		Track &beatTrack = syncDevice->getTrack("beat.image");
 
 		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
 		
@@ -638,12 +638,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Anim greetingsAnim = engine::loadAnim(device, "data/greetings/");
 		Image greetingsImage(greetingsAnim.getTexture(0), tex_fx);
 		
+		Anim beatAnim = engine::loadAnim(device, "data/beat/");
+		Image beatImage(beatAnim.getTexture(0), tex_fx);
+		
 		Texture title_end_tex = engine::loadTexture(device, "data/title_end.png");
 		Image titleEndSubtextImage(engine::loadTexture(device, "data/title_end_subtext.png"), tex_fx);
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 3.8*30.0f));
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 2.8*30.0f));
 		
 		bool done = false;
 		while (!done)
@@ -712,6 +715,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			bool skyboxEnabled = false;
 			bool introEnabled = false;
 			bool splinesEnabled = false;
+			bool beatEnabled = false;
 			bool korridorEnabled = false;
 			bool growEnabled = false;
 			bool greebleKubeEnabled = false;
@@ -724,10 +728,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 				introEnabled = true;
 //				splinesEnabled = beat >= 0x1C0;
 			}
-			else if (beat < 0x280)
+			else if (beat < 0x270)
 			{
 				skyboxEnabled = true;
 				splinesEnabled = true;
+			}
+			else if (beat < 0x280)
+			{
+				beatEnabled = true;
 			}
 			else if (beat < 0x3C0)
 			{
@@ -1052,6 +1060,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 						drawParticleExplosion(device, streamer, particle3_fx, cubeExplosionParticles, explode2, modelview, 0.5f);
 //						drawParticleField(device, streamer, particle3_fx, cubeExplosionParticles, modelview);
 					}
+				}
+
+				if (beatEnabled)
+				{
+					Texture &tex = beatAnim.getTexture(beatTrack.getIntValue(beat) % beatAnim.getTextureCount());
+					beatImage.setTexture(tex);
+					beatImage.setPosition(-1, -1);
+					beatImage.setDimension(2, 2);
+					beatImage.draw(device);
 				}
 				
 				if (greetingsEnabled)
