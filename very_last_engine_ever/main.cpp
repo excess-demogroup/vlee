@@ -202,7 +202,7 @@ struct ParticleData
 };
 using engine::ParticleCloud;
 
-void drawParticleExplosion(renderer::Device &device, engine::ParticleStreamer &streamer, Effect *particle_fx, ParticleCloud<ParticleData> &blackCloud, float explode, const Matrix4x4 &modelview)
+void drawParticleExplosion(renderer::Device &device, engine::ParticleStreamer &streamer, Effect *particle_fx, ParticleCloud<ParticleData> &blackCloud, float explode, const Matrix4x4 &modelview, float exp = 1.75f)
 {
 	Vector3 up(modelview._12, modelview._22, modelview._32);
 	Vector3 left(modelview._11, modelview._21, modelview._31);
@@ -223,7 +223,7 @@ void drawParticleExplosion(renderer::Device &device, engine::ParticleStreamer &s
 		for (int i = 0; i < 1024; ++i)
 		{
 			Vector3 pos = iter->pos;
-			pos = pos + pos * pow(1.0f / math::length(pos), 1.75f) * explode;
+			pos = pos + pos * pow(1.0f / math::length(pos), exp) * explode;
 			float size = iter->data.size;
 
 			streamer.add(pos, size);
@@ -417,6 +417,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture lightparticle_tex = engine::loadTexture(device, "data/lightparticle.png");
 		particle2_fx->setTexture("tex", lightparticle_tex);
 		
+		Effect *particle3_fx = engine::loadEffect(device, "data/particle3.fx");
+		Texture particle_tex = engine::loadTexture(device, "data/particle.png");
+		particle3_fx->setTexture("tex", particle_tex);
+		
 		Effect *noise_fx = engine::loadEffect(device, "data/noise.fx");
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
 		
@@ -502,6 +506,43 @@ int main(int /*argc*/, char* /*argv*/ [])
 				)
 			);
 		}
+		
+		engine::ParticleCloud<ParticleData> cubeExplosionParticles;
+		for (int i = 0; i < 512; ++i)
+		{
+			float x, y, z;
+			do {
+				x = (randf() - 0.5f) * 2;
+				z = (randf() - 0.5f) * 2;
+				y = (randf() - 0.5f) * 2;
+			} while ((x * x + y * y + z * z) > 1.0f || (fabs(x) < 1e-5 && fabs(y) < 1e-5 && fabs(z) < 1e-5));
+
+			float dist = randf();
+			dist = pow(dist, 1.25f);
+			dist += 0.01f;
+			x *= dist;
+			y *= dist;
+			z *= dist;
+
+/*			x += 35;
+			y -= 35;
+			z -= 35; */
+
+			float s = (randf() + 0.25f) * 5.0f;
+			cubeExplosionParticles.addParticle(
+				engine::Particle<ParticleData>(
+				Vector3(x, y, z) * 15,
+				ParticleData(s,
+				math::normalize(Vector3(
+				1.0f / x,
+				1.0f / y,
+				1.0f / z
+				))
+				)
+				)
+			);
+		}
+
 
 		engine::ParticleCloud<ParticleData> korridorParticles;
 		for (int i = 0; i < 64 * 1024; ++i)
@@ -698,7 +739,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			{
 				greetingsEnabled = true;
 			}
-			else if (beat < 0x580)
+			else if (beat < 0x600)
 			{
 				skyboxEnabled = true;
 				greebleKubeEnabled = true;
@@ -977,6 +1018,23 @@ int main(int /*argc*/, char* /*argv*/ [])
 						world *= Matrix4x4::translation(Vector3(1 * explode, -1 * explode, -1 * explode));
 						greeble_cube_fx->setMatrices(world, view, proj);
 						greeble_cube_fx->draw(greeble_sprengt_debris_x);
+
+						world = Matrix4x4::translation(Vector3(32, -16, 0));
+						Matrix4x4 modelview = world * view;
+						cubeExplosionParticles.sort(Vector3(modelview._13, modelview._23, modelview._33));
+
+						float explode2 = explode * 0.25f;
+						particle3_fx->setMatrices(world, view, proj);
+						particle3_fx->setFloat("alpha", 1.0f / explode);
+
+						device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+						device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+						device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+						device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+						device->SetRenderState(D3DRS_ZWRITEENABLE, false);
+						
+						drawParticleExplosion(device, streamer, particle3_fx, cubeExplosionParticles, explode2, modelview, 0.5f);
+//						drawParticleField(device, streamer, particle3_fx, cubeExplosionParticles, modelview);
 					}
 				}
 				
@@ -990,20 +1048,21 @@ int main(int /*argc*/, char* /*argv*/ [])
 				
 				if (endTextEnabled)
 				{
+					float alpha = math::clamp((beat - 0x600) / 16, 0.0f, 1.0f);
 					tex_trans_fx->setTexture("tex", title_end_tex);
-//					tex_trans_fx->setFloat("alpha", 0.1f);
+					tex_trans_fx->setFloat("alpha", alpha);
 					tex_trans_fx->commitChanges();
 					Effect *effect = tex_trans_fx;
-
-					float flip = math::clamp((beat - 0x590) / 16, 0.0f, 1.0f);
-					float letterFlip = ((beat - 0x5A0) / 16) - 1.0f;
-
+					
+					float flip = math::clamp((beat - 0x610) / 16, 0.0f, 1.0f);
+					float letterFlip = ((beat - 0x620) / 16) - 1.0f;
+					
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
 					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
 					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 					device->SetRenderState(D3DRS_ZWRITEENABLE, false);
-
+					
 					UINT passes = 0;
 					(*effect)->Begin(&passes, 0);
 					for (UINT pass = 0; pass < passes; ++pass)
@@ -1052,16 +1111,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 						(*effect)->EndPass();
 					}
 					(*effect)->End();
-	
+					
+					tex_fx->setFloat("alpha", alpha);
+					tex_fx->setMatrix("transform", Matrix4x4::identity());
+					tex_fx->commitChanges();
 					titleEndSubtextImage.setPosition(-1, -1);
 					titleEndSubtextImage.setDimension(2, 2);
 					titleEndSubtextImage.draw(device);
-
+					
 					device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 					device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-
-//					title_end_tex
 				}
 
 #if 0
