@@ -31,6 +31,7 @@ samplerCUBE env_samp = sampler_state
 	MipFilter = LINEAR;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
+	MaxAnisotropy = 8;
 };
 
 struct VS_OUTPUT 
