@@ -548,16 +548,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 		for (int i = 0; i < 64 * 1024; ++i)
 		{
 			float x, y, z;
-			do {
-				x = (randf() - 0.5f) * 2;
-				z = (randf() - 0.5f) * 2;
-				y = (randf() - 0.5f) * 2;
-			} while ((x * x + y * y + z * z) > 1.0f || (fabs(x) < 1e-5 && fabs(y) < 1e-5 && fabs(z) < 1e-5));
+			x = (randf() - 0.5f) * 2;
+			z = (randf() - 0.5f) * 2;
+			y = (randf() - 0.5f) * 2;
 
 			float s = (randf() + 0.55f) * 0.25f;
 			korridorParticles.addParticle(
 				engine::Particle<ParticleData>(
-				Vector3(x, y, z) * 100,
+				Vector3(x, y * 2, z) * 55,
 				ParticleData(s,
 				math::normalize(Vector3(
 				1.0f / x,
@@ -789,18 +787,23 @@ int main(int /*argc*/, char* /*argv*/ [])
 				voxelMesh.update(mrot);
 			}
 			
-			Matrix4x4 spherelight_transform = Matrix4x4::rotation(math::Quaternion(time, time, 0));
-			spherelight_transform *= Matrix4x4::translation(Vector3(0, 0, sin(time) * 25));
+			Matrix4x4 spherelight_transform = Matrix4x4::identity();
 			if (korridorEnabled)
 			{
-				eye = Vector3(sin(beat * 0.05f) * 50, -cos(beat * 0.05f) * 50, 0);
-				at = eye + Vector3(0, 0, -20);
+				Vector3 spherelightPos(0, 0, 0);
+				spherelight_transform = Matrix4x4::rotation(math::Quaternion(time, time, 0));
+				spherelight_transform *= Matrix4x4::translation(spherelightPos);
+				
+				eye = Vector3(sin(beat * 0.05f) * 50, 0, -cos(beat * 0.05f) * 50);
+				at = spherelightPos;
 				view = Matrix4x4::lookAt(eye, at, roll);
 				
 				float scale = 10;
-				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
+				Matrix4x4 world = Matrix4x4::rotation(math::Quaternion(-M_PI / 2, 0.0f, 0.0f));
+				korridor_fx->setMatrix("spherelight_transform", world * Matrix4x4(spherelight_transform).inverse());
+				
+				world = Matrix4x4::scaling(Vector3(scale, scale, scale)) * world;
 				korridor_fx->setMatrices(world, view, proj);
-				korridor_fx->setMatrix("spherelight_transform", spherelight_transform.inverse());
 				korridor_fx->commitChanges();
 				
 				float s = 10;
