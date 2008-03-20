@@ -790,12 +790,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Matrix4x4 spherelight_transform = Matrix4x4::identity();
 			if (korridorEnabled)
 			{
-				Vector3 spherelightPos(0, 0, 0);
+				Vector3 spherelightPos(0, sin(beat * 0.1f) * 10, 0);
 				spherelight_transform = Matrix4x4::rotation(math::Quaternion(time, time, 0));
 				spherelight_transform *= Matrix4x4::translation(spherelightPos);
 				
 				eye = Vector3(sin(beat * 0.05f) * 50, 0, -cos(beat * 0.05f) * 50);
-				at = spherelightPos;
+				at = spherelightPos * 10;
 				view = Matrix4x4::lookAt(eye, at, roll);
 				
 				float scale = 10;
