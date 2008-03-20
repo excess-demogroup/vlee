@@ -570,7 +570,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *explosion_fx = engine::loadEffect(device, "data/explosion.fx");
 		Texture explosion_tex = engine::loadTexture(device, "data/explosion.png");
 		explosion_fx->setTexture("explosion_tex", explosion_tex);
-		engine::Explosion explosion = engine::Explosion(device, Vector3(0.1f, 0.1f, 4.1f), Vector3(8.0f, 0.1f, 32.1f));
+		//engine::Explosion explosion = engine::Explosion(device, Vector3(32.f, -16.f, 0.f), Vector3(42.f, -26.f, -10.f));
+
+		engine::Explosion explosion = engine::Explosion(device, Vector3(22.f, -6.f, 10.f), Vector3(32.f, -21.f, -10.f));
 
 		Effect *ccbs_fx = engine::loadEffect(device, "data/ccbs.fx");
 		Texture ccbs_tex = engine::loadTexture(device, "data/red_particle.png");
@@ -1039,6 +1041,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 						device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 						device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 						device->SetRenderState(D3DRS_ZWRITEENABLE, false);
+
+						/* explosion */
+						explosion_fx->setMatrices(world, view, proj);
+						explosion.draw(*explosion_fx, explosionTrack.getIntValue(beat));
 						
 						drawParticleExplosion(device, streamer, particle3_fx, cubeExplosionParticles, explode2, modelview, 0.5f);
 //						drawParticleField(device, streamer, particle3_fx, cubeExplosionParticles, modelview);

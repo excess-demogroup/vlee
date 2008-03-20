@@ -52,7 +52,7 @@ void Explosion::updateGraphics(int time) {
 	for (int i = 0; i < count; ++i) {
 		if (i <EXPLOSION_INIT_TRIANGLE_COUNT ) {
 			Vector3 axis = cross(end-begin, data->dir);
-			D3DXMatrixRotationAxis(&mrot, &axis, rotCounter/data->weight*0.02f);
+			D3DXMatrixRotationAxis(&mrot, &axis, rotCounter/data->weight*0.2f);
 			if (lastTime-time != 0) data->pos      = mul(mrot, data->initPos);
 			data++;
 
@@ -146,15 +146,15 @@ void Explosion::generateGraphics() {
 
 	for (int i = 0; i < count; ++i) {
 		float s = 0;
-		s			   = notRandf(i);
+		s			   = notRandf(i)*EXPLISION_FRAGMENT_FACTOR;
 		Vector2 uv1	   = Vector2(0,0);
 		Vector3 pos1   = Vector3(-s,-s,0);
 
-		s			   = notRandf(i+1);
+		s			   = notRandf(i+1)*EXPLISION_FRAGMENT_FACTOR;
 		Vector2 uv2	   = Vector2(0,1);
 		Vector3 pos2   = Vector3(-s,s,0);
 
-		s			   = notRandf(i+2);
+		s			   = notRandf(i+2)*EXPLISION_FRAGMENT_FACTOR;
 		Vector2 uv3	   = Vector2(1,1);
 		Vector3 pos3   = Vector3(s,s,0);
 		
