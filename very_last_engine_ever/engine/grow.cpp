@@ -9,13 +9,13 @@ using namespace std;
 
 
 void Grow::draw(engine::Effect &effect, float time, int part) {
-	if (part == 0) return;
-	if (part >= 1 && st0 == 0) st0 = time;
-	if (part >= 3 && st2 == 0) st2 = time;
-	if (part >= 4 && st3 == 0) st3 = time;
-	if (part >= 5 && st4 == 0) st4 = time;
-	if (part >= 6 && st5 == 0) st5 = time;
-	if (part >= 7 && st6 == 0) st6 = time;
+	if (part < 1) return;
+	else if (part >= 1 && st0 == 0) st0 = time;
+	else if (part >= 3 && st2 == 0) st2 = time;
+	else if (part >= 4 && st3 == 0) st3 = time;
+	else if (part >= 5 && st4 == 0) st4 = time;
+	else if (part >= 6 && st5 == 0) st5 = time;
+	else if (part >= 7 && st6 == 0) st6 = time;
 	UINT passes;
 	effect->Begin(&passes, 0);
 	for (UINT pass = 0; pass < passes; ++pass)

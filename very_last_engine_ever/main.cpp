@@ -762,7 +762,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				skyboxEnabled = true;
 				growEnabled = true;
 			}
-			else if (beat < 0x600)
+			else if (beat < 0x5ee)
 			{
 				skyboxEnabled = true;
 				greebleKubeEnabled = true;
@@ -1048,10 +1048,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 				if (greebleKubeEnabled)
 				{
 					Matrix4x4 world = Matrix4x4::identity();
+					at += Vector3(
+						pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
+						pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
+						pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
+						) * 0.025f * math::length(eye - at) * (cameraShakeAmtTrack.getValue(beat));
+					view.makeLookAt(eye, at, roll);
 					greeble_cube_fx->setMatrices(world, view, proj);
 					greeble_cube_fx->commitChanges();
 					
-					if (beat < 0x500)
+					if (beat < 0x580)
 					{
 						greeble_cube_fx->draw(greeble_cube_x);
 						
@@ -1067,7 +1073,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					{
 						greeble_cube_fx->draw(greeble_sprengt_cube_x);
 						
-						float explode = beat - 0x500;
+						float explode = beat - 0x580;
 						world = Matrix4x4::rotation(math::Quaternion(explode / 20, explode / 30, 0));
 						world *= Matrix4x4::translation(Vector3(1 * explode, -1 * explode, -1 * explode));
 						greeble_cube_fx->setMatrices(world, view, proj);
@@ -1122,14 +1128,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 				
 				if (endTextEnabled)
 				{
-					float alpha = math::clamp((beat - 0x600) / 16, 0.0f, 1.0f);
+					float alpha = math::clamp((beat - 0x5ee) / 16, 0.0f, 1.0f);
 					tex_trans_fx->setTexture("tex", title_end_tex);
 					tex_trans_fx->setFloat("alpha", alpha);
 					tex_trans_fx->commitChanges();
 					Effect *effect = tex_trans_fx;
 					
-					float flip = math::clamp((beat - 0x610) / 16, 0.0f, 1.0f);
-					float letterFlip = ((beat - 0x620) / 16) - 1.0f;
+					float flip = math::clamp((beat - 0x6fe) / 16, 0.0f, 1.0f);
+					float letterFlip = ((beat - 0x60e) / 16) - 1.0f;
 					
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
@@ -1268,9 +1274,39 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 				if (growEnabled)
 				{
+/*
+					float yRot = cameraYRotTrack.getValue(beat);
+					Vector3 eye(
+						float(sin(yRot)),
+						float(cameraUpTrack.getValue(beat)),
+						-4+float(cos(yRot))
+						);
+*/
+					eye = Vector3(0, 0, -4);
+					at = Vector3(0, 0, 0);
+					at += Vector3(
+						pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
+						pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
+						pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
+						) * 0.025f * math::length(eye - at) * (cameraShakeAmtTrack.getValue(beat));
+					view.makeLookAt(eye, at, roll);
+
+					/*
+					eye = Vector3(sin(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
+						cameraUpTrack.getValue(beat),
+						-cos(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat));
+
+					at = Vector3(0, 0, -2);
+					eye += Vector3(0, 0, -4);
+
+					eye = Vector3(0, 0, -4);
+					at = Vector3(0, 0, 0);
+					Matrix4x4 view = Matrix4x4::lookAt(eye, at, roll);
+*/
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 					grow_fx->setMatrices(world, view, proj);
+					grow_fx->commitChanges();
 					grow.draw(*grow_fx, beat, growTrack.getIntValue(beat));
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				}
