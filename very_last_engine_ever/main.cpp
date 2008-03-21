@@ -240,6 +240,16 @@ void drawParticleExplosion(renderer::Device &device, engine::ParticleStreamer &s
 	}
 }
 
+float getCubeLightBrightness(Vector3 pos)
+{
+	pos = normalize(pos);
+	
+	float max = fabs(pos.x);
+	max = std::max(max, fabs(pos.y));
+	max = std::max(max, fabs(pos.z));
+	return max;
+}
+
 void drawParticleField(renderer::Device &device, engine::ParticleStreamer &streamer, Effect *particle_fx, ParticleCloud<ParticleData> &blackCloud, const Matrix4x4 &modelview)
 {
 	Vector3 up(modelview._12, modelview._22, modelview._32);
@@ -1424,7 +1434,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_msaa.resolve(device);
 			
 			color_map_fx->setFloat("fade", colorMapBlendTrack.getValue(beat));
-			color_map_fx->setFloat("flash", pow(colorMapFlashTrack.getValue(beat), 2.0f));
+
+			float flash = pow(colorMapFlashTrack.getValue(beat), 2.0f);
+			if (korridorEnabled)
+			{
+				Vector3 dir = spherelight_transform.inverse().getTranslation();
+				float l = pow(getCubeLightBrightness(dir), 5.0f);
+				l *= 2.0f / math::length(dir * 0.5f);
+				flash += l;
+			}
+			
+			color_map_fx->setFloat("flash", flash);
 			color_map_fx->setFloat("fade2", colorMapFadeTrack.getValue(beat));
 			color_map_fx->setFloat("alpha", 0.25f);
 			color_map_fx->setTexture("tex", color1_hdr);
