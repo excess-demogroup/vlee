@@ -1134,7 +1134,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					tex_trans_fx->commitChanges();
 					Effect *effect = tex_trans_fx;
 					
-					float flip = math::clamp((beat - 0x6fe) / 16, 0.0f, 1.0f);
+					float flip = math::clamp((beat - 0x5fe) / 16, 0.0f, 1.0f);
 					float letterFlip = ((beat - 0x60e) / 16) - 1.0f;
 					
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
