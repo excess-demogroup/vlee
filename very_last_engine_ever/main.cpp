@@ -1347,7 +1347,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				{
 					eye = Vector3( sin(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
 								       cameraUpTrack.getValue(beat),
-						          -4-cos(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat)
+						          (-4-cos(cameraYRotTrack.getValue(beat) * (M_PI / 180))) * cameraDistanceTrack.getValue(beat)
 								 );
 					//eye = Vector3(0, 0, -4);
 					at = Vector3(0, 0, 0);
