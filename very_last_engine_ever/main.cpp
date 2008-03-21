@@ -634,10 +634,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 		korridor_particles_fx->setTexture("tex", lightparticle_tex);
 		korridor_particles_fx->setTexture("spherelight", korridor_spherelight);
 		
+		renderer::CubeTexture greeble_envmap = engine::loadCubeTexture(device, "data/greeble_cube_env.dds");
 		Mesh *greeble_cube_x = engine::loadMesh(device, "data/greeble_cube.x");
 		Effect *greeble_cube_fx = engine::loadEffect(device, "data/greeble_cube.fx");
 		greeble_cube_fx->setTexture("lightmap", engine::loadTexture(device, "data/greeble_cube_lightmap.png"));
-		greeble_cube_fx->setTexture("env", engine::loadCubeTexture(device, "data/greeble_cube_env.dds"));
+		greeble_cube_fx->setTexture("env", greeble_envmap);
+		Effect *black_fx = engine::loadEffect(device, "data/black.fx");
 		
 		Mesh *greeble_bars_x = engine::loadMesh(device, "data/greeble_bars.x");
 		Effect *greeble_bars_fx = engine::loadEffect(device, "data/greeble_bars.fx");
@@ -658,7 +660,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 180.0f));
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 190.0f));
 		
 		bool done = false;
 		while (!done)
@@ -762,10 +764,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 				skyboxEnabled = true;
 				growEnabled = true;
 			}
-			else if (beat < 0x5ee)
+			else if (beat < 0x5d0)
 			{
 				skyboxEnabled = true;
 				greebleKubeEnabled = true;
+			}
+			else if (beat < 0x5ee)
+			{
+				skyboxEnabled = true;
 			}
 			else
 			{
@@ -867,8 +873,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 					cameraUpTrack.getValue(beat),
 					-cos(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat));
 
-				at = Vector3(20, 0, 0);
-				eye -= at;
+				at = Vector3(0, 0, 20);
+				eye += at;
 				
 				view = Matrix4x4::lookAt(eye, at, roll);
 				
@@ -890,6 +896,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			if (skyboxEnabled)
 			{
+				if (greebleKubeEnabled)
+				{
+					skybox_fx->setTexture("reflectionMap", greeble_envmap);
+					skybox_fx->setFloat("alpha", 0.25f);
+				}
+				else 
+				{
+					skybox_fx->setTexture("reflectionMap", cubemap_tex);
+					skybox_fx->setFloat("alpha", 1.0f);
+				}
+
 				float scale = 100;
 				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
 				skybox_fx->setMatrices(world, view, proj);
@@ -1064,6 +1081,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 					greeble_cube_fx->setMatrices(world, view, proj);
 					greeble_cube_fx->commitChanges();
 					
+					black_fx->setMatrices(world, view, proj);
+					black_fx->commitChanges();
+
 					if (beat < 0x580)
 					{
 						greeble_cube_fx->draw(greeble_cube_x);
@@ -1079,8 +1099,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 					else
 					{
 						greeble_cube_fx->draw(greeble_sprengt_cube_x);
+						black_fx->draw(greeble_sprengt_inside_x);
+						
+						/* explosion */
+						explosion_fx->setMatrices(world, view, proj);
+						explosion.draw(*explosion_fx, explosionTrack.getIntValue(beat) - 4);
 						
 						float explode = beat - 0x580;
+						explode = logf(explode + 1) * 4;
 						world = Matrix4x4::rotation(math::Quaternion(explode / 20, explode / 30, 0));
 						world *= Matrix4x4::translation(Vector3(1 * explode, -1 * explode, -1 * explode));
 						greeble_cube_fx->setMatrices(world, view, proj);
@@ -1089,20 +1115,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 						world = Matrix4x4::translation(Vector3(32, -16, 0));
 						Matrix4x4 modelview = world * view;
 						cubeExplosionParticles.sort(Vector3(modelview._13, modelview._23, modelview._33));
-
-						float explode2 = explode * 0.25f;
-						particle3_fx->setMatrices(world, view, proj);
-						particle3_fx->setFloat("alpha", 1.0f / explode);
-
+						
 						device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 						device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
 						device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 						device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 						device->SetRenderState(D3DRS_ZWRITEENABLE, false);
-
-						/* explosion */
-						explosion_fx->setMatrices(world, view, proj);
-						explosion.draw(*explosion_fx, explosionTrack.getIntValue(beat));
+						
+						float explode2 = explode * 0.25f;
+						particle3_fx->setMatrices(world, view, proj);
+						particle3_fx->setFloat("alpha", 1.5f / (1 + explode * 0.25f));
 						
 						drawParticleExplosion(device, streamer, particle3_fx, cubeExplosionParticles, explode2, modelview, 0.5f);
 //						drawParticleField(device, streamer, particle3_fx, cubeExplosionParticles, modelview);

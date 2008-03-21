@@ -2,6 +2,7 @@ float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorld : WORLD;
 float4x4 matView : VIEW;
+float alpha = 1.0;
 
 uniform float4 vViewPosition;
 
@@ -63,7 +64,7 @@ PS_OUTPUT ps_main( PS_INPUT In )
 {
 	PS_OUTPUT Out;
 
-	Out.color = texCUBE(reflectionMapSampler, normalize(In.texcoord));
+	Out.color = texCUBE(reflectionMapSampler, normalize(In.texcoord)) * alpha;
 	return Out;
 }
 

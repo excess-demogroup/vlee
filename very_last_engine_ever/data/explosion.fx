@@ -25,10 +25,12 @@ struct VS_OUTPUT
 {
    float4 pos : POSITION0;
    float2 tex : TEXCOORD0;
+   float4 col : TEXCOORD1;
 };
 struct VS_INPUT 
 {
    float4 pos     : POSITION0;
+   float3 norm    : NORMAL;
    float2 tex     : TEXCOORD0;
    float3 dir     : TEXCOORD1;
    float3 initPos : TEXCOORD2;
@@ -40,6 +42,7 @@ struct VS_INPUT
 
 float4 pixel(VS_OUTPUT In) : COLOR
 {
+	return In.col;
 	float4 col = tex2D(explosion_sampler, In.tex);
 	return float4(col.xyz, col.a * 0.5);
 }
@@ -51,6 +54,8 @@ VS_OUTPUT vertex(VS_INPUT In)
     Out.pos = mul(In.pos, worldpos) + float4(In.dir, 0.0) * (dstep*time);
     Out.pos = mul(Out.pos, View);
     Out.pos = mul(Out.pos, Projection);
+    float n_dot_l = In.norm.z;
+	Out.col = float4(n_dot_l, n_dot_l, n_dot_l, 1.0f);
 
     Out.tex = float2(In.tex.x * 0.5, -In.tex.y * 0.5);
     Out.tex += float2(0.5f, 0.5f);   
