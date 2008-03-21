@@ -661,7 +661,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 190.0f));
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f));
 		
 		bool done = false;
 		while (!done)

@@ -9,13 +9,16 @@ using namespace std;
 
 
 void Grow::draw(engine::Effect &effect, float time, int part) {
-	if (part < 1) return;
+	if (part == 0)
+		return;
+/*
 	else if (part >= 1 && st0 == 0) st0 = time;
 	else if (part >= 3 && st2 == 0) st2 = time;
 	else if (part >= 4 && st3 == 0) st3 = time;
 	else if (part >= 5 && st4 == 0) st4 = time;
 	else if (part >= 6 && st5 == 0) st5 = time;
 	else if (part >= 7 && st6 == 0) st6 = time;
+*/
 	UINT passes;
 	effect->Begin(&passes, 0);
 	for (UINT pass = 0; pass < passes; ++pass)
@@ -121,12 +124,12 @@ void Grow::drawFrame(engine::Effect &effect, float time, int part) {
 
 
 void Grow::generateSplineLoops() {
-	st0 = 0;
-	st2 = 0;
-	st3 = 0;
-	st4 = 0;
-	st5 = 0;
-	st6 = 0;
+	st0 = 0x400;
+	st2 = 0x43e;
+	st3 = 0x43e;
+	st4 = 0x43e;
+	st5 = 0x440;
+	st6 = 0x442;
 /*
 	Vector3(-3.8f,-2.f,0.f) 
 	Vector3(3.8f,-2.f,-1.0.f)

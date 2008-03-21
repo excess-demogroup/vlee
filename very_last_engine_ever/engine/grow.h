@@ -20,7 +20,7 @@ namespace engine
 
 		#if defined(SYNC)
 		//because of crappy code we need to shorten the anim lenght while using the sync_editor to see stuff :(
-			#define SSYNCMAX 0x7a	// animationlength
+			#define SSYNCMAX 0xaa	// animationlength
 		#else
 			#define SSYNCMAX 0xaa	// animationlength
 		#endif
