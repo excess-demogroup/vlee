@@ -1274,35 +1274,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 				if (growEnabled)
 				{
-/*
-					float yRot = cameraYRotTrack.getValue(beat);
-					Vector3 eye(
-						float(sin(yRot)),
-						float(cameraUpTrack.getValue(beat)),
-						-4+float(cos(yRot))
-						);
-*/
-					eye = Vector3(0, 0, -4);
+					eye = Vector3( sin(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
+								       cameraUpTrack.getValue(beat),
+						          -4-cos(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat)
+								 );
+					//eye = Vector3(0, 0, -4);
 					at = Vector3(0, 0, 0);
 					at += Vector3(
 						pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
 						pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
 						pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
 						) * 0.025f * math::length(eye - at) * (cameraShakeAmtTrack.getValue(beat));
+					Matrix4x4 view;
 					view.makeLookAt(eye, at, roll);
 
-					/*
-					eye = Vector3(sin(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
-						cameraUpTrack.getValue(beat),
-						-cos(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat));
-
-					at = Vector3(0, 0, -2);
-					eye += Vector3(0, 0, -4);
-
-					eye = Vector3(0, 0, -4);
-					at = Vector3(0, 0, 0);
-					Matrix4x4 view = Matrix4x4::lookAt(eye, at, roll);
-*/
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 					grow_fx->setMatrices(world, view, proj);
