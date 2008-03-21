@@ -10,9 +10,9 @@ namespace engine
 {
 	class CCBSplines {
 	public:
-		#define CSNK 15		//num of knots per spline loop
-		#define CSLOD 40		//level of detail per knot
-		#define	CSLOOP 10		//num of spline loops
+		#define CSNK 40		//num of knots per spline loop
+		#define CSLOD 128	//level of detail per knot
+		#define	CSLOOP 20	//num of spline loops
 
 		struct CCBSplineLoop {
 			Vector3 knots[CSNK];

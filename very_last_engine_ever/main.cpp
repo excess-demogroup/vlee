@@ -590,9 +590,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		engine::Explosion explosion = engine::Explosion(device, Vector3(22.f, -6.f, 10.f), Vector3(32.f, -21.f, -10.f));
 
 		Effect *ccbs_fx = engine::loadEffect(device, "data/ccbs.fx");
-		Texture ccbs_tex = engine::loadTexture(device, "data/blue_particle.png");
+		Texture ccbs_tex = engine::loadTexture(device, "data/particle.png");
 		ccbs_fx->setTexture("ccbs_tex", ccbs_tex);
-		engine::CCBSplines ccbs = engine::CCBSplines(device);
+		engine::CCBSplines *ccbs = new engine::CCBSplines(device);
 
 		Effect *grow_fx = engine::loadEffect(device, "data/grow.fx");
 		engine::Grow grow = engine::Grow(vertex_streamer, Vector3(-3.8f,-2.f,0.f));
@@ -658,7 +658,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f));
+		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 180.0f));
 		
 		bool done = false;
 		while (!done)
@@ -822,6 +822,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 				voxelMesh.update(mrot);
 			}
 			
+			if (splinesEnabled)
+			{
+				at = Vector3(0, 0, 0);
+				eye = Vector3(sin((beat / 128) * M_PI), 0, -cos((beat / 128) * M_PI)) * 4;
+				view.makeLookAt(eye, at, roll);
+			}
+			
 			Matrix4x4 spherelight_transform = Matrix4x4::identity();
 			if (korridorEnabled)
 			{
@@ -830,9 +837,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 					spherePosYTrack.getValue(beat),
 					spherePosZTrack.getValue(beat));
 				spherelight_transform = Matrix4x4::rotation(math::Quaternion(
-					sphereRotXTrack.getValue(beat) * (M_PI / 180),
-					sphereRotYTrack.getValue(beat) * (M_PI / 180),
-					sphereRotZTrack.getValue(beat) * (M_PI / 180)));
+					sphereRotXTrack.getValue(beat) * float(M_PI / 180),
+					sphereRotYTrack.getValue(beat) * float(M_PI / 180),
+					sphereRotZTrack.getValue(beat) * float(M_PI / 180)));
 				spherelight_transform *= Matrix4x4::translation(spherelightPos);
 				
 				eye = Vector3(sin(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
@@ -1265,10 +1272,28 @@ int main(int /*argc*/, char* /*argv*/ [])
 				{
 					/* splines */
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+					device->SetRenderState(D3DRS_ZWRITEENABLE, false);
 					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+					
+					world.makeIdentity();
+					Matrix4x4 modelview = world * view;
 					ccbs_fx->setMatrices(world, view, proj);
-					ccbs.draw(*ccbs_fx, beat);
+
+					Vector3 up(modelview._12, modelview._22, modelview._32);
+					Vector3 left(modelview._11, modelview._21, modelview._31);
+					math::normalize(up);
+					math::normalize(left);
+
+					ccbs_fx->setFloatArray("up", up, 3);
+					ccbs_fx->setFloatArray("left", left, 3);
+					ccbs_fx->commitChanges();
+					ccbs_fx->setMatrices(world, view, proj);
+					ccbs->draw(*ccbs_fx, beat);
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+					device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+					device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 				}
 				
 

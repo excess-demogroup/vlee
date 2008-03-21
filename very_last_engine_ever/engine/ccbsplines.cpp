@@ -12,21 +12,25 @@ void CCBSplines::draw(engine::Effect &effect, double time) {
 	for (UINT pass = 0; pass < passes; ++pass)
 	{
 		effect->BeginPass( pass );
-		drawFrame(effect,time);
+		drawFrame(effect, time);
 		effect->EndPass();
 	}
 	effect->End();
 }
 
-void CCBSplines::drawFrame(engine::Effect &effect, double time) {
-	time *= 2;
-	ps.begin();
+void CCBSplines::drawFrame(engine::Effect &effect, double stime) {
+	int time = int(floor(stime * 8));
 	for (int i = 0; i < CSLOOP; ++i) {
+		float size =  0.75f + notRandf(i) * 0.25f;
+		size *= 0.25f;
+		ps.begin();
 		for (int c = time; c < time+CSLOD; ++c)
-			ps.add(loops[i].vectors[c%(CSNK*CSLOD)], 0.5f);
+		{
+			ps.add(loops[i].vectors[c%(CSNK*CSLOD)], size / (1 + ((time + CSLOD) - c) * 0.125f));
+		}
+		ps.end();
+		ps.draw();
 	}
-	ps.end();
-	ps.draw();
 }
 
 
@@ -42,26 +46,31 @@ void CCBSplines::generateSplineLoops() {
 
 void CCBSplines::generateKnots(int mod, CCBSplineLoop& sl) {
 	for (int i = 0; i < CSNK; ++i) {
-		sl.knots[i] = Vector3((rand() * (1.f / RAND_MAX))*5.f-2.5f, (rand() * (1.f / RAND_MAX))*3.5f-1.75f, (rand() * (1.f / RAND_MAX))*5.f-2.5f);
+		sl.knots[i] = Vector3((rand() * (1.f / RAND_MAX))*5.f-2.5f,(rand() * (1.f / RAND_MAX))*5.f-2.5f,(rand() * (1.f / RAND_MAX))*5.f-2.5f);
+		//sl.knots[i] = Vector3(notRandf(i+mod+1)*5.f-2.5f,notRandf(i+mod+2)*5.f-2.5f,notRandf(i+mod+3)*5.f-2.5f);
 	}
+}
+
+Vector3 evalSpline(const Vector3 &v0, const Vector3 &v1, const Vector3 &v2, const Vector3 &v3, float t)
+{
+	float it= (float)1.0-t;
+
+	float b0 = it*it*it/6.f;
+	float b1 = (3.f*t*t*t-6.f*t*t+4.f)/6.f;
+	float b2 = (-3.f*t*t*t+3.f*t*t+3.f*t+1)/6.f;
+	float b3 = t*t*t/6.f;
+
+	float x = b0*v0.x + b1*v1.x + b2*v2.x + b3*v3.x;
+	float y = b0*v0.y + b1*v1.y + b2*v2.y + b3*v3.y;
+	float z = b0*v0.z + b1*v1.z + b2*v2.z + b3*v3.z;
+	return Vector3(x, y, z);
 }
 
 void CCBSplines::generateSplines(CCBSplineLoop& sl) {
 	for (int c = 0; c < CSNK; ++c){
 		for (int i = 0; i < CSLOD; ++i) {
 			float t = (float)i / (float)CSLOD;
-			float it= (float)1.0-t;
-
-			float b0 = it*it*it/6.f;
-			float b1 = (3.f*t*t*t-6.f*t*t+4.f)/6.f;
-			float b2 = (-3.f*t*t*t+3.f*t*t+3.f*t+1)/6.f;
-			float b3 = t*t*t/6.f;
-	
-			float x = b0*sl.knots[(c-0)%CSNK].x + b1*sl.knots[(c+1)%CSNK].x + b2*sl.knots[(c+2)%CSNK].x + b3*sl.knots[(c+3)%CSNK].x;
-			float y = b0*sl.knots[(c-0)%CSNK].y + b1*sl.knots[(c+1)%CSNK].y + b2*sl.knots[(c+2)%CSNK].y + b3*sl.knots[(c+3)%CSNK].y;
-			float z = b0*sl.knots[(c-0)%CSNK].z + b1*sl.knots[(c+1)%CSNK].z + b2*sl.knots[(c+2)%CSNK].z + b3*sl.knots[(c+3)%CSNK].z;
-
-			sl.vectors[c*CSLOD+i] = Vector3(x,y,z);
+			sl.vectors[c*CSLOD+i] = evalSpline(sl.knots[(c-0)%CSNK], sl.knots[(c+1)%CSNK], sl.knots[(c+2)%CSNK], sl.knots[(c+3)%CSNK], t);
 		}
 	}
 }
