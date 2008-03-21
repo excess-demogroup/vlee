@@ -389,9 +389,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &sphereRotYTrack = syncDevice->getTrack("sphere.rot.y");
 		Track &sphereRotZTrack = syncDevice->getTrack("sphere.rot.z");
 		Track &sphereOffsetTrack = syncDevice->getTrack("sphere.offs");
-
+		
 		Track &vuAmountTrack = syncDevice->getTrack("vu.amount");
-
+		Track &bigbangTime = syncDevice->getTrack("bb.time");
+		
 		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
 		
 		Surface backbuffer   = device.getRenderTarget(0);
@@ -725,7 +726,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 				view = camView.inverse();
 				proj = cam->getProjection();
 			} */
-			
+
+			bool bigbangEnabled = false;
 			bool skyboxEnabled = false;
 			bool introEnabled = false;
 			bool splinesEnabled = false;
@@ -735,11 +737,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 			bool greebleKubeEnabled = false;
 			bool endTextEnabled = false;
 			bool greetingsEnabled = false;
+			bool revBigbang = false;
 			
 			if (beat < 0x200)
 			{
 				skyboxEnabled = true;
 				introEnabled = true;
+				bigbangEnabled = true;
 //				splinesEnabled = beat >= 0x1C0;
 			}
 			else if (beat < 0x270)
@@ -751,7 +755,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			{
 				beatEnabled = true;
 			}
-			else if (beat < 0x3C0)
+			else if (beat < 0x3C8)
 			{
 				korridorEnabled = true;
 			}
@@ -764,7 +768,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				skyboxEnabled = true;
 				growEnabled = true;
 			}
-			else if (beat < 0x5d0)
+			else if (beat < 0x5c0)
 			{
 				skyboxEnabled = true;
 				greebleKubeEnabled = true;
@@ -772,6 +776,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			else if (beat < 0x5ee)
 			{
 				skyboxEnabled = true;
+				bigbangEnabled = true;
+				revBigbang = true;
 			}
 			else
 			{
@@ -781,6 +787,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float grid_size = 0.0f;
 			int eye2_scroll2 = 0;
 			float tunelle_scale = math::clamp((beat - (256 + 32)) * 0.5f, 0.0f, 1.0f);
+
 			if (introEnabled)
 			{
 
@@ -884,6 +891,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 				greeble_bars_fx->commitChanges();
 			}
 			
+			if (revBigbang)
+			{
+				eye = Vector3(sin(beat * 0.005f), 0, -cos(beat * 0.005f)) * 80;
+				at = Vector3(20, 0, 0);
+				eye -= at;
+				view.makeLookAt(eye, at, roll);
+				
+				particle_fx->setMatrices(world, view, proj);
+				particle2_fx->setMatrices(world, view, proj);
+				particle2_fx->setFloat("alpha", 1.0f);
+			}
+			
 			if (endTextEnabled)
 			{
 				eye = Vector3(0, 0, -100);
@@ -963,11 +982,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 					cubegrid_fx->setMatrices(mscale2 * world, view, proj);
 					cubegrid_fx->commitChanges();
 					voxelMesh.draw(device);
+				}
 
+				if (bigbangEnabled)
+				{
 					// black particles
 					{
 						//blackCloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
-						float explode = std::max((beat - 255) * 0.5f, 0.0f);
+						float explode = bigbangTime.getValue(beat) / 2; // std::max((beat - 255) * 0.5f, 0.0f);
 						explode *= explode;
 						Matrix4x4 modelview = world * view;
 						
@@ -981,8 +1003,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					// white particles
 					{
 						// whiteCloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
-						float explode = std::max((beat - 255), 0.0f) * 0.5f;
-//						explode *= explode;
+						float explode = bigbangTime.getValue(beat) / 2; // std::max((beat - 255), 0.0f) * 0.5f;
 						Matrix4x4 modelview = world * view;
 						
 						device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
@@ -992,7 +1013,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 						
 						drawParticleExplosion(device, streamer, particle2_fx, whiteCloud, explode, modelview);
 					}
-					
+				}
+				
+				if (introEnabled)
+				{
 					// text-plotter
 					int blinkVal = textBlinkTrack.getIntValue(beat);
 					if ((blinkVal == 0) || (math::frac(beat / blinkVal) > 0.5f))
