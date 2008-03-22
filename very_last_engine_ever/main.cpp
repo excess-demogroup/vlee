@@ -240,6 +240,21 @@ void drawParticleExplosion(renderer::Device &device, engine::ParticleStreamer &s
 	}
 }
 
+float faceLight[6] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+
+int getFace(const Vector3 &v)
+{
+	float saxis[3] = { v.x,  v.y,  v.z };
+	float axis[3] = { abs(v.x), abs(v.y), abs(v.z) };
+	int maxAxis;
+	if (axis[0]>axis[1] && axis[0]>axis[2]) maxAxis=0;
+	else if (axis[1] > axis[2]) maxAxis=1;
+	else maxAxis=2;
+	if (saxis[maxAxis]<0) maxAxis+=3;	
+	return maxAxis;
+}
+
+
 float getCubeLightBrightness(Vector3 pos)
 {
 	pos = normalize(pos);
@@ -247,7 +262,7 @@ float getCubeLightBrightness(Vector3 pos)
 	float max = fabs(pos.x);
 	max = std::max(max, fabs(pos.y));
 	max = std::max(max, fabs(pos.z));
-	return max;
+	return max * faceLight[getFace(pos)];
 }
 
 void drawParticleField(renderer::Device &device, engine::ParticleStreamer &streamer, Effect *particle_fx, ParticleCloud<ParticleData> &blackCloud, const Matrix4x4 &modelview)
@@ -388,6 +403,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		Track &voxelResTrack  = syncDevice->getTrack("voxel.res");
 		Track &voxelAnimTrack  = syncDevice->getTrack("voxel.anim");
+		Track &voxelScaleTrack  = syncDevice->getTrack("voxel.scale");
 
 		Track &greetGroupTrack  = syncDevice->getTrack("greet.group");
 		Track &beatTrack = syncDevice->getTrack("beat.image");
@@ -578,7 +594,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			z = (randf() - 0.5f) * 2;
 			y = (randf() - 0.5f) * 2;
 
-			float s = (randf() + 0.55f) * 0.25f;
+			float s = (randf() + 0.55f) * 0.45f;
 			korridorParticles.addParticle(
 				engine::Particle<ParticleData>(
 				Vector3(x, y * 2, z) * 55,
@@ -855,6 +871,21 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Matrix4x4 spherelight_transform = Matrix4x4::identity();
 			if (korridorEnabled)
 			{
+				int activeLights = 6;
+				bool lightEnabled[6] = {false, false, false, false, false, false};
+				for (int i = 0; i < activeLights; ++i)
+				{
+					int l = i;
+					float f = 1.0f;
+					//while ()
+					
+					lightEnabled[l] = true;
+					faceLight[l] = f;
+				}
+				korridor_fx->setFloatArray("faceLight", faceLight, 6);
+				korridor_sphere_fx->setFloatArray("faceLight", faceLight, 6);
+				korridor_particles_fx->setFloatArray("faceLight", faceLight, 6);
+
 				Vector3 spherelightPos(
 					spherePosXTrack.getValue(beat),
 					spherePosYTrack.getValue(beat),
@@ -988,6 +1019,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 					mscale2 *= Matrix4x4::scaling(Vector3(10.0f / grid_size, 10.0f / grid_size, 10.0f / grid_size));
 					
 					Matrix4x4 world = Matrix4x4::translation(orig_at);
+					Matrix4x4 vscale = Matrix4x4::scaling(Vector3(
+						voxelScaleTrack.getValue(beat),
+						voxelScaleTrack.getValue(beat),
+						voxelScaleTrack.getValue(beat)
+						));
+					mscale2 *= vscale;
 					
 					cubegrid_fx->setMatrices(mscale2 * world, view, proj);
 					cubegrid_fx->commitChanges();

@@ -20,6 +20,20 @@ float4x4 WorldView : WORLDVIEW;
 // textures
 texture tex;
 
+float faceLight[6] = {0, 1, 0, 0, 0, 0};
+int getFace(float3 v)
+{
+	float saxis[3] = { v.x,  v.y,  v.z };
+	float axis[3] = { abs(v.x), abs(v.y), abs(v.z) };
+	int maxAxis;
+	if (axis[0]>axis[1] && axis[0]>axis[2]) maxAxis=0;
+		else if (axis[1] > axis[2]) maxAxis=1;
+		else maxAxis=2;
+	if (saxis[maxAxis]<0) maxAxis+=3;	
+	return maxAxis;
+}
+
+
 sampler tex_samp = sampler_state
 {
 	Texture = (tex);
@@ -52,14 +66,18 @@ struct VS_OUTPUT
 {
 	float4 pos : POSITION;
 	float2 tex : TEXCOORD0;
-	float3 l   : TEXCOORD1;
+	float4 l   : TEXCOORD1;
+	int axis : TEXCOORD2;
 };
 
 VS_OUTPUT vertex(VS_INPUT In)
 {
 	VS_OUTPUT Out;
 
-	Out.l   = mul(float4(In.pos / 10,  1), spherelight_transform).xyz;
+	Out.l.xyz = mul(float4(In.pos / 10,  1), spherelight_transform).xyz;
+	Out.l.w = length(Out.l.xyz);
+	Out.axis = getFace(Out.l);
+	
 	In.pos += left * In.tex.x * In.size;
 	In.pos += up   * In.tex.y * In.size;
 	
@@ -80,9 +98,9 @@ PS_OUTPUT pixel(VS_OUTPUT In)
 {
 	PS_OUTPUT output;
 	
-	float dist = length(In.l);
-	float light = texCUBE(spherelight_samp, In.l).r / dist;
-	light += 0.05;
+	float light = (texCUBE(spherelight_samp, In.l.xyz).r * faceLight[In.axis]) / In.l.w;
+	light *= 2;
+	light += 0.025;
 
 	output.col = tex2D(tex_samp, In.tex) * light * alpha;
 	return output;

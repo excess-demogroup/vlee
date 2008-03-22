@@ -14,6 +14,8 @@ float overbright = 1.0;
 float3 fog_color = float3(1, 1, 1);
 
 
+float faceLight[6] = {0, 1, 0, 0, 0, 0};
+
 // textures
 texture diffuse;
 sampler tex_samp = sampler_state
@@ -66,12 +68,26 @@ struct VS_OUTPUT
 	float3 l   : TEXCOORD1;
 };
 
+int getFace(float3 v)
+{
+	float saxis[3] = { v.x,  v.y,  v.z };
+	float axis[3] = { abs(v.x), abs(v.y), abs(v.z) };
+	int maxAxis;
+	if (axis[0]>axis[1] && axis[0]>axis[2]) maxAxis=0;
+		else if (axis[1] > axis[2]) maxAxis=1;
+		else maxAxis=2;
+	if (saxis[maxAxis]<0) maxAxis+=3;	
+	return maxAxis;
+}
+
+
 VS_OUTPUT vertex(
 	float3 ipos  : POSITION,
 	float3 inorm : NORMAL,
 	float3 itex  : TEXCOORD0)
 {
 	VS_OUTPUT Out;
+	
 	Out.pos = mul(float4(ipos,  1), WorldViewProjection);
 	Out.l   = mul(float4(ipos,  1), spherelight_transform).xyz;
 	Out.tex = itex;
@@ -81,6 +97,7 @@ VS_OUTPUT vertex(
 float4 pixel(VS_OUTPUT In) : COLOR
 {
 	float light = texCUBE(spherelight_samp, In.l).r / length(In.l * 0.1);
+	light *= faceLight[getFace(In.l)];
 	light += 0.5;
 	return tex2D(lightmap_samp, In.tex) * tex2D(tex_samp, In.tex * 16) * light;
 }
