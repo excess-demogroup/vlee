@@ -52,7 +52,7 @@ void Explosion::updateGraphics(int time) {
 	for (int i = 0; i < count; ++i) {
 		if (i <EXPLOSION_INIT_TRIANGLE_COUNT ) {
 			Vector3 axis = cross(end-begin, data->dir);
-			D3DXMatrixRotationAxis(&mrot, &axis, rotCounter/data->weight*0.2f);
+			D3DXMatrixRotationAxis(&mrot, &axis, rotCounter/data->weight*0.1f);
 			for (int j = 0; j < 3; ++j) data[j].pos      = mul(mrot, data[j].initPos);
 			Vector3 norm = normalize(cross(data[1].pos - data[0].pos, data[2].pos - data[0].pos));
 			for (int j = 0; j < 3; ++j) data[j].norm = norm;
