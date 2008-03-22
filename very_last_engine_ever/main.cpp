@@ -879,12 +879,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 			{
 				int activeLights = 6;
 				float faceLight[6] = {
-					sphereLight1Track.getValue(beat),
-					sphereLight2Track.getValue(beat),
-					sphereLight3Track.getValue(beat),
-					sphereLight4Track.getValue(beat),
-					sphereLight5Track.getValue(beat),
-					sphereLight6Track.getValue(beat),
+					sphereLight1Track.getValue(beat) == 1000.f ? (float)(rand()%2) : sphereLight1Track.getValue(beat),
+					sphereLight2Track.getValue(beat) == 1000.f ? (float)(rand()%2) : sphereLight2Track.getValue(beat),
+					sphereLight3Track.getValue(beat) == 1000.f ? (float)(rand()%2) : sphereLight3Track.getValue(beat),
+					sphereLight4Track.getValue(beat) == 1000.f ? (float)(rand()%2) : sphereLight4Track.getValue(beat),
+					sphereLight5Track.getValue(beat) == 1000.f ? (float)(rand()%2) : sphereLight5Track.getValue(beat),
+					sphereLight6Track.getValue(beat) == 1000.f ? (float)(rand()%2) : sphereLight6Track.getValue(beat),
 				};
 				korridor_fx->setFloatArray("faceLight", faceLight, 6);
 				korridor_sphere_fx->setFloatArray("faceLight", faceLight, 6);
