@@ -663,6 +663,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Mesh *korridor_sphere_x = engine::loadMesh(device, "data/korridor_sphere.x");
 		Effect *korridor_sphere_fx = engine::loadEffect(device, "data/korridor_sphere.fx");
 		korridor_sphere_fx->setTexture("lightmap", engine::loadTexture(device, "data/korridor_sphere_lightmap.png"));
+		korridor_sphere_fx->setTexture("text", engine::loadTexture(device, "data/korridor_sphere_text.png"));
 		
 		Effect *korridor_particles_fx = engine::loadEffect(device, "data/korridor_particles.fx");
 		korridor_particles_fx->setTexture("tex", lightparticle_tex);

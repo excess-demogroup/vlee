@@ -27,6 +27,19 @@ sampler tex_samp = sampler_state
 	MaxAnisotropy = 8;
 };
 
+// textures
+texture text;
+sampler text_samp = sampler_state
+{
+	Texture = (text);
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = WRAP; // CLAMP;
+	AddressV = CLAMP;
+	MaxAnisotropy = 8;
+};
+
 texture lightmap;
 sampler lightmap_samp = sampler_state
 {
@@ -51,18 +64,21 @@ int getFace(float3 v)
 struct VS_OUTPUT
 {
 	float4 pos : POSITION;
-	float3 tex : TEXCOORD0;
-	float on : TEXCOORD1;
+	float2 tex : TEXCOORD0;
+	float2 tex2 : TEXCOORD1;
+	float on : TEXCOORD2;
 };
 
 VS_OUTPUT vertex(
 	float3 ipos  : POSITION,
 	float3 inorm : NORMAL,
-	float3 itex  : TEXCOORD0)
+	float2 itex  : TEXCOORD0,
+	float2 itex2  : TEXCOORD1)
 {
 	VS_OUTPUT Out;
 	Out.pos = mul(float4(ipos,  1), WorldViewProjection);
 	Out.tex = itex;
+	Out.tex2 = itex2;
 	Out.on = faceLight[getFace(ipos)];
 	return Out;
 }
@@ -71,6 +87,7 @@ float4 pixel(VS_OUTPUT In) : COLOR
 {
 	const float ambient = 0.1;
 	float4 col = tex2D(lightmap_samp, In.tex) * In.on;
+	col += tex2D(text_samp, In.tex2 * float2(-1, 1)) * 0.25;
 	return (0.075 + col) * 3;
 }
 
