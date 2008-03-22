@@ -415,6 +415,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &sphereRotYTrack = syncDevice->getTrack("sphere.rot.y");
 		Track &sphereRotZTrack = syncDevice->getTrack("sphere.rot.z");
 		Track &sphereOffsetTrack = syncDevice->getTrack("sphere.offs");
+		Track &sphereLight1Track = syncDevice->getTrack("sphere.l0");
+		Track &sphereLight2Track = syncDevice->getTrack("sphere.l1");
+		Track &sphereLight3Track = syncDevice->getTrack("sphere.l2");
+		Track &sphereLight4Track = syncDevice->getTrack("sphere.l3");
+		Track &sphereLight5Track = syncDevice->getTrack("sphere.l4");
+		Track &sphereLight6Track = syncDevice->getTrack("sphere.l5");
 		
 		Track &vuAmountTrack = syncDevice->getTrack("vu.amount");
 		Track &bigbangTime = syncDevice->getTrack("bb.time");
@@ -872,16 +878,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 			if (korridorEnabled)
 			{
 				int activeLights = 6;
-				bool lightEnabled[6] = {false, false, false, false, false, false};
-				for (int i = 0; i < activeLights; ++i)
-				{
-					int l = i;
-					float f = 1.0f;
-					//while ()
-					
-					lightEnabled[l] = true;
-					faceLight[l] = f;
-				}
+				float faceLight[6] = {
+					sphereLight1Track.getValue(beat),
+					sphereLight2Track.getValue(beat),
+					sphereLight3Track.getValue(beat),
+					sphereLight4Track.getValue(beat),
+					sphereLight5Track.getValue(beat),
+					sphereLight6Track.getValue(beat),
+				};
 				korridor_fx->setFloatArray("faceLight", faceLight, 6);
 				korridor_sphere_fx->setFloatArray("faceLight", faceLight, 6);
 				korridor_particles_fx->setFloatArray("faceLight", faceLight, 6);
