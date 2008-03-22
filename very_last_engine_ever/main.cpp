@@ -1476,7 +1476,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			color_map_fx->setFloat("fade", colorMapBlendTrack.getValue(beat));
 
-			float flash = pow(colorMapFlashTrack.getValue(beat), 2.0f);
+			float flash = pow(colorMapFlashTrack.getValue(beat) == 1000.f ? (float)(rand()%2) : colorMapFlashTrack.getValue(beat), 2.0f);
 			if (korridorEnabled)
 			{
 				Vector3 dir = spherelight_transform.inverse().getTranslation();
