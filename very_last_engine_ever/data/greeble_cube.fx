@@ -70,7 +70,7 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	gloss *= gloss;
 	color += ref * gloss * 0.25;
 	
-	return color;
+	return color * 1.1;
 }
 
 technique schvoi
