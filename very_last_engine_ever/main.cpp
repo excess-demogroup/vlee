@@ -390,6 +390,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &colorMapFlashTrack  = syncDevice->getTrack("cm.flash");
 		Track &colorMapDistortXTrack  = syncDevice->getTrack("cm.dist.x");
 		Track &colorMapDistortYTrack  = syncDevice->getTrack("cm.dist.y");
+		Track &overlayTrack  = syncDevice->getTrack("cm.overlay");
 		
 		Track &noiseAmtTrack  = syncDevice->getTrack("noise.amt");
 		Track &noiseFFTTrack  = syncDevice->getTrack("noise.fft");
@@ -686,6 +687,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		Anim beatAnim = engine::loadAnim(device, "data/beat/");
 		Image beatImage(beatAnim.getTexture(0), tex_fx);
+
+		Anim overlaysAnim = engine::loadAnim(device, "data/overlays/");
+		Image overlaysImage(overlaysAnim.getTexture(0), tex_fx);
+
 		
 		Texture title_end_tex = engine::loadTexture(device, "data/title_end.png");
 		Image titleEndSubtextImage(engine::loadTexture(device, "data/title_end_subtext.png"), tex_fx);
@@ -1491,7 +1496,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			{
 				Vector3 dir = spherelight_transform.inverse().getTranslation();
 				float l = pow(getCubeLightBrightness(dir), 5.0f);
-				l *= 4.0f / (math::length(dir) * 0.25f + 1);
+				l *= 1.0f / (math::length(dir) * 0.25f + 1);
 				flash += l;
 			}
 			
@@ -1528,9 +1533,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 			);
 			
 			/* draw scanlines */
-			scanlinesImage.setPosition(-1, -1);
+/*			scanlinesImage.setPosition(-1, -1);
 			scanlinesImage.setDimension(2, 2);
-			scanlinesImage.draw(device);
+			scanlinesImage.draw(device); */
+			
+			overlaysImage.setTexture(overlaysAnim.getTexture(overlayTrack.getIntValue(beat) % overlaysAnim.getTextureCount()));
+			overlaysImage.setPosition(-1, -1);
+			overlaysImage.setDimension(2, 2);
+			overlaysImage.draw(device);
 			
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			
