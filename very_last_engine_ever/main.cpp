@@ -425,6 +425,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		Track &vuAmountTrack = syncDevice->getTrack("vu.amount");
 		Track &bigbangTime = syncDevice->getTrack("bb.time");
+		Track &partTrack = syncDevice->getTrack("_part");
 		
 		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
 		
@@ -775,41 +776,42 @@ int main(int /*argc*/, char* /*argv*/ [])
 			bool greetingsEnabled = false;
 			bool revBigbang = false;
 			
-			if (beat < 0x200)
+			int part = partTrack.getIntValue(beat);
+			if (0 == part)
 			{
 				skyboxEnabled = true;
 				introEnabled = true;
 				bigbangEnabled = true;
 //				splinesEnabled = beat >= 0x1C0;
 			}
-			else if (beat < 0x270)
+			else if (1 == part)
 			{
 				skyboxEnabled = true;
 				splinesEnabled = true;
 			}
-			else if (beat < 0x280)
+			else if (2 == part)
 			{
 				beatEnabled = true;
 			}
-			else if (beat < 0x3C8)
+			else if (3 == part)
 			{
 				korridorEnabled = true;
 			}
-			else if (beat < 0x400)
+			else if (4 == part)
 			{
 				greetingsEnabled = true;
 			}
-			else if (beat < 0x480)
+			else if (5 == part)
 			{
 				skyboxEnabled = true;
 				growEnabled = true;
 			}
-			else if (beat < 0x5c0)
+			else if (6 == part)
 			{
 				skyboxEnabled = true;
 				greebleKubeEnabled = true;
 			}
-			else if (beat < 0x5ee)
+			else if (7 == part)
 			{
 				skyboxEnabled = true;
 				bigbangEnabled = true;
