@@ -590,20 +590,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 				)
 			);
 		}
-
-
+		
 		engine::ParticleCloud<ParticleData> korridorParticles;
-		for (int i = 0; i < 64 * 1024; ++i)
+		for (int i = 0; i < 24 * 1024; ++i)
 		{
 			float x, y, z;
 			x = (randf() - 0.5f) * 2;
 			z = (randf() - 0.5f) * 2;
 			y = (randf() - 0.5f) * 2;
-
-			float s = (randf() + 0.55f) * 0.45f;
+			
+			float s = (randf() + 0.55f);
 			korridorParticles.addParticle(
 				engine::Particle<ParticleData>(
-				Vector3(x, y * 2, z) * 55,
+				Vector3(x, y, z) * 70,
 				ParticleData(s,
 					math::normalize(Vector3(
 					1.0f / x,
@@ -1062,7 +1061,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 						device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 						device->SetRenderState(D3DRS_ZWRITEENABLE, false);
 						
-						drawParticleExplosion(device, streamer, particle2_fx, whiteCloud, explode, modelview);
+						drawParticleExplosion(device, streamer, particle2_fx, whiteCloud, explode, modelview, 0.75f);
 					}
 				}
 				
@@ -1128,19 +1127,30 @@ int main(int /*argc*/, char* /*argv*/ [])
 					/* particles */
 					{
 						// cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
-						Matrix4x4 modelview = world * view;
-						
-						korridor_particles_fx->setMatrices(world, view, proj);
-						korridor_particles_fx->setFloat("alpha", 1.0f);
-						korridor_particles_fx->setMatrix("spherelight_transform", spherelight_transform.inverse());
-
-						device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-						device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-						device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-						device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-						device->SetRenderState(D3DRS_ZWRITEENABLE, false);
-
-						drawParticleField(device, streamer, korridor_particles_fx, korridorParticles, modelview);
+						int paricle_start = int(floor(spherelight_transform.getTranslation().y / 7));
+						for (int i = paricle_start-1; i < paricle_start+2; ++i)
+						{
+							Matrix4x4 world = Matrix4x4::rotation(Vector3(-M_PI/2, 0, 0));
+							world *= Matrix4x4::translation(Vector3(0, i * 70, 0));
+							
+							Matrix4x4 modelview = world * view;
+							korridor_particles_fx->setMatrices(world, view, proj);
+							korridor_particles_fx->setFloat("alpha", 1.0f);
+							
+							Matrix4x4 sphere_to_particle = spherelight_transform;
+							sphere_to_particle = sphere_to_particle.inverse();
+							sphere_to_particle *= Matrix4x4::scaling(Vector3(10, 10, 10)).inverse();
+							
+							korridor_particles_fx->setMatrix("spherelight_transform", sphere_to_particle);
+							
+							device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+							device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+							device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+							device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+							device->SetRenderState(D3DRS_ZWRITEENABLE, false);
+							
+							drawParticleField(device, streamer, korridor_particles_fx, korridorParticles, modelview);
+						}
 					}
 				}
 
@@ -1481,7 +1491,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			{
 				Vector3 dir = spherelight_transform.inverse().getTranslation();
 				float l = pow(getCubeLightBrightness(dir), 5.0f);
-				l *= 2.0f / math::length(dir * 0.5f);
+				l *= 4.0f / (math::length(dir) * 0.25f + 1);
 				flash += l;
 			}
 			

@@ -16,6 +16,7 @@ float3 fog_color = float3(1, 1, 1);
 
 float4x4 WorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 WorldView : WORLDVIEW;
+float4x4 World : WORLD;
 
 // textures
 texture tex;
@@ -74,8 +75,10 @@ VS_OUTPUT vertex(VS_INPUT In)
 {
 	VS_OUTPUT Out;
 
-	Out.l.xyz = mul(float4(In.pos / 10,  1), spherelight_transform).xyz;
-	Out.l.w = length(Out.l.xyz);
+	float3 pos = mul(float4(In.pos, 1), World);
+	Out.l.xyz = mul(float4(pos / 10,  1), spherelight_transform).xyz;
+	Out.l.w = clamp(1.0 - (length(Out.l.xyz) / 10), 0.0, 1.0);
+	Out.l.w = 0.5 / (1 + length(Out.l.xyz) * 10);
 	Out.axis = getFace(Out.l);
 	
 	In.pos += left * In.tex.x * In.size;
@@ -97,11 +100,7 @@ struct PS_OUTPUT
 PS_OUTPUT pixel(VS_OUTPUT In)
 {
 	PS_OUTPUT output;
-	
-	float light = (texCUBE(spherelight_samp, In.l.xyz).r * faceLight[In.axis]) / In.l.w;
-	light *= 2;
-	light += 0.025;
-
+	float light = (texCUBE(spherelight_samp, In.l.xyz).r * faceLight[In.axis]) * In.l.w;
 	output.col = tex2D(tex_samp, In.tex) * light * alpha;
 	return output;
 }
