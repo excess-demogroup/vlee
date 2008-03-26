@@ -444,10 +444,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		engine::VertexStreamer vertex_streamer(device);
 		
-		// load a scene we can render, yes
-		scenegraph::Scene *testScene = scenegraph::loadScene(device, "data/test.scene");
-		engine::SceneRenderer testRenderer(testScene, NULL);
-		
 /*		scenegraph::Node *testNode = testScene->findChild("Camera01-node_transform");
 		assert(NULL != testNode); */
 		
@@ -631,8 +627,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *grow_fx = engine::loadEffect(device, "data/grow.fx");
 		engine::Grow grow = engine::Grow(vertex_streamer, Vector3(-3.8f,-2.f,0.f));
 
-		Image scanlinesImage(engine::loadTexture(device, "data/scanlines.png"), tex_fx);
-		
 		renderer::CubeTexture cubemap_tex = engine::loadCubeTexture(device, "data/stpeters_cross3.dds");
 /*
 		Effect test_fx = engine::loadEffect(device, "data/test.fx");
