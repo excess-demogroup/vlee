@@ -637,8 +637,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Mesh *cube_x         = engine::loadMesh(device, "data/cube.X");
 		
 		Effect *tex_trans_fx       = engine::loadEffect(device, "data/tex_trans.fx");
-		Texture excess_outline_tex = engine::loadTexture(device, "data/excess_outline.dds");
-		Texture demotitle_tex      = engine::loadTexture(device, "data/demotitle.dds");
 		
 		Surface logo_surf = loadSurface(device, "data/logo.png");
 		Texture bar_tex = engine::loadTexture(device, "data/bar.png");
