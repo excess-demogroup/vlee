@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="very_last_engine_ever"
 	ProjectGUID="{CD862F66-C73B-4E6B-87DE-FB5519A91A5D}"
 	RootNamespace="very_last_engine_ever"

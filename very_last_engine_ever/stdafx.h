@@ -24,9 +24,9 @@
 
 // atl-stuff, for the config-dialog.
 #include <atlbase.h>
-#include <atlapp.h>
-extern CAppModule _Module;
-#include <atlwin.h>
+//#include <atlapp.h>
+//extern CAppModule _Module;
+//#include <atlwin.h>
 
 // ain't gonna be no bling without...
 #include <d3d9.h>

@@ -76,8 +76,6 @@ Matrix4x4 radialblur_matrix(const Texture &tex, const Vector2 &center, const flo
 #include "sync/basstimer.h"
 
 
-WTL::CAppModule _Module;
-
 using namespace core;
 using namespace scenegraph;
 
@@ -311,19 +309,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 /*	_CrtSetBreakAlloc(68); */
 #endif
 	
-	_Module.Init(NULL, GetModuleHandle(0));
+	HINSTANCE hInstance = GetModuleHandle(0);
+//	_Module.Init(NULL, hInstance);
 	
 	try
 	{
 		/* create d3d object */
 		CComPtr<IDirect3D9> direct3d = com_ptr(Direct3DCreate9(D3D_SDK_VERSION));
 		if (!direct3d) throw FatalException("your directx-version is from the stone-age.\n\nTHRUG SAYS: UPGRADE!");
+
 		
-		ConfigDialog config(direct3d);
-		
-#if !WINDOWED
+#if 1||!WINDOWED
 		/* show config dialog */
-		INT_PTR result = config.DoModal();
+		INT_PTR result = config::showDialog(hInstance, direct3d);
 		if (FAILED(result)) MessageBox(NULL, "Could not initialize dialogbox, using default settings.", NULL, MB_OK);
 		else
 		{
@@ -336,23 +334,23 @@ int main(int /*argc*/, char* /*argv*/ [])
 		}
 #endif
 		
-		if (FAILED(direct3d->CheckDeviceFormat(config.getAdapter(), DEVTYPE, config.getMode().Format, D3DUSAGE_QUERY_FILTER, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F)))
+		if (FAILED(direct3d->CheckDeviceFormat(config::adapter, DEVTYPE, config::mode.Format, D3DUSAGE_QUERY_FILTER, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F)))
 		{
 			MessageBox(NULL, "Selected mode does not support FP16 texture-filtering, demo will look crap.", "visual quality warning", MB_OK | MB_ICONWARNING);
 		}
 		
-		if (FAILED(direct3d->CheckDeviceFormat(config.getAdapter(), DEVTYPE, config.getMode().Format, D3DUSAGE_QUERY_POSTPIXELSHADER_BLENDING, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F)))
+		if (FAILED(direct3d->CheckDeviceFormat(config::adapter, DEVTYPE, config::mode.Format, D3DUSAGE_QUERY_POSTPIXELSHADER_BLENDING, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F)))
 		{
 			MessageBox(NULL, "Selected mode does not support FP16 blending, demo will look crap.", "visual quality warning", MB_OK | MB_ICONWARNING);
 		}
 		
 		/* create window */
-		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, config.getWidth(), config.getHeight(), 0, 0, GetModuleHandle(0), 0);
+		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, config::mode.Width, config::mode.Height, 0, 0, GetModuleHandle(0), 0);
 		if (!win) throw FatalException("CreateWindow() failed. something is VERY spooky.");
 		
 		/* create device */
 		Device device;
-		device.Attach(init::initD3D(direct3d, win, config.getMode(), D3DMULTISAMPLE_NONE, config.getAdapter(), config.getVsync()));
+		device.Attach(init::initD3D(direct3d, win, config::mode, D3DMULTISAMPLE_NONE, config::adapter, config::vsync));
 		
 		/* showing window after initing d3d in order to be able to see warnings during init */
 		ShowWindow(win, TRUE);
@@ -362,11 +360,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		/* setup letterbox */
 		D3DVIEWPORT9 letterbox_viewport = device.getViewport();
-		makeLetterboxViewport(&letterbox_viewport, config.getWidth(), config.getHeight(), config.getAspect(), float(DEMO_ASPECT));
+		makeLetterboxViewport(&letterbox_viewport, config::mode.Width, config::mode.Height, config::aspect, float(DEMO_ASPECT));
 		
 		/* setup sound-playback */
-		if (!BASS_Init(config.getSoundcard(), 44100, 0, 0, 0)) throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/soundtrack.ogg", 0, 0, BASS_MP3_SETPOS | ((0 == config.getSoundcard()) ? BASS_STREAM_DECODE : 0));
+		if (!BASS_Init(config::soundcard, 44100, 0, 0, 0)) throw FatalException("failed to init bass");
+		stream = BASS_StreamCreateFile(false, "data/soundtrack.ogg", 0, 0, BASS_MP3_SETPOS | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
 		if (!stream) throw FatalException("failed to open tune");
 		
 		// setup timer and construct sync-device
@@ -432,8 +430,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Surface backbuffer   = device.getRenderTarget(0);
 		Surface depthstencil = device.getDepthStencilSurface();
 		
-		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8, config.getMultisample());
-		Surface depthstencil_msaa = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8, config.getMultisample());
+		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8, config::multisample);
+		Surface depthstencil_msaa = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8, config::multisample);
 		
 		/** DEMO ***/
 		
@@ -1617,7 +1615,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		MessageBox(0, e.what(), 0, MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
 		return 1;
 	}
-
-	_Module.Term();
+	
 	return 0;
 }
