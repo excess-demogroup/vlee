@@ -1,0 +1,5 @@
+*.ncb
+*.suo
+*.user
+very_last_engine_ever/Debug/
+very_last_engine_ever/Release/
