@@ -31,7 +31,7 @@
 // ain't gonna be no bling without...
 #include <d3d9.h>
 #include <d3dx9.h>
-#include <dxerr9.h>
+#include <dxerr.h>
 
 // got a nick, know what's BASS!
 #include <bass.h>

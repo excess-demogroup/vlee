@@ -1557,7 +1557,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			if (FAILED(res))
 			{
-				throw FatalException(std::string(DXGetErrorString9(res)) + std::string(" : ") + std::string(DXGetErrorDescription9(res)));
+				throw FatalException(std::string(DXGetErrorString(res)) + std::string(" : ") + std::string(DXGetErrorDescription(res)));
 			}
 			
 			BASS_Update(); // decrease the chance of missing vsync

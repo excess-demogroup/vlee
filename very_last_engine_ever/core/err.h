@@ -7,7 +7,7 @@ namespace core
 
 	inline std::string d3dGetError(HRESULT hr)
 	{
-		return std::string(DXGetErrorString9(hr)) + std::string(" : ") + std::string(DXGetErrorDescription9(hr));
+		return std::string(DXGetErrorString(hr)) + std::string(" : ") + std::string(DXGetErrorDescription(hr));
 	}
 
 	inline void d3dErr(HRESULT hr)

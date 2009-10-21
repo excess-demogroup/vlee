@@ -112,7 +112,7 @@ namespace renderer
 			std::string base_message;
 			if (usage & D3DUSAGE_RENDERTARGET) base_message = std::string("failed to create render target\n");
 			else  base_message = std::string("failed to create texture\n");
-			throw core::FatalException(base_message + std::string(DXGetErrorString9(res)) + std::string(" : ") + std::string(DXGetErrorDescription9(res)));
+			throw core::FatalException(base_message + std::string(DXGetErrorString(res)) + std::string(" : ") + std::string(DXGetErrorDescription(res)));
 		}
 		assert(NULL != texture);
 		

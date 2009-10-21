@@ -109,7 +109,7 @@ IDirect3DDevice9 *init::initD3D(IDirect3D9 *direct3d, HWND win, D3DDISPLAYMODE m
 		result = direct3d->CreateDevice(adapter, devtype, win, tnl, &present_parameters, &device);
 		if (FAILED(result))
 		{
-			throw FatalException(std::string(DXGetErrorString9(result)) + std::string(" : ") + std::string(DXGetErrorDescription9(result)));
+			throw FatalException(std::string(DXGetErrorString(result)) + std::string(" : ") + std::string(DXGetErrorDescription(result)));
 		}
 	}
 
