@@ -14,14 +14,14 @@ IDirect3D9 *config::direct3d = NULL;
 UINT config::adapter = D3DADAPTER_DEFAULT;
 D3DDISPLAYMODE config::mode = 
 {
-	DEFAULT_WIDTH,           // UINT Width;
-	DEFAULT_HEIGHT,          // UINT Height;
+	0,           // UINT Width;
+	0,          // UINT Height;
 	D3DPRESENT_RATE_DEFAULT, // UINT RefreshRate;
 	DEFAULT_FORMAT           // D3DFORMAT Format;
 };
 // D3DFORMAT config::format = DEFAULT_FORMAT;
 D3DMULTISAMPLE_TYPE config::multisample = DEFAULT_MULTISAMPLE;
-float config::aspect = float(DEFAULT_WIDTH) / DEFAULT_HEIGHT;
+float config::aspect = 1.0; // float(DEFAULT_WIDTH) / DEFAULT_HEIGHT;
 bool config::vsync = DEFAULT_VSYNC;
 unsigned config::soundcard = DEFAULT_SOUNDCARD;
 
@@ -156,6 +156,9 @@ INT_PTR config::showDialog(HINSTANCE hInstance, IDirect3D9 *direct3d)
 
 static LRESULT onInitDialog(HWND hDlg)
 {
+	direct3d->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode);
+	aspect = float(mode.Width) / mode.Height;
+
 	// add adapters to list
 	unsigned adapter_count = direct3d->GetAdapterCount();
 	for (unsigned i = 0; i < adapter_count; ++i) {
@@ -177,9 +180,6 @@ static LRESULT onInitDialog(HWND hDlg)
 	// set vsync checkbutton to the default setting
 	CheckDlgButton(hDlg, IDC_VSYNC, DEFAULT_VSYNC);
 
-	// setup aspect ratio 
-	float screen_aspect = float(GetSystemMetrics(SM_CXSCREEN)) / GetSystemMetrics(SM_CYSCREEN);
-	
 	int best_fit = 0;
 	float best_ratio = FLT_MAX;
 
@@ -199,7 +199,7 @@ static LRESULT onInitDialog(HWND hDlg)
 		SendMessage(GetDlgItem(hDlg, IDC_ASPECT), CB_ADDSTRING, 0, (LPARAM)temp);
 
 		float curr_ratio = float(aspect_ratios[i].w) / aspect_ratios[i].h;
-		if (fabs(curr_ratio - screen_aspect) < fabs(best_ratio - screen_aspect))
+		if (fabs(curr_ratio - config::aspect) < fabs(best_ratio - config::aspect))
 		{
 			best_fit = i;
 			best_ratio = curr_ratio;
