@@ -97,7 +97,7 @@ void VoxelMesh::fillGrid(math::Matrix4x4 mrot)
 #pragma omp parallel for
 	for (int z = -igrid_min_size; z < igrid_max_size; ++z)
 	{
-		Vector3 py = pz + dz * (z + igrid_min_size);
+		Vector3 py = pz + dz * float(z + igrid_min_size);
 		for (int y = -igrid_min_size; y < igrid_max_size; ++y)
 		{
 			int px_x = int(py.x * (1 << 24));

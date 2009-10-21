@@ -125,7 +125,7 @@ public:
 				
 				const char *val = curr->Value();
 				if      (strcmp(val, "position") == 0) ret->setPosition(loadVector3(currElem));
-				else if (strcmp(val, "rotation") == 0) ret->setRotation(vector3ToQuaternion(loadVector3(currElem) * (M_PI / 180)));
+				else if (strcmp(val, "rotation") == 0) ret->setRotation(vector3ToQuaternion(loadVector3(currElem) * float(M_PI / 180)));
 				else if (strcmp(val, "scale")    == 0) ret->setScale(loadVector3(currElem));
 				else if (strcmp(val, "children") == 0) loadChildren(device, ret, currElem);
 				else throw std::string("unknown element \"") + val + std::string("\"");

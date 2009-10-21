@@ -154,7 +154,7 @@ void Explosion::generateGraphics() {
 		Vector2 uv3	   = Vector2(1,1);
 		Vector3 pos3   = Vector3(s,s,0);
 		
-		float weight   = 0.5 * math::length(cross(pos3 - pos1, pos2 - pos1)); 
+		float weight   = 0.5f * math::length(cross(pos3 - pos1, pos2 - pos1)); 
 		float size	   = notRandf(i+3);
 
 		Vector3 avg = (pos1 + pos2 + pos3)/3;

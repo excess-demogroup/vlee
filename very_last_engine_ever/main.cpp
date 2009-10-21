@@ -904,7 +904,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				view = Matrix4x4::lookAt(eye, at, roll);
 				
 				float scale = 10;
-				Matrix4x4 world = Matrix4x4::rotation(math::Quaternion(-M_PI / 2, 0.0f, 0.0f));
+				Matrix4x4 world = Matrix4x4::rotation(math::Quaternion(-float(M_PI) / 2, 0.0f, 0.0f));
 				korridor_fx->setMatrix("spherelight_transform", world * Matrix4x4(spherelight_transform).inverse());
 				
 				world = Matrix4x4::scaling(Vector3(scale, scale, scale)) * world;
@@ -1006,7 +1006,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 						float rot = (beat > (256 + 128)) ? ((beat - (256 + 128)) / 8) : 0;
 						rot *= 2;
 						Matrix4x4 world = Matrix4x4::rotation(Vector3((math::notRandf(i - eye2_scroll2) - 0.5f) * rot, 0, 0));
-						world *= Matrix4x4::rotation(math::Quaternion(M_PI / 2, M_PI / 2, 0));
+						world *= Matrix4x4::rotation(math::Quaternion(float(M_PI) / 2, float(M_PI) / 2, 0));
 						world *= Matrix4x4::translation(Vector3(-i * 300, 0, 0));
 						float tunelle_scale2 = tunelle_scale * 0.25f;
 						world *= Matrix4x4::scaling(Vector3(tunelle_scale2, tunelle_scale2, tunelle_scale2));
@@ -1268,10 +1268,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 							float x2 = float(i + 1) / 15;
 							
 							float currLetterFlip = math::clamp(((letterFlip * 15) + i) / 15, 0.0f, 1.0f);
-							Matrix4x4 letterTransform = Matrix4x4::rotation(math::Quaternion(0, currLetterFlip * M_PI, 0));
+							Matrix4x4 letterTransform = Matrix4x4::rotation(math::Quaternion(0, currLetterFlip * float(M_PI), 0));
 							letterTransform *= Matrix4x4::translation(Vector3((i - (14.0f / 2)) * 1.6, 0, 0));
 							letterTransform *= Matrix4x4::scaling(Vector3(7, 7, 7));
-							letterTransform *= Matrix4x4::rotation(math::Quaternion(0, flip * M_PI, 0));
+							letterTransform *= Matrix4x4::rotation(math::Quaternion(0, flip * float(M_PI), 0));
 							
 							Vector3 letterPos = Vector3(0, 0, 0);
 							
