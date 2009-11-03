@@ -146,14 +146,11 @@ void VoxelMesh::fillGrid(math::Matrix4x4 mrot)
 				}
 
 				float size = getVoxelSize(voxelGrid.trilinearSample(px, py, pz));
-				//				size = 0.15f;
 				grid[dstIndex] = BYTE(math::clamp(size, 0.0f, 1.0f) * 255);
 			}
 			py += dy;
 		}
-//		pz += dz;
 	}
-
 }
 
 size_t VoxelMesh::updateDynamicVertexBuffer(renderer::VertexBuffer &vb)
