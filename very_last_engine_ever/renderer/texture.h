@@ -12,7 +12,7 @@ namespace renderer
 	class Texture : public CComPtr<IDirect3DTexture9>
 	{
 	public:
-		Texture(IDirect3DTexture9 *texture = NULL)
+		explicit Texture(IDirect3DTexture9 *texture = NULL)
 			: CComPtr<IDirect3DTexture9>(texture)
 		{
 		}
