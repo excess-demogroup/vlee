@@ -42,6 +42,7 @@ namespace renderer
 	class VertexDeclaration;
 
 	class Texture;
+	class VolumeTexture;
 	class Surface;
 
 	class Device : public CComPtr<IDirect3DDevice9>
@@ -74,6 +75,8 @@ namespace renderer
 
 		/* textures / surfaces */
 		Texture createTexture(UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = NULL);
+		VolumeTexture createVolumeTexture(UINT width, UINT height, UINT detph, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = NULL);
+
 		Surface createDepthStencilSurface(
 			UINT Width,
 			UINT Height,

@@ -3,6 +3,7 @@
 
 #include "surface.h"
 #include "texture.h"
+#include "volumetexture.h"
 #include "vertexdeclaration.h"
 #include "vertexbuffer.h"
 #include "indexbuffer.h"
@@ -120,6 +121,24 @@ namespace renderer
 		
 		return Texture(texture);
 	}
+
+	VolumeTexture Device::createVolumeTexture(UINT width, UINT height, UINT depth, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool, HANDLE* handle)
+	{
+		assert(NULL != p);
+		core::log::printf("creating volume texture... ");
+		IDirect3DVolumeTexture9 *texture;
+		core::d3dErr(
+			p->CreateVolumeTexture(
+				width, height, depth,
+				levels, usage, format,
+				pool, &texture, handle)
+				);
+		assert(NULL != texture);
+		core::log::printf("done.\n");
+		return VolumeTexture(texture);
+	}
+
+
 
 	Surface Device::createRenderTarget(
 		UINT Width,
