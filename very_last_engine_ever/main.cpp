@@ -364,11 +364,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		/* setup sound-playback */
 		if (!BASS_Init(config::soundcard, 44100, 0, 0, 0)) throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/soundtrack.ogg", 0, 0, BASS_MP3_SETPOS | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
+		stream = BASS_StreamCreateFile(false, "data/carl_den_tredje-09.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
 		if (!stream) throw FatalException("failed to open tune");
 		
 		// setup timer and construct sync-device
-		BassTimer synctimer(stream, BPM, 4);
+		BassTimer synctimer(stream, BPM, 16);
 		
 		std::auto_ptr<sync::Device> syncDevice = std::auto_ptr<sync::Device>(sync::createDevice("data/sync", synctimer));
 		if (NULL == syncDevice.get()) throw FatalException("something went wrong - failed to connect to host?");

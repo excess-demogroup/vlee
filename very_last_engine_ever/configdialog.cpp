@@ -157,6 +157,11 @@ INT_PTR config::showDialog(HINSTANCE hInstance, IDirect3D9 *direct3d)
 static LRESULT onInitDialog(HWND hDlg)
 {
 	direct3d->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode);
+#ifdef WINDOWED
+	mode.Width = 1280;
+	mode.Height = 720;
+#endif
+
 	aspect = float(mode.Width) / mode.Height;
 
 	// add adapters to list
