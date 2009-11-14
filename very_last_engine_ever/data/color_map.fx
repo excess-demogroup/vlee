@@ -120,9 +120,9 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	
 	float4 color =
 		tex2D(tex_sampler, In.tex + bloom_nudge) * alpha
-		+ tex2D(tex2_sampler, In.tex) * 0.5 ;
+		+ tex2D(tex2_sampler, In.tex) * 1.0 ;
 	
-	color.rgb = lerp(color.rgb, tex2D(tex_sampler, In.tex + bloom_nudge).rgb, (1 - pal_sel) * 0.75);
+//	color.rgb = lerp(color.rgb, tex2D(tex_sampler, In.tex + bloom_nudge).rgb, (1 - pal_sel) * 0.75);
 	
 	/* lookup in palette */
 	float lum = luminance(color.rgb);

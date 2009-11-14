@@ -364,7 +364,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		/* setup sound-playback */
 		if (!BASS_Init(config::soundcard, 44100, 0, 0, 0)) throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/carl_den_tredje-09.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
+		stream = BASS_StreamCreateFile(false, "data/carl_den_tredje.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
 		if (!stream) throw FatalException("failed to open tune");
 		
 		// setup timer and construct sync-device
@@ -1495,7 +1495,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			color_map_fx->setFloat("flash", flash);
 			color_map_fx->setFloat("fade2", colorMapFadeTrack.getValue(beat));
-			color_map_fx->setFloat("alpha", 0.25f);
+			color_map_fx->setFloat("alpha", 0.0f);
 			color_map_fx->setTexture("tex", color1_hdr);
 			color_map_fx->setTexture("tex2", color_msaa);
 			color_map_fx->setTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
