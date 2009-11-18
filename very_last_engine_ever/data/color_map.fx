@@ -119,9 +119,9 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	float pal_sel = tex2D(desaturate_sampler, In.tex);
 	
 	float4 color =
-		tex2D(tex_sampler, In.tex + bloom_nudge) * alpha
+		tex2D(tex_sampler, In.tex + bloom_nudge) * 0.1
 		+ tex2D(tex2_sampler, In.tex) * 1.0 ;
-	
+
 //	color.rgb = lerp(color.rgb, tex2D(tex_sampler, In.tex + bloom_nudge).rgb, (1 - pal_sel) * 0.75);
 	
 	/* lookup in palette */
