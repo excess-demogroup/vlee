@@ -3,23 +3,10 @@
 		<key row="0" value="1.000000" interpolation="0"/>
 		<key row="288" value="10.000000" interpolation="0"/>
 		<key row="320" value="8.000000" interpolation="0"/>
-		<key row="1024" value="0.000000" interpolation="2"/>
-		<key row="1137" value="-1.000000" interpolation="0"/>
-		<key row="1152" value="90.000000" interpolation="0"/>
-		<key row="1216" value="70.000000" interpolation="0"/>
-		<key row="1248" value="90.000000" interpolation="0"/>
-		<key row="1264" value="30.000000" interpolation="2"/>
-		<key row="1266" value="100.000000" interpolation="2"/>
-		<key row="1267" value="35.000000" interpolation="2"/>
-		<key row="1268" value="90.000000" interpolation="2"/>
-		<key row="1280" value="120.000000" interpolation="1"/>
-		<key row="1311" value="60.000000" interpolation="1"/>
-		<key row="1336" value="110.000000" interpolation="1"/>
-		<key row="1360" value="35.000000" interpolation="1"/>
-		<key row="1408" value="110.000000" interpolation="1"/>
+		<key row="1024" value="0.000000" interpolation="0"/>
+		<key row="1216" value="50.000000" interpolation="0"/>
 		<key row="1487" value="30.000000" interpolation="0"/>
 		<key row="1488" value="184.000000" interpolation="0"/>
-		<key row="1600" value="1.000000" interpolation="0"/>
 		<key row="1888" value="10.000000" interpolation="0"/>
 		<key row="1920" value="8.000000" interpolation="0"/>
 		<key row="2624" value="0.000000" interpolation="2"/>
@@ -50,15 +37,8 @@
 		<key row="1152" value="-0.050000" interpolation="0"/>
 		<key row="1184" value="0.050000" interpolation="1"/>
 		<key row="1215" value="-0.050000" interpolation="0"/>
-		<key row="1216" value="0.050000" interpolation="2"/>
-		<key row="1359" value="-2.000000" interpolation="0"/>
-		<key row="1360" value="1.000000" interpolation="3"/>
-		<key row="1375" value="5.000000" interpolation="0"/>
-		<key row="1376" value="1.870000" interpolation="2"/>
 		<key row="1407" value="2.000000" interpolation="0"/>
 		<key row="1408" value="2.000000" interpolation="0"/>
-		<key row="1536" value="0.000000" interpolation="0"/>
-		<key row="1600" value="0.000000" interpolation="0"/>
 		<key row="1949" value="0.000000" interpolation="0"/>
 		<key row="1950" value="0.100000" interpolation="0"/>
 		<key row="1951" value="3.000000" interpolation="1"/>
@@ -123,15 +103,11 @@
 		<key row="1183" value="180.000000" interpolation="0"/>
 		<key row="1184" value="220.000000" interpolation="1"/>
 		<key row="1215" value="-100.000000" interpolation="0"/>
-		<key row="1216" value="-50.000000" interpolation="1"/>
-		<key row="1248" value="100.000000" interpolation="1"/>
-		<key row="1280" value="-100.000000" interpolation="1"/>
-		<key row="1311" value="70.000000" interpolation="2"/>
-		<key row="1375" value="-90.000000" interpolation="0"/>
-		<key row="1376" value="60.500000" interpolation="1"/>
+		<key row="1216" value="270.000000" interpolation="1"/>
+		<key row="1343" value="90.000000" interpolation="0"/>
+		<key row="1344" value="120.000000" interpolation="1"/>
+		<key row="1407" value="230.000000" interpolation="0"/>
 		<key row="1448" value="50.000000" interpolation="0"/>
-		<key row="1600" value="0.500000" interpolation="2"/>
-		<key row="1632" value="3.500000" interpolation="0"/>
 		<key row="1788" value="0.500000" interpolation="1"/>
 		<key row="1791" value="1.250000" interpolation="0"/>
 		<key row="2240" value="5.000000" interpolation="1"/>
@@ -169,7 +145,8 @@
 		<key row="1024" value="0.000000" interpolation="3"/>
 		<key row="1096" value="-2.000000" interpolation="1"/>
 		<key row="1151" value="-6.000000" interpolation="0"/>
-		<key row="1152" value="-10.000000" interpolation="1"/>
+		<key row="1152" value="-10.000000" interpolation="0"/>
+		<key row="1216" value="0.000000" interpolation="0"/>
 		<key row="1408" value="-50.000000" interpolation="1"/>
 		<key row="1448" value="-23.000000" interpolation="0"/>
 		<key row="1600" value="0.000000" interpolation="0"/>
@@ -302,104 +279,6 @@
 		<key row="501" value="0.000000" interpolation="0"/>
 		<key row="502" value="0.400000" interpolation="1"/>
 		<key row="504" value="0.000000" interpolation="0"/>
-		<key row="1136" value="0.000000" interpolation="3"/>
-		<key row="1151" value="0.200000" interpolation="0"/>
-		<key row="1152" value="1.000000" interpolation="1"/>
-		<key row="1153" value="0.000000" interpolation="0"/>
-		<key row="1154" value="1.000000" interpolation="1"/>
-		<key row="1155" value="0.000000" interpolation="0"/>
-		<key row="1162" value="1.000000" interpolation="1"/>
-		<key row="1163" value="0.000000" interpolation="0"/>
-		<key row="1168" value="1.000000" interpolation="1"/>
-		<key row="1169" value="0.000000" interpolation="0"/>
-		<key row="1171" value="1.000000" interpolation="1"/>
-		<key row="1172" value="0.000000" interpolation="0"/>
-		<key row="1178" value="1.000000" interpolation="1"/>
-		<key row="1179" value="0.000000" interpolation="0"/>
-		<key row="1184" value="1.000000" interpolation="1"/>
-		<key row="1185" value="0.000000" interpolation="0"/>
-		<key row="1186" value="1.000000" interpolation="1"/>
-		<key row="1187" value="0.000000" interpolation="0"/>
-		<key row="1194" value="1.000000" interpolation="1"/>
-		<key row="1195" value="0.000000" interpolation="0"/>
-		<key row="1200" value="1.000000" interpolation="1"/>
-		<key row="1201" value="0.000000" interpolation="0"/>
-		<key row="1203" value="1.000000" interpolation="1"/>
-		<key row="1204" value="0.000000" interpolation="0"/>
-		<key row="1210" value="1.000000" interpolation="1"/>
-		<key row="1216" value="1.000000" interpolation="1"/>
-		<key row="1217" value="0.000000" interpolation="0"/>
-		<key row="1218" value="1.000000" interpolation="1"/>
-		<key row="1219" value="0.000000" interpolation="0"/>
-		<key row="1226" value="1.000000" interpolation="1"/>
-		<key row="1227" value="0.000000" interpolation="0"/>
-		<key row="1232" value="1.000000" interpolation="1"/>
-		<key row="1233" value="0.000000" interpolation="0"/>
-		<key row="1235" value="1.000000" interpolation="1"/>
-		<key row="1236" value="0.000000" interpolation="0"/>
-		<key row="1242" value="1.000000" interpolation="1"/>
-		<key row="1243" value="0.000000" interpolation="0"/>
-		<key row="1248" value="1.000000" interpolation="1"/>
-		<key row="1249" value="0.000000" interpolation="0"/>
-		<key row="1250" value="1.000000" interpolation="1"/>
-		<key row="1251" value="0.000000" interpolation="0"/>
-		<key row="1258" value="1.000000" interpolation="1"/>
-		<key row="1259" value="0.000000" interpolation="0"/>
-		<key row="1264" value="1.000000" interpolation="1"/>
-		<key row="1265" value="0.000000" interpolation="0"/>
-		<key row="1267" value="1.000000" interpolation="1"/>
-		<key row="1268" value="0.000000" interpolation="0"/>
-		<key row="1274" value="1.000000" interpolation="1"/>
-		<key row="1275" value="0.000000" interpolation="0"/>
-		<key row="1280" value="1.000000" interpolation="1"/>
-		<key row="1281" value="0.000000" interpolation="0"/>
-		<key row="1282" value="1.000000" interpolation="1"/>
-		<key row="1283" value="0.000000" interpolation="0"/>
-		<key row="1290" value="1.000000" interpolation="1"/>
-		<key row="1291" value="0.000000" interpolation="0"/>
-		<key row="1296" value="1.000000" interpolation="1"/>
-		<key row="1297" value="0.000000" interpolation="0"/>
-		<key row="1299" value="1.000000" interpolation="1"/>
-		<key row="1300" value="0.000000" interpolation="0"/>
-		<key row="1306" value="1.000000" interpolation="1"/>
-		<key row="1307" value="0.000000" interpolation="0"/>
-		<key row="1312" value="1.000000" interpolation="1"/>
-		<key row="1313" value="0.000000" interpolation="0"/>
-		<key row="1314" value="1.000000" interpolation="1"/>
-		<key row="1315" value="0.000000" interpolation="0"/>
-		<key row="1322" value="1.000000" interpolation="1"/>
-		<key row="1323" value="0.000000" interpolation="0"/>
-		<key row="1328" value="1.000000" interpolation="1"/>
-		<key row="1329" value="0.000000" interpolation="0"/>
-		<key row="1331" value="1.000000" interpolation="1"/>
-		<key row="1332" value="0.000000" interpolation="0"/>
-		<key row="1338" value="1.000000" interpolation="1"/>
-		<key row="1339" value="0.000000" interpolation="0"/>
-		<key row="1344" value="1.000000" interpolation="1"/>
-		<key row="1345" value="0.000000" interpolation="0"/>
-		<key row="1346" value="1.000000" interpolation="1"/>
-		<key row="1347" value="0.000000" interpolation="0"/>
-		<key row="1354" value="1.000000" interpolation="1"/>
-		<key row="1355" value="0.000000" interpolation="0"/>
-		<key row="1360" value="1.000000" interpolation="1"/>
-		<key row="1361" value="0.000000" interpolation="0"/>
-		<key row="1363" value="1.000000" interpolation="1"/>
-		<key row="1364" value="0.000000" interpolation="0"/>
-		<key row="1370" value="1.000000" interpolation="1"/>
-		<key row="1371" value="0.000000" interpolation="0"/>
-		<key row="1376" value="1.000000" interpolation="1"/>
-		<key row="1377" value="0.000000" interpolation="0"/>
-		<key row="1378" value="1.000000" interpolation="1"/>
-		<key row="1379" value="0.000000" interpolation="0"/>
-		<key row="1386" value="1.000000" interpolation="1"/>
-		<key row="1387" value="0.000000" interpolation="0"/>
-		<key row="1392" value="1.000000" interpolation="1"/>
-		<key row="1393" value="0.000000" interpolation="0"/>
-		<key row="1395" value="1.000000" interpolation="1"/>
-		<key row="1396" value="0.000000" interpolation="0"/>
-		<key row="1402" value="1.000000" interpolation="1"/>
-		<key row="1403" value="0.000000" interpolation="2"/>
-		<key row="1407" value="0.300000" interpolation="0"/>
 		<key row="1408" value="0.200000" interpolation="2"/>
 		<key row="1471" value="0.000000" interpolation="0"/>
 		<key row="1600" value="0.500000" interpolation="1"/>
@@ -626,100 +505,6 @@
 		<key row="416" value="60.000000" interpolation="0"/>
 		<key row="448" value="60.000000" interpolation="0"/>
 		<key row="480" value="60.000000" interpolation="0"/>
-		<key row="1152" value="20.000000" interpolation="1"/>
-		<key row="1153" value="0.000000" interpolation="0"/>
-		<key row="1154" value="20.000000" interpolation="1"/>
-		<key row="1155" value="0.000000" interpolation="0"/>
-		<key row="1162" value="20.000000" interpolation="1"/>
-		<key row="1163" value="0.000000" interpolation="0"/>
-		<key row="1168" value="20.000000" interpolation="1"/>
-		<key row="1169" value="0.000000" interpolation="0"/>
-		<key row="1171" value="20.000000" interpolation="1"/>
-		<key row="1172" value="0.000000" interpolation="0"/>
-		<key row="1178" value="20.000000" interpolation="1"/>
-		<key row="1179" value="0.000000" interpolation="0"/>
-		<key row="1184" value="20.000000" interpolation="1"/>
-		<key row="1185" value="0.000000" interpolation="0"/>
-		<key row="1186" value="20.000000" interpolation="1"/>
-		<key row="1187" value="0.000000" interpolation="0"/>
-		<key row="1194" value="20.000000" interpolation="1"/>
-		<key row="1195" value="0.000000" interpolation="0"/>
-		<key row="1200" value="20.000000" interpolation="1"/>
-		<key row="1201" value="0.000000" interpolation="0"/>
-		<key row="1203" value="20.000000" interpolation="1"/>
-		<key row="1204" value="0.000000" interpolation="0"/>
-		<key row="1210" value="500.000000" interpolation="1"/>
-		<key row="1216" value="20.000000" interpolation="1"/>
-		<key row="1217" value="0.000000" interpolation="0"/>
-		<key row="1218" value="20.000000" interpolation="1"/>
-		<key row="1219" value="0.000000" interpolation="0"/>
-		<key row="1226" value="20.000000" interpolation="1"/>
-		<key row="1227" value="0.000000" interpolation="0"/>
-		<key row="1232" value="20.000000" interpolation="1"/>
-		<key row="1233" value="0.000000" interpolation="0"/>
-		<key row="1235" value="20.000000" interpolation="1"/>
-		<key row="1236" value="0.000000" interpolation="0"/>
-		<key row="1242" value="20.000000" interpolation="1"/>
-		<key row="1243" value="0.000000" interpolation="0"/>
-		<key row="1248" value="20.000000" interpolation="1"/>
-		<key row="1249" value="0.000000" interpolation="0"/>
-		<key row="1250" value="20.000000" interpolation="1"/>
-		<key row="1251" value="0.000000" interpolation="0"/>
-		<key row="1258" value="20.000000" interpolation="1"/>
-		<key row="1259" value="0.000000" interpolation="0"/>
-		<key row="1264" value="20.000000" interpolation="1"/>
-		<key row="1265" value="0.000000" interpolation="0"/>
-		<key row="1267" value="20.000000" interpolation="1"/>
-		<key row="1268" value="0.000000" interpolation="0"/>
-		<key row="1274" value="20.000000" interpolation="1"/>
-		<key row="1275" value="0.000000" interpolation="0"/>
-		<key row="1280" value="20.000000" interpolation="1"/>
-		<key row="1281" value="0.000000" interpolation="0"/>
-		<key row="1282" value="20.000000" interpolation="1"/>
-		<key row="1283" value="0.000000" interpolation="0"/>
-		<key row="1290" value="20.000000" interpolation="1"/>
-		<key row="1291" value="0.000000" interpolation="0"/>
-		<key row="1296" value="20.000000" interpolation="1"/>
-		<key row="1297" value="0.000000" interpolation="0"/>
-		<key row="1299" value="20.000000" interpolation="1"/>
-		<key row="1300" value="0.000000" interpolation="0"/>
-		<key row="1306" value="20.000000" interpolation="1"/>
-		<key row="1307" value="0.000000" interpolation="0"/>
-		<key row="1312" value="20.000000" interpolation="1"/>
-		<key row="1313" value="0.000000" interpolation="0"/>
-		<key row="1314" value="20.000000" interpolation="1"/>
-		<key row="1315" value="0.000000" interpolation="0"/>
-		<key row="1322" value="20.000000" interpolation="1"/>
-		<key row="1323" value="0.000000" interpolation="0"/>
-		<key row="1328" value="20.000000" interpolation="1"/>
-		<key row="1329" value="0.000000" interpolation="0"/>
-		<key row="1331" value="20.000000" interpolation="1"/>
-		<key row="1332" value="0.000000" interpolation="0"/>
-		<key row="1338" value="20.000000" interpolation="1"/>
-		<key row="1339" value="0.000000" interpolation="0"/>
-		<key row="1344" value="20.000000" interpolation="1"/>
-		<key row="1345" value="0.000000" interpolation="0"/>
-		<key row="1346" value="20.000000" interpolation="1"/>
-		<key row="1347" value="0.000000" interpolation="0"/>
-		<key row="1354" value="20.000000" interpolation="1"/>
-		<key row="1355" value="0.000000" interpolation="0"/>
-		<key row="1360" value="20.000000" interpolation="1"/>
-		<key row="1361" value="0.000000" interpolation="0"/>
-		<key row="1363" value="20.000000" interpolation="1"/>
-		<key row="1364" value="0.000000" interpolation="0"/>
-		<key row="1370" value="20.000000" interpolation="1"/>
-		<key row="1371" value="0.000000" interpolation="0"/>
-		<key row="1376" value="20.000000" interpolation="1"/>
-		<key row="1377" value="0.000000" interpolation="0"/>
-		<key row="1378" value="20.000000" interpolation="1"/>
-		<key row="1379" value="0.000000" interpolation="0"/>
-		<key row="1386" value="20.000000" interpolation="1"/>
-		<key row="1387" value="0.000000" interpolation="0"/>
-		<key row="1392" value="20.000000" interpolation="1"/>
-		<key row="1393" value="0.000000" interpolation="0"/>
-		<key row="1395" value="20.000000" interpolation="1"/>
-		<key row="1396" value="0.000000" interpolation="0"/>
-		<key row="1407" value="100.000000" interpolation="0"/>
 		<key row="1408" value="10.000000" interpolation="0"/>
 		<key row="1600" value="2.000000" interpolation="0"/>
 		<key row="1856" value="400.000000" interpolation="1"/>
@@ -846,30 +631,8 @@
 		<key row="957" value="2.000000" interpolation="1"/>
 		<key row="959" value="0.000000" interpolation="0"/>
 		<key row="1024" value="1.500000" interpolation="0"/>
-		<key row="1087" value="0.400000" interpolation="2"/>
-		<key row="1088" value="0.800000" interpolation="2"/>
-		<key row="1092" value="0.400000" interpolation="1"/>
-		<key row="1109" value="1.000000" interpolation="2"/>
-		<key row="1151" value="0.400000" interpolation="0"/>
-		<key row="1152" value="0.900000" interpolation="0"/>
-		<key row="1194" value="0.000000" interpolation="1"/>
-		<key row="1195" value="0.900000" interpolation="0"/>
-		<key row="1216" value="0.000000" interpolation="1"/>
-		<key row="1217" value="0.900000" interpolation="0"/>
-		<key row="1232" value="0.000000" interpolation="1"/>
-		<key row="1233" value="0.900000" interpolation="0"/>
-		<key row="1235" value="0.000000" interpolation="1"/>
-		<key row="1236" value="0.900000" interpolation="0"/>
-		<key row="1242" value="0.000000" interpolation="1"/>
-		<key row="1243" value="0.900000" interpolation="0"/>
-		<key row="1272" value="0.000000" interpolation="1"/>
-		<key row="1273" value="0.900000" interpolation="0"/>
-		<key row="1274" value="0.000000" interpolation="1"/>
-		<key row="1275" value="0.900000" interpolation="0"/>
-		<key row="1276" value="0.000000" interpolation="1"/>
-		<key row="1277" value="0.900000" interpolation="0"/>
-		<key row="1278" value="0.000000" interpolation="1"/>
-		<key row="1279" value="0.900000" interpolation="0"/>
+		<key row="1072" value="0.000000" interpolation="0"/>
+		<key row="1216" value="0.000000" interpolation="0"/>
 		<key row="1408" value="0.900000" interpolation="0"/>
 		<key row="1600" value="1.000000" interpolation="0"/>
 		<key row="1855" value="0.900000" interpolation="1"/>
@@ -923,6 +686,8 @@
 		<key row="832" value="1.000000" interpolation="0"/>
 		<key row="1016" value="1.000000" interpolation="0"/>
 		<key row="1024" value="0.000000" interpolation="0"/>
+		<key row="1072" value="0.000000" interpolation="0"/>
+		<key row="1216" value="0.000000" interpolation="0"/>
 		<key row="1600" value="1.000000" interpolation="0"/>
 		<key row="2360" value="0.000000" interpolation="0"/>
 		<key row="2432" value="1.000000" interpolation="0"/>
@@ -947,13 +712,13 @@
 		<key row="760" value="2.000000" interpolation="0"/>
 		<key row="960" value="1.200000" interpolation="1"/>
 		<key row="1016" value="1.000000" interpolation="0"/>
-		<key row="1084" value="0.900000" interpolation="2"/>
-		<key row="1096" value="1.200000" interpolation="2"/>
-		<key row="1108" value="0.900000" interpolation="2"/>
-		<key row="1120" value="1.200000" interpolation="2"/>
-		<key row="1132" value="0.900000" interpolation="2"/>
-		<key row="1144" value="1.200000" interpolation="0"/>
-		<key row="1152" value="1.200000" interpolation="0"/>
+		<key row="1072" value="1.000000" interpolation="0"/>
+		<key row="1130" value="1.000000" interpolation="1"/>
+		<key row="1132" value="0.000000" interpolation="0"/>
+		<key row="1216" value="1.000000" interpolation="0"/>
+		<key row="1400" value="1.000000" interpolation="1"/>
+		<key row="1407" value="0.000000" interpolation="0"/>
+		<key row="1408" value="1.000000" interpolation="0"/>
 		<key row="1464" value="1.200000" interpolation="1"/>
 		<key row="1472" value="0.000000" interpolation="1"/>
 		<key row="1480" value="0.200000" interpolation="1"/>
@@ -1057,68 +822,18 @@
 		<key row="942" value="0.000000" interpolation="0"/>
 		<key row="957" value="0.000000" interpolation="0"/>
 		<key row="1016" value="0.000000" interpolation="0"/>
-		<key row="1136" value="0.300000" interpolation="1"/>
-		<key row="1137" value="0.300000" interpolation="1"/>
-		<key row="1138" value="0.000000" interpolation="0"/>
-		<key row="1139" value="0.300000" interpolation="1"/>
-		<key row="1140" value="0.000000" interpolation="0"/>
-		<key row="1141" value="0.300000" interpolation="1"/>
-		<key row="1142" value="0.000000" interpolation="0"/>
-		<key row="1148" value="0.000000" interpolation="1"/>
-		<key row="1152" value="1.000000" interpolation="1"/>
-		<key row="1153" value="0.000000" interpolation="0"/>
-		<key row="1154" value="0.300000" interpolation="1"/>
-		<key row="1155" value="0.000000" interpolation="0"/>
-		<key row="1168" value="1.000000" interpolation="1"/>
-		<key row="1170" value="0.000000" interpolation="0"/>
-		<key row="1171" value="1.000000" interpolation="1"/>
-		<key row="1173" value="0.000000" interpolation="0"/>
-		<key row="1182" value="1000.000000" interpolation="0"/>
-		<key row="1184" value="1.000000" interpolation="1"/>
-		<key row="1185" value="0.000000" interpolation="0"/>
-		<key row="1186" value="1.000000" interpolation="1"/>
-		<key row="1188" value="0.000000" interpolation="0"/>
 		<key row="1216" value="1.000000" interpolation="1"/>
-		<key row="1220" value="0.000000" interpolation="0"/>
-		<key row="1232" value="1.000000" interpolation="1"/>
-		<key row="1234" value="0.000000" interpolation="0"/>
-		<key row="1246" value="1000.000000" interpolation="0"/>
-		<key row="1248" value="1.000000" interpolation="1"/>
-		<key row="1252" value="0.000000" interpolation="0"/>
-		<key row="1258" value="1.000000" interpolation="1"/>
-		<key row="1260" value="0.000000" interpolation="0"/>
-		<key row="1274" value="1.000000" interpolation="1"/>
-		<key row="1276" value="0.000000" interpolation="0"/>
-		<key row="1280" value="1.000000" interpolation="1"/>
-		<key row="1285" value="0.000000" interpolation="0"/>
-		<key row="1296" value="1.000000" interpolation="1"/>
-		<key row="1298" value="0.000000" interpolation="0"/>
-		<key row="1299" value="1.000000" interpolation="1"/>
-		<key row="1301" value="0.000000" interpolation="0"/>
-		<key row="1310" value="1000.000000" interpolation="0"/>
-		<key row="1312" value="1.000000" interpolation="1"/>
-		<key row="1313" value="0.000000" interpolation="0"/>
-		<key row="1314" value="1.000000" interpolation="1"/>
-		<key row="1316" value="0.000000" interpolation="0"/>
-		<key row="1322" value="1.000000" interpolation="1"/>
-		<key row="1324" value="0.000000" interpolation="0"/>
-		<key row="1326" value="1000.000000" interpolation="0"/>
-		<key row="1327" value="0.000000" interpolation="0"/>
-		<key row="1332" value="1000.000000" interpolation="0"/>
-		<key row="1333" value="0.000000" interpolation="0"/>
-		<key row="1338" value="1.000000" interpolation="1"/>
-		<key row="1340" value="0.000000" interpolation="0"/>
+		<key row="1223" value="0.000000" interpolation="0"/>
 		<key row="1344" value="1.000000" interpolation="1"/>
-		<key row="1346" value="0.000000" interpolation="0"/>
-		<key row="1360" value="1.000000" interpolation="1"/>
-		<key row="1362" value="0.000000" interpolation="0"/>
-		<key row="1374" value="1000.000000" interpolation="0"/>
-		<key row="1376" value="1.000000" interpolation="1"/>
-		<key row="1378" value="0.000000" interpolation="0"/>
-		<key row="1386" value="1.000000" interpolation="1"/>
-		<key row="1388" value="0.000000" interpolation="3"/>
-		<key row="1408" value="0.300000" interpolation="1"/>
-		<key row="1463" value="0.200000" interpolation="1"/>
+		<key row="1351" value="0.000000" interpolation="0"/>
+		<key row="1408" value="1.000000" interpolation="1"/>
+		<key row="1411" value="0.000000" interpolation="0"/>
+		<key row="1412" value="0.750000" interpolation="1"/>
+		<key row="1415" value="0.000000" interpolation="0"/>
+		<key row="1416" value="0.500000" interpolation="1"/>
+		<key row="1419" value="0.000000" interpolation="0"/>
+		<key row="1420" value="0.250000" interpolation="1"/>
+		<key row="1423" value="0.000000" interpolation="0"/>
 		<key row="1472" value="0.300000" interpolation="1"/>
 		<key row="1473" value="0.100000" interpolation="0"/>
 		<key row="1475" value="0.300000" interpolation="1"/>
@@ -1364,126 +1079,6 @@
 		<key row="878" value="0.200000" interpolation="1"/>
 		<key row="880" value="0.000000" interpolation="0"/>
 		<key row="1016" value="0.000000" interpolation="0"/>
-		<key row="1147" value="0.000000" interpolation="1"/>
-		<key row="1151" value="-40.000000" interpolation="0"/>
-		<key row="1152" value="1.000000" interpolation="1"/>
-		<key row="1153" value="0.000000" interpolation="0"/>
-		<key row="1154" value="1.000000" interpolation="1"/>
-		<key row="1155" value="0.000000" interpolation="0"/>
-		<key row="1156" value="1.000000" interpolation="1"/>
-		<key row="1159" value="0.000000" interpolation="0"/>
-		<key row="1160" value="1.000000" interpolation="1"/>
-		<key row="1162" value="0.000000" interpolation="0"/>
-		<key row="1163" value="1.000000" interpolation="0"/>
-		<key row="1164" value="5.000000" interpolation="0"/>
-		<key row="1165" value="0.000000" interpolation="0"/>
-		<key row="1166" value="1.000000" interpolation="1"/>
-		<key row="1167" value="0.000000" interpolation="0"/>
-		<key row="1168" value="-8.000000" interpolation="1"/>
-		<key row="1175" value="0.000000" interpolation="0"/>
-		<key row="1176" value="1.000000" interpolation="1"/>
-		<key row="1180" value="0.000000" interpolation="1"/>
-		<key row="1184" value="-0.400000" interpolation="0"/>
-		<key row="1185" value="0.400000" interpolation="0"/>
-		<key row="1186" value="2.000000" interpolation="0"/>
-		<key row="1187" value="4.000000" interpolation="0"/>
-		<key row="1188" value="-1.000000" interpolation="1"/>
-		<key row="1190" value="0.500000" interpolation="1"/>
-		<key row="1196" value="0.000000" interpolation="0"/>
-		<key row="1200" value="-2.000000" interpolation="1"/>
-		<key row="1202" value="0.000000" interpolation="0"/>
-		<key row="1203" value="1.000000" interpolation="1"/>
-		<key row="1205" value="0.000000" interpolation="0"/>
-		<key row="1216" value="1.000000" interpolation="1"/>
-		<key row="1217" value="0.000000" interpolation="0"/>
-		<key row="1218" value="1.000000" interpolation="1"/>
-		<key row="1219" value="0.000000" interpolation="0"/>
-		<key row="1220" value="1.000000" interpolation="1"/>
-		<key row="1223" value="0.000000" interpolation="0"/>
-		<key row="1224" value="1.000000" interpolation="1"/>
-		<key row="1226" value="0.000000" interpolation="0"/>
-		<key row="1227" value="1.000000" interpolation="0"/>
-		<key row="1228" value="5.000000" interpolation="0"/>
-		<key row="1229" value="0.000000" interpolation="0"/>
-		<key row="1230" value="1.000000" interpolation="1"/>
-		<key row="1231" value="0.000000" interpolation="0"/>
-		<key row="1232" value="-8.000000" interpolation="3"/>
-		<key row="1239" value="0.000000" interpolation="0"/>
-		<key row="1240" value="1.000000" interpolation="1"/>
-		<key row="1244" value="0.000000" interpolation="1"/>
-		<key row="1248" value="-0.400000" interpolation="0"/>
-		<key row="1249" value="0.400000" interpolation="0"/>
-		<key row="1250" value="2.000000" interpolation="0"/>
-		<key row="1251" value="4.000000" interpolation="0"/>
-		<key row="1252" value="-1.000000" interpolation="1"/>
-		<key row="1254" value="0.500000" interpolation="1"/>
-		<key row="1260" value="0.000000" interpolation="0"/>
-		<key row="1264" value="-2.000000" interpolation="1"/>
-		<key row="1266" value="0.000000" interpolation="0"/>
-		<key row="1267" value="1.000000" interpolation="1"/>
-		<key row="1268" value="0.000000" interpolation="1"/>
-		<key row="1269" value="0.000000" interpolation="0"/>
-		<key row="1279" value="0.000000" interpolation="0"/>
-		<key row="1280" value="1.000000" interpolation="1"/>
-		<key row="1281" value="0.000000" interpolation="0"/>
-		<key row="1282" value="1.000000" interpolation="1"/>
-		<key row="1283" value="0.000000" interpolation="0"/>
-		<key row="1284" value="1.000000" interpolation="1"/>
-		<key row="1287" value="0.000000" interpolation="0"/>
-		<key row="1288" value="1.000000" interpolation="1"/>
-		<key row="1290" value="0.000000" interpolation="0"/>
-		<key row="1291" value="1.000000" interpolation="0"/>
-		<key row="1292" value="5.000000" interpolation="0"/>
-		<key row="1293" value="0.000000" interpolation="0"/>
-		<key row="1294" value="1.000000" interpolation="1"/>
-		<key row="1295" value="0.000000" interpolation="0"/>
-		<key row="1296" value="-5.000000" interpolation="2"/>
-		<key row="1303" value="0.000000" interpolation="0"/>
-		<key row="1304" value="1.000000" interpolation="1"/>
-		<key row="1308" value="0.000000" interpolation="1"/>
-		<key row="1312" value="1.000000" interpolation="0"/>
-		<key row="1313" value="4.000000" interpolation="0"/>
-		<key row="1314" value="2.000000" interpolation="0"/>
-		<key row="1315" value="4.000000" interpolation="0"/>
-		<key row="1316" value="-1.000000" interpolation="1"/>
-		<key row="1318" value="2.000000" interpolation="1"/>
-		<key row="1324" value="1.000000" interpolation="2"/>
-		<key row="1328" value="-2.000000" interpolation="1"/>
-		<key row="1332" value="0.000000" interpolation="1"/>
-		<key row="1336" value="1.000000" interpolation="1"/>
-		<key row="1338" value="5.000000" interpolation="1"/>
-		<key row="1339" value="0.000000" interpolation="0"/>
-		<key row="1341" value="-2.000000" interpolation="1"/>
-		<key row="1342" value="1.000000" interpolation="1"/>
-		<key row="1343" value="0.000000" interpolation="0"/>
-		<key row="1344" value="1.000000" interpolation="1"/>
-		<key row="1345" value="0.000000" interpolation="0"/>
-		<key row="1346" value="1.000000" interpolation="1"/>
-		<key row="1347" value="0.000000" interpolation="0"/>
-		<key row="1348" value="1.000000" interpolation="1"/>
-		<key row="1351" value="0.000000" interpolation="0"/>
-		<key row="1352" value="1.000000" interpolation="1"/>
-		<key row="1354" value="0.000000" interpolation="0"/>
-		<key row="1355" value="1.000000" interpolation="0"/>
-		<key row="1356" value="5.000000" interpolation="0"/>
-		<key row="1357" value="0.000000" interpolation="0"/>
-		<key row="1358" value="1.000000" interpolation="1"/>
-		<key row="1359" value="0.000000" interpolation="0"/>
-		<key row="1360" value="-8.000000" interpolation="3"/>
-		<key row="1367" value="0.000000" interpolation="0"/>
-		<key row="1368" value="1.000000" interpolation="1"/>
-		<key row="1372" value="0.000000" interpolation="1"/>
-		<key row="1376" value="-0.400000" interpolation="0"/>
-		<key row="1377" value="0.400000" interpolation="0"/>
-		<key row="1378" value="2.000000" interpolation="0"/>
-		<key row="1379" value="4.000000" interpolation="0"/>
-		<key row="1380" value="-1.000000" interpolation="1"/>
-		<key row="1382" value="0.500000" interpolation="1"/>
-		<key row="1388" value="0.000000" interpolation="0"/>
-		<key row="1392" value="-1.000000" interpolation="1"/>
-		<key row="1394" value="0.000000" interpolation="0"/>
-		<key row="1395" value="0.500000" interpolation="1"/>
-		<key row="1397" value="0.000000" interpolation="0"/>
 		<key row="1472" value="0.000000" interpolation="3"/>
 		<key row="1519" value="0.100000" interpolation="0"/>
 		<key row="1520" value="0.050000" interpolation="0"/>
@@ -1667,106 +1262,6 @@
 		<key row="878" value="0.500000" interpolation="1"/>
 		<key row="880" value="0.000000" interpolation="0"/>
 		<key row="1016" value="0.000000" interpolation="0"/>
-		<key row="1152" value="0.200000" interpolation="2"/>
-		<key row="1153" value="0.000000" interpolation="0"/>
-		<key row="1154" value="0.200000" interpolation="2"/>
-		<key row="1155" value="0.000000" interpolation="0"/>
-		<key row="1162" value="0.200000" interpolation="2"/>
-		<key row="1163" value="0.000000" interpolation="0"/>
-		<key row="1168" value="0.200000" interpolation="2"/>
-		<key row="1169" value="0.000000" interpolation="0"/>
-		<key row="1171" value="0.200000" interpolation="2"/>
-		<key row="1172" value="0.000000" interpolation="0"/>
-		<key row="1178" value="0.200000" interpolation="2"/>
-		<key row="1179" value="0.000000" interpolation="0"/>
-		<key row="1184" value="0.200000" interpolation="2"/>
-		<key row="1185" value="0.000000" interpolation="0"/>
-		<key row="1186" value="0.200000" interpolation="2"/>
-		<key row="1187" value="0.000000" interpolation="0"/>
-		<key row="1194" value="0.200000" interpolation="2"/>
-		<key row="1195" value="0.000000" interpolation="0"/>
-		<key row="1200" value="0.200000" interpolation="2"/>
-		<key row="1201" value="0.000000" interpolation="0"/>
-		<key row="1203" value="0.200000" interpolation="2"/>
-		<key row="1204" value="0.000000" interpolation="0"/>
-		<key row="1210" value="0.500000" interpolation="2"/>
-		<key row="1211" value="0.000000" interpolation="0"/>
-		<key row="1216" value="0.200000" interpolation="2"/>
-		<key row="1217" value="0.000000" interpolation="0"/>
-		<key row="1218" value="0.200000" interpolation="2"/>
-		<key row="1219" value="0.000000" interpolation="0"/>
-		<key row="1226" value="0.200000" interpolation="2"/>
-		<key row="1227" value="0.000000" interpolation="0"/>
-		<key row="1232" value="0.200000" interpolation="2"/>
-		<key row="1233" value="0.000000" interpolation="0"/>
-		<key row="1235" value="0.200000" interpolation="2"/>
-		<key row="1236" value="0.000000" interpolation="0"/>
-		<key row="1242" value="0.200000" interpolation="2"/>
-		<key row="1243" value="0.000000" interpolation="0"/>
-		<key row="1248" value="0.200000" interpolation="2"/>
-		<key row="1249" value="0.000000" interpolation="0"/>
-		<key row="1250" value="0.200000" interpolation="2"/>
-		<key row="1251" value="0.000000" interpolation="0"/>
-		<key row="1258" value="0.200000" interpolation="2"/>
-		<key row="1259" value="0.000000" interpolation="0"/>
-		<key row="1264" value="0.200000" interpolation="2"/>
-		<key row="1265" value="0.000000" interpolation="0"/>
-		<key row="1267" value="0.200000" interpolation="2"/>
-		<key row="1268" value="0.000000" interpolation="0"/>
-		<key row="1272" value="0.400000" interpolation="0"/>
-		<key row="1274" value="0.200000" interpolation="2"/>
-		<key row="1275" value="0.000000" interpolation="0"/>
-		<key row="1276" value="0.400000" interpolation="0"/>
-		<key row="1280" value="0.200000" interpolation="2"/>
-		<key row="1281" value="0.000000" interpolation="0"/>
-		<key row="1282" value="0.200000" interpolation="2"/>
-		<key row="1283" value="0.000000" interpolation="0"/>
-		<key row="1290" value="0.200000" interpolation="2"/>
-		<key row="1291" value="0.000000" interpolation="0"/>
-		<key row="1296" value="0.200000" interpolation="2"/>
-		<key row="1297" value="0.000000" interpolation="0"/>
-		<key row="1299" value="0.200000" interpolation="2"/>
-		<key row="1300" value="0.000000" interpolation="0"/>
-		<key row="1306" value="0.200000" interpolation="2"/>
-		<key row="1307" value="0.000000" interpolation="0"/>
-		<key row="1312" value="0.200000" interpolation="2"/>
-		<key row="1313" value="0.000000" interpolation="0"/>
-		<key row="1314" value="0.200000" interpolation="2"/>
-		<key row="1315" value="0.000000" interpolation="0"/>
-		<key row="1322" value="0.200000" interpolation="2"/>
-		<key row="1323" value="0.000000" interpolation="0"/>
-		<key row="1328" value="0.200000" interpolation="2"/>
-		<key row="1329" value="0.000000" interpolation="0"/>
-		<key row="1331" value="0.200000" interpolation="2"/>
-		<key row="1332" value="0.000000" interpolation="0"/>
-		<key row="1338" value="0.200000" interpolation="2"/>
-		<key row="1339" value="0.000000" interpolation="0"/>
-		<key row="1344" value="0.200000" interpolation="2"/>
-		<key row="1345" value="0.000000" interpolation="0"/>
-		<key row="1346" value="0.200000" interpolation="2"/>
-		<key row="1347" value="0.000000" interpolation="0"/>
-		<key row="1354" value="0.200000" interpolation="2"/>
-		<key row="1355" value="0.000000" interpolation="0"/>
-		<key row="1360" value="0.200000" interpolation="2"/>
-		<key row="1361" value="0.000000" interpolation="0"/>
-		<key row="1363" value="0.200000" interpolation="2"/>
-		<key row="1364" value="0.000000" interpolation="0"/>
-		<key row="1370" value="0.200000" interpolation="2"/>
-		<key row="1371" value="0.000000" interpolation="0"/>
-		<key row="1376" value="0.200000" interpolation="2"/>
-		<key row="1377" value="0.000000" interpolation="0"/>
-		<key row="1378" value="0.200000" interpolation="2"/>
-		<key row="1379" value="0.000000" interpolation="0"/>
-		<key row="1386" value="0.200000" interpolation="2"/>
-		<key row="1387" value="0.000000" interpolation="0"/>
-		<key row="1392" value="0.200000" interpolation="2"/>
-		<key row="1393" value="0.000000" interpolation="0"/>
-		<key row="1395" value="0.200000" interpolation="2"/>
-		<key row="1396" value="0.000000" interpolation="0"/>
-		<key row="1402" value="0.200000" interpolation="2"/>
-		<key row="1403" value="0.000000" interpolation="1"/>
-		<key row="1407" value="0.200000" interpolation="1"/>
-		<key row="1408" value="0.100000" interpolation="0"/>
 		<key row="1472" value="0.000000" interpolation="0"/>
 		<key row="1600" value="0.000000" interpolation="0"/>
 		<key row="1966" value="1.000000" interpolation="2"/>
@@ -1896,41 +1391,6 @@
 	</track>
 	<track name="cm.overlay">
 		<key row="0" value="0.000000" interpolation="0"/>
-		<key row="832" value="15.000000" interpolation="0"/>
-		<key row="860" value="7.000000" interpolation="0"/>
-		<key row="861" value="0.000000" interpolation="0"/>
-		<key row="906" value="7.000000" interpolation="0"/>
-		<key row="908" value="0.000000" interpolation="0"/>
-		<key row="912" value="15.000000" interpolation="0"/>
-		<key row="928" value="0.000000" interpolation="0"/>
-		<key row="960" value="17.000000" interpolation="0"/>
-		<key row="1016" value="0.000000" interpolation="0"/>
-		<key row="1072" value="0.000000" interpolation="0"/>
-		<key row="1136" value="11.000000" interpolation="0"/>
-		<key row="1137" value="12.000000" interpolation="0"/>
-		<key row="1139" value="13.000000" interpolation="0"/>
-		<key row="1141" value="14.000000" interpolation="0"/>
-		<key row="1144" value="14.000000" interpolation="1"/>
-		<key row="1148" value="0.000000" interpolation="0"/>
-		<key row="1152" value="7.000000" interpolation="0"/>
-		<key row="1154" value="0.000000" interpolation="0"/>
-		<key row="1184" value="7.000000" interpolation="0"/>
-		<key row="1186" value="0.000000" interpolation="0"/>
-		<key row="1214" value="7.000000" interpolation="0"/>
-		<key row="1216" value="0.000000" interpolation="0"/>
-		<key row="1248" value="15.000000" interpolation="0"/>
-		<key row="1264" value="16.000000" interpolation="0"/>
-		<key row="1267" value="18.000000" interpolation="0"/>
-		<key row="1272" value="0.000000" interpolation="0"/>
-		<key row="1280" value="0.000000" interpolation="0"/>
-		<key row="1306" value="7.000000" interpolation="0"/>
-		<key row="1308" value="0.000000" interpolation="0"/>
-		<key row="1328" value="7.000000" interpolation="0"/>
-		<key row="1330" value="0.000000" interpolation="0"/>
-		<key row="1331" value="7.000000" interpolation="0"/>
-		<key row="1333" value="0.000000" interpolation="0"/>
-		<key row="1348" value="7.000000" interpolation="0"/>
-		<key row="1352" value="0.000000" interpolation="0"/>
 		<key row="1600" value="0.000000" interpolation="0"/>
 		<key row="2432" value="15.000000" interpolation="0"/>
 		<key row="2460" value="7.000000" interpolation="0"/>
@@ -2013,8 +1473,6 @@
 	<track name="explosion">
 		<key row="1274" value="100.000000" interpolation="2"/>
 		<key row="1320" value="2000.000000" interpolation="0"/>
-		<key row="1408" value="100.000000" interpolation="1"/>
-		<key row="1488" value="500.000000" interpolation="0"/>
 		<key row="2874" value="100.000000" interpolation="2"/>
 		<key row="2920" value="2000.000000" interpolation="0"/>
 		<key row="3008" value="100.000000" interpolation="1"/>
@@ -2186,11 +1644,11 @@
 		<key row="864" value="9.000000" interpolation="0"/>
 		<key row="872" value="10.000000" interpolation="0"/>
 		<key row="1072" value="0.000000" interpolation="0"/>
-		<key row="1076" value="1.000000" interpolation="0"/>
-		<key row="1080" value="2.000000" interpolation="0"/>
-		<key row="1084" value="3.000000" interpolation="0"/>
-		<key row="1088" value="4.000000" interpolation="0"/>
-		<key row="1092" value="5.000000" interpolation="0"/>
+		<key row="1080" value="1.000000" interpolation="0"/>
+		<key row="1084" value="2.000000" interpolation="0"/>
+		<key row="1088" value="3.000000" interpolation="0"/>
+		<key row="1092" value="4.000000" interpolation="0"/>
+		<key row="1096" value="5.000000" interpolation="0"/>
 		<key row="1100" value="6.000000" interpolation="0"/>
 		<key row="1104" value="7.000000" interpolation="0"/>
 		<key row="1108" value="8.000000" interpolation="0"/>
@@ -3145,23 +2603,7 @@
 		<key row="824" value="2.000000" interpolation="0"/>
 		<key row="904" value="4.000000" interpolation="0"/>
 		<key row="1072" value="2.000000" interpolation="0"/>
-		<key row="1152" value="6.000000" interpolation="0"/>
-		<key row="1230" value="4.000000" interpolation="0"/>
-		<key row="1231" value="6.000000" interpolation="0"/>
-		<key row="1272" value="2.000000" interpolation="0"/>
-		<key row="1281" value="6.000000" interpolation="0"/>
-		<key row="1309" value="1.000000" interpolation="0"/>
-		<key row="1312" value="6.000000" interpolation="0"/>
-		<key row="1344" value="6.000000" interpolation="0"/>
-		<key row="1346" value="1.000000" interpolation="0"/>
-		<key row="1348" value="6.000000" interpolation="0"/>
-		<key row="1356" value="4.000000" interpolation="0"/>
-		<key row="1360" value="6.000000" interpolation="0"/>
-		<key row="1386" value="1.000000" interpolation="0"/>
-		<key row="1388" value="6.000000" interpolation="0"/>
-		<key row="1488" value="7.000000" interpolation="0"/>
-		<key row="1520" value="8.000000" interpolation="0"/>
-		<key row="1600" value="0.000000" interpolation="0"/>
+		<key row="1216" value="6.000000" interpolation="0"/>
 		<key row="1904" value="4.000000" interpolation="0"/>
 		<key row="1905" value="0.000000" interpolation="0"/>
 		<key row="1907" value="4.000000" interpolation="0"/>

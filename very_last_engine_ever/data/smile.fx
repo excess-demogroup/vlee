@@ -58,17 +58,24 @@ VS_OUTPUT vertex(
 	return Out;
 }
 
-float4 pixel(VS_OUTPUT In) : COLOR
+float4 pixel0(VS_OUTPUT In) : COLOR
 {
-	float ao = tex2D(lightmap_samp, In.tex).r;
-	float4 color = ao * 0.4;
+	return float4(0,0,0,1) + texCUBE(env_samp, In.reflection); // EVIL EYES!
+}
+
+float4 pixel1(VS_OUTPUT In) : COLOR
+{
+	return float4(0,0,0,1); // mustachio
+}
+
+float4 pixel2(VS_OUTPUT In) : COLOR
+{
+	float ao = 1.0; // tex2D(lightmap_samp, In.tex).r;
+	float4 color = float4(1,1,0,1);
 	
 	float4 ref = texCUBE(env_samp, In.reflection);
 	float gloss = ao;
-	gloss *= 0.75 + tex2D(lightmap_samp, In.tex.yx * 10).r / 4;
-	gloss *= 0.50 + tex2D(lightmap_samp, In.tex.yx * 40).r / 2;
-	gloss *= gloss;
-	color += ref * gloss * 0.25;
+	color += ref;
 	
 	return color * 1.1;
 }
@@ -78,6 +85,16 @@ technique schvoi
 	pass P0
 	{
 		VertexShader = compile vs_2_0 vertex();
-		PixelShader  = compile ps_2_0 pixel();
+		PixelShader  = compile ps_2_0 pixel0();
+	}
+	pass P1
+	{
+		VertexShader = compile vs_2_0 vertex();
+		PixelShader  = compile ps_2_0 pixel1();
+	}
+	pass P2
+	{
+		VertexShader = compile vs_2_0 vertex();
+		PixelShader  = compile ps_2_0 pixel2();
 	}
 }

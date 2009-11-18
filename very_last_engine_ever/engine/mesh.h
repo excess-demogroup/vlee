@@ -19,6 +19,11 @@ namespace engine
 			p->DrawSubset(0);
 		}
 
+		void draw(UINT subset)
+		{
+			p->DrawSubset(subset);
+		}
+
 		renderer::IndexBuffer getIndexBuffer()
 		{
 			LPDIRECT3DINDEXBUFFER9 indexBuffer;
