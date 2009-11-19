@@ -19,9 +19,10 @@ namespace engine
 		{
 			switch (type)
 			{
-			case D3DPT_POINTLIST:		return 0;
-			case D3DPT_LINELIST:		return index % 2;
-			case D3DPT_TRIANGLELIST:	return index % 3;
+			case D3DPT_POINTLIST:    return 0;
+			case D3DPT_LINELIST:     return index % 2;
+			case D3DPT_TRIANGLELIST: return index % 3;
+			case D3DPT_LINESTRIP:    return 0;
 			default:
 				assert(0);
 				return 0;
@@ -45,9 +46,10 @@ namespace engine
 			int primitive_count = 0;
 			switch (type)
 			{
-				case D3DPT_POINTLIST:		primitive_count = index;			break;
-				case D3DPT_LINELIST:		primitive_count = index / 2;		break;
-				case D3DPT_TRIANGLELIST:	primitive_count = index / 3;		break;
+				case D3DPT_POINTLIST:    primitive_count = index;     break;
+				case D3DPT_LINELIST:     primitive_count = index / 2; break;
+				case D3DPT_TRIANGLELIST: primitive_count = index / 3; break;
+				case D3DPT_LINESTRIP:    primitive_count = index - 1; break;
 				default: assert(0);
 			}
 			

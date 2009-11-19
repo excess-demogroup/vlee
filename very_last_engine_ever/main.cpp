@@ -83,6 +83,8 @@ using sync::Track;
 
 HWND win = 0;
 HSTREAM stream = 0;
+#define OSC_SIZE 512
+float osc[OSC_SIZE];
 
 float randf()
 {
@@ -171,6 +173,26 @@ void drawFuzz(Effect *effect, engine::VertexStreamer &streamer, float time, floa
 			streamer.vertex(D3DXVECTOR3( 1, (y1 * 2) - 1, 0));
 			last_xoffs = xoffs;
 			last_yoffs = yoffs;
+		}
+		streamer.end();
+		(*effect)->EndPass();
+	}
+	(*effect)->End();
+}
+
+void drawOsc(Effect *effect, engine::VertexStreamer &streamer)
+{
+	UINT passes;
+	(*effect)->Begin(&passes, 0);
+	for (UINT pass = 0; pass < passes; ++pass) {
+		(*effect)->BeginPass( pass );
+		streamer.begin(D3DPT_LINESTRIP);
+		float last_xoffs = 0.f;
+		float last_yoffs = 0.f;
+		for (unsigned i = 0; i < OSC_SIZE; ++i) {
+			float x = (float(i) / (OSC_SIZE - 1)) * 2 - 1;
+			float y = osc[i];
+			streamer.vertex(D3DXVECTOR3(x, y, 0));
 		}
 		streamer.end();
 		(*effect)->EndPass();
@@ -635,7 +657,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
 		skybox_fx->setTexture("reflectionMap", cubemap_tex);
 		Mesh *cube_x         = engine::loadMesh(device, "data/cube.X");
-		
+
+		Mesh *cornell_main_x         = engine::loadMesh(device, "data/cornell-main.x");
+		Mesh *cornell_left_x         = engine::loadMesh(device, "data/cornell-left.x");
+		Mesh *cornell_right_x         = engine::loadMesh(device, "data/cornell-right.x");
+		Texture cornell_main_tex = engine::loadTexture(device, "data/cornell-main.jpg");
+		Texture cornell_left_tex = engine::loadTexture(device, "data/cornell-left.jpg");
+		Texture cornell_right_tex = engine::loadTexture(device, "data/cornell-right.jpg");
+
 		Effect *tex_trans_fx       = engine::loadEffect(device, "data/tex_trans.fx");
 		
 		Surface logo_surf = loadSurface(device, "data/logo.png");
@@ -666,7 +695,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *smile_fx = engine::loadEffect(device, "data/smile.fx");
 		smile_fx->setTexture("env", greeble_envmap);
 		Effect *black_fx = engine::loadEffect(device, "data/black.fx");
-		
+		Effect *osc_fx = engine::loadEffect(device, "data/osc.fx");
+
 		Anim greetingsAnim = engine::loadAnim(device, "data/greetings/");
 		Image greetingsImage(greetingsAnim.getTexture(0), tex_fx);
 		
@@ -678,7 +708,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Anim invmapAnim = engine::loadAnim(device, "data/invmaps/");
 
-		
 		Texture title_end_tex = engine::loadTexture(device, "data/title_end.png");
 		Image titleEndSubtextImage(engine::loadTexture(device, "data/title_end_subtext.png"), tex_fx);
 		
@@ -703,6 +732,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 #ifndef VJSYS
 			syncDevice->update(beat); //gets current timing info from the SyncTimer.
 #endif
+			BASS_ChannelGetData(stream, osc, (OSC_SIZE * sizeof(float)) | BASS_DATA_FLOAT);
 			device->BeginScene();
 			
 			/* setup multisampled stuffz */
@@ -761,6 +791,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			bool endTextEnabled = false;
 			bool greetingsEnabled = false;
 			bool revBigbang = false;
+			bool cornellEnabled = true;
 			
 			int part = partTrack.getIntValue(beat);
 			if (0 == part)
@@ -1166,6 +1197,34 @@ int main(int /*argc*/, char* /*argv*/ [])
 					smile_fx->p->End();
 				}
 
+
+				if (cornellEnabled)
+				{
+					Matrix4x4 world = Matrix4x4::identity();
+					eye = Vector3(sin(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
+							cameraUpTrack.getValue(beat),
+							-cos(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat));
+					at = Vector3(0, sphereOffsetTrack.getValue(beat), 0);
+					view.makeLookAt(eye, at, roll);
+					tex_trans_fx->setFloat("alpha", 1.0);
+
+					world.makeIdentity();
+					tex_trans_fx->setMatrices(world, view, proj);
+					tex_trans_fx->setTexture("tex", cornell_main_tex);
+					tex_trans_fx->commitChanges();
+					tex_trans_fx->draw(cornell_main_x);
+
+					world.makeIdentity();
+					tex_trans_fx->setTexture("tex", cornell_left_tex);
+					tex_trans_fx->commitChanges();
+					tex_trans_fx->draw(cornell_left_x);
+
+					world.makeIdentity();
+					tex_trans_fx->setTexture("tex", cornell_right_tex);
+					tex_trans_fx->commitChanges();
+					tex_trans_fx->draw(cornell_right_x);
+				}
+
 				if (beatEnabled)
 				{
 					Texture &tex = beatAnim.getTexture(beatTrack.getIntValue(beat) % beatAnim.getTextureCount());
@@ -1377,6 +1436,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 					grow.draw(*grow_fx, beat, growTrack.getIntValue(beat));
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				}
+				if (!i)
+					drawOsc(osc_fx, vertex_streamer);
 				
 				device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
@@ -1455,13 +1516,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setTexture("invmap", invmapAnim.getTexture(invmapTrack.getIntValue(beat) % invmapAnim.getTextureCount()));
 			color_map_fx->setTexture("overlay", overlaysAnim.getTexture(overlayTrack.getIntValue(beat) % overlaysAnim.getTextureCount()));
 			
-			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
 			drawFuzz(color_map_fx, vertex_streamer,  time, 1.0f, colorMapDistortXTrack.getValue(beat), colorMapDistortYTrack.getValue(beat),
 				0.5f / letterbox_viewport.Width, 0.5f / letterbox_viewport.Height);
-			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
-			drawFuzz(color_map_fx, vertex_streamer, -time, 0.0f, colorMapDistortXTrack.getValue(beat), 0.0f,
-				0.5f / letterbox_viewport.Width, 0.5f / letterbox_viewport.Height);
-			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED | D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
 			
 			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
@@ -1477,7 +1533,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 				 2.0f, 2.0f,
 				 randf(), randf()
 			);
-			
+
+
 			/* draw scanlines */
 /*			scanlinesImage.setPosition(-1, -1);
 			scanlinesImage.setDimension(2, 2);
