@@ -229,12 +229,6 @@
 		<key row="1864" value="0.000000" interpolation="1"/>
 		<key row="1872" value="1.000000" interpolation="1"/>
 		<key row="1896" value="0.000000" interpolation="0"/>
-		<key row="1920" value="1.000000" interpolation="1"/>
-		<key row="1922" value="0.000000" interpolation="0"/>
-		<key row="1923" value="1.000000" interpolation="1"/>
-		<key row="1925" value="0.000000" interpolation="0"/>
-		<key row="1926" value="1.000000" interpolation="1"/>
-		<key row="1928" value="0.000000" interpolation="0"/>
 		<key row="1952" value="1.000000" interpolation="1"/>
 		<key row="1954" value="0.000000" interpolation="0"/>
 		<key row="1955" value="1.000000" interpolation="1"/>
@@ -406,7 +400,6 @@
 		<key row="1856" value="400.000000" interpolation="1"/>
 		<key row="1872" value="50.000000" interpolation="1"/>
 		<key row="1896" value="1.000000" interpolation="0"/>
-		<key row="1920" value="60.000000" interpolation="0"/>
 		<key row="1952" value="60.000000" interpolation="0"/>
 		<key row="1984" value="60.000000" interpolation="0"/>
 		<key row="2016" value="60.000000" interpolation="0"/>
@@ -540,6 +533,7 @@
 		<key row="1856" value="1.200000" interpolation="1"/>
 		<key row="1857" value="1.200000" interpolation="1"/>
 		<key row="1863" value="0.900000" interpolation="0"/>
+		<key row="1920" value="0.000000" interpolation="0"/>
 		<key row="2201" value="1.000000" interpolation="0"/>
 		<key row="2204" value="0.900000" interpolation="0"/>
 		<key row="2240" value="1.000000" interpolation="0"/>
@@ -941,7 +935,7 @@
 		<key row="0" value="0.000000" interpolation="0"/>
 	</track>
 	<track name="cm.overlay">
-		<key row="0" value="0.000000" interpolation="0"/>
+		<key row="0" value="1.000000" interpolation="0"/>
 		<key row="1600" value="0.000000" interpolation="0"/>
 		<key row="2432" value="15.000000" interpolation="0"/>
 		<key row="2460" value="7.000000" interpolation="0"/>
@@ -1165,9 +1159,8 @@
 		<key row="1358" value="17.000000" interpolation="0"/>
 		<key row="1359" value="17.000000" interpolation="0"/>
 		<key row="1904" value="17.000000" interpolation="0"/>
-		<key row="1920" value="16.000000" interpolation="0"/>
-		<key row="1952" value="17.000000" interpolation="0"/>
-		<key row="1976" value="16.000000" interpolation="0"/>
+		<key row="1920" value="0.000000" interpolation="1"/>
+		<key row="2048" value="128.000000" interpolation="0"/>
 		<key row="2201" value="14.000000" interpolation="0"/>
 		<key row="2496" value="16.000000" interpolation="0"/>
 		<key row="2520" value="17.000000" interpolation="0"/>
@@ -2161,26 +2154,8 @@
 		<key row="1908" value="0.000000" interpolation="0"/>
 		<key row="1914" value="4.000000" interpolation="0"/>
 		<key row="1915" value="0.000000" interpolation="0"/>
-		<key row="1930" value="4.000000" interpolation="0"/>
-		<key row="1931" value="0.000000" interpolation="0"/>
-		<key row="1936" value="4.000000" interpolation="0"/>
-		<key row="1937" value="0.000000" interpolation="0"/>
-		<key row="1939" value="4.000000" interpolation="0"/>
-		<key row="1940" value="0.000000" interpolation="0"/>
-		<key row="1945" value="4.000000" interpolation="0"/>
-		<key row="1946" value="0.000000" interpolation="0"/>
-		<key row="1952" value="4.000000" interpolation="0"/>
-		<key row="1953" value="0.000000" interpolation="0"/>
-		<key row="1955" value="4.000000" interpolation="0"/>
-		<key row="1956" value="0.000000" interpolation="0"/>
-		<key row="1962" value="4.000000" interpolation="0"/>
-		<key row="1963" value="0.000000" interpolation="0"/>
-		<key row="1968" value="4.000000" interpolation="0"/>
-		<key row="1969" value="0.000000" interpolation="0"/>
-		<key row="1971" value="4.000000" interpolation="0"/>
-		<key row="1972" value="0.000000" interpolation="0"/>
-		<key row="1978" value="4.000000" interpolation="0"/>
-		<key row="1979" value="0.000000" interpolation="0"/>
+		<key row="1920" value="4.000000" interpolation="0"/>
+		<key row="2000" value="0.000000" interpolation="0"/>
 		<key row="2112" value="1.000000" interpolation="0"/>
 		<key row="2176" value="3.000000" interpolation="0"/>
 		<key row="2360" value="2.000000" interpolation="0"/>
@@ -2214,5 +2189,26 @@
 		<key row="2988" value="6.000000" interpolation="0"/>
 		<key row="3088" value="7.000000" interpolation="0"/>
 		<key row="3120" value="8.000000" interpolation="0"/>
+	</track>
+	<track name="cm.repeat">
+		<key row="0" value="1.000000" interpolation="0"/>
+		<key row="768" value="2.000000" interpolation="0"/>
+		<key row="824" value="1.000000" interpolation="0"/>
+		<key row="960" value="2.000000" interpolation="0"/>
+		<key row="1072" value="1.000000" interpolation="0"/>
+		<key row="1344" value="2.000000" interpolation="0"/>
+		<key row="1408" value="1.000000" interpolation="0"/>
+		<key row="1728" value="2.000000" interpolation="0"/>
+		<key row="1856" value="1.000000" interpolation="0"/>
+		<key row="1920" value="1.000000" interpolation="0"/>
+		<key row="1928" value="2.000000" interpolation="0"/>
+		<key row="1936" value="3.000000" interpolation="0"/>
+		<key row="1944" value="4.000000" interpolation="0"/>
+		<key row="1952" value="5.000000" interpolation="0"/>
+		<key row="1960" value="6.000000" interpolation="0"/>
+		<key row="1968" value="7.000000" interpolation="0"/>
+		<key row="1976" value="8.000000" interpolation="0"/>
+		<key row="1984" value="9.000000" interpolation="0"/>
+		<key row="1992" value="1.000000" interpolation="0"/>
 	</track>
 </tracks>

@@ -424,7 +424,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &vuAmountTrack = syncDevice->getTrack("vu.amount");
 		Track &bigbangTime = syncDevice->getTrack("bb.time");
 		Track &partTrack = syncDevice->getTrack("_part");
-		
+		Track &repeatTrack = syncDevice->getTrack("cm.repeat");
+
+
 		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
 		
 		Surface backbuffer   = device.getRenderTarget(0);
@@ -1443,6 +1445,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			color_map_fx->setFloat("flash", flash);
 			color_map_fx->setFloat("fade2", colorMapFadeTrack.getValue(beat));
+			color_map_fx->setFloat("repeat", repeatTrack.getValue(beat));
 			color_map_fx->setFloat("alpha", 0.0f);
 			color_map_fx->setTexture("tex", color1_hdr);
 			color_map_fx->setTexture("tex2", color_msaa);
