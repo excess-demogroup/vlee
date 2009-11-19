@@ -151,7 +151,7 @@ float4 pixel(VS_OUTPUT In) : COLOR
 //	color.rgb += delta * (1-pal_sel);
 	color = color * fade2 + flash;
 	color.rgb *= tex2D(overlay_sampler, In.tex * repeat).r;
-	color.rgb = lerp(float3(1,1,1) - color.rgb, color.rgb, tex2D(invmap_sampler, In.tex).r);
+	color.rgb = lerp(color.rgb, float3(1,1,1) - color.rgb, tex2D(invmap_sampler, In.tex).r);
 	
 	return color;
 }

@@ -389,6 +389,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &colorMapDistortXTrack  = syncDevice->getTrack("cm.dist.x");
 		Track &colorMapDistortYTrack  = syncDevice->getTrack("cm.dist.y");
 		Track &overlayTrack  = syncDevice->getTrack("cm.overlay");
+		Track &invmapTrack  = syncDevice->getTrack("cm.invmap");
 		
 		Track &noiseAmtTrack  = syncDevice->getTrack("noise.amt");
 		Track &noiseFFTTrack  = syncDevice->getTrack("noise.fft");
@@ -470,7 +471,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *noise_fx = engine::loadEffect(device, "data/noise.fx");
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
 		
-		Texture desaturate_tex = engine::loadTexture(device, "data/desaturate.png");
 		Effect *color_map_fx = engine::loadEffect(device, "data/color_map.fx");
 		Texture color_maps[2];
 		
@@ -675,6 +675,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Anim overlaysAnim = engine::loadAnim(device, "data/overlays/");
 		Image overlaysImage(overlaysAnim.getTexture(0), tex_fx);
+
+		Anim invmapAnim = engine::loadAnim(device, "data/invmaps/");
 
 		
 		Texture title_end_tex = engine::loadTexture(device, "data/title_end.png");
@@ -1450,7 +1452,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setTexture("tex", color1_hdr);
 			color_map_fx->setTexture("tex2", color_msaa);
 			color_map_fx->setTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
-			color_map_fx->setTexture("invmap", desaturate_tex);
+			color_map_fx->setTexture("invmap", invmapAnim.getTexture(invmapTrack.getIntValue(beat) % invmapAnim.getTextureCount()));
 			color_map_fx->setTexture("overlay", overlaysAnim.getTexture(overlayTrack.getIntValue(beat) % overlaysAnim.getTextureCount()));
 			
 			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
