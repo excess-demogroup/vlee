@@ -966,14 +966,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 				
-				if (skyboxEnabled)
-				{
-					device->Clear(0, 0, D3DCLEAR_ZBUFFER, clear_color, 1.f, 0);
+				device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, clear_color, 1.f, 0);
+				if (skyboxEnabled) {
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
 					skybox_fx->draw(cube_x);
 					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				}
-				else device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, clear_color, 1.f, 0);
 
 
 				//	test_fx.draw(cube_x);
@@ -1449,7 +1447,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setTexture("tex", color1_hdr);
 			color_map_fx->setTexture("tex2", color_msaa);
 			color_map_fx->setTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
-			color_map_fx->setTexture("desaturate", desaturate_tex);
+			color_map_fx->setTexture("invmap", desaturate_tex);
+			color_map_fx->setTexture("overlay", overlaysAnim.getTexture(overlayTrack.getIntValue(beat) % overlaysAnim.getTextureCount()));
 			
 			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
 			drawFuzz(color_map_fx, vertex_streamer,  time, 1.0f, colorMapDistortXTrack.getValue(beat), colorMapDistortYTrack.getValue(beat),
@@ -1479,10 +1478,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 			scanlinesImage.setDimension(2, 2);
 			scanlinesImage.draw(device); */
 			
-			overlaysImage.setTexture(overlaysAnim.getTexture(overlayTrack.getIntValue(beat) % overlaysAnim.getTextureCount()));
+/*			overlaysImage.setTexture(overlaysAnim.getTexture(overlayTrack.getIntValue(beat) % overlaysAnim.getTextureCount()));
 			overlaysImage.setPosition(-1, -1);
 			overlaysImage.setDimension(2, 2);
-			overlaysImage.draw(device);
+			overlaysImage.draw(device); */
 			
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			

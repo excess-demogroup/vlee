@@ -13,6 +13,7 @@ float yzoom = 1.f;
 
 float flash = 0.0f;
 float fade2 = 1.0f;
+float repeat = 3.0f;
 
 // textures
 texture tex;
@@ -25,8 +26,8 @@ sampler tex_sampler = sampler_state
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
 	
-	AddressU = CLAMP;
-	AddressV = CLAMP;
+	AddressU = WRAP;
+	AddressV = WRAP;
 };
 
 texture tex2;
@@ -37,20 +38,32 @@ sampler tex2_sampler = sampler_state
 	MinFilter = POINT;
 	MagFilter = POINT;
 	
-	AddressU = CLAMP;
-	AddressV = CLAMP;
+	AddressU = WRAP;
+	AddressV = WRAP;
 };
 
-texture desaturate;
-sampler desaturate_sampler = sampler_state
+texture invmap;
+sampler invmap_sampler = sampler_state
 {
-	Texture = (desaturate);
+	Texture = (invmap);
 	MipFilter = NONE;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
 	
 	AddressU = CLAMP;
 	AddressV = CLAMP;
+};
+
+texture overlay;
+sampler overlay_sampler = sampler_state
+{
+	Texture = (overlay);
+	MipFilter = NONE;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	
+	AddressU = WRAP;
+	AddressV = WRAP;
 };
 
 
@@ -116,11 +129,11 @@ float2 bloom_nudge = float2(0.5 / 400, 0.5 / 225);
 
 float4 pixel(VS_OUTPUT In) : COLOR
 {
-	float pal_sel = tex2D(desaturate_sampler, In.tex);
+	float pal_sel = 0.0;
 	
 	float4 color =
-		tex2D(tex_sampler, In.tex + bloom_nudge) * 0.1
-		+ tex2D(tex2_sampler, In.tex) * 1.0 ;
+		tex2D(tex_sampler, In.tex * repeat + bloom_nudge) * 0.1
+		+ tex2D(tex2_sampler, In.tex * repeat) * 1.0 ;
 
 //	color.rgb = lerp(color.rgb, tex2D(tex_sampler, In.tex + bloom_nudge).rgb, (1 - pal_sel) * 0.75);
 	
@@ -136,7 +149,11 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	
 //	float3 delta = color - lum;
 //	color.rgb += delta * (1-pal_sel);
-	return color * fade2 + flash;
+	color = color * fade2 + flash;
+	color.rgb *= tex2D(overlay_sampler, In.tex * repeat).r;
+	color.rgb = lerp(float3(1,1,1) - color.rgb, color.rgb, tex2D(invmap_sampler, In.tex).r);
+	
+	return color;
 }
 
 technique blur_ps_vs_2_0
