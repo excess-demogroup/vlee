@@ -739,7 +739,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device.setRenderTarget(color_msaa.getRenderTarget());
 			device.setDepthStencilSurface(depthstencil_msaa);
 			
-			D3DXCOLOR clear_color(0.45f, 0.25f, 0.25f, 0.f);
+//			D3DXCOLOR clear_color(0.45f, 0.25f, 0.25f, 0.f);
+			D3DXCOLOR clear_color(0.f, 0.f, 0.f, 0.f);
 			
 			float roll = cameraRollTrack.getValue(beat);
 			roll *= float(2 * M_PI);
@@ -791,7 +792,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			bool endTextEnabled = false;
 			bool greetingsEnabled = false;
 			bool revBigbang = false;
-			bool cornellEnabled = true;
+			bool cornellEnabled = false;
 			
 			int part = partTrack.getIntValue(beat);
 			if (0 == part)
@@ -820,8 +821,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			}
 			else if (5 == part)
 			{
-				skyboxEnabled = true;
-				growEnabled = true;
+				cornellEnabled = true;
 			}
 			else if (6 == part)
 			{
@@ -1174,7 +1174,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				if (greebleKubeEnabled)
 				{
 					Matrix4x4 world = Matrix4x4::identity();
-					at += Vector3(
+					at = Vector3(
 						pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
 						pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
 						pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
