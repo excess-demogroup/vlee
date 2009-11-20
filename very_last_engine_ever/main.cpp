@@ -456,18 +456,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		tex_fx->setMatrix("transform", Matrix4x4::identity());
 		Effect *blur_fx     = engine::loadEffect(device, "data/blur.fx");
 		
-		Effect *particle_fx = engine::loadEffect(device, "data/particle.fx");
-		Texture bartikkel_tex = engine::loadTexture(device, "data/spherenormal.png");
-		particle_fx->setTexture("tex", bartikkel_tex);
-		
-		Effect *particle2_fx = engine::loadEffect(device, "data/particle2.fx");
-		Texture lightparticle_tex = engine::loadTexture(device, "data/lightparticle.png");
-		particle2_fx->setTexture("tex", lightparticle_tex);
-		
-		Effect *particle3_fx = engine::loadEffect(device, "data/particle3.fx");
-		Texture particle_tex = engine::loadTexture(device, "data/particle.png");
-		particle3_fx->setTexture("tex", particle_tex);
-		
 		Effect *noise_fx = engine::loadEffect(device, "data/noise.fx");
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
 		
@@ -478,154 +466,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		color_maps[1] = engine::loadTexture(device, "data/color_map1.png");
 		color_map_fx->setFloat("texel_width", 1.0f / color_msaa.getWidth());
 		color_map_fx->setFloat("texel_height", 1.0f / color_msaa.getHeight());
-		
-		Effect *cubegrid_fx = engine::loadEffect(device, "data/cubegrid.fx");
-		renderer::VolumeTexture front_tex = engine::loadVolumeTexture(device, "data/front.dds");
-		cubegrid_fx->setTexture("front_tex", front_tex);
-		
-		engine::VoxelGrid voxelGrid = engine::loadVoxelGrid("data/spikeball.voxel");
-		engine::VoxelMesh voxelMesh(device, cubegrid_fx, voxelGrid, 64);
-		voxelMesh.update(Matrix4x4::identity());
-		
-		engine::ParticleStreamer streamer(device);
-		
-		engine::ParticleCloud<ParticleData> blackCloud;
-		for (int i = 0; i < 12 * 1024; ++i)
-		{
-			float x, y, z;
-			do {
-				x = (randf() - 0.5f) * 2;
-				z = (randf() - 0.5f) * 2;
-				y = (randf() - 0.5f) * 2;
-			} while ((x * x + y * y + z * z) > 1.0f || (fabs(x) < 1e-5 && fabs(y) < 1e-5 && fabs(z) < 1e-5));
-
-			float dist = randf();
-			dist = pow(dist, 5.0f);
-			dist += 0.01f;
-			x *= dist;
-			y *= dist;
-			z *= dist;
-
-			float s = (randf() + 0.5f) * 0.45f;
-			blackCloud.addParticle(
-				engine::Particle<ParticleData>(
-					Vector3(x, y, z) * 200,
-					ParticleData(s,
-						math::normalize(Vector3(
-						1.0f / x,
-						1.0f / y,
-						1.0f / z
-						))
-					)
-				)
-			);
-		}
-		
-		engine::ParticleCloud<ParticleData> whiteCloud;
-		for (int i = 0; i < 4 * 1024; ++i)
-		{
-			float x, y, z;
-			do {
-				x = (randf() - 0.5f) * 2;
-				z = (randf() - 0.5f) * 2;
-				y = (randf() - 0.5f) * 2;
-			} while ((x * x + y * y + z * z) > 1.0f || (fabs(x) < 1e-5 && fabs(y) < 1e-5 && fabs(z) < 1e-5));
-			
-			float dist = randf();
-			dist = pow(dist, 32.0f);
-			dist += 0.01f;
-			x *= dist;
-			y *= dist;
-			z *= dist;
-			
-			float s = (randf() + 0.75f) * 0.55f;
-			whiteCloud.addParticle(
-				engine::Particle<ParticleData>(
-					Vector3(x, y, z) * 75,
-					ParticleData(s,
-						math::normalize(Vector3(
-						1.0f / x,
-						1.0f / y,
-						1.0f / z
-						))
-					)
-				)
-			);
-		}
-		
-		engine::ParticleCloud<ParticleData> cubeExplosionParticles;
-		for (int i = 0; i < 512; ++i)
-		{
-			float x, y, z;
-			do {
-				x = (randf() - 0.5f) * 2;
-				z = (randf() - 0.5f) * 2;
-				y = (randf() - 0.5f) * 2;
-			} while ((x * x + y * y + z * z) > 1.0f || (fabs(x) < 1e-5 && fabs(y) < 1e-5 && fabs(z) < 1e-5));
-
-			float dist = randf();
-			dist = pow(dist, 1.25f);
-			dist += 0.01f;
-			x *= dist;
-			y *= dist;
-			z *= dist;
-
-/*			x += 35;
-			y -= 35;
-			z -= 35; */
-
-			float s = (randf() + 0.25f) * 5.0f;
-			cubeExplosionParticles.addParticle(
-				engine::Particle<ParticleData>(
-				Vector3(x, y, z) * 15,
-				ParticleData(s,
-				math::normalize(Vector3(
-				1.0f / x,
-				1.0f / y,
-				1.0f / z
-				))
-				)
-				)
-			);
-		}
-		
-		engine::ParticleCloud<ParticleData> korridorParticles;
-		for (int i = 0; i < 24 * 1024; ++i)
-		{
-			float x, y, z;
-			x = (randf() - 0.5f) * 2;
-			z = (randf() - 0.5f) * 2;
-			y = (randf() - 0.5f) * 2;
-			
-			float s = (randf() + 0.55f);
-			korridorParticles.addParticle(
-				engine::Particle<ParticleData>(
-				Vector3(x, y, z) * 70,
-				ParticleData(s,
-					math::normalize(Vector3(
-					1.0f / x,
-					1.0f / y,
-					1.0f / z
-					))
-					)
-				)
-			);
-		}
-
-		Effect *explosion_fx = engine::loadEffect(device, "data/explosion.fx");
-		Texture explosion_tex = engine::loadTexture(device, "data/explosion.png");
-		explosion_fx->setTexture("explosion_tex", explosion_tex);
-		//engine::Explosion explosion = engine::Explosion(device, Vector3(32.f, -16.f, 0.f), Vector3(42.f, -26.f, -10.f));
-
-		engine::Explosion explosion = engine::Explosion(device, Vector3(22.f, -6.f, 10.f), Vector3(32.f, -21.f, -10.f));
-
-		Effect *ccbs_fx = engine::loadEffect(device, "data/ccbs.fx");
-		Texture ccbs_tex = engine::loadTexture(device, "data/particle.png");
-		ccbs_fx->setTexture("ccbs_tex", ccbs_tex);
-		engine::CCBSplines *ccbs = new engine::CCBSplines(device);
-
-		Effect *grow_fx = engine::loadEffect(device, "data/grow.fx");
-		engine::Grow grow = engine::Grow(vertex_streamer, Vector3(-3.8f,-2.f,0.f));
 
 		renderer::CubeTexture cubemap_tex = engine::loadCubeTexture(device, "data/stpeters_cross3.dds");
 /*
@@ -646,29 +486,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Effect *tex_trans_fx       = engine::loadEffect(device, "data/tex_trans.fx");
 		
-		Surface logo_surf = loadSurface(device, "data/logo.png");
-		Texture bar_tex = engine::loadTexture(device, "data/bar.png");
-		
-		Effect *tunelle_fx = engine::loadEffect(device, "data/tunelle.fx");
-		tunelle_fx->setTexture("tex", engine::loadTexture(device, "data/tunelle.dds"));
-		Mesh *tunelle_x = engine::loadMesh(device, "data/tunelle.x");
-		
-		Mesh *korridor_x = engine::loadMesh(device, "data/korridor.x");
-		Effect *korridor_fx = engine::loadEffect(device, "data/korridor.fx");
-		korridor_fx->setTexture("diffuse", engine::loadTexture(device, "data/korridor_diffuse.png"));
-		korridor_fx->setTexture("lightmap", engine::loadTexture(device, "data/korridor_lightmap.png"));
-		renderer::CubeTexture korridor_spherelight = engine::loadCubeTexture(device, "data/korridor_spherelight.dds");
-		korridor_fx->setTexture("spherelight", korridor_spherelight);
-		
-		Mesh *korridor_sphere_x = engine::loadMesh(device, "data/korridor_sphere.x");
-		Effect *korridor_sphere_fx = engine::loadEffect(device, "data/korridor_sphere.fx");
-		korridor_sphere_fx->setTexture("lightmap", engine::loadTexture(device, "data/korridor_sphere_lightmap.png"));
-		korridor_sphere_fx->setTexture("text", engine::loadTexture(device, "data/korridor_sphere_text.png"));
-		
-		Effect *korridor_particles_fx = engine::loadEffect(device, "data/korridor_particles.fx");
-		korridor_particles_fx->setTexture("tex", lightparticle_tex);
-		korridor_particles_fx->setTexture("spherelight", korridor_spherelight);
-		
 		renderer::CubeTexture greeble_envmap = engine::loadCubeTexture(device, "data/greeble_cube_env.dds");
 		Mesh *smile_x = engine::loadMesh(device, "data/smile.x");
 		Effect *smile_fx = engine::loadEffect(device, "data/smile.fx");
@@ -687,9 +504,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Anim invmapAnim = engine::loadAnim(device, "data/invmaps/");
 
-		Texture title_end_tex = engine::loadTexture(device, "data/title_end.png");
-		Image titleEndSubtextImage(engine::loadTexture(device, "data/title_end_subtext.png"), tex_fx);
-		
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
 		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f));
