@@ -410,40 +410,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &colorMapDistortYTrack  = syncDevice->getTrack("cm.dist.y");
 		Track &overlayTrack  = syncDevice->getTrack("cm.overlay");
 		Track &invmapTrack  = syncDevice->getTrack("cm.invmap");
-		
+
 		Track &noiseAmtTrack  = syncDevice->getTrack("noise.amt");
 		Track &noiseFFTTrack  = syncDevice->getTrack("noise.fft");
-		
-		Track &explosionTrack = syncDevice->getTrack("explosion");
-		Track &growTrack = syncDevice->getTrack("growfield");
-		
-		Track &textLineTrack  = syncDevice->getTrack("text.line");
-		Track &textAnimTrack  = syncDevice->getTrack("text.anim");
-		Track &textBlinkTrack  = syncDevice->getTrack("text.blink");
-		
-		Track &voxelResTrack  = syncDevice->getTrack("voxel.res");
-		Track &voxelAnimTrack  = syncDevice->getTrack("voxel.anim");
-		Track &voxelScaleTrack  = syncDevice->getTrack("voxel.scale");
 
 		Track &greetGroupTrack  = syncDevice->getTrack("greet.group");
 		Track &beatTrack = syncDevice->getTrack("beat.image");
 
-		Track &spherePosXTrack = syncDevice->getTrack("sphere.pos.x");
-		Track &spherePosYTrack = syncDevice->getTrack("sphere.pos.y");
-		Track &spherePosZTrack = syncDevice->getTrack("sphere.pos.z");
-		Track &sphereRotXTrack = syncDevice->getTrack("sphere.rot.x");
-		Track &sphereRotYTrack = syncDevice->getTrack("sphere.rot.y");
-		Track &sphereRotZTrack = syncDevice->getTrack("sphere.rot.z");
 		Track &sphereOffsetTrack = syncDevice->getTrack("sphere.offs");
-		Track &sphereLight1Track = syncDevice->getTrack("sphere.l0");
-		Track &sphereLight2Track = syncDevice->getTrack("sphere.l1");
-		Track &sphereLight3Track = syncDevice->getTrack("sphere.l2");
-		Track &sphereLight4Track = syncDevice->getTrack("sphere.l3");
-		Track &sphereLight5Track = syncDevice->getTrack("sphere.l4");
-		Track &sphereLight6Track = syncDevice->getTrack("sphere.l5");
-		
-		Track &vuAmountTrack = syncDevice->getTrack("vu.amount");
-		Track &bigbangTime = syncDevice->getTrack("bb.time");
 		Track &partTrack = syncDevice->getTrack("_part");
 		Track &repeatTrack = syncDevice->getTrack("cm.repeat");
 
@@ -786,166 +760,27 @@ int main(int /*argc*/, char* /*argv*/ [])
 				proj = cam->getProjection();
 			} */
 
-			bool bigbangEnabled = false;
 			bool skyboxEnabled = false;
-			bool introEnabled = false;
-			bool splinesEnabled = false;
 			bool beatEnabled = false;
-			bool korridorEnabled = false;
-			bool growEnabled = false;
 			bool smileEnabled = false;
-			bool endTextEnabled = false;
 			bool greetingsEnabled = false;
-			bool revBigbang = false;
 			bool cornellEnabled = false;
 			
 			int part = partTrack.getIntValue(beat);
-			if (0 == part)
-			{
-				skyboxEnabled = true;
-				introEnabled = true;
-				bigbangEnabled = true;
-//				splinesEnabled = beat >= 0x1C0;
-			}
-			else if (1 == part)
-			{
-				skyboxEnabled = true;
-				splinesEnabled = true;
-			}
-			else if (2 == part)
-			{
+			if (2 == part) {
 				beatEnabled = true;
-			}
-			else if (3 == part)
-			{
-				korridorEnabled = true;
-			}
-			else if (4 == part)
-			{
+			} else if (4 == part) {
 				greetingsEnabled = true;
-			}
-			else if (5 == part)
-			{
+			} else if (5 == part) {
 				cornellEnabled = true;
-			}
-			else if (6 == part)
-			{
+			} else if (6 == part) {
 				skyboxEnabled = true;
 				smileEnabled = true;
 			}
-			else if (7 == part)
-			{
-				skyboxEnabled = true;
-				bigbangEnabled = true;
-				revBigbang = true;
-			}
-			else
-			{
-				endTextEnabled = true;
-			}
-			
+
 			float grid_size = 0.0f;
 			int eye2_scroll2 = 0;
 			float tunelle_scale = math::clamp((beat - (256 + 32)) * 0.5f, 0.0f, 1.0f);
-
-			if (introEnabled)
-			{
-
-/*				Track &cameraDistanceTrack = syncDevice->getTrack("cam.dist");
-				Track &cameraRollTrack     = syncDevice->getTrack("cam.roll");
-				Track &cameraYRotTrack     = syncDevice->getTrack("cam.y-rot");
-				Track &cameraZRotTrack     = syncDevice->getTrack("cam.z-rot"); */
-
-				eye = Vector3(sin(beat * 0.005f), 0, -cos(beat * 0.005f)) * 80;
-				at = Vector3(20, 0, 0);
-				eye -= at;
-				
-				float eye2_scroll_temp = -((beat - (256 + 32)) * 8) + (64 + 8);
-				float eye2_scroll = fmod(eye2_scroll_temp, 75.0f);
-				eye2_scroll2 = int(floor(eye2_scroll_temp / 75.0f));
-
-				Vector3 eye2 = Vector3(eye2_scroll, 0, 0);
-				Vector3 at2 = Vector3(
-					eye2_scroll - 10,
-					sin(cameraXRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
-					cos(cameraXRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat));
-				
-				float cam_blend = math::smoothstep(0.0f, 1.0f, (beat - (256 + 32)) / 8);
-				eye = math::lerp(eye, eye2, cam_blend);
-				at = math::lerp(at, at2, cam_blend);
-				
-				orig_at = at;
-				at += Vector3(
-					pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
-					pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
-					pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
-					) * 0.025f * math::length(eye - at) * (cameraShakeAmtTrack.getValue(beat));
-				view.makeLookAt(eye, at, roll);
-				
-				particle_fx->setMatrices(world, view, proj);
-				particle2_fx->setMatrices(world, view, proj);
-				particle2_fx->setFloat("alpha", 1.0f - tunelle_scale);
-				
-				voxelMesh.setSize(voxelResTrack.getValue(beat));
-				grid_size = voxelMesh.getSize();
-				Matrix4x4 mrot;
-				float voxelAnim = voxelAnimTrack.getValue(beat);
-				mrot.makeRotation(Vector3(float(voxelAnim / 4), float(M_PI - sin(voxelAnim / 5)), float(M_PI + voxelAnim / 3)));
-				Matrix4x4 mscale = Matrix4x4::scaling(Vector3(0.75f, 0.75f, 0.75f));
-				voxelMesh.update(mrot);
-			}
-			
-			if (splinesEnabled)
-			{
-				at = Vector3(0, 0, 0);
-				eye = Vector3(sin((beat / 128) * M_PI), 0, -cos((beat / 128) * M_PI)) * 4;
-				view.makeLookAt(eye, at, roll);
-			}
-			
-			Matrix4x4 spherelight_transform = Matrix4x4::identity();
-			if (korridorEnabled)
-			{
-				int activeLights = 6;
-				float faceLight[6] = {
-					sphereLight1Track.getValue(beat) == 1000.f ? (float)(rand()%2) : sphereLight1Track.getValue(beat),
-					sphereLight2Track.getValue(beat) == 1000.f ? (float)(rand()%2) : sphereLight2Track.getValue(beat),
-					sphereLight3Track.getValue(beat) == 1000.f ? (float)(rand()%2) : sphereLight3Track.getValue(beat),
-					sphereLight4Track.getValue(beat) == 1000.f ? (float)(rand()%2) : sphereLight4Track.getValue(beat),
-					sphereLight5Track.getValue(beat) == 1000.f ? (float)(rand()%2) : sphereLight5Track.getValue(beat),
-					sphereLight6Track.getValue(beat) == 1000.f ? (float)(rand()%2) : sphereLight6Track.getValue(beat),
-				};
-				korridor_fx->setFloatArray("faceLight", faceLight, 6);
-				korridor_sphere_fx->setFloatArray("faceLight", faceLight, 6);
-				korridor_particles_fx->setFloatArray("faceLight", faceLight, 6);
-
-				Vector3 spherelightPos(
-					spherePosXTrack.getValue(beat),
-					spherePosYTrack.getValue(beat),
-					spherePosZTrack.getValue(beat));
-				spherelight_transform = Matrix4x4::rotation(math::Quaternion(
-					sphereRotXTrack.getValue(beat) * float(M_PI / 180),
-					sphereRotYTrack.getValue(beat) * float(M_PI / 180),
-					sphereRotZTrack.getValue(beat) * float(M_PI / 180)));
-				spherelight_transform *= Matrix4x4::translation(spherelightPos);
-				
-				eye = Vector3(sin(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
-							cameraUpTrack.getValue(beat),
-							-cos(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat));
-				at = spherelightPos * 10 + Vector3(0, sphereOffsetTrack.getValue(beat), 0);
-				view = Matrix4x4::lookAt(eye, at, roll);
-				
-				float scale = 10;
-				Matrix4x4 world = Matrix4x4::rotation(math::Quaternion(-float(M_PI) / 2, 0.0f, 0.0f));
-				korridor_fx->setMatrix("spherelight_transform", world * Matrix4x4(spherelight_transform).inverse());
-				
-				world = Matrix4x4::scaling(Vector3(scale, scale, scale)) * world;
-				korridor_fx->setMatrices(world, view, proj);
-				korridor_fx->commitChanges();
-				
-				float s = 10;
-				korridor_sphere_fx->setMatrices(spherelight_transform * Matrix4x4::scaling(Vector3(s,s,s)), view, proj);
-				korridor_sphere_fx->commitChanges();
-			}
 
 			if (smileEnabled)
 			{
@@ -957,28 +792,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 				eye += at;
 				
 				view = Matrix4x4::lookAt(eye, at, roll);
-			}
-			
-			if (revBigbang)
-			{
-				eye = Vector3(sin(beat * 0.005f), 0, -cos(beat * 0.005f)) * 80;
-				at = Vector3(20, 0, 0);
-				eye -= at;
-				view.makeLookAt(eye, at, roll);
-				
-				particle_fx->setMatrices(world, view, proj);
-				particle2_fx->setMatrices(world, view, proj);
-				particle2_fx->setFloat("alpha", 1.0f);
-			}
-			
-			if (endTextEnabled)
-			{
-				eye = Vector3(0, 0, -100);
-				at = Vector3(0, 0, 0);
-				Matrix4x4 view = Matrix4x4::lookAt(eye, at, roll);
-				Matrix4x4 world = Matrix4x4::identity();
-				
-				tex_trans_fx->setMatrices(world, view, proj);
 			}
 
 			if (skyboxEnabled)
@@ -1120,84 +933,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 						0.5f / letterbox_viewport.Width, 0.5f / letterbox_viewport.Height
 					);
 				}
-				
-				if (endTextEnabled)
-				{
-					float alpha = math::clamp((beat - 0x5ee) / 16, 0.0f, 1.0f);
-					tex_trans_fx->setTexture("tex", title_end_tex);
-					tex_trans_fx->setFloat("alpha", alpha);
-					tex_trans_fx->commitChanges();
-					Effect *effect = tex_trans_fx;
-					
-					float flip = math::clamp((beat - 0x5fe) / 16, 0.0f, 1.0f);
-					float letterFlip = ((beat - 0x60e) / 16) - 1.0f;
-					
-					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-					device->SetRenderState(D3DRS_ZWRITEENABLE, false);
-					
-					UINT passes = 0;
-					(*effect)->Begin(&passes, 0);
-					for (UINT pass = 0; pass < passes; ++pass)
-					{
-						(*effect)->BeginPass( pass );
-						vertex_streamer.begin(D3DPT_TRIANGLELIST);
-						
-						for (unsigned i = 0; i < 15; ++i)
-						{
-							float x1 = float(i) / 15;
-							float x2 = float(i + 1) / 15;
-							
-							float currLetterFlip = math::clamp(((letterFlip * 15) + i) / 15, 0.0f, 1.0f);
-							Matrix4x4 letterTransform = Matrix4x4::rotation(math::Quaternion(0, currLetterFlip * float(M_PI), 0));
-							letterTransform *= Matrix4x4::translation(Vector3((i - (14.0f / 2)) * 1.6, 0, 0));
-							letterTransform *= Matrix4x4::scaling(Vector3(7, 7, 7));
-							letterTransform *= Matrix4x4::rotation(math::Quaternion(0, flip * float(M_PI), 0));
-							
-							Vector3 letterPos = Vector3(0, 0, 0);
-							
-							// bottom left
-							vertex_streamer.uv(Vector2(x1, 1.0f));
-							vertex_streamer.vertex(math::mul(letterTransform, letterPos + Vector3(-1.0f, -1.0f, 0.0f)));
-							
-							// top right
-							vertex_streamer.uv(Vector2(x2, 0.0f));
-							vertex_streamer.vertex(math::mul(letterTransform, letterPos + Vector3( 1.0f,  1.0f, 0.0f)));
-							
-							// bottom right
-							vertex_streamer.uv(Vector2(x2, 1.0f));
-							vertex_streamer.vertex(math::mul(letterTransform, letterPos + Vector3( 1.0f, -1.0f, 0.0f)));
-							
-							// top right
-							vertex_streamer.uv(Vector2(x2, 0.0f));
-							vertex_streamer.vertex(math::mul(letterTransform, letterPos + Vector3( 1.0f,  1.0f, 0.0f)));
-							
-							// bottom left
-							vertex_streamer.uv(Vector2(x1, 1.0f));
-							vertex_streamer.vertex(math::mul(letterTransform, letterPos + Vector3(-1.0f, -1.0f, 0.0f)));
-							
-							// top left
-							vertex_streamer.uv(Vector2(x1, 0.0f));
-							vertex_streamer.vertex(math::mul(letterTransform, letterPos + Vector3(-1.0f,  1.0f, 0.0f)));
-						}
-						vertex_streamer.end();
-						(*effect)->EndPass();
-					}
-					(*effect)->End();
-					
-					tex_fx->setFloat("alpha", alpha);
-					tex_fx->setMatrix("transform", Matrix4x4::identity());
-					tex_fx->commitChanges();
-					titleEndSubtextImage.setPosition(-1, -1);
-					titleEndSubtextImage.setDimension(2, 2);
-					titleEndSubtextImage.draw(device);
-					
-					device->SetRenderState(D3DRS_ZWRITEENABLE, true);
-					device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-				}
 
 #if 0
 				Matrix4x4 mscale2;
@@ -1255,59 +990,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 #endif
 
-
-				if (splinesEnabled)
-				{
-					/* splines */
-					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-					device->SetRenderState(D3DRS_ZWRITEENABLE, false);
-					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-					
-					world.makeIdentity();
-					Matrix4x4 modelview = world * view;
-					ccbs_fx->setMatrices(world, view, proj);
-
-					Vector3 up(modelview._12, modelview._22, modelview._32);
-					Vector3 left(modelview._11, modelview._21, modelview._31);
-					math::normalize(up);
-					math::normalize(left);
-
-					ccbs_fx->setFloatArray("up", up, 3);
-					ccbs_fx->setFloatArray("left", left, 3);
-					ccbs_fx->commitChanges();
-					ccbs_fx->setMatrices(world, view, proj);
-					ccbs->draw(*ccbs_fx, beat);
-					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-					device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-					device->SetRenderState(D3DRS_ZWRITEENABLE, true);
-				}
-				
-
-				if (growEnabled)
-				{
-					eye = Vector3( sin(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
-								       cameraUpTrack.getValue(beat),
-						          (-4-cos(cameraYRotTrack.getValue(beat) * (M_PI / 180))) * cameraDistanceTrack.getValue(beat)
-								 );
-					//eye = Vector3(0, 0, -4);
-					at = Vector3(0, 0, 0);
-					at += Vector3(
-						pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
-						pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
-						pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
-						) * 0.025f * math::length(eye - at) * (cameraShakeAmtTrack.getValue(beat));
-					Matrix4x4 view;
-					view.makeLookAt(eye, at, roll);
-
-					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-					device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-					grow_fx->setMatrices(world, view, proj);
-					grow_fx->commitChanges();
-					grow.draw(*grow_fx, beat, growTrack.getIntValue(beat));
-					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-				}
 				if (!i)
 					drawOsc(osc_fx, vertex_streamer);
 				
@@ -1370,14 +1052,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setFloat("fade", colorMapBlendTrack.getValue(beat));
 
 			float flash = pow(colorMapFlashTrack.getValue(beat) == 1000.f ? (float)(rand()%2) : colorMapFlashTrack.getValue(beat), 2.0f);
-			if (korridorEnabled)
-			{
-				Vector3 dir = spherelight_transform.inverse().getTranslation();
-				float l = pow(getCubeLightBrightness(dir), 5.0f);
-				l *= 1.0f / (math::length(dir) * 0.25f + 1);
-				flash += l;
-			}
-			
 			color_map_fx->setFloat("flash", flash);
 			color_map_fx->setFloat("fade2", colorMapFadeTrack.getValue(beat));
 			color_map_fx->setFloat("repeat", repeatTrack.getValue(beat));
