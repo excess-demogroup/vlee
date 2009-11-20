@@ -340,8 +340,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		CComPtr<IDirect3D9> direct3d = com_ptr(Direct3DCreate9(D3D_SDK_VERSION));
 		if (!direct3d) throw FatalException("your directx-version is from the stone-age.\n\nTHRUG SAYS: UPGRADE!");
 
-		
-#if 1||!WINDOWED
 		/* show config dialog */
 		INT_PTR result = config::showDialog(hInstance, direct3d);
 		if (FAILED(result)) MessageBox(NULL, "Could not initialize dialogbox, using default settings.", NULL, MB_OK);
@@ -354,8 +352,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				return 0;
 			}
 		}
-#endif
-		
+
 		if (FAILED(direct3d->CheckDeviceFormat(config::adapter, DEVTYPE, config::mode.Format, D3DUSAGE_QUERY_FILTER, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F)))
 		{
 			MessageBox(NULL, "Selected mode does not support FP16 texture-filtering, demo will look crap.", "visual quality warning", MB_OK | MB_ICONWARNING);
@@ -403,7 +400,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &cameraUpTrack     = syncDevice->getTrack("cam.up");
 		Track &cameraShakeAmtTrack     = syncDevice->getTrack("cam.shake.amt");
 		Track &cameraShakeTempoTrack     = syncDevice->getTrack("cam.shake.tempo");
-		
+		Track &cameraFovTrack     = syncDevice->getTrack("cam.fov");
+
 		Track &colorMapBlendTrack  = syncDevice->getTrack("cm.blend");
 		Track &colorMapPalTrack    = syncDevice->getTrack("cm.pal");
 		Track &colorMapFadeTrack   = syncDevice->getTrack("cm.fade");
@@ -449,6 +447,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &partTrack = syncDevice->getTrack("_part");
 		Track &repeatTrack = syncDevice->getTrack("cm.repeat");
 
+		Track &musSize1Track = syncDevice->getTrack("mus.size1");
+		Track &musBoom1Track = syncDevice->getTrack("mus.boom1");
+		Track &musSize2Track = syncDevice->getTrack("mus.size2");
+		Track &musBoom2Track = syncDevice->getTrack("mus.boom2");
+		Track &musGroove1Track = syncDevice->getTrack("mus.groove1");
+		Track &musGroove2Track = syncDevice->getTrack("mus.groove2");
 
 		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
 		
@@ -661,6 +665,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Mesh *cornell_main_x         = engine::loadMesh(device, "data/cornell-main.x");
 		Mesh *cornell_left_x         = engine::loadMesh(device, "data/cornell-left.x");
 		Mesh *cornell_right_x         = engine::loadMesh(device, "data/cornell-right.x");
+		Mesh *bart_x         = engine::loadMesh(device, "data/bart.x");
 		Texture cornell_main_tex = engine::loadTexture(device, "data/cornell-main.jpg");
 		Texture cornell_left_tex = engine::loadTexture(device, "data/cornell-left.jpg");
 		Texture cornell_right_tex = engine::loadTexture(device, "data/cornell-right.jpg");
@@ -764,7 +769,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			
 			Matrix4x4 world = Matrix4x4::identity();
 			Matrix4x4 view = Matrix4x4::lookAt(eye, at, roll);
-			Matrix4x4 proj = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 1.0f, 100000.f);
+			Matrix4x4 proj = Matrix4x4::projection(cameraFovTrack.getValue(beat), float(DEMO_ASPECT), 1.0f, 100000.f);
 			
 /*			testScene->anim(fmod(beat, 100));
 			scenegraph::Camera *cam = testScene->findCamera("Camera01-camera");
@@ -788,7 +793,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			bool beatEnabled = false;
 			bool korridorEnabled = false;
 			bool growEnabled = false;
-			bool greebleKubeEnabled = false;
+			bool smileEnabled = false;
 			bool endTextEnabled = false;
 			bool greetingsEnabled = false;
 			bool revBigbang = false;
@@ -826,7 +831,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			else if (6 == part)
 			{
 				skyboxEnabled = true;
-				greebleKubeEnabled = true;
+				smileEnabled = true;
 			}
 			else if (7 == part)
 			{
@@ -942,7 +947,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				korridor_sphere_fx->commitChanges();
 			}
 
-			if (greebleKubeEnabled)
+			if (smileEnabled)
 			{
 				eye = Vector3(sin(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
 					cameraUpTrack.getValue(beat),
@@ -978,7 +983,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			if (skyboxEnabled)
 			{
-				if (greebleKubeEnabled)
+				if (smileEnabled)
 				{
 					skybox_fx->setTexture("reflectionMap", greeble_envmap);
 					skybox_fx->setFloat("alpha", 0.25f);
@@ -1017,161 +1022,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 					testRenderer.projection = proj; // math::Matrix4x4::projection(60.0f, 16.0f / 9, 1.0f, 1000.0f);
 					testRenderer.draw();
 				} */
-				if (introEnabled)
-				{
-					// series of tubes
-					for (int i = 0; i < 30; ++i)
-					{
-						float rot = (beat > (256 + 128)) ? ((beat - (256 + 128)) / 8) : 0;
-						rot *= 2;
-						Matrix4x4 world = Matrix4x4::rotation(Vector3((math::notRandf(i - eye2_scroll2) - 0.5f) * rot, 0, 0));
-						world *= Matrix4x4::rotation(math::Quaternion(float(M_PI) / 2, float(M_PI) / 2, 0));
-						world *= Matrix4x4::translation(Vector3(-i * 300, 0, 0));
-						float tunelle_scale2 = tunelle_scale * 0.25f;
-						world *= Matrix4x4::scaling(Vector3(tunelle_scale2, tunelle_scale2, tunelle_scale2));
-						tunelle_fx->setMatrices(world, view, proj);
-						tunelle_fx->commitChanges();
-						tunelle_fx->draw(tunelle_x);
-					}
-					
-					Matrix4x4 mscale2;
-					mscale2 = Matrix4x4::translation(-Vector3(floor(grid_size / 2), floor(grid_size / 2), floor(grid_size / 2)));
-					mscale2 *= Matrix4x4::scaling(Vector3(10.0f / grid_size, 10.0f / grid_size, 10.0f / grid_size));
-					
-					Matrix4x4 world = Matrix4x4::translation(orig_at);
-					Matrix4x4 vscale = Matrix4x4::scaling(Vector3(
-						voxelScaleTrack.getValue(beat),
-						voxelScaleTrack.getValue(beat),
-						voxelScaleTrack.getValue(beat)
-						));
-					mscale2 *= vscale;
-					
-					cubegrid_fx->setMatrices(mscale2 * world, view, proj);
-					cubegrid_fx->commitChanges();
-					voxelMesh.draw(device);
-				}
 
-				if (bigbangEnabled)
-				{
-					// black particles
-					{
-						//blackCloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
-						float explode = bigbangTime.getValue(beat) / 2; // std::max((beat - 255) * 0.5f, 0.0f);
-						explode *= explode;
-						Matrix4x4 modelview = world * view;
-						
-						device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-						device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-						device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-						
-						drawParticleExplosion(device, streamer, particle_fx, blackCloud, explode, modelview);
-					}
-					
-					// white particles
-					{
-						// whiteCloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
-						float explode = bigbangTime.getValue(beat) / 2; // std::max((beat - 255), 0.0f) * 0.5f;
-						Matrix4x4 modelview = world * view;
-						
-						device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-						device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-						device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-						device->SetRenderState(D3DRS_ZWRITEENABLE, false);
-						
-						drawParticleExplosion(device, streamer, particle2_fx, whiteCloud, explode, modelview, 0.75f);
-					}
-				}
-				
-				if (introEnabled)
-				{
-					// text-plotter
-					int blinkVal = textBlinkTrack.getIntValue(beat);
-					if ((blinkVal == 0) || (math::frac(beat / blinkVal) > 0.5f))
-					{
-						D3DLOCKED_RECT rect;
-						if (!FAILED(logo_surf->LockRect(&rect, NULL, D3DLOCK_READONLY)))
-						{
-							tex_trans_fx->setTexture("tex", bar_tex);
-							tex_trans_fx->setFloat("alpha", 1.0f);
-
-							int line = textLineTrack.getIntValue(beat);
-							float anim = textAnimTrack.getValue(beat);
-
-							float scale = 10;
-							Matrix4x4 world = Matrix4x4::scaling(math::Vector3(scale, scale, scale));
-							world = Matrix4x4::translation(Vector3(2, 0, 0)) * world;
-
-							const int line_height = 8;
-							int ystart = line * line_height;
-							int ystop = std::min(ystart + line_height, int(logo_surf.getDesc().Height));
-							unsigned int *data = (unsigned int*)rect.pBits;
-
-							for (int y = ystart; y < ystop; ++y)
-							{
-								int ly = y - ystart;
-								for (size_t x = 0; x < logo_surf.getDesc().Width; ++x)
-								{
-									unsigned int color = ((unsigned int*)((char*)rect.pBits + rect.Pitch * y))[x];
-									if ((color & 0xFFFFFF) != 0)
-									{
-										tex_trans_fx->setMatrices(
-											Matrix4x4::translation(Vector3(x * 0.1f, ly * -0.1f + 3 / std::max((int(ly) - 10) + anim * 4, 0.0f), 0)) *
-											world *
-											Matrix4x4::rotation(Vector3(cos(anim - x * 0.1) / (anim + 1), sin(anim + ly * 0.15) / (anim + 1), 0)) * 
-											Matrix4x4::translation(Vector3(0, 0, 4 - 4 / (anim + 1))),
-											view,
-											proj);
-										drawQuad(
-											device, tex_trans_fx,
-											-0.2f, 0.1f,
-											0.2f, -0.1f,
-											0, 0
-											);
-									}
-								}
-							}
-							logo_surf->UnlockRect();
-						}
-					}
-				}
-				
-				if (korridorEnabled)
-				{
-					device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
-					korridor_fx->draw(korridor_x);
-					korridor_sphere_fx->draw(korridor_sphere_x);
-
-					/* particles */
-					{
-						// cloud.sort(Vector3(modelview._13, modelview._23, modelview._33));
-						int paricle_start = int(floor(spherelight_transform.getTranslation().y / 7));
-						for (int i = paricle_start-1; i < paricle_start+2; ++i)
-						{
-							Matrix4x4 world = Matrix4x4::rotation(Vector3(-M_PI/2, 0, 0));
-							world *= Matrix4x4::translation(Vector3(0, i * 70, 0));
-							
-							Matrix4x4 modelview = world * view;
-							korridor_particles_fx->setMatrices(world, view, proj);
-							korridor_particles_fx->setFloat("alpha", 1.0f);
-							
-							Matrix4x4 sphere_to_particle = spherelight_transform;
-							sphere_to_particle = sphere_to_particle.inverse();
-							sphere_to_particle *= Matrix4x4::scaling(Vector3(10, 10, 10)).inverse();
-							
-							korridor_particles_fx->setMatrix("spherelight_transform", sphere_to_particle);
-							
-							device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-							device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-							device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-							device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-							device->SetRenderState(D3DRS_ZWRITEENABLE, false);
-							
-							drawParticleField(device, streamer, korridor_particles_fx, korridorParticles, modelview);
-						}
-					}
-				}
-
-				if (greebleKubeEnabled)
+				if (smileEnabled)
 				{
 					Matrix4x4 world = Matrix4x4::identity();
 					at = Vector3(
@@ -1214,15 +1066,35 @@ int main(int /*argc*/, char* /*argv*/ [])
 					tex_trans_fx->commitChanges();
 					tex_trans_fx->draw(cornell_main_x);
 
-					world.makeIdentity();
+					float groove1 = 1.0f + sinf(beat * float(M_PI / 8)) * musGroove1Track.getValue(beat);
+					float groove2 = 1.0f + sinf(beat * float(M_PI / 8)) * musGroove2Track.getValue(beat);
+
+					world.makeScaling(Vector3(1, groove1, 1));
+					tex_trans_fx->setMatrices(world, view, proj);
 					tex_trans_fx->setTexture("tex", cornell_left_tex);
 					tex_trans_fx->commitChanges();
 					tex_trans_fx->draw(cornell_left_x);
 
-					world.makeIdentity();
+					world.makeScaling(Vector3(1, groove2, 1));
+					tex_trans_fx->setMatrices(world, view, proj);
 					tex_trans_fx->setTexture("tex", cornell_right_tex);
 					tex_trans_fx->commitChanges();
 					tex_trans_fx->draw(cornell_right_x);
+
+
+					float size1 = musSize1Track.getValue(beat) + (0.5f + cosf(beat * float(M_PI / 4)) * 0.5f) * musBoom1Track.getValue(beat);
+					float size2 = musSize2Track.getValue(beat) + (0.5f + cosf(beat * float(M_PI / 4)) * 0.5f) * musBoom2Track.getValue(beat);
+					world.makeScaling(Vector3(0.75, 0.75, 0.75) * size1);
+					world *= Matrix4x4::rotation(Vector3(D3DXToRadian(168.765), 0, 0));
+					world *= Matrix4x4::translation(Vector3(-15, 46 * groove1, -4.566));
+					tex_trans_fx->setMatrices(world, view, proj);
+					tex_trans_fx->draw(bart_x);
+
+					world.makeScaling(Vector3(1.25, 1.25, 1.0) * size2);
+					world *= Matrix4x4::rotation(Vector3(D3DXToRadian(-163.1), 0, 0));
+					world *= Matrix4x4::translation(Vector3(13.264, 15 * groove2, -31));
+					tex_trans_fx->setMatrices(world, view, proj);
+					tex_trans_fx->draw(bart_x);
 				}
 
 				if (beatEnabled)

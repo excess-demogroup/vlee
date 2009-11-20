@@ -14,9 +14,8 @@
 		<key row="1888" value="10.000000" interpolation="0"/>
 		<key row="1920" value="8.000000" interpolation="0"/>
 		<key row="2496" value="79.000000" interpolation="0"/>
-		<key row="2688" value="55.000000" interpolation="1"/>
-		<key row="2751" value="69.000000" interpolation="0"/>
-		<key row="2752" value="50.000000" interpolation="0"/>
+		<key row="2688" value="69.000000" interpolation="1"/>
+		<key row="2751" value="55.000000" interpolation="0"/>
 		<key row="3008" value="110.000000" interpolation="1"/>
 		<key row="3087" value="30.000000" interpolation="0"/>
 		<key row="3088" value="184.000000" interpolation="0"/>
@@ -1754,5 +1753,36 @@
 		<key row="2872" value="3.000000" interpolation="0"/>
 		<key row="2876" value="4.000000" interpolation="0"/>
 		<key row="2880" value="0.000000" interpolation="0"/>
+	</track>
+	<track name="cam.fov">
+		<key row="0" value="60.000000" interpolation="0"/>
+		<key row="2688" value="60.000000" interpolation="1"/>
+		<key row="2751" value="80.000000" interpolation="0"/>
+	</track>
+	<track name="mus.size1">
+		<key row="2688" value="0.000000" interpolation="2"/>
+		<key row="2692" value="1.000000" interpolation="0"/>
+	</track>
+	<track name="mus.boom1">
+		<key row="2688" value="0.000000" interpolation="2"/>
+		<key row="2692" value="1.000000" interpolation="2"/>
+		<key row="2704" value="0.000000" interpolation="0"/>
+	</track>
+	<track name="mus.size2">
+		<key row="2708" value="0.000000" interpolation="2"/>
+		<key row="2712" value="1.000000" interpolation="0"/>
+	</track>
+	<track name="mus.boom2">
+		<key row="2708" value="0.000000" interpolation="2"/>
+		<key row="2712" value="1.000000" interpolation="2"/>
+		<key row="2727" value="0.000000" interpolation="0"/>
+	</track>
+	<track name="mus.groove1">
+		<key row="2751" value="0.000000" interpolation="0"/>
+		<key row="2752" value="0.500000" interpolation="0"/>
+	</track>
+	<track name="mus.groove2">
+		<key row="2751" value="0.000000" interpolation="0"/>
+		<key row="2752" value="0.500000" interpolation="0"/>
 	</track>
 </tracks>
