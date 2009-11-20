@@ -778,6 +778,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 				smileEnabled = true;
 			}
 
+#if !SYNC
+			if (-1 == part)
+				done = true;
+#endif
+
 			float grid_size = 0.0f;
 			int eye2_scroll2 = 0;
 			float tunelle_scale = math::clamp((beat - (256 + 32)) * 0.5f, 0.0f, 1.0f);
