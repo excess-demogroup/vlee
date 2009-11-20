@@ -13,7 +13,7 @@ namespace engine
 	{
 		ID3DXEffect *eff = NULL;
 		ID3DXBuffer *err_buf = NULL;
-		HRESULT hr = D3DXCreateEffectFromFile(device, filename.c_str(), NULL, NULL, 0, NULL, &eff, &err_buf);
+		HRESULT hr = D3DXCreateEffectFromFile(device, filename.c_str(), NULL, NULL, D3DXSHADER_AVOID_FLOW_CONTROL, NULL, &eff, &err_buf);
 		
 		if (FAILED(hr))
 		{

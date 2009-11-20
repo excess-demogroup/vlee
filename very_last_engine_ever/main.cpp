@@ -761,13 +761,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 			} */
 
 			bool skyboxEnabled = false;
+			bool rayTraceEnabled = false;
 			bool beatEnabled = false;
 			bool smileEnabled = false;
 			bool greetingsEnabled = false;
 			bool cornellEnabled = false;
 			
 			int part = partTrack.getIntValue(beat);
-			if (2 == part) {
+			if (1 == part) {
+				rayTraceEnabled = true;
+			} else if (2 == part) {
 				beatEnabled = true;
 			} else if (4 == part) {
 				greetingsEnabled = true;
@@ -1057,10 +1060,23 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setFloat("fade", colorMapBlendTrack.getValue(beat));
 
 			float flash = pow(colorMapFlashTrack.getValue(beat) == 1000.f ? (float)(rand()%2) : colorMapFlashTrack.getValue(beat), 2.0f);
+
+			if (rayTraceEnabled) {
+				eye = Vector3(sin(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
+					cameraUpTrack.getValue(beat),
+					-cos(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat));
+
+				at = Vector3(0, 0, 0);
+				eye += at;
+				view = Matrix4x4::lookAt(eye, at, roll);
+			}
+
+			color_map_fx->setMatrices(world, view, proj);
 			color_map_fx->setFloat("flash", flash);
 			color_map_fx->setFloat("fade2", colorMapFadeTrack.getValue(beat));
 			color_map_fx->setFloat("repeat", repeatTrack.getValue(beat));
 			color_map_fx->setFloat("alpha", 0.0f);
+			color_map_fx->p->SetBool("spheretracer", rayTraceEnabled);
 			color_map_fx->setTexture("tex", color1_hdr);
 			color_map_fx->setTexture("tex2", color_msaa);
 			color_map_fx->setTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
