@@ -60,7 +60,7 @@ VS_OUTPUT vertex(
 
 float4 pixel0(VS_OUTPUT In) : COLOR
 {
-	return float4(0,0,0,1) + texCUBE(env_samp, In.reflection); // EVIL EYES!
+	return float4(0,0,0,1) + texCUBE(env_samp, In.reflection) * 0.1; // EVIL EYES!
 }
 
 float4 pixel1(VS_OUTPUT In) : COLOR
@@ -70,12 +70,9 @@ float4 pixel1(VS_OUTPUT In) : COLOR
 
 float4 pixel2(VS_OUTPUT In) : COLOR
 {
-	float ao = 1.0; // tex2D(lightmap_samp, In.tex).r;
 	float4 color = float4(1,1,0,1);
-	
-	float4 ref = texCUBE(env_samp, In.reflection);
-	float gloss = ao;
-	color += ref;
+
+	color += texCUBE(env_samp, In.reflection) * 0.25;
 	
 	return color * 1.1;
 }

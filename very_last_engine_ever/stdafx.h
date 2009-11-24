@@ -14,7 +14,7 @@
 #include <windows.h>
 #include <shellapi.h>
 #include <mmsystem.h>
-#include <omp.h>
+// #include <omp.h>
 
 #ifndef NDEBUG
 #define CRTDBG_MAP_ALLOC
@@ -59,4 +59,4 @@
 #include <assert.h>
 // TODO: reference additional headers your program requires here
 
-#include <omp.h>
+// #include <omp.h>

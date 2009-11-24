@@ -160,7 +160,7 @@ static LRESULT onInitDialog(HWND hDlg)
 #if WINDOWED
 	mode.Width = 1280;
 	mode.Height = 720;
-	EndDialog(hDlg, IDOK);
+//	EndDialog(hDlg, IDOK);
 #endif
 
 	aspect = float(mode.Width) / mode.Height;

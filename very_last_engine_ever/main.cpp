@@ -391,7 +391,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		std::auto_ptr<sync::Device> syncDevice = std::auto_ptr<sync::Device>(sync::createDevice("data/sync", synctimer));
 		if (NULL == syncDevice.get()) throw FatalException("something went wrong - failed to connect to host?");
+
+		Surface backbuffer   = device.getRenderTarget(0);
+		Surface depthstencil = device.getDepthStencilSurface();
 		
+		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8, config::multisample);
+		Surface depthstencil_msaa = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8, config::multisample);
+		
+		/** DEMO ***/
+
+		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
+
 		Track &cameraDistanceTrack = syncDevice->getTrack("cam.dist");
 		Track &cameraRollTrack     = syncDevice->getTrack("cam.roll");
 		Track &cameraXRotTrack     = syncDevice->getTrack("cam.x-rot");
@@ -428,54 +438,28 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &musGroove1Track = syncDevice->getTrack("mus.groove1");
 		Track &musGroove2Track = syncDevice->getTrack("mus.groove2");
 
-		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
-		
-		Surface backbuffer   = device.getRenderTarget(0);
-		Surface depthstencil = device.getDepthStencilSurface();
-		
-		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8, config::multisample);
-		Surface depthstencil_msaa = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8, config::multisample);
-		
-		/** DEMO ***/
-		
+		Track &spheresAnimTrack = syncDevice->getTrack("spheres.anim");
+		Track &spheresAnimAmtTrack = syncDevice->getTrack("spheres.anim_amt");
+
 		RenderTexture color1_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
 		RenderTexture color2_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
-		
-/*		RenderTexture depth(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_R32F); */
-		
+
 		engine::VertexStreamer vertex_streamer(device);
-		
-/*		scenegraph::Node *testNode = testScene->findChild("Camera01-node_transform");
-		assert(NULL != testNode); */
-		
-//		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE);
-//		RenderTexture rt2(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
-//		RenderTexture rt3(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
-		
 		Effect *tex_fx      = engine::loadEffect(device, "data/tex.fx");
 		tex_fx->setMatrix("transform", Matrix4x4::identity());
 		Effect *blur_fx     = engine::loadEffect(device, "data/blur.fx");
-		
 		Effect *noise_fx = engine::loadEffect(device, "data/noise.fx");
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
-		
 		Effect *color_map_fx = engine::loadEffect(device, "data/color_map.fx");
 		Texture color_maps[2];
-		
 		color_maps[0] = engine::loadTexture(device, "data/color_map0.png");
 		color_maps[1] = engine::loadTexture(device, "data/color_map1.png");
 		color_map_fx->setFloat("texel_width", 1.0f / color_msaa.getWidth());
 		color_map_fx->setFloat("texel_height", 1.0f / color_msaa.getHeight());
-
 		renderer::CubeTexture cubemap_tex = engine::loadCubeTexture(device, "data/stpeters_cross3.dds");
-/*
-		Effect test_fx = engine::loadEffect(device, "data/test.fx");
-		test_fx->SetTexture("env", cube);
-*/
 		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
 		skybox_fx->setTexture("reflectionMap", cubemap_tex);
 		Mesh *cube_x         = engine::loadMesh(device, "data/cube.X");
-
 		Mesh *cornell_main_x         = engine::loadMesh(device, "data/cornell-main.x");
 		Mesh *cornell_left_x         = engine::loadMesh(device, "data/cornell-left.x");
 		Mesh *cornell_right_x         = engine::loadMesh(device, "data/cornell-right.x");
@@ -884,6 +868,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 				eye += at;
 				view = Matrix4x4::lookAt(eye, at, roll);
 			}
+
+			float temp = (2 * M_PI) / 3;
+			float th = spheresAnimTrack.getValue(beat);
+			float r = spheresAnimAmtTrack.getValue(beat);
+			color_map_fx->setVector3("spos[0]", Vector3(sin((th + 0) * temp) * r, 0, cos((th + 0) * temp) * r));
+			color_map_fx->setVector3("spos[1]", Vector3(sin((th + 1) * temp) * r, 0, cos((th + 1) * temp) * r));
+			color_map_fx->setVector3("spos[2]", Vector3(sin((th + 2) * temp) * r, 0, cos((th + 2) * temp) * r));
+//			color_map_fx->p->SetVectorArray("sphere_pos", CONST D3DXVECTOR4* pVector, UINT Count
+/*			spheresAnimTrack = syncDevice->getTrack("spheres.anim");
+			spheresAnimAmtTrack = syncDevice->getTrack("spheres.anim_amt"); */
 
 			color_map_fx->setMatrices(world, view, proj);
 			color_map_fx->setFloat("flash", flash);

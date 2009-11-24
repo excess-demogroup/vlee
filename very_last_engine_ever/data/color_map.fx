@@ -249,7 +249,7 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	float pal_sel = 0.0;
 
 	float4 color =
-		tex2D(tex_sampler, In.tex * repeat + bloom_nudge) * 0.1
+		tex2D(tex_sampler, In.tex * repeat + bloom_nudge) * 0.25
 		+ tex2D(tex2_sampler, In.tex * repeat) * 1.0 ;
 
 	if (spheretracer)
