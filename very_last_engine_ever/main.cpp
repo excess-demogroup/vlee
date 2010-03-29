@@ -83,8 +83,6 @@ using sync::Track;
 
 HWND win = 0;
 HSTREAM stream = 0;
-#define OSC_SIZE 512
-float osc[OSC_SIZE];
 
 float randf()
 {
@@ -180,26 +178,6 @@ void drawFuzz(Effect *effect, engine::VertexStreamer &streamer, float time, floa
 	(*effect)->End();
 }
 
-void drawOsc(Effect *effect, engine::VertexStreamer &streamer)
-{
-	UINT passes;
-	(*effect)->Begin(&passes, 0);
-	for (UINT pass = 0; pass < passes; ++pass) {
-		(*effect)->BeginPass( pass );
-		streamer.begin(D3DPT_LINESTRIP);
-		float last_xoffs = 0.f;
-		float last_yoffs = 0.f;
-		for (unsigned i = 0; i < OSC_SIZE; ++i) {
-			float x = (float(i) / (OSC_SIZE - 1)) * 2 - 1;
-			float y = osc[i];
-			streamer.vertex(D3DXVECTOR3(x, y, 0));
-		}
-		streamer.end();
-		(*effect)->EndPass();
-	}
-	(*effect)->End();
-}
-
 Surface loadSurface(renderer::Device &device, std::string fileName)
 {
 	D3DXIMAGE_INFO srcInfo;
@@ -212,113 +190,6 @@ Surface loadSurface(renderer::Device &device, std::string fileName)
 	Surface surface_wrapper;
 	surface_wrapper.Attach(surface);
 	return surface_wrapper;
-}
-
-struct ParticleData
-{
-	ParticleData(float size, const Vector3 &dir) : size(size), dir(dir) {}
-	float size;
-	Vector3 dir;
-};
-using engine::ParticleCloud;
-
-void drawParticleExplosion(renderer::Device &device, engine::ParticleStreamer &streamer, Effect *particle_fx, ParticleCloud<ParticleData> &blackCloud, float explode, const Matrix4x4 &modelview, float exp = 1.75f)
-{
-	Vector3 up(modelview._12, modelview._22, modelview._32);
-	Vector3 left(modelview._11, modelview._21, modelview._31);
-	math::normalize(up);
-	math::normalize(left);
-	
-	particle_fx->setFloat("overbright", std::min(explode, 1.0f));
-	particle_fx->setFloatArray("up", up, 3);
-	particle_fx->setFloatArray("left", left, 3);
-	particle_fx->commitChanges();
-	
-	engine::ParticleCloud<ParticleData>::ParticleContainer::iterator iter = blackCloud.particles.begin();
-	bool iter_done = false;
-
-	while (!iter_done)
-	{
-		streamer.begin();
-		for (int i = 0; i < 1024; ++i)
-		{
-			Vector3 pos = iter->pos;
-			pos = pos + pos * pow(1.0f / math::length(pos), exp) * explode;
-			float size = iter->data.size;
-
-			streamer.add(pos, size);
-			++iter;
-
-			if (blackCloud.particles.end() == iter)
-			{
-				iter_done = true;
-				break;
-			}
-		}
-		streamer.end();
-		particle_fx->draw(&streamer);
-	}
-}
-
-float faceLight[6] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
-
-int getFace(const Vector3 &v)
-{
-	float saxis[3] = { v.x,  v.y,  v.z };
-	float axis[3] = { abs(v.x), abs(v.y), abs(v.z) };
-	int maxAxis;
-	if (axis[0]>axis[1] && axis[0]>axis[2]) maxAxis=0;
-	else if (axis[1] > axis[2]) maxAxis=1;
-	else maxAxis=2;
-	if (saxis[maxAxis]<0) maxAxis+=3;	
-	return maxAxis;
-}
-
-
-float getCubeLightBrightness(Vector3 pos)
-{
-	pos = normalize(pos);
-	
-	float max = fabs(pos.x);
-	max = std::max(max, fabs(pos.y));
-	max = std::max(max, fabs(pos.z));
-	return max * faceLight[getFace(pos)];
-}
-
-void drawParticleField(renderer::Device &device, engine::ParticleStreamer &streamer, Effect *particle_fx, ParticleCloud<ParticleData> &blackCloud, const Matrix4x4 &modelview)
-{
-	Vector3 up(modelview._12, modelview._22, modelview._32);
-	Vector3 left(modelview._11, modelview._21, modelview._31);
-	math::normalize(up);
-	math::normalize(left);
-
-	particle_fx->setFloatArray("up", up, 3);
-	particle_fx->setFloatArray("left", left, 3);
-	particle_fx->commitChanges();
-
-	engine::ParticleCloud<ParticleData>::ParticleContainer::iterator iter = blackCloud.particles.begin();
-	bool iter_done = false;
-
-	while (!iter_done)
-	{
-		streamer.begin();
-		for (int i = 0; i < 1024; ++i)
-		{
-			Vector3 pos = iter->pos;
-			float size = iter->data.size;
-
-			streamer.add(pos, size);
-			++iter;
-
-			if (blackCloud.particles.end() == iter)
-			{
-				iter_done = true;
-				break;
-			}
-		}
-		streamer.end();
-		particle_fx->draw(&streamer);
-	}
 }
 
 int main(int /*argc*/, char* /*argv*/ [])
@@ -380,37 +251,25 @@ int main(int /*argc*/, char* /*argv*/ [])
 		/* setup letterbox */
 		D3DVIEWPORT9 letterbox_viewport = device.getViewport();
 		makeLetterboxViewport(&letterbox_viewport, config::mode.Width, config::mode.Height, config::aspect, float(DEMO_ASPECT));
-		
+
 		/* setup sound-playback */
 		if (!BASS_Init(config::soundcard, 44100, 0, 0, 0)) throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/carl_den_tredje.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
+		stream = BASS_StreamCreateFile(false, "data/makesnodigital.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
 		if (!stream) throw FatalException("failed to open tune");
-		
+
 		// setup timer and construct sync-device
-		BassTimer synctimer(stream, BPM, 16);
+		BassTimer synctimer(stream, BPM, 4);
 		
 		std::auto_ptr<sync::Device> syncDevice = std::auto_ptr<sync::Device>(sync::createDevice("data/sync", synctimer));
 		if (NULL == syncDevice.get()) throw FatalException("something went wrong - failed to connect to host?");
-
-		Surface backbuffer   = device.getRenderTarget(0);
-		Surface depthstencil = device.getDepthStencilSurface();
 		
-		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8, config::multisample);
-		Surface depthstencil_msaa = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8, config::multisample);
-		
-		/** DEMO ***/
-
-		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
-
 		Track &cameraDistanceTrack = syncDevice->getTrack("cam.dist");
 		Track &cameraRollTrack     = syncDevice->getTrack("cam.roll");
 		Track &cameraXRotTrack     = syncDevice->getTrack("cam.x-rot");
 		Track &cameraYRotTrack     = syncDevice->getTrack("cam.y-rot");
 		Track &cameraZRotTrack     = syncDevice->getTrack("cam.z-rot");
-		Track &cameraUpTrack     = syncDevice->getTrack("cam.up");
-		Track &cameraShakeAmtTrack     = syncDevice->getTrack("cam.shake.amt");
-		Track &cameraShakeTempoTrack     = syncDevice->getTrack("cam.shake.tempo");
-		Track &cameraFovTrack     = syncDevice->getTrack("cam.fov");
+		Track &cameraOffsetTrack     = syncDevice->getTrack("cam.offset");
+		Track &cameraIndexTrack     = syncDevice->getTrack("cam.index");
 
 		Track &colorMapBlendTrack  = syncDevice->getTrack("cm.blend");
 		Track &colorMapPalTrack    = syncDevice->getTrack("cm.pal");
@@ -419,74 +278,93 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &colorMapDistortXTrack  = syncDevice->getTrack("cm.dist.x");
 		Track &colorMapDistortYTrack  = syncDevice->getTrack("cm.dist.y");
 		Track &overlayTrack  = syncDevice->getTrack("cm.overlay");
-		Track &invmapTrack  = syncDevice->getTrack("cm.invmap");
-
+		
 		Track &noiseAmtTrack  = syncDevice->getTrack("noise.amt");
 		Track &noiseFFTTrack  = syncDevice->getTrack("noise.fft");
 
-		Track &greetGroupTrack  = syncDevice->getTrack("greet.group");
-		Track &beatTrack = syncDevice->getTrack("beat.image");
-
-		Track &sphereOffsetTrack = syncDevice->getTrack("sphere.offs");
 		Track &partTrack = syncDevice->getTrack("_part");
-		Track &repeatTrack = syncDevice->getTrack("cm.repeat");
+		Track &logoCycleTrack     = syncDevice->getTrack("logo.cycle");
 
-		Track &musSize1Track = syncDevice->getTrack("mus.size1");
-		Track &musBoom1Track = syncDevice->getTrack("mus.boom1");
-		Track &musSize2Track = syncDevice->getTrack("mus.size2");
-		Track &musBoom2Track = syncDevice->getTrack("mus.boom2");
-		Track &musGroove1Track = syncDevice->getTrack("mus.groove1");
-		Track &musGroove2Track = syncDevice->getTrack("mus.groove2");
+		Track &starAlphaTrack     = syncDevice->getTrack("star.alpha");
+		Track &starRotTrack     = syncDevice->getTrack("star.rot");
 
-		Track &spheresAnimTrack = syncDevice->getTrack("spheres.anim");
-		Track &spheresAnimAmtTrack = syncDevice->getTrack("spheres.anim_amt");
+//		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
 
+		Surface backbuffer   = device.getRenderTarget(0);
+		Surface depthstencil = device.getDepthStencilSurface();
+
+		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8, config::multisample);
+		Surface depthstencil_msaa = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8, config::multisample);
+		
+		/** DEMO ***/
+		
 		RenderTexture color1_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
 		RenderTexture color2_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
+		
+/*		RenderTexture depth(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_R32F); */
 
 		engine::VertexStreamer vertex_streamer(device);
+
+		scenegraph::Scene *testScene = loadScene(device, "data/testScene/test.scene");
+		engine::SceneRenderer testRenderer = engine::SceneRenderer(testScene, testScene->findCamera("Camera01-camera"));
+/*		scenegraph::Node *testNode = testScene->findChild("Camera01-node_transform");
+		assert(NULL != testNode); */
+
+//		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE);
+//		RenderTexture rt2(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
+//		RenderTexture rt3(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
+
 		Effect *tex_fx      = engine::loadEffect(device, "data/tex.fx");
+		Effect *tex_trans_fx      = engine::loadEffect(device, "data/tex.fx");
 		tex_fx->setMatrix("transform", Matrix4x4::identity());
 		Effect *blur_fx     = engine::loadEffect(device, "data/blur.fx");
+
+		Effect *particle_fx = engine::loadEffect(device, "data/particle.fx");
+		Texture bartikkel_tex = engine::loadTexture(device, "data/spherenormal.png");
+		particle_fx->setTexture("tex", bartikkel_tex);
+
 		Effect *noise_fx = engine::loadEffect(device, "data/noise.fx");
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
+
+		Texture desaturate_tex = engine::loadTexture(device, "data/desaturate.png");
 		Effect *color_map_fx = engine::loadEffect(device, "data/color_map.fx");
 		Texture color_maps[2];
+		
 		color_maps[0] = engine::loadTexture(device, "data/color_map0.png");
 		color_maps[1] = engine::loadTexture(device, "data/color_map1.png");
 		color_map_fx->setFloat("texel_width", 1.0f / color_msaa.getWidth());
 		color_map_fx->setFloat("texel_height", 1.0f / color_msaa.getHeight());
+
+		engine::ParticleStreamer particleStreamer(device);
+		Texture starTexture = engine::loadTexture(device, "data/star.png");
+		Effect *starParticleEffect = engine::loadEffect(device, "data/star_particle.fx");
+		starParticleEffect->setTexture("tex", starTexture);
+
 		renderer::CubeTexture cubemap_tex = engine::loadCubeTexture(device, "data/stpeters_cross3.dds");
+
 		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
 		skybox_fx->setTexture("reflectionMap", cubemap_tex);
 		Mesh *cube_x         = engine::loadMesh(device, "data/cube.X");
-		Mesh *cornell_main_x         = engine::loadMesh(device, "data/cornell-main.x");
-		Mesh *cornell_left_x         = engine::loadMesh(device, "data/cornell-left.x");
-		Mesh *cornell_right_x         = engine::loadMesh(device, "data/cornell-right.x");
-		Mesh *bart_x         = engine::loadMesh(device, "data/bart.x");
-		Texture cornell_main_tex = engine::loadTexture(device, "data/cornell-main.jpg");
-		Texture cornell_left_tex = engine::loadTexture(device, "data/cornell-left.jpg");
-		Texture cornell_right_tex = engine::loadTexture(device, "data/cornell-right.jpg");
+		Mesh *boxMesh        = engine::loadMesh(device, "data/box.x");
+		Mesh *discoTilesMesh = engine::loadMesh(device, "data/disco_tiles.x");
 
-		Effect *tex_trans_fx       = engine::loadEffect(device, "data/tex_trans.fx");
-		
-		renderer::CubeTexture greeble_envmap = engine::loadCubeTexture(device, "data/greeble_cube_env.dds");
-		Mesh *smile_x = engine::loadMesh(device, "data/smile.x");
-		Effect *smile_fx = engine::loadEffect(device, "data/smile.fx");
-		smile_fx->setTexture("env", greeble_envmap);
+		renderer::CubeTexture greeble_envmap = engine::loadCubeTexture(device, "data/stpeters_cross3.dds");
+		Mesh *greeble_cube_x = engine::loadMesh(device, "data/greeble_cube.x");
+		Effect *greeble_cube_fx = engine::loadEffect(device, "data/greeble_cube.fx");
+		greeble_cube_fx->setTexture("lightmap", engine::loadTexture(device, "data/greeble_cube_lightmap.png"));
+		greeble_cube_fx->setTexture("env", greeble_envmap);
 		Effect *black_fx = engine::loadEffect(device, "data/black.fx");
-		Effect *osc_fx = engine::loadEffect(device, "data/osc.fx");
-
-		Anim greetingsAnim = engine::loadAnim(device, "data/greetings/");
-		Image greetingsImage(greetingsAnim.getTexture(0), tex_fx);
-		
-		Anim beatAnim = engine::loadAnim(device, "data/beat/");
-		Image beatImage(beatAnim.getTexture(0), tex_fx);
 
 		Anim overlaysAnim = engine::loadAnim(device, "data/overlays/");
 		Image overlaysImage(overlaysAnim.getTexture(0), tex_fx);
 
-		Anim invmapAnim = engine::loadAnim(device, "data/invmaps/");
+		Image logoImage(engine::loadTexture(device, "data/komputerpop.png"), tex_fx);
+
+		Effect *logoEffect = greeble_cube_fx; // engine::loadEffect(device, "data/test2.fx");
+		Mesh   *logoMesh   = engine::loadMesh(device, "data/logo.x");
+		Mesh   *logoRingMesh   = engine::loadMesh(device, "data/logoring.x");
+		Effect *logoRingEffect = engine::loadEffect(device, "data/logoring.fx");
+		logoRingEffect->setTexture("tex", engine::loadTexture(device, "data/logoring.png"));
 
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -509,15 +387,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 #ifndef VJSYS
 			syncDevice->update(beat); //gets current timing info from the SyncTimer.
 #endif
-			BASS_ChannelGetData(stream, osc, (OSC_SIZE * sizeof(float)) | BASS_DATA_FLOAT);
 			device->BeginScene();
 			
 			/* setup multisampled stuffz */
 			device.setRenderTarget(color_msaa.getRenderTarget());
 			device.setDepthStencilSurface(depthstencil_msaa);
 			
-//			D3DXCOLOR clear_color(0.45f, 0.25f, 0.25f, 0.f);
-			D3DXCOLOR clear_color(0.f, 0.f, 0.f, 0.f);
+			D3DXCOLOR clear_color(0.45f, 0.25f, 0.25f, 0.f);
 			
 			float roll = cameraRollTrack.getValue(beat);
 			roll *= float(2 * M_PI);
@@ -525,98 +401,30 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Vector3 up(float(sin(roll)), float(cos(roll)), 0.f);
 			Vector3 eye(
 				float(sin(yRot)),
-				float(cameraUpTrack.getValue(beat)),
+				float(0),
 				float(cos(yRot))
 			);
 			eye = normalize(eye);
-			
+
 			float camera_distance = 360 * (cameraDistanceTrack.getValue(beat));
 			eye *= camera_distance;
-			float shake_time = time * 0.125f * (cameraShakeTempoTrack.getValue(beat));
 			Vector3 at(0, 0, 0);
-			
+
 			at = Vector3(0, 0, 0);
 			eye = Vector3(0, 0, -4);
 			Vector3 orig_at = at;
 			
 			Matrix4x4 world = Matrix4x4::identity();
 			Matrix4x4 view = Matrix4x4::lookAt(eye, at, roll);
-			Matrix4x4 proj = Matrix4x4::projection(cameraFovTrack.getValue(beat), float(DEMO_ASPECT), 1.0f, 100000.f);
-			
-/*			testScene->anim(fmod(beat, 100));
+			Matrix4x4 proj = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 1.0f, 100000.f);
+
+//			testScene->anim(fmod(beat, 100));
 			scenegraph::Camera *cam = testScene->findCamera("Camera01-camera");
 			if (NULL != cam)
 			{
 				Matrix4x4 camView = cam->getAbsoluteTransform();
-				camView *= Matrix4x4::rotation(math::Quaternion(
-					(pow(sin(shake_time * 15 - cos(shake_time * 20)), 3) / 100) * cameraShakeAmtTrack.getValue(beat),
-					(pow(cos(shake_time * 15 - sin(shake_time * 21)), 3) / 100) * cameraShakeAmtTrack.getValue(beat),
-					0
-					)
-				);
 				view = camView.inverse();
 				proj = cam->getProjection();
-			} */
-
-			bool skyboxEnabled = false;
-			bool rayTraceEnabled = false;
-			bool beatEnabled = false;
-			bool smileEnabled = false;
-			bool greetingsEnabled = false;
-			bool cornellEnabled = false;
-			
-			int part = partTrack.getIntValue(beat);
-			if (1 == part) {
-				rayTraceEnabled = true;
-			} else if (2 == part) {
-				beatEnabled = true;
-			} else if (4 == part) {
-				greetingsEnabled = true;
-			} else if (5 == part) {
-				cornellEnabled = true;
-			} else if (6 == part) {
-				skyboxEnabled = true;
-				smileEnabled = true;
-			}
-
-#if !SYNC
-			if (-1 == part)
-				done = true;
-#endif
-
-			float grid_size = 0.0f;
-			int eye2_scroll2 = 0;
-			float tunelle_scale = math::clamp((beat - (256 + 32)) * 0.5f, 0.0f, 1.0f);
-
-			if (smileEnabled)
-			{
-				eye = Vector3(sin(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
-					cameraUpTrack.getValue(beat),
-					-cos(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat));
-
-				at = Vector3(0, 0, 20);
-				eye += at;
-				
-				view = Matrix4x4::lookAt(eye, at, roll);
-			}
-
-			if (skyboxEnabled)
-			{
-				if (smileEnabled)
-				{
-					skybox_fx->setTexture("reflectionMap", greeble_envmap);
-					skybox_fx->setFloat("alpha", 0.25f);
-				}
-				else 
-				{
-					skybox_fx->setTexture("reflectionMap", cubemap_tex);
-					skybox_fx->setFloat("alpha", 1.0f);
-				}
-
-				float scale = 100;
-				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
-				skybox_fx->setMatrices(world, view, proj);
-				skybox_fx->commitChanges();
 			}
 
 			// render
@@ -624,197 +432,156 @@ int main(int /*argc*/, char* /*argv*/ [])
 			{
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-				
+				device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 				device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, clear_color, 1.f, 0);
-				if (skyboxEnabled) {
-					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
-					skybox_fx->draw(cube_x);
-					device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-				}
-
 
 				//	test_fx.draw(cube_x);
 				//	time /= 4;
+/*
+				testRenderer.view       = view;
+				testRenderer.projection = proj; // math::Matrix4x4::projection(60.0f, 16.0f / 9, 1.0f, 1000.0f);
+				testRenderer.draw(); */
 
-/*				{
-					testRenderer.view       = view;
-					testRenderer.projection = proj; // math::Matrix4x4::projection(60.0f, 16.0f / 9, 1.0f, 1000.0f);
-					testRenderer.draw();
-				} */
+				float dist = cameraDistanceTrack.getValue(beat);
+				float roll = cameraRollTrack.getValue(beat);
+				float rot = 0; // cameraRollTrack.getValue(beat);
+				int cameraIndex = cameraIndexTrack.getIntValue(beat);
 
-				if (smileEnabled)
+				float camTime = beat / 4 + cameraOffsetTrack.getValue(beat);
+				Vector3 camPos;
+				if      (0 == cameraIndex) camPos = Vector3(-sin(camTime*0.3f)*280, cos(camTime*0.3f)*80, cos(-camTime * 0.4f + 1)*220);
+				else if (1 == cameraIndex) camPos = Vector3(sin(camTime*0.3f)*200, cos(camTime*0.7f)*70, cos(-camTime*0.3f)*160);
+				else                       camPos = Vector3(sin(camTime * 0.25f) * 200, cos(camTime * 0.7f) * 70, -(120 + (camTime - 8) * 1.f)) * dist;
+
+				view = Matrix4x4::lookAt(camPos, Vector3(0,0,50), roll);
+				world = Matrix4x4::rotation(Vector3(0, -M_PI / 2, 0));
+
+				if (partTrack.getIntValue(beat) == 1)
 				{
-					Matrix4x4 world = Matrix4x4::identity();
-					at = Vector3(
-						pow(sin(shake_time * 15 - cos(shake_time * 20)), 3),
-						pow(cos(shake_time * 15 - sin(shake_time * 21)), 3),
-						pow(cos(shake_time * 16 - sin(shake_time * 20)), 3)
-						) * 0.025f * math::length(eye - at) * (cameraShakeAmtTrack.getValue(beat));
-					view.makeLookAt(eye, at, roll);
-					smile_fx->setMatrices(world, view, proj);
-					smile_fx->commitChanges();
-					
-					black_fx->setMatrices(world, view, proj);
-					black_fx->commitChanges();
-
-					UINT passes = 0;
-					smile_fx->p->Begin(&passes, 0);
-					for (unsigned j = 0; j < passes; ++j)
+					for (int j = -2; j < 3; ++j)
 					{
-						smile_fx->p->BeginPass(j);
-						smile_x->draw(j);
-						smile_fx->p->EndPass();
+						float dir = j & 1 ? -1.0f : 1.0f;
+						for (int i = 0; i < 16; ++i)
+						{
+							Matrix4x4 world = Matrix4x4::translation(Vector3(0, 30, 0));
+							world *= Matrix4x4::rotation(Vector3(0, 0, (float(i) / 16  + beat / 64) * 2 * M_PI * dir));
+							world *= Matrix4x4::translation(Vector3(0, j * 70, 0));
+
+							logoEffect->setMatrices(world, view, proj);
+							logoEffect->commitChanges();
+							logoEffect->draw(boxMesh);
+						}
+
+						for (int i = 0; i < 16; ++i)
+						{
+							Matrix4x4 world = Matrix4x4::translation(Vector3(0, 30, 0));
+							world *= Matrix4x4::rotation(Vector3(0, 0, (float(i) / 16  + beat / 64) * 2 * M_PI * dir));
+							world *= Matrix4x4::rotation(Vector3(M_PI / 2, 0, 0));
+							world *= Matrix4x4::translation(Vector3(0, -35 + j * 70, 0));
+
+							logoEffect->setMatrices(world, view, proj);
+							logoEffect->commitChanges();
+							logoEffect->draw(boxMesh);
+						}
 					}
-					smile_fx->p->End();
 				}
-
-
-				if (cornellEnabled)
+				else if (0 == partTrack.getIntValue(beat))
 				{
-					Matrix4x4 world = Matrix4x4::identity();
-					eye = Vector3(sin(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
-							cameraUpTrack.getValue(beat),
-							-cos(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat));
-					at = Vector3(0, sphereOffsetTrack.getValue(beat), 0);
-					view.makeLookAt(eye, at, roll);
-					tex_trans_fx->setFloat("alpha", 1.0);
-
-					world.makeIdentity();
-					tex_trans_fx->setMatrices(world, view, proj);
-					tex_trans_fx->setTexture("tex", cornell_main_tex);
-					tex_trans_fx->commitChanges();
-					tex_trans_fx->draw(cornell_main_x);
-
-					float groove1 = 1.0f + sinf(beat * float(M_PI / 8)) * musGroove1Track.getValue(beat);
-					float groove2 = 1.0f + sinf(beat * float(M_PI / 8)) * musGroove2Track.getValue(beat);
-
-					world.makeScaling(Vector3(1, groove1, 1));
-					tex_trans_fx->setMatrices(world, view, proj);
-					tex_trans_fx->setTexture("tex", cornell_left_tex);
-					tex_trans_fx->commitChanges();
-					tex_trans_fx->draw(cornell_left_x);
-
-					world.makeScaling(Vector3(1, groove2, 1));
-					tex_trans_fx->setMatrices(world, view, proj);
-					tex_trans_fx->setTexture("tex", cornell_right_tex);
-					tex_trans_fx->commitChanges();
-					tex_trans_fx->draw(cornell_right_x);
-
-
-					float size1 = musSize1Track.getValue(beat) + (0.5f + cosf(beat * float(M_PI / 4)) * 0.5f) * musBoom1Track.getValue(beat);
-					float size2 = musSize2Track.getValue(beat) + (0.5f + cosf(beat * float(M_PI / 4)) * 0.5f) * musBoom2Track.getValue(beat);
-					world.makeScaling(Vector3(0.75, 0.75, 0.75) * size1);
-					world *= Matrix4x4::rotation(Vector3(D3DXToRadian(168.765), 0, 0));
-					world *= Matrix4x4::translation(Vector3(-15, 46 * groove1, -4.566));
-					tex_trans_fx->setMatrices(world, view, proj);
-					tex_trans_fx->draw(bart_x);
-
-					world.makeScaling(Vector3(1.25, 1.25, 1.0) * size2);
-					world *= Matrix4x4::rotation(Vector3(D3DXToRadian(-163.1), 0, 0));
-					world *= Matrix4x4::translation(Vector3(13.264, 15 * groove2, -31));
-					tex_trans_fx->setMatrices(world, view, proj);
-					tex_trans_fx->draw(bart_x);
+					logoEffect->setMatrices(world, view, proj);
+					logoEffect->commitChanges();
+					logoEffect->draw(logoMesh);
 				}
-
-				if (beatEnabled)
+				else
 				{
-					Texture &tex = beatAnim.getTexture(beatTrack.getIntValue(beat) % beatAnim.getTextureCount());
-					beatImage.setTexture(tex);
-					beatImage.setPosition(-1, -1);
-					beatImage.setDimension(2, 2);
-					beatImage.draw(device);
-				}
-				
-				if (greetingsEnabled)
-				{
-					Texture &tex = greetingsAnim.getTexture(greetGroupTrack.getIntValue(beat) % greetingsAnim.getTextureCount());
-/*					greetingsImage.setTexture(tex);
-					greetingsImage.setPosition(-1, -1);
-					greetingsImage.setDimension(2, 2);
-					greetingsImage.draw(device); */
-
-					tex_fx->setTexture("tex", tex);
-					drawFuzz( tex_fx, vertex_streamer,  time, 1.0f,
-						colorMapDistortXTrack.getValue(beat), colorMapDistortYTrack.getValue(beat),
-						0.5f / letterbox_viewport.Width, 0.5f / letterbox_viewport.Height
-					);
+					logoEffect->setMatrices(world, view, proj);
+					logoEffect->commitChanges();
+					logoEffect->draw(discoTilesMesh);
 				}
 
-#if 0
-				Matrix4x4 mscale2;
-				mscale2.makeScaling(Vector3(10.0f / grid_size, 10.0f / grid_size, 10.0f / grid_size));
-				
-				// center object
-				Vector3 pos = Vector3(floor(grid_size / 2), floor(grid_size / 2), floor(grid_size / 2));
-				world = math::Matrix4x4::translation(-pos);
-				cubegrid_fx.setMatrices(world * mscale2, view, proj);
-				
-				float planearray[4];
-				Matrix4x4 hatchTransform;
-				
-				planearray[0] = sin(time);
-				planearray[1] = cos(time);
-				planearray[2] = 0;
-				planearray[3] = 0;
-				device->SetClipPlane(0, planearray);
-				hatchTransform = Matrix4x4::scaling(Vector3(
-					25.0f / device.getRenderTarget().getDesc().Width,
-					25.0f / device.getRenderTarget().getDesc().Width,
-					1)
-				);
-				cubegrid_fx.setMatrix("hatch_transform", hatchTransform);
-				cubegrid_fx->CommitChanges();
-				
-				device->SetRenderState( D3DRS_CLIPPLANEENABLE, D3DCLIPPLANE0 );
-//				voxelMesh.draw(device);
-				
-				planearray[0] *= -1;
-				planearray[1] *= -1;
-				planearray[2] *= -1;
-				device->SetClipPlane(0, planearray);
-				
-				hatchTransform = Matrix4x4::scaling(Vector3(
-					15.0f / device.getRenderTarget().getDesc().Width,
-					15.0f / device.getRenderTarget().getDesc().Width,
-					1)
-					) * Matrix4x4::rotation(Vector3(0, 0, M_PI / 2));
-				cubegrid_fx.setMatrix("hatch_transform", hatchTransform);
-				cubegrid_fx->CommitChanges();
-				
-//				voxelMesh.draw(device);
-				device->SetRenderState( D3DRS_CLIPPLANEENABLE, 0 );
-#endif
-
-#if 0
-				/* explosion */
-				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+				device->SetRenderState(D3DRS_ZWRITEENABLE, false);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-				explosion_fx->setMatrices(world, view, proj);
-				explosion.draw(*explosion_fx, explosionTrack.getIntValue(beat));
-				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-#endif
+				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
 
-				if (!i)
-					drawOsc(osc_fx, vertex_streamer);
-				
-				device->SetRenderState(D3DRS_ZWRITEENABLE, true);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-				
+				for (int i = 0; i < 3; ++i)
+				{
+					Matrix4x4 world = Matrix4x4::rotation(Vector3(0, -M_PI / 2, 0));
+					world *= Matrix4x4::scaling(Vector3(i + 3, i + 3, i + 3) * 3);
+					world *= Matrix4x4::rotation(Vector3(0, 0, beat + i));
+
+					float color = pow(fmod(logoCycleTrack.getValue(beat + i), 1), 3);
+					logoRingEffect->setFloat("alpha", color);
+					logoRingEffect->setMatrices(world, view, proj);
+					logoRingEffect->commitChanges();
+					logoRingEffect->draw(logoRingMesh);
+				}
+
+				Matrix4x4 modelview = world * view;
+				Vector3 up(modelview._12, modelview._22, modelview._32);
+				Vector3 left(modelview._11, modelview._21, modelview._31);
+				math::normalize(up);
+				math::normalize(left);
+				starParticleEffect->setFloatArray("up", up, 3);
+				starParticleEffect->setFloatArray("left", left, 3);
+				starParticleEffect->setMatrices(world, view, proj);
+				starParticleEffect->setFloat("alpha", starAlphaTrack.getValue(beat));
+				starParticleEffect->commitChanges();
+
+				if (2 == partTrack.getIntValue(beat))
+				{
+					particleStreamer.begin();
+					for (int i = 0; i < 256; ++i)
+					{
+#if 1
+						int j = i - 8;
+						float scale = 1.0f / (1 + abs(j) * 0.5f);
+						Vector3 pos = Vector3(cos(float(i) * 350) * 50, cos(float(i) * 150) * 50, fabs(cos((beat + i * 0.1) * (M_PI / 8))) * 100 * scale - 100);
+#else
+						float rot = (float(i) / 16 + beat / 32) * (2 * M_PI);
+						float dist = (float(i) / 16) * 100;
+						float scale = float(i) / 16;
+						Vector3 pos = Vector3(sin(rot) * dist, 50, -cos(rot) * dist);
+#endif
+						particleStreamer.add(pos, 25 * scale);
+					}
+					particleStreamer.end();
+				}
+				else
+				{
+					particleStreamer.begin();
+					for (int i = 0; i < 256; ++i)
+					{
+	#if 0
+						int j = i - 8;
+						float scale = 1.0f / (1 + abs(j) * 0.5f);
+						Vector3 pos = Vector3(cos(float(i) * 350) * 150, 150 + cos(float(i) * 150) * 50, fabs(cos((beat + i * 0.1) * (M_PI / 8))) * 100 * scale - 50);
+	#else
+						float rot = (float(i) / 16 + beat / 32) * float(2 * M_PI);
+						float dist = (float(i) / 16) * 100;
+						float scale = float(i) / 16;
+						Vector3 pos = Vector3(sin(rot) * dist, 50, -cos(rot) * dist);
+	#endif
+						particleStreamer.add(pos, 25 * scale);
+					}
+					particleStreamer.end();
+				}
+				starParticleEffect->draw(&particleStreamer);
+
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+
 				device.setRenderTarget(color1_hdr.getRenderTarget());
 				device.setDepthStencilSurface(depthstencil);
 			}
 #if 1
 			world.makeIdentity();
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-//			device->SetRenderState(D3DRS_ZWRITEENABLE, false);
+			device->SetRenderState(D3DRS_ZWRITEENABLE, false);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 
 			blur_fx->setFloat("sub", 0.25f);
 			RenderTexture render_textures[2] = { color1_hdr, color2_hdr };
 			int rtIndex = 0;
-			for (int i = 0; i < 3; i++)
+			for (int i = 0; i < 4; i++)
 			{
 				for (int j = 0; j < 2; j++)
 				{
@@ -854,53 +621,35 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device.setViewport(&letterbox_viewport);
 			
 			color_msaa.resolve(device);
-			
+
 			color_map_fx->setFloat("fade", colorMapBlendTrack.getValue(beat));
 
 			float flash = pow(colorMapFlashTrack.getValue(beat) == 1000.f ? (float)(rand()%2) : colorMapFlashTrack.getValue(beat), 2.0f);
 
-			if (rayTraceEnabled) {
-				eye = Vector3(sin(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat),
-					cameraUpTrack.getValue(beat),
-					-cos(cameraYRotTrack.getValue(beat) * (M_PI / 180)) * cameraDistanceTrack.getValue(beat));
-
-				at = Vector3(0, 0, 0);
-				eye += at;
-				view = Matrix4x4::lookAt(eye, at, roll);
-			}
-
-			float temp = (2 * M_PI) / 3;
-			float th = spheresAnimTrack.getValue(beat);
-			float r = spheresAnimAmtTrack.getValue(beat);
-			color_map_fx->setVector3("spos[0]", Vector3(sin((th + 0) * temp) * r, 0, cos((th + 0) * temp) * r));
-			color_map_fx->setVector3("spos[1]", Vector3(sin((th + 1) * temp) * r, 0, cos((th + 1) * temp) * r));
-			color_map_fx->setVector3("spos[2]", Vector3(sin((th + 2) * temp) * r, 0, cos((th + 2) * temp) * r));
-//			color_map_fx->p->SetVectorArray("sphere_pos", CONST D3DXVECTOR4* pVector, UINT Count
-/*			spheresAnimTrack = syncDevice->getTrack("spheres.anim");
-			spheresAnimAmtTrack = syncDevice->getTrack("spheres.anim_amt"); */
-
-			color_map_fx->setMatrices(world, view, proj);
 			color_map_fx->setFloat("flash", flash);
 			color_map_fx->setFloat("fade2", colorMapFadeTrack.getValue(beat));
-			color_map_fx->setFloat("repeat", repeatTrack.getValue(beat));
-			color_map_fx->setFloat("alpha", 0.0f);
-			color_map_fx->p->SetBool("spheretracer", rayTraceEnabled);
+			color_map_fx->setFloat("alpha", 0.25f);
 			color_map_fx->setTexture("tex", color1_hdr);
 			color_map_fx->setTexture("tex2", color_msaa);
-			color_map_fx->setTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
-			color_map_fx->setTexture("invmap", invmapAnim.getTexture(invmapTrack.getIntValue(beat) % invmapAnim.getTextureCount()));
-			color_map_fx->setTexture("overlay", overlaysAnim.getTexture(overlayTrack.getIntValue(beat) % overlaysAnim.getTextureCount()));
+//			color_map_fx->setTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
+			color_map_fx->setTexture("color_map", color_maps[0]);
+			color_map_fx->setTexture("desaturate", desaturate_tex);
 			
+			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
 			drawFuzz(color_map_fx, vertex_streamer,  time, 1.0f, colorMapDistortXTrack.getValue(beat), colorMapDistortYTrack.getValue(beat),
 				0.5f / letterbox_viewport.Width, 0.5f / letterbox_viewport.Height);
+			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
+			drawFuzz(color_map_fx, vertex_streamer, -time, 0.0f, colorMapDistortXTrack.getValue(beat), 0.0f,
+				0.5f / letterbox_viewport.Width, 0.5f / letterbox_viewport.Height);
+			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED | D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
 			
 			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-			
+
 			/* draw noise */
-			
-			noise_fx->setFloat("alpha", (noiseAmtTrack.getValue(beat) + noiseFFTTrack.getValue(beat) * noise_fft.getValue(beat)));
+
+			noise_fx->setFloat("alpha", noiseAmtTrack.getValue(beat)); // + noiseFFTTrack.getValue(beat) * noise_fft.getValue(beat)));
 			noise_fx->setTexture("tex", noise_tex);
 			drawQuad(
 				device, noise_fx,
@@ -909,16 +658,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 				 randf(), randf()
 			);
 
+			logoImage.setPosition(-1, -1);
+			logoImage.setDimension(2, 0.5);
+			logoImage.draw(device);
 
 			/* draw scanlines */
 /*			scanlinesImage.setPosition(-1, -1);
 			scanlinesImage.setDimension(2, 2);
 			scanlinesImage.draw(device); */
 			
-/*			overlaysImage.setTexture(overlaysAnim.getTexture(overlayTrack.getIntValue(beat) % overlaysAnim.getTextureCount()));
+			overlaysImage.setTexture(overlaysAnim.getTexture(overlayTrack.getIntValue(beat) % overlaysAnim.getTextureCount()));
 			overlaysImage.setPosition(-1, -1);
 			overlaysImage.setDimension(2, 2);
-			overlaysImage.draw(device); */
+			overlaysImage.draw(device);
 			
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			
@@ -1000,6 +752,5 @@ int main(int /*argc*/, char* /*argv*/ [])
 		MessageBox(0, e.what(), 0, MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
 		return 1;
 	}
-	
 	return 0;
 }

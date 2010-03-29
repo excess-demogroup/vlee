@@ -1,0 +1,52 @@
+<scene name="test">
+    <children>
+        <prs_transform name="Teapot01-node_transform">
+            <position x="32.546001" y="0.000000" z="26.180300" />
+            <rotation x="35.264393" y="-29.999983" z="-54.735584" />
+            <scale x="1.000000" y="0.999999" z="0.999999" />
+            <children>
+                <mesh name="Teapot01-node_mesh_0" file="Teapot01-mesh_0.x" />
+                <prs_transform name="Teapot02-node_transform" keys="Teapot02-node_transform.keys">
+                    <position x="-29.363100" y="-29.363100" z="4.501240" />
+                    <rotation x="-86.508133" y="19.222576" z="-24.592966" />
+                    <scale x="1.000000" y="1.000000" z="1.000000" />
+                    <children>
+                        <prs_transform name="Teapot02-node_PIVOT_transform">
+                            <position x="-2.154260" y="-15.850300" z="-0.000000" />
+                            <rotation x="-0.000000" y="0.000000" z="0.000000" />
+                            <scale x="1.000000" y="1.000000" z="1.000000" />
+                            <children>
+                                <mesh name="Teapot02-node_PIVOT_mesh_0" file="Teapot02-mesh_0.x" />
+                            </children>
+                        </prs_transform>
+                        <prs_transform name="Teapot03-node_transform" keys="Teapot03-node_transform.keys">
+                            <position x="-58.673698" y="-60.000900" z="-22.976299" />
+                            <rotation x="-98.699364" y="-14.477554" z="-28.170599" />
+                            <scale x="1.000000" y="1.000000" z="1.000000" />
+                            <children>
+                                <mesh name="Teapot03-node_mesh_0" file="Teapot03-mesh_0.x" />
+                            </children>
+                        </prs_transform>
+                    </children>
+                </prs_transform>
+            </children>
+        </prs_transform>
+        <prs_transform name="Camera01-node_transform" keys="Camera01-node_transform.keys">
+            <position x="88.527901" y="11.320300" z="-45.107201" />
+            <rotation x="6.499980" y="-63.000046" z="0.000000" />
+            <scale x="1.000000" y="1.000000" z="1.000000" />
+            <children>
+                <target_transform name="Camera01-camera_lookat" target="Camera01.Target-node_transform">
+                    <children>
+                        <camera name="Camera01-camera" fov="60.000000" znear="1.000000" zfar="1000.000000" />
+                    </children>
+                </target_transform>
+            </children>
+        </prs_transform>
+        <prs_transform name="Camera01.Target-node_transform">
+            <position x="-0.000014" y="0.000000" z="-0.000000" />
+            <rotation x="-45.000000" y="0.000000" z="0.000000" />
+            <scale x="1.000000" y="1.000000" z="1.000000" />
+        </prs_transform>
+    </children>
+</scene>

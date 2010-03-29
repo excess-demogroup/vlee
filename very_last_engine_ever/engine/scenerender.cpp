@@ -30,4 +30,3 @@ void SceneRenderer::draw()
 {
 	visit(scene, math::Matrix4x4::identity());
 }
-

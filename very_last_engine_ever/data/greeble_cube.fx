@@ -58,23 +58,9 @@ VS_OUTPUT vertex(
 	return Out;
 }
 
-float4 pixel0(VS_OUTPUT In) : COLOR
+float4 pixel(VS_OUTPUT In) : COLOR
 {
-	return float4(0,0,0,1) + texCUBE(env_samp, In.reflection) * 0.1; // EVIL EYES!
-}
-
-float4 pixel1(VS_OUTPUT In) : COLOR
-{
-	return float4(0,0,0,1); // mustachio
-}
-
-float4 pixel2(VS_OUTPUT In) : COLOR
-{
-	float4 color = float4(1,1,0,1);
-
-	color += texCUBE(env_samp, In.reflection) * 0.25;
-	
-	return color * 1.1;
+	return texCUBE(env_samp, In.reflection);
 }
 
 technique schvoi
@@ -82,16 +68,6 @@ technique schvoi
 	pass P0
 	{
 		VertexShader = compile vs_2_0 vertex();
-		PixelShader  = compile ps_2_0 pixel0();
-	}
-	pass P1
-	{
-		VertexShader = compile vs_2_0 vertex();
-		PixelShader  = compile ps_2_0 pixel1();
-	}
-	pass P2
-	{
-		VertexShader = compile vs_2_0 vertex();
-		PixelShader  = compile ps_2_0 pixel2();
+		PixelShader  = compile ps_2_0 pixel();
 	}
 }

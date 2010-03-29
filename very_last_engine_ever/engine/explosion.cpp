@@ -162,7 +162,13 @@ void Explosion::generateGraphics() {
 		pos2 -= avg;
 		pos3 -= avg;
 
-		Vector3 dir    = end - begin;		Vector3 axisX  = normalize(findOrthogonal(dir));		Vector3 axisY  = normalize(cross(dir, axisX));		float r        = EXPLOSION_MAX_RADIUS * pow(notRandf(i+1), EXPLOSION_CONE_FACTOR);		float theta    = (float)(2.0f*M_PI*notRandf(i+2)); 		float z        = 1.0f - sqrt(notRandf(i+3));		Vector3 newend = r*z*cos(theta) * axisX + r*z*sin(theta) * axisY + z*dir + begin;
+		Vector3 dir    = end - begin;
+		Vector3 axisX  = normalize(findOrthogonal(dir));
+		Vector3 axisY  = normalize(cross(dir, axisX));
+		float r        = EXPLOSION_MAX_RADIUS * pow(notRandf(i+1), EXPLOSION_CONE_FACTOR);
+		float theta    = (float)(2.0f*M_PI*notRandf(i+2)); 
+		float z        = 1.0f - sqrt(notRandf(i+3));
+		Vector3 newend = r*z*cos(theta) * axisX + r*z*sin(theta) * axisY + z*dir + begin;
 		//Vector3 newend = Vector3(begin.x+4.0f,begin.y,begin.z);
 
 

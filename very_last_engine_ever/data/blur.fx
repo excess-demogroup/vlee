@@ -29,7 +29,9 @@ VS_OUTPUT vertex(float4 ipos : POSITION)
 {
 	VS_OUTPUT Out;
 	Out.pos = ipos;
-	Out.tex = float2(Out.pos.x * 0.5 + 0.5f + (0.5f / 256) - 4 * dir.x, -Out.pos.y * 0.5 + 0.5f + (0.5f / 256) - 4 * dir.y);
+	Out.tex = float2(
+		 Out.pos.x * 0.5 + 0.5f + (0.5f / 256) - (SAMPLE_COUNT / 2 - 0.5) * dir.x,
+		-Out.pos.y * 0.5 + 0.5f + (0.5f / 256) - (SAMPLE_COUNT / 2 - 0.5) * dir.y);
 //	Out.tex = float2(Out.pos.x * 0.5 + 0.5f - (0.5f / 256), -Out.pos.y * 0.5 + 0.5f - (0.5f / 256));
 	return Out;
 }
