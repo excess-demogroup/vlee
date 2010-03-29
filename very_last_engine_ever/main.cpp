@@ -345,6 +345,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
 		skybox_fx->setTexture("reflectionMap", cubemap_tex);
 		Mesh *cube_x         = engine::loadMesh(device, "data/cube.X");
+		Mesh *hexcol_x         = engine::loadMesh(device, "data/hexcol.X");
 		Mesh *boxMesh        = engine::loadMesh(device, "data/box.x");
 		Mesh *discoTilesMesh = engine::loadMesh(device, "data/disco_tiles.x");
 
@@ -484,11 +485,28 @@ int main(int /*argc*/, char* /*argv*/ [])
 					logoEffect->setMatrices(world, view, proj);
 					logoEffect->commitChanges();
 					logoEffect->draw(logoMesh);
-				} else {
+				} else if (2 == partTrack.getIntValue(beat)) {
 					logoEffect->setMatrices(world, view, proj);
 					logoEffect->commitChanges();
 					logoEffect->draw(discoTilesMesh);
+				} else {
+					logoEffect->setMatrices(world, view, proj);
+					logoEffect->commitChanges();
+
+					for (int y = -16; y < 16; ++y) {
+						for (int x = -16; x < 16; ++x) {
+							Vector3 center(y * 1.7, 0, x * 2 + y % 2);
+							center.y  = cos(center.x * 0.1f - center.z * 0.15f - beat);
+							center.y -= sin(center.x * 0.2f - center.z * 0.11f + beat);
+							center.y -= 3.0f;
+							Matrix4x4 world = Matrix4x4::translation(center) * Matrix4x4::scaling(Vector3(15, 30, 15)) ;
+							logoEffect->setMatrices(world, view, proj);
+							logoEffect->commitChanges();
+							logoEffect->draw(hexcol_x);
+						}
+					}
 				}
+
 
 				device->SetRenderState(D3DRS_ZWRITEENABLE, false);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
