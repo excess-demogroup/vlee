@@ -371,8 +371,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f));
 		
 		bool done = false;
-		while (!done)
-		{
+		while (!done) {
 #ifdef DUMP_VIDEO
 			static int frame = 0;
 			BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, float(frame) / VIDEO_DUMP_FRAMERATE));
@@ -420,16 +419,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 //			testScene->anim(fmod(beat, 100));
 			scenegraph::Camera *cam = testScene->findCamera("Camera01-camera");
-			if (NULL != cam)
-			{
+			if (cam) {
 				Matrix4x4 camView = cam->getAbsoluteTransform();
 				view = camView.inverse();
 				proj = cam->getProjection();
 			}
 
 			// render
-			for (int i = 0; i < 2; ++i)
-			{
+			for (int i = 0; i < 2; ++i) {
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 				device->SetRenderState(D3DRS_ZWRITEENABLE, true);
@@ -449,20 +446,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 				float camTime = beat / 4 + cameraOffsetTrack.getValue(beat);
 				Vector3 camPos;
-				if      (0 == cameraIndex) camPos = Vector3(-sin(camTime*0.3f)*280, cos(camTime*0.3f)*80, cos(-camTime * 0.4f + 1)*220);
-				else if (1 == cameraIndex) camPos = Vector3(sin(camTime*0.3f)*200, cos(camTime*0.7f)*70, cos(-camTime*0.3f)*160);
-				else                       camPos = Vector3(sin(camTime * 0.25f) * 200, cos(camTime * 0.7f) * 70, -(120 + (camTime - 8) * 1.f)) * dist;
+				if      (0 == cameraIndex)
+					camPos = Vector3(-sin(camTime*0.3f)*280, cos(camTime*0.3f)*80, cos(-camTime * 0.4f + 1)*220);
+				else if (1 == cameraIndex)
+					camPos = Vector3(sin(camTime*0.3f)*200, cos(camTime*0.7f)*70, cos(-camTime*0.3f)*160);
+				else
+					camPos = Vector3(sin(camTime * 0.25f) * 200, cos(camTime * 0.7f) * 70, -(120 + (camTime - 8) * 1.f)) * dist;
 
 				view = Matrix4x4::lookAt(camPos, Vector3(0,0,50), roll);
 				world = Matrix4x4::rotation(Vector3(0, -M_PI / 2, 0));
 
-				if (partTrack.getIntValue(beat) == 1)
-				{
-					for (int j = -2; j < 3; ++j)
-					{
+				if (partTrack.getIntValue(beat) == 1) {
+					for (int j = -2; j < 3; ++j) {
 						float dir = j & 1 ? -1.0f : 1.0f;
-						for (int i = 0; i < 16; ++i)
-						{
+						for (int i = 0; i < 16; ++i) {
 							Matrix4x4 world = Matrix4x4::translation(Vector3(0, 30, 0));
 							world *= Matrix4x4::rotation(Vector3(0, 0, (float(i) / 16  + beat / 64) * 2 * M_PI * dir));
 							world *= Matrix4x4::translation(Vector3(0, j * 70, 0));
@@ -472,8 +469,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 							logoEffect->draw(boxMesh);
 						}
 
-						for (int i = 0; i < 16; ++i)
-						{
+						for (int i = 0; i < 16; ++i) {
 							Matrix4x4 world = Matrix4x4::translation(Vector3(0, 30, 0));
 							world *= Matrix4x4::rotation(Vector3(0, 0, (float(i) / 16  + beat / 64) * 2 * M_PI * dir));
 							world *= Matrix4x4::rotation(Vector3(M_PI / 2, 0, 0));
@@ -484,15 +480,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 							logoEffect->draw(boxMesh);
 						}
 					}
-				}
-				else if (0 == partTrack.getIntValue(beat))
-				{
+				} else if (0 == partTrack.getIntValue(beat)) {
 					logoEffect->setMatrices(world, view, proj);
 					logoEffect->commitChanges();
 					logoEffect->draw(logoMesh);
-				}
-				else
-				{
+				} else {
 					logoEffect->setMatrices(world, view, proj);
 					logoEffect->commitChanges();
 					logoEffect->draw(discoTilesMesh);
@@ -503,8 +495,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
 
-				for (int i = 0; i < 3; ++i)
-				{
+				for (int i = 0; i < 3; ++i) {
 					Matrix4x4 world = Matrix4x4::rotation(Vector3(0, -M_PI / 2, 0));
 					world *= Matrix4x4::scaling(Vector3(i + 3, i + 3, i + 3) * 3);
 					world *= Matrix4x4::rotation(Vector3(0, 0, beat + i));
@@ -527,11 +518,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 				starParticleEffect->setFloat("alpha", starAlphaTrack.getValue(beat));
 				starParticleEffect->commitChanges();
 
-				if (2 == partTrack.getIntValue(beat))
-				{
+				if (2 == partTrack.getIntValue(beat)) {
 					particleStreamer.begin();
-					for (int i = 0; i < 256; ++i)
-					{
+					for (int i = 0; i < 256; ++i) {
 #if 1
 						int j = i - 8;
 						float scale = 1.0f / (1 + abs(j) * 0.5f);
@@ -545,12 +534,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 						particleStreamer.add(pos, 25 * scale);
 					}
 					particleStreamer.end();
-				}
-				else
-				{
+				} else {
 					particleStreamer.begin();
-					for (int i = 0; i < 256; ++i)
-					{
+					for (int i = 0; i < 256; ++i) {
 	#if 0
 						int j = i - 8;
 						float scale = 1.0f / (1 + abs(j) * 0.5f);
@@ -581,10 +567,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			blur_fx->setFloat("sub", 0.25f);
 			RenderTexture render_textures[2] = { color1_hdr, color2_hdr };
 			int rtIndex = 0;
-			for (int i = 0; i < 4; i++)
-			{
-				for (int j = 0; j < 2; j++)
-				{
+			for (int i = 0; i < 4; i++) {
+				for (int j = 0; j < 2; j++) {
 					RenderTexture current_rt  = render_textures[(rtIndex + 1) & 1];
 					RenderTexture current_tex = render_textures[(rtIndex + 0) & 1];
 					
@@ -693,24 +677,23 @@ int main(int /*argc*/, char* /*argv*/ [])
 			HRESULT res = device->Present(0, 0, 0, 0);
 			
 			if (FAILED(res))
-			{
 				throw FatalException(std::string(DXGetErrorString(res)) + std::string(" : ") + std::string(DXGetErrorDescription(res)));
-			}
 			
 			BASS_Update(); // decrease the chance of missing vsync
 			
 			MSG msg;
-			while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-			{
+			while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
 
 				/* handle keys-events */
-				if (WM_QUIT == msg.message) done = true;
-				if (WM_KEYDOWN == msg.message)
-				{
-					if (VK_ESCAPE == LOWORD(msg.wParam)) done = true;
-					if (VK_SPACE == LOWORD(msg.wParam)) printf("beat: %f - time %f\n", beat, time);
+				if (WM_QUIT == msg.message)
+					done = true;
+				if (WM_KEYDOWN == msg.message) {
+					if (VK_ESCAPE == LOWORD(msg.wParam))
+						done = true;
+					if (VK_SPACE == LOWORD(msg.wParam))
+						printf("beat: %f - time %f\n", beat, time);
 				}
 			}
 		}
@@ -720,29 +703,22 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		/** END OF DEMO ***/
 
-
-
-
-
-
-
-
 		// cleanup
-		if (stream) BASS_StreamFree(stream);
+		if (stream)
+			BASS_StreamFree(stream);
 		BASS_Free();
-		if (win) DestroyWindow(win);
+		if (win)
+			DestroyWindow(win);
 #if !WINDOWED
 		ShowCursor(TRUE);
 #endif
-	
-	}
-	catch (const std::exception &e)
-	{
-
+	} catch (const std::exception &e) {
 		// cleanup
-		if (stream) BASS_StreamFree(stream);
+		if (stream)
+			BASS_StreamFree(stream);
 		BASS_Free();
-		if (win) DestroyWindow(win);
+		if (win)
+			DestroyWindow(win);
 #if !WINDOWED
 		ShowCursor(TRUE);
 #endif
