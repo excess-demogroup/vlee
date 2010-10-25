@@ -17,7 +17,7 @@ namespace engine
 		
 		if (FAILED(hr))
 		{
-			if (NULL == err_buf) throw core::FatalException(std::string("failed to load mesh \"") + filename + std::string("\"\n\n") + core::d3dGetError(hr));
+			if (NULL == err_buf) throw core::FatalException(std::string("failed to load effect \"") + filename + std::string("\"\n\n") + core::d3dGetError(hr));
 			throw core::FatalException(std::string("failed to load mesh \"") + filename + std::string("\"\n\n") + std::string((const char*)err_buf->GetBufferPointer()));
 		}
 

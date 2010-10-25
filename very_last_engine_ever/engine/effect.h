@@ -61,17 +61,17 @@ namespace engine
 			p->SetVector(param, &v4);
 		}
 		
-		void setTexture(D3DXHANDLE param, renderer::Texture &texture)
+		void setTexture(D3DXHANDLE param, const renderer::Texture &texture)
+		{
+			p->SetTexture(param, texture.tex);
+		}
+		
+		void setTexture(D3DXHANDLE param, const renderer::CubeTexture &texture)
 		{
 			p->SetTexture(param, texture);
 		}
 		
-		void setTexture(D3DXHANDLE param, renderer::CubeTexture &texture)
-		{
-			p->SetTexture(param, texture);
-		}
-		
-		void setTexture(D3DXHANDLE param, renderer::VolumeTexture &texture)
+		void setTexture(D3DXHANDLE param, const renderer::VolumeTexture &texture)
 		{
 			p->SetTexture(param, texture);
 		}

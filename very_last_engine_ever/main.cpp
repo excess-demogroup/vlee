@@ -293,7 +293,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Surface backbuffer   = device.getRenderTarget(0);
 		Surface depthstencil = device.getDepthStencilSurface();
 
-		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8, config::multisample);
+		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F, config::multisample);
 		Surface depthstencil_msaa = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8, config::multisample);
 		
 		/** DEMO ***/
@@ -340,7 +340,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *starParticleEffect = engine::loadEffect(device, "data/star_particle.fx");
 		starParticleEffect->setTexture("tex", starTexture);
 
-		renderer::CubeTexture cubemap_tex = engine::loadCubeTexture(device, "data/stpeters_cross3.dds");
+		renderer::CubeTexture cubemap_tex = engine::loadCubeTexture(device, "data/diamond-env.dds");
 
 		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
 		skybox_fx->setTexture("reflectionMap", cubemap_tex);
@@ -427,7 +427,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			}
 
 			// render
-			for (int i = 0; i < 2; ++i) {
+			for (int i = 0; i < 1; ++i) {
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 				device->SetRenderState(D3DRS_ZWRITEENABLE, true);
@@ -572,10 +572,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 				starParticleEffect->draw(&particleStreamer);
 
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-
-				device.setRenderTarget(color1_hdr.getRenderTarget());
-				device.setDepthStencilSurface(depthstencil);
 			}
+			color_msaa.resolve(device);
 #if 1
 			world.makeIdentity();
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
@@ -583,46 +581,43 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 
 			blur_fx->setFloat("sub", 0.25f);
+			const Texture *current_tex = &color_msaa;
 			RenderTexture render_textures[2] = { color1_hdr, color2_hdr };
 			int rtIndex = 0;
+			device->SetDepthStencilSurface(NULL);
 			for (int i = 0; i < 4; i++) {
 				for (int j = 0; j < 2; j++) {
-					RenderTexture current_rt  = render_textures[(rtIndex + 1) & 1];
-					RenderTexture current_tex = render_textures[(rtIndex + 0) & 1];
-					
-					device.setRenderTarget(current_rt.getRenderTarget(), 0);
-					device->SetDepthStencilSurface(NULL);
+					device.setRenderTarget(render_textures[rtIndex].getRenderTarget(), 0);
 //					device->Clear(0, 0, D3DCLEAR_TARGET, clear_color, 1.f, 0);
-					
+
 					float dir_vec[2];
 					float dir = float(M_PI / 2 * j);
-					dir_vec[0] = cosf(dir) * (float(1 << i) / current_tex.getWidth());
-					dir_vec[1] = sinf(dir) * (float(1 << i) / current_tex.getWidth());
+					dir_vec[0] = cosf(dir) * (float(1 << i) / current_tex->getWidth());
+					dir_vec[1] = sinf(dir) * (float(1 << i) / current_tex->getWidth());
 					dir_vec[0] *= 3.f / 4.f;
-					
+
 					blur_fx->setFloatArray("dir", dir_vec, 2);
-					blur_fx->setTexture("blur_tex", current_tex);
-					
+					blur_fx->setTexture("blur_tex", *current_tex);
+
 					drawQuad(
 						device, blur_fx,
 						-1.0f, -1.0f,
 						 2.0f, 2.0f,
-						0.5f / current_tex.getWidth(),
-						0.5f / current_tex.getHeight()
+						0.5f / current_tex->getWidth(),
+						0.5f / current_tex->getHeight()
 					);
 					blur_fx->setFloat("sub", 0.0f);
-					rtIndex++;
+					current_tex = &render_textures[!rtIndex];
+					rtIndex = !rtIndex;
 				}
 			}
 #endif
-			
+
 			/* letterbox */
 			device.setRenderTarget(backbuffer);
 			device->SetDepthStencilSurface(NULL);
 			device->Clear(0, 0, D3DCLEAR_TARGET, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
 			device.setViewport(&letterbox_viewport);
-			
-			color_msaa.resolve(device);
 
 			color_map_fx->setFloat("fade", colorMapBlendTrack.getValue(beat));
 
@@ -668,11 +663,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 /*			scanlinesImage.setPosition(-1, -1);
 			scanlinesImage.setDimension(2, 2);
 			scanlinesImage.draw(device); */
-			
+/*
 			overlaysImage.setTexture(overlaysAnim.getTexture(overlayTrack.getIntValue(beat) % overlaysAnim.getTextureCount()));
 			overlaysImage.setPosition(-1, -1);
 			overlaysImage.setDimension(2, 2);
-			overlaysImage.draw(device);
+			overlaysImage.draw(device); */
 			
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			

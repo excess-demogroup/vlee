@@ -24,7 +24,7 @@ Texture engine::loadTexture(renderer::Device &device, ::std::string filename)
 	if (FAILED(hr)) throw core::FatalException(::std::string("failed to load texture \"") + filename + ::std::string("\"\n\n") + core::d3dGetError(hr));
 
 	Texture texture_wrapper;
-	texture_wrapper.Attach(texture);
+	texture_wrapper.tex.Attach(texture);
 	return texture_wrapper;
 }
 

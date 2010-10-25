@@ -10,9 +10,9 @@ engine::Anim engine::loadAnim(renderer::Device &device, std::string folder)
 		char temp[256];
 		sprintf(temp, "%s/%04d.png", folder.c_str(), i);
 		renderer::Texture tex;
-		if (FAILED(D3DXCreateTextureFromFile(device, temp, &tex))) {
+		if (FAILED(D3DXCreateTextureFromFile(device, temp, &tex.tex))) {
 			sprintf(temp, "%s/%04d.jpg", folder.c_str(), i);
-			if (FAILED(D3DXCreateTextureFromFile(device, temp, &tex)))
+			if (FAILED(D3DXCreateTextureFromFile(device, temp, &tex.tex)))
 				break;
 		}
 		anim.addTexture(tex);

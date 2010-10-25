@@ -65,6 +65,7 @@ static void refreshModes(HWND hDlg)
 
 static bool is_multisample_type_ok(IDirect3D9 *direct3d, UINT Adapter, D3DFORMAT DepthBufferFormat, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat, D3DMULTISAMPLE_TYPE multisample_type) {
 	if (SUCCEEDED(direct3d->CheckDeviceMultiSampleType(Adapter, D3DDEVTYPE_HAL, BackBufferFormat, FALSE, multisample_type, NULL)) &&
+	    SUCCEEDED(direct3d->CheckDeviceMultiSampleType(Adapter, D3DDEVTYPE_HAL, D3DFMT_A16B16G16R16F, FALSE, multisample_type, NULL)) &&
 	    SUCCEEDED(direct3d->CheckDeviceMultiSampleType(Adapter, D3DDEVTYPE_HAL, DepthBufferFormat, FALSE, multisample_type, NULL)))
 	{
 		return true;
@@ -85,8 +86,7 @@ static void refreshMultisampleTypes(HWND hDlg)
 	unsigned item = 0;
 	for (unsigned i = 0; i < ARRAY_SIZE(types); ++i)
 	{
-		if (true == is_multisample_type_ok(direct3d, adapter, mode.Format, mode.Format, init::get_best_depth_stencil_format(direct3d, adapter, mode.Format), types[i]))
-		{
+		if (is_multisample_type_ok(direct3d, adapter, mode.Format, mode.Format, init::get_best_depth_stencil_format(direct3d, adapter, mode.Format), types[i])) {
 			SendMessage(GetDlgItem(hDlg, IDC_MULTISAMPLE), CB_ADDSTRING, 0, (LPARAM)type_strings[i]);
 			SendMessage(GetDlgItem(hDlg, IDC_MULTISAMPLE), CB_SETITEMDATA, item, (UINT)types[i]);
 			if (config::multisample == types[i]) best_hit = item;
@@ -158,8 +158,8 @@ static LRESULT onInitDialog(HWND hDlg)
 {
 	direct3d->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode);
 #if WINDOWED
-	mode.Width = 1280;
-	mode.Height = 720;
+	mode.Width = 1920 / 2;
+	mode.Height = 1080 / 2;
 //	EndDialog(hDlg, IDOK);
 #endif
 

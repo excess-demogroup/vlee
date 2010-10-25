@@ -9,11 +9,11 @@
 namespace renderer
 {
 
-	class Texture : public CComPtr<IDirect3DTexture9>
+	class Texture
 	{
 	public:
-		explicit Texture(IDirect3DTexture9 *texture = NULL)
-			: CComPtr<IDirect3DTexture9>(texture)
+		explicit Texture(IDirect3DTexture9 *texture = NULL) :
+			tex(texture)
 		{
 		}
 		
@@ -22,7 +22,7 @@ namespace renderer
 		}
 
 #if 1
-		Texture(IDirect3DDevice9 *device, UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = 0) : CComPtr<IDirect3DTexture9>()
+		Texture(IDirect3DDevice9 *device, UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = 0)
 		{
 			assert(NULL != device);
 			core::log::printf("creating texture... ");
@@ -39,7 +39,7 @@ namespace renderer
 			assert(NULL != texture);
 			core::log::printf("done.\n");
 
-			Attach(texture); // don't addref
+			tex.Attach(texture); // don't addref
 		}
 #endif
 		
@@ -48,7 +48,7 @@ namespace renderer
 			assert(p != NULL);
 
 			IDirect3DSurface9 *surface;
-			core::d3dErr(p->GetSurfaceLevel(level, &surface));
+			core::d3dErr(tex->GetSurfaceLevel(level, &surface));
 
 			Surface surface_wrapper;
 			surface_wrapper.Attach(surface);
@@ -60,22 +60,33 @@ namespace renderer
 			assert(p != NULL);
 
 			IDirect3DSurface9 *surface;
-			core::d3dErr(p->GetSurfaceLevel(level, &surface));
+			core::d3dErr(tex->GetSurfaceLevel(level, &surface));
 
 			Surface surface_wrapper;
 			surface_wrapper.Attach(surface);
 			return surface;
 		}
 
-		D3DSURFACE_DESC getLevelDesc(int level = 0)
+		D3DSURFACE_DESC getLevelDesc(int level = 0) const
 		{
 			assert(p != NULL);
 
 			D3DSURFACE_DESC desc;
-			p->GetLevelDesc(level, &desc);
+			tex->GetLevelDesc(level, &desc);
 			return desc;
 		}
-		
+
+		int getWidth() const
+		{
+			return getLevelDesc(0).Width;
+		}
+
+		int getHeight() const
+		{
+			return getLevelDesc(0).Height;
+		}
+
+		CComPtr<IDirect3DTexture9> tex;
 	};
 
 }
