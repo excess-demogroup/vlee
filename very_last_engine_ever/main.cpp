@@ -621,9 +621,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			color_map_fx->setFloat("fade", colorMapBlendTrack.getValue(beat));
 
-			float flash = pow(colorMapFlashTrack.getValue(beat) == 1000.f ? (float)(rand() % 2) : colorMapFlashTrack.getValue(beat), 2.0f);
-
-			color_map_fx->setFloat("flash", flash);
+			float flash = (colorMapFlashTrack.getValue(beat) == 1000.f) ? float(rand() % 2) : colorMapFlashTrack.getValue(beat);
+			color_map_fx->setFloat("flash", pow(flash, 2.0f));
 			color_map_fx->setFloat("fade2", colorMapFadeTrack.getValue(beat));
 			color_map_fx->setFloat("alpha", 0.25f);
 			color_map_fx->setTexture("tex", color1_hdr);
@@ -687,14 +686,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 				DispatchMessage(&msg);
 
 				/* handle keys-events */
-				if (WM_QUIT == msg.message)
+				if (WM_QUIT == msg.message ||
+				    (WM_KEYDOWN == msg.message && VK_ESCAPE == LOWORD(msg.wParam)))
 					done = true;
-				if (WM_KEYDOWN == msg.message) {
-					if (VK_ESCAPE == LOWORD(msg.wParam))
-						done = true;
-					if (VK_SPACE == LOWORD(msg.wParam))
-						printf("beat: %f - time %f\n", beat, time);
-				}
 			}
 		}
 
