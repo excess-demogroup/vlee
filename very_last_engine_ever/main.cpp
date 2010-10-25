@@ -293,26 +293,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Surface backbuffer   = device.getRenderTarget(0);
 		Surface depthstencil = device.getDepthStencilSurface();
 
-		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F, config::multisample);
+		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F, config::multisample, D3DUSAGE_AUTOGENMIPMAP);
 		Surface depthstencil_msaa = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8, config::multisample);
-		
+
 		/** DEMO ***/
-		
 		RenderTexture color1_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
 		RenderTexture color2_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
-		
-/*		RenderTexture depth(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_R32F); */
 
 		engine::VertexStreamer vertex_streamer(device);
 
 		scenegraph::Scene *testScene = loadScene(device, "data/testScene/test.scene");
 		engine::SceneRenderer testRenderer = engine::SceneRenderer(testScene, testScene->findCamera("Camera01-camera"));
-/*		scenegraph::Node *testNode = testScene->findChild("Camera01-node_transform");
-		assert(NULL != testNode); */
-
-//		RenderTexture rt(device, 128, 128, 1, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE);
-//		RenderTexture rt2(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
-//		RenderTexture rt3(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
 
 		Effect *tex_fx      = engine::loadEffect(device, "data/tex.fx");
 		Effect *tex_trans_fx      = engine::loadEffect(device, "data/tex.fx");
