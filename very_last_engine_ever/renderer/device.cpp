@@ -26,7 +26,7 @@ namespace renderer
 		core::d3dErr(p->GetRenderTarget(index, &surface));
 
 		Surface surface_wrapper;
-		surface_wrapper.Attach(surface);
+		surface_wrapper.attachRef(surface);
 		return surface_wrapper;
 	}
 
@@ -44,7 +44,7 @@ namespace renderer
 		core::d3dErr(p->GetDepthStencilSurface(&surface));
 		
 		Surface surface_wrapper;
-		surface_wrapper.Attach(surface);
+		surface_wrapper.attachRef(surface);
 		return surface_wrapper;
 	}
 
@@ -63,7 +63,7 @@ namespace renderer
 		core::log::printf("done.\n");
 		
 		VertexBuffer vb_wrapper;
-		vb_wrapper.Attach(vb); // don't addref
+		vb_wrapper.attachRef(vb); // don't addref
 		return vb_wrapper;
 	}
 
@@ -81,7 +81,7 @@ namespace renderer
 		core::log::printf("done.\n");
 
 		IndexBuffer ib_wrapper;
-		ib_wrapper.Attach(ib); // don't addref
+		ib_wrapper.attachRef(ib); // don't addref
 		return ib_wrapper;
 	}
 
@@ -96,7 +96,7 @@ namespace renderer
 		core::log::printf("done.\n");
 		
 		VertexDeclaration decl_wrapper;
-		decl_wrapper.Attach(decl); // don't addref
+		decl_wrapper.attachRef(decl); // don't addref
 		return decl_wrapper;
 	}
 
@@ -165,7 +165,7 @@ namespace renderer
 		);
 
 		Surface surface_wrapper;
-		surface_wrapper.Attach(surface);
+		surface_wrapper.attachRef(surface);
 		return surface_wrapper;
 	}
 
@@ -193,7 +193,7 @@ namespace renderer
 		);
 
 		Surface surf;
-		surf.Attach(d3d_surf);
+		surf.attachRef(d3d_surf);
 		return surf;
 	}
 };

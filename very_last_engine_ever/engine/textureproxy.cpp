@@ -24,7 +24,7 @@ Texture engine::loadTexture(renderer::Device &device, ::std::string filename)
 	if (FAILED(hr)) throw core::FatalException(::std::string("failed to load texture \"") + filename + ::std::string("\"\n\n") + core::d3dGetError(hr));
 
 	Texture texture_wrapper;
-	texture_wrapper.tex.Attach(texture);
+	texture_wrapper.tex.attachRef(texture);
 	return texture_wrapper;
 }
 
@@ -48,7 +48,7 @@ CubeTexture engine::loadCubeTexture(renderer::Device &device, ::std::string file
 	if (FAILED(hr)) throw core::FatalException(::std::string("failed to load cube texture \"") + filename + ::std::string("\"\n\n") + core::d3dGetError(hr));
 	
 	CubeTexture texture_wrapper;
-	texture_wrapper.Attach(texture);
+	texture_wrapper.attachRef(texture);
 	return texture_wrapper;
 }
 
@@ -72,7 +72,7 @@ VolumeTexture engine::loadVolumeTexture(renderer::Device &device, ::std::string 
 	if (FAILED(hr)) throw core::FatalException(::std::string("failed to load volume texture \"") + filename + ::std::string("\"\n\n") + core::d3dGetError(hr));
 	
 	VolumeTexture texture_wrapper;
-	texture_wrapper.Attach(texture);
+	texture_wrapper.attachRef(texture);
 	return texture_wrapper;
 }
 

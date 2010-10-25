@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/err.h"
+#include "core/comref.h"
 #include "renderer/device.h"
 #include "renderer/indexbuffer.h"
 
@@ -8,11 +9,11 @@
 
 namespace engine
 {
-	class Mesh : public CComPtr<ID3DXMesh>, public Drawable
+	class Mesh : public ComRef<ID3DXMesh>, public Drawable
 	{
 	public:
-		Mesh() : CComPtr<ID3DXMesh>() {}
-		Mesh(ID3DXMesh *mesh) : CComPtr<ID3DXMesh>(mesh) {}
+		Mesh() : ComRef<ID3DXMesh>() {}
+		Mesh(ID3DXMesh *mesh) : ComRef<ID3DXMesh>(mesh) {}
 		
 		void draw()
 		{
@@ -65,7 +66,7 @@ namespace engine
 		assert(NULL != mesh);
 		
 		Mesh *mesh_wrapper = new Mesh;
-		mesh_wrapper->Attach(mesh);
+		mesh_wrapper->attachRef(mesh);
 		return mesh_wrapper;
 	}
 }

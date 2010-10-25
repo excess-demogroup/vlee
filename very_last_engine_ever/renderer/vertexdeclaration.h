@@ -1,14 +1,15 @@
 #pragma once
 
 #include "../core/fatalexception.h"
+#include "../core/comref.h"
 
 namespace renderer
 {
-	class VertexDeclaration : public CComPtr<IDirect3DVertexDeclaration9>
+	class VertexDeclaration : public ComRef<IDirect3DVertexDeclaration9>
 	{
 	public:
 		VertexDeclaration(IDirect3DVertexDeclaration9 *decl = NULL)
-			: CComPtr<IDirect3DVertexDeclaration9>(decl)
+			: ComRef<IDirect3DVertexDeclaration9>(decl)
 		{
 		}
 	};

@@ -22,7 +22,7 @@ namespace engine
 		}
 
 		Effect *eff_wrapper = new Effect;
-		eff_wrapper->Attach(eff);
+		eff_wrapper->attachRef(eff);
 		eff_wrapper->update();
 		return eff_wrapper;
 	}

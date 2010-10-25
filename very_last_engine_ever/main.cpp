@@ -89,15 +89,6 @@ float randf()
 	return rand() * (1.f / RAND_MAX);
 }
 
-template <typename T>
-CComPtr<T> com_ptr(T *ptr)
-{
-	// make a CComPtr<T> without adding a reference
-	CComPtr<T> com_ptr;
-	com_ptr.Attach(ptr); // don't addref
-	return com_ptr;
-}
-
 void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_height, float screen_aspect, float demo_aspect)
 {
 	int letterbox_width, letterbox_height;
@@ -188,7 +179,7 @@ Surface loadSurface(renderer::Device &device, std::string fileName)
 	core::d3dErr(D3DXLoadSurfaceFromFile(surface, NULL, NULL, fileName.c_str(), NULL, D3DX_FILTER_NONE, NULL, NULL));
 	
 	Surface surface_wrapper;
-	surface_wrapper.Attach(surface);
+	surface_wrapper.attachRef(surface);
 	return surface_wrapper;
 }
 
@@ -208,8 +199,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 	try
 	{
 		/* create d3d object */
-		CComPtr<IDirect3D9> direct3d = com_ptr(Direct3DCreate9(D3D_SDK_VERSION));
-		if (!direct3d) throw FatalException("your directx-version is from the stone-age.\n\nTHRUG SAYS: UPGRADE!");
+		ComRef<IDirect3D9> direct3d;
+		direct3d.attachRef(Direct3DCreate9(D3D_SDK_VERSION));
+		if (!direct3d)
+			throw FatalException("your directx-version is from the stone-age.\n\nTHRUG SAYS: UPGRADE!");
 
 		/* show config dialog */
 		INT_PTR result = config::showDialog(hInstance, direct3d);
@@ -240,7 +233,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		
 		/* create device */
 		Device device;
-		device.Attach(init::initD3D(direct3d, win, config::mode, D3DMULTISAMPLE_NONE, config::adapter, config::vsync));
+		device.attachRef(init::initD3D(direct3d, win, config::mode, D3DMULTISAMPLE_NONE, config::adapter, config::vsync));
 		
 		/* showing window after initing d3d in order to be able to see warnings during init */
 		ShowWindow(win, TRUE);

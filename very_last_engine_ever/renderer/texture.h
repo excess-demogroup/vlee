@@ -3,6 +3,7 @@
 #include "../core/log.h"
 #include "../core/fatalexception.h"
 #include "../core/err.h"
+#include "../core/comref.h"
 
 #include "surface.h"
 
@@ -39,38 +40,32 @@ namespace renderer
 			assert(NULL != texture);
 			core::log::printf("done.\n");
 
-			tex.Attach(texture); // don't addref
+			tex.attachRef(texture);
 		}
 #endif
 		
 		const Surface getSurface(int level = 0) const
 		{
-			assert(p != NULL);
-
 			IDirect3DSurface9 *surface;
 			core::d3dErr(tex->GetSurfaceLevel(level, &surface));
 
 			Surface surface_wrapper;
-			surface_wrapper.Attach(surface);
+			surface_wrapper.attachRef(surface);
 			return surface;
 		}
 		
 		Surface getSurface(int level = 0)
 		{
-			assert(p != NULL);
-
 			IDirect3DSurface9 *surface;
 			core::d3dErr(tex->GetSurfaceLevel(level, &surface));
 
 			Surface surface_wrapper;
-			surface_wrapper.Attach(surface);
+			surface_wrapper.attachRef(surface);
 			return surface;
 		}
 
 		D3DSURFACE_DESC getLevelDesc(int level = 0) const
 		{
-			assert(p != NULL);
-
 			D3DSURFACE_DESC desc;
 			tex->GetLevelDesc(level, &desc);
 			return desc;
@@ -86,7 +81,7 @@ namespace renderer
 			return getLevelDesc(0).Height;
 		}
 
-		CComPtr<IDirect3DTexture9> tex;
+		ComRef<IDirect3DTexture9> tex;
 	};
 
 }

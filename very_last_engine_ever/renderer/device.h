@@ -35,6 +35,7 @@ HRESULT IDirect3DDevice9::CreateRenderTarget(
 );
 */
 
+#include "core/comref.h"
 namespace renderer
 {
 	class VertexBuffer;
@@ -45,7 +46,7 @@ namespace renderer
 	class VolumeTexture;
 	class Surface;
 
-	class Device : public CComPtr<IDirect3DDevice9>
+	class Device : public ComRef<IDirect3DDevice9>
 	{
 	public:
 		

@@ -2,15 +2,16 @@
 
 #include "../core/fatalexception.h"
 #include "../core/log.h"
+#include "../core/comref.h"
 #include "device.h"
 
 namespace renderer
 {
-	class VertexBuffer : public CComPtr<IDirect3DVertexBuffer9>
+	class VertexBuffer : public ComRef<IDirect3DVertexBuffer9>
 	{
 	public:
-		VertexBuffer(IDirect3DVertexBuffer9 *vertex_buffer = NULL) : CComPtr<IDirect3DVertexBuffer9>(vertex_buffer) {}
-		
+		VertexBuffer(IDirect3DVertexBuffer9 *vertex_buffer = NULL) : ComRef<IDirect3DVertexBuffer9>(vertex_buffer) {}
+
 		void *lock(UINT offset, UINT size, DWORD flags)
 		{
 			assert(NULL != p);

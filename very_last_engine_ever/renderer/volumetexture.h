@@ -1,15 +1,13 @@
 #pragma once
 
 #include "texture.h"
+#include "core/comref.h"
 
-namespace renderer
-{
-	
-	class VolumeTexture : public CComPtr<IDirect3DVolumeTexture9>
-	{
+namespace renderer {
+	class VolumeTexture : public ComRef<IDirect3DVolumeTexture9> {
 	public:
 		explicit VolumeTexture(IDirect3DVolumeTexture9 *volumeTexture = NULL)
-			: CComPtr<IDirect3DVolumeTexture9>(volumeTexture)
+			: ComRef<IDirect3DVolumeTexture9>(volumeTexture)
 		{
 		}
 		

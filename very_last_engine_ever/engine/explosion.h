@@ -47,10 +47,6 @@ namespace engine
 			generateGraphics();
 		};
 
-		~Explosion() {
-			vb.Release();
-		}
-
 		void draw(engine::Effect &effect, int time);
 
 	private:

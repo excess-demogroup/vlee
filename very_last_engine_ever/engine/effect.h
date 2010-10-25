@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../core/comref.h"
 #include "drawable.h"
 #include "../renderer/device.h"
 #include "../renderer/texture.h"
@@ -8,13 +9,10 @@
 #include "../math/matrix4x4.h"
 #include "../math/vector3.h"
 
-namespace engine
-{
-
-	class Effect : public CComPtr<ID3DXEffect>
-	{
+namespace engine {
+	class Effect : public ComRef<ID3DXEffect> {
 	public:
-		Effect() : CComPtr<ID3DXEffect>(), world(0), view(0), projection(0), worldview(0), worldviewprojection(0) { }
+		Effect() : ComRef<ID3DXEffect>(), world(0), view(0), projection(0), worldview(0), worldviewprojection(0) { }
 		
 		void update()
 		{
