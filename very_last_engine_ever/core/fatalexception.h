@@ -2,10 +2,8 @@
 
 #include <exception>
 
-namespace core
-{
-	class FatalException : public std::exception
-	{
+namespace core {
+	class FatalException : public std::exception {
 	public:
 		FatalException(std::string str) : exception(), str(str)
 		{
@@ -14,7 +12,7 @@ namespace core
 #endif
 		}
 
-		virtual const char *what() const
+		const char *what() const
 		{
 			return str.c_str();
 		}

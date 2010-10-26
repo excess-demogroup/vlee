@@ -7,17 +7,14 @@
 
 #include "surface.h"
 
-namespace renderer
-{
-
-	class Texture
-	{
+namespace renderer {
+	class Texture {
 	public:
 		explicit Texture(IDirect3DTexture9 *texture = NULL) :
-			tex(texture)
+		    tex(texture)
 		{
 		}
-		
+
 		virtual ~Texture()
 		{
 		}
@@ -30,11 +27,12 @@ namespace renderer
 
 			IDirect3DTexture9 *texture;
 			HRESULT res = device->CreateTexture(width, height, levels, usage, format, pool, &texture, handle);
-			if (FAILED(res))
-			{
+			if (FAILED(res)) {
 				std::string base_message;
-				if (usage & D3DUSAGE_RENDERTARGET) base_message = std::string("failed to create render target\n");
-				else  base_message = std::string("failed to create texture\n");
+				if (usage & D3DUSAGE_RENDERTARGET)
+					base_message = std::string("failed to create render target\n");
+				else
+					base_message = std::string("failed to create texture\n");
 				throw core::FatalException(base_message + std::string(DXGetErrorString(res)) + std::string(" : ") + std::string(DXGetErrorDescription(res)));
 			}
 			assert(NULL != texture);
@@ -43,7 +41,7 @@ namespace renderer
 			tex.attachRef(texture);
 		}
 #endif
-		
+
 		const Surface getSurface(int level = 0) const
 		{
 			IDirect3DSurface9 *surface;
@@ -83,5 +81,4 @@ namespace renderer
 
 		ComRef<IDirect3DTexture9> tex;
 	};
-
 }
