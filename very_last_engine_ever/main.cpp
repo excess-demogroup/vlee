@@ -196,8 +196,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 	HINSTANCE hInstance = GetModuleHandle(0);
 //	_Module.Init(NULL, hInstance);
 	
-	try
-	{
+	try {
 		/* create d3d object */
 		ComRef<IDirect3D9> direct3d;
 		direct3d.attachRef(Direct3DCreate9(D3D_SDK_VERSION));
@@ -206,11 +205,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		/* show config dialog */
 		INT_PTR result = config::showDialog(hInstance, direct3d);
-		if (FAILED(result)) MessageBox(NULL, "Could not initialize dialogbox, using default settings.", NULL, MB_OK);
-		else
-		{
-			if (IDOK != result)
-			{
+		if (FAILED(result))
+			MessageBox(NULL, "Could not initialize dialogbox, using default settings.", NULL, MB_OK);
+		else {
+			if (IDOK != result) {
 				// cancel was hit...
 				MessageBox(NULL, "damn wimp...", "pfff", MB_OK);
 				return 0;
@@ -218,18 +216,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 		}
 
 		if (FAILED(direct3d->CheckDeviceFormat(config::adapter, DEVTYPE, config::mode.Format, D3DUSAGE_QUERY_FILTER, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F)))
-		{
 			MessageBox(NULL, "Selected mode does not support FP16 texture-filtering, demo will look crap.", "visual quality warning", MB_OK | MB_ICONWARNING);
-		}
 		
 		if (FAILED(direct3d->CheckDeviceFormat(config::adapter, DEVTYPE, config::mode.Format, D3DUSAGE_QUERY_POSTPIXELSHADER_BLENDING, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F)))
-		{
 			MessageBox(NULL, "Selected mode does not support FP16 blending, demo will look crap.", "visual quality warning", MB_OK | MB_ICONWARNING);
-		}
 		
 		/* create window */
 		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, config::mode.Width, config::mode.Height, 0, 0, GetModuleHandle(0), 0);
-		if (!win) throw FatalException("CreateWindow() failed. something is VERY spooky.");
+		if (!win)
+			throw FatalException("CreateWindow() failed. something is VERY spooky.");
 		
 		/* create device */
 		Device device;
@@ -246,16 +241,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 		makeLetterboxViewport(&letterbox_viewport, config::mode.Width, config::mode.Height, config::aspect, float(DEMO_ASPECT));
 
 		/* setup sound-playback */
-		if (!BASS_Init(config::soundcard, 44100, 0, 0, 0)) throw FatalException("failed to init bass");
+		if (!BASS_Init(config::soundcard, 44100, 0, 0, 0))
+			throw FatalException("failed to init bass");
 		stream = BASS_StreamCreateFile(false, "data/makesnodigital.mp3", 0, 0, BASS_MP3_SETPOS | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
-		if (!stream) throw FatalException("failed to open tune");
+		if (!stream)
+			throw FatalException("failed to open tune");
 
 		// setup timer and construct sync-device
 		BassTimer synctimer(stream, BPM, 4);
 		
 		std::auto_ptr<sync::Device> syncDevice = std::auto_ptr<sync::Device>(sync::createDevice("data/sync", synctimer));
-		if (NULL == syncDevice.get()) throw FatalException("something went wrong - failed to connect to host?");
-		
+		if (NULL == syncDevice.get())
+			throw FatalException("something went wrong - failed to connect to host?");
+
 		Track &cameraDistanceTrack = syncDevice->getTrack("cam.dist");
 		Track &cameraRollTrack     = syncDevice->getTrack("cam.roll");
 		Track &cameraXRotTrack     = syncDevice->getTrack("cam.x-rot");
@@ -271,7 +269,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Track &colorMapDistortXTrack  = syncDevice->getTrack("cm.dist.x");
 		Track &colorMapDistortYTrack  = syncDevice->getTrack("cm.dist.y");
 		Track &overlayTrack  = syncDevice->getTrack("cm.overlay");
-		
+
 		Track &noiseAmtTrack  = syncDevice->getTrack("noise.amt");
 		Track &noiseFFTTrack  = syncDevice->getTrack("noise.fft");
 
@@ -657,8 +655,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 					NULL
 				));
 			}
-			HRESULT res = device->Present(0, 0, 0, 0);
 
+			HRESULT res = device->Present(0, 0, 0, 0);
 			if (FAILED(res))
 				throw FatalException(std::string(DXGetErrorString(res)) + std::string(" : ") + std::string(DXGetErrorDescription(res)));
 
