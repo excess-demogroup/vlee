@@ -18,6 +18,16 @@ namespace renderer
 			p->GetDesc(&desc);
 			return desc;
 		}
+
+		int getWidth() const
+		{
+			return getDesc().Width;
+		}
+
+		int getHeight() const
+		{
+			return getDesc().Height;
+		}
 	};
 
 }

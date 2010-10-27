@@ -242,7 +242,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			throw FatalException("failed to open tune");
 
 		// setup timer and construct sync-device
-		BassTimer synctimer(stream, BPM, 4);
+		BassTimer synctimer(stream, float(BPM), 4);
 		
 		std::auto_ptr<sync::Device> syncDevice = std::auto_ptr<sync::Device>(sync::createDevice("data/sync", synctimer));
 		if (NULL == syncDevice.get())
@@ -319,7 +319,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture desaturate_tex = engine::loadTexture(device, "data/desaturate.png");
 		Effect *color_map_fx = engine::loadEffect(device, "data/color_map.fx");
 		Texture color_maps[2];
-		
+
 		color_maps[0] = engine::loadTexture(device, "data/color_map0.png");
 		color_maps[1] = engine::loadTexture(device, "data/color_map1.png");
 		color_map_fx->setFloat("texel_width", 1.0f / color_msaa.getWidth());
@@ -609,49 +609,23 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->Clear(0, 0, D3DCLEAR_TARGET, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
 			device.setViewport(&letterbox_viewport);
 
-			color_map_fx->setFloat("fade", colorMapBlendTrack.getValue(beat));
-
 			float flash = (colorMapFlashTrack.getValue(beat) == 1000.f) ? float(rand() % 2) : colorMapFlashTrack.getValue(beat);
+			color_map_fx->setFloat("fade", colorMapBlendTrack.getValue(beat));
 			color_map_fx->setFloat("flash", pow(flash, 2.0f));
 			color_map_fx->setFloat("fade2", colorMapFadeTrack.getValue(beat));
 			color_map_fx->setFloat("alpha", 0.25f);
 			color_map_fx->setTexture("tex", color1_hdr);
 			color_map_fx->setTexture("tex2", color_msaa);
-//			color_map_fx->setTexture("color_map", color_maps[colorMapPalTrack.getIntValue(beat) % 2]);
 			color_map_fx->setTexture("color_map", color_maps[0]);
 			color_map_fx->setTexture("desaturate", desaturate_tex);
-			
-			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
-			drawFuzz(color_map_fx, vertex_streamer,  time, 1.0f, colorMapDistortXTrack.getValue(beat), colorMapDistortYTrack.getValue(beat),
-				0.5f / letterbox_viewport.Width, 0.5f / letterbox_viewport.Height);
-			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
-			drawFuzz(color_map_fx, vertex_streamer, -time, 0.0f, colorMapDistortXTrack.getValue(beat), 0.0f,
-				0.5f / letterbox_viewport.Width, 0.5f / letterbox_viewport.Height);
-			device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED | D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
-			
-			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 
-			/* draw noise */
-
-			noise_fx->setFloat("alpha", noiseAmtTrack.getValue(beat)); // + noiseFFTTrack.getValue(beat) * noise_fft.getValue(beat)));
-			noise_fx->setTexture("tex", noise_tex);
-			drawQuad(
-				device, noise_fx,
-				-1.0f, -1.0f,
-				 2.0f, 2.0f,
-				 randf(), randf()
-			);
-
-			logoImage.setPosition(-1, -1);
-			logoImage.setDimension(2, 0.5);
-			logoImage.draw(device);
-
-			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-			
+			drawQuad(device, color_map_fx,
+			    -1.0f, -1.0f,
+			    2.0f, 2.0f,
+			    0.5f / backbuffer.getWidth(),
+			    0.5f / backbuffer.getHeight());
 			device->EndScene(); /* WE DONE IS! */
-			
+
 			if (dump_video) {
 				char temp[256];
 				_snprintf(temp, 256, "dump/frame%04d.tga", frame);

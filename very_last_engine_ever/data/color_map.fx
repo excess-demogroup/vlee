@@ -2,14 +2,10 @@ string XFile = "misc\\teapot.x";
 int BCLR = 0xff202060;
 
 float fade  = 0.75f;
-float sobel_fade = 0.5f;
 
 float alpha = 1.f;
 float xoffs = 0.f;
 float yoffs = 0.f;
-
-float xzoom = 1.f;
-float yzoom = 1.f;
 
 float flash = 0.0f;
 float fade2 = 1.0f;
@@ -79,31 +75,6 @@ VS_OUTPUT vertex(float4 ipos : POSITION, float2 tex  : TEXCOORD0)
 	return Out;
 }
 
-float texel_width = 1.f / 800;
-float texel_height = 1.f / 450;
-
-float4 sobel(sampler samp, float2 uv)
-{
-	float4 color1 = float4(0, 0, 0, 0);
-	color1 += tex2D(tex_sampler, uv + float2(-texel_width, -texel_height)) * -1;
-	color1 += tex2D(tex_sampler, uv + float2(-texel_width, 0)) * -2;
-	color1 += tex2D(tex_sampler, uv + float2(-texel_width, +texel_height)) * -1;
-	color1 += tex2D(tex_sampler, uv + float2(+texel_width, -texel_height)) *  1;
-	color1 += tex2D(tex_sampler, uv + float2(+texel_width, 0)) *  2;
-	color1 += tex2D(tex_sampler, uv + float2(+texel_width, +texel_height)) * 1;
-
-	float4 color2 = float4(0, 0, 0, 0);
-	color2 += tex2D(tex_sampler, uv + float2(-texel_width, -texel_height)) * -1;
-	color2 += tex2D(tex_sampler, uv + float2(0,            -texel_height)) * -2;
-	color2 += tex2D(tex_sampler, uv + float2(+texel_width, -texel_height)) * -1;
-	color2 += tex2D(tex_sampler, uv + float2(-texel_width, +texel_height)) *  1;
-	color2 += tex2D(tex_sampler, uv + float2(0,            +texel_height)) *  2;
-	color2 += tex2D(tex_sampler, uv + float2(+texel_width, +texel_height)) * 1;
-	
-	float val = sqrt(color1.x * color1.x + color2.x * color2.x);
-	return float4(val, val, val, val);
-}
-
 float luminance(float3 color)
 {
 	return
@@ -112,17 +83,15 @@ float luminance(float3 color)
 		(color.b * 0.114);
 }
 
-float2 bloom_nudge = float2(0.5 / 400, 0.5 / 225);
-
 float4 pixel(VS_OUTPUT In) : COLOR
 {
-	float pal_sel = tex2D(desaturate_sampler, In.tex);
-	
+	float pal_sel = tex2D(desaturate_sampler, In.tex).r;
+
 	float4 color =
-		tex2D(tex_sampler, In.tex + bloom_nudge) * alpha
+		tex2D(tex_sampler, In.tex) * alpha
 		+ tex2D(tex2_sampler, In.tex) * 0.5 ;
 	
-	color.rgb = lerp(color.rgb, tex2D(tex_sampler, In.tex + bloom_nudge).rgb, (1 - pal_sel) * 0.75);
+	color.rgb = lerp(color.rgb, tex2D(tex_sampler, In.tex).rgb, (1 - pal_sel) * 0.75);
 	
 	/* lookup in palette */
 	float lum = luminance(color.rgb);
