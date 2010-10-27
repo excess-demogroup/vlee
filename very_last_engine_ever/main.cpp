@@ -294,9 +294,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		    use_sm20_codepath ? D3DMULTISAMPLE_NONE : config::multisample);
 
 		/** DEMO ***/
-		RenderTexture color1_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1,
+		RenderTexture color1_hdr(device, 1280 / 4, int((1280 / DEMO_ASPECT) / 4), 1,
 		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
-		RenderTexture color2_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1,
+		RenderTexture color2_hdr(device, 1280 / 4, int((1280 / DEMO_ASPECT) / 4), 1,
 		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
 
 		engine::VertexStreamer vertex_streamer(device);
@@ -577,7 +577,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			RenderTexture render_textures[2] = { color1_hdr, color2_hdr };
 			int rtIndex = 0;
 			device->SetDepthStencilSurface(NULL);
-			for (int i = 0; i < 4; i++) {
+			for (int i = 0; i < 3; i++) {
 				for (int j = 0; j < 2; j++) {
 
 					float dir_vec[2];
