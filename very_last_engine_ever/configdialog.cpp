@@ -205,23 +205,10 @@ static LRESULT onInitDialog(HWND hDlg)
 	}
 	SendMessage(GetDlgItem(hDlg, IDC_ASPECT), (UINT)CB_SETCURSEL, (WPARAM)best_fit, 0);
 
-	// select medium by default
-//	CheckDlgButton(IDC_MEDIUM, true);
-//	SendMessage(GetDlgItem(IDC_MEDIUM), (UINT)BN_CLICKED, (WPARAM)1, 0);
-//	::PostMessage(GetDlgItem(IDC_MEDIUM), (UINT)BN_CLICKED, (WPARAM)0, 0);
-
-#ifndef VJSYS
 	// playback device
-	for (unsigned i = 0; 0 != BASS_GetDeviceDescription(i); ++i)
-	{
-		SendMessage(GetDlgItem(hDlg, IDC_SOUNDCARD), CB_ADDSTRING, 0, (LPARAM)BASS_GetDeviceDescription(i));
-	}
-#else
-	// record device
-	for (unsigned i = 0; 0 != BASS_RecordGetDeviceDescription(i); ++i) {
-		SendMessage(GetDlgItem(IDC_SOUNDCARD), CB_ADDSTRING, 0, (LPARAM)BASS_RecordGetDeviceDescription(i));
-	}
-#endif
+	BASS_DEVICEINFO info;
+	for (int i = 0; BASS_GetDeviceInfo(i, &info); ++i)
+		SendMessage(GetDlgItem(hDlg, IDC_SOUNDCARD), CB_ADDSTRING, 0, (LPARAM)info.name);
 
 	// select default soundcard
 	SendMessage(GetDlgItem(hDlg, IDC_SOUNDCARD), (UINT)CB_SETCURSEL, (WPARAM)DEFAULT_SOUNDCARD, 0);

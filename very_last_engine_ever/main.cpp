@@ -38,6 +38,8 @@
 #include "engine/spectrumdata.h"
 #include "engine/video.h"
 
+#include "sync/sync.h"
+
 using math::Vector2;
 using math::Vector3;
 using math::Matrix4x4;
@@ -51,8 +53,6 @@ using engine::Mesh;
 using engine::Effect;
 using engine::Image;
 using engine::Anim;
-
-#include "scenegraph/sceneloader.h"
 
 Matrix4x4 radialblur_matrix(const Texture &tex, const Vector2 &center, const float amt = 1.01)
 {
@@ -72,14 +72,7 @@ Matrix4x4 radialblur_matrix(const Texture &tex, const Vector2 &center, const flo
 	return trans1 * mat * trans2;
 }
 
-#include "sync/device.h"
-#include "sync/basstimer.h"
-
-
 using namespace core;
-using namespace scenegraph;
-
-using sync::Track;
 
 HWND win = 0;
 HSTREAM stream = 0;
@@ -183,6 +176,45 @@ Surface loadSurface(renderer::Device &device, std::string fileName)
 	return surface_wrapper;
 }
 
+const int rpb = 4; /* rows per beat */
+const double row_rate = (double(BPM) / 60) * rpb;
+
+double bass_get_row(HSTREAM h)
+{
+	QWORD pos = BASS_ChannelGetPosition(h, BASS_POS_BYTE);
+	double time = BASS_ChannelBytes2Seconds(h, pos);
+	return time * row_rate;
+}
+
+#ifndef SYNC_PLAYER
+
+void bass_pause(void *d, int flag)
+{
+	if (flag)
+		BASS_ChannelPause((HSTREAM)d);
+	else
+		BASS_ChannelPlay((HSTREAM)d, false);
+}
+
+void bass_set_row(void *d, int row)
+{
+	QWORD pos = BASS_ChannelSeconds2Bytes((HSTREAM)d, row / row_rate);
+	BASS_ChannelSetPosition((HSTREAM)d, pos, BASS_POS_BYTE);
+}
+
+int bass_is_playing(void *d)
+{
+	return BASS_ChannelIsActive((HSTREAM)d) == BASS_ACTIVE_PLAYING;
+}
+
+struct sync_cb bass_cb = {
+	bass_pause,
+	bass_set_row,
+	bass_is_playing
+};
+
+#endif /* !defined(SYNC_PLAYER) */
+
 int main(int /*argc*/, char* /*argv*/ [])
 {
 #ifdef _DEBUG
@@ -241,37 +273,24 @@ int main(int /*argc*/, char* /*argv*/ [])
 		if (!stream)
 			throw FatalException("failed to open tune");
 
-		// setup timer and construct sync-device
-		BassTimer synctimer(stream, float(BPM), 4);
-		
-		std::auto_ptr<sync::Device> syncDevice = std::auto_ptr<sync::Device>(sync::createDevice("data/sync", synctimer));
-		if (NULL == syncDevice.get())
+		sync_device *rocket = sync_create_device("data/sync");
+		if (!rocket)
 			throw FatalException("something went wrong - failed to connect to host?");
 
-		Track &cameraDistanceTrack = syncDevice->getTrack("cam.dist");
-		Track &cameraRollTrack     = syncDevice->getTrack("cam.roll");
-		Track &cameraXRotTrack     = syncDevice->getTrack("cam.x-rot");
-		Track &cameraYRotTrack     = syncDevice->getTrack("cam.y-rot");
-		Track &cameraZRotTrack     = syncDevice->getTrack("cam.z-rot");
-		Track &cameraOffsetTrack     = syncDevice->getTrack("cam.offset");
-		Track &cameraIndexTrack     = syncDevice->getTrack("cam.index");
+#ifndef SYNC_PLAYER
+		sync_set_callbacks(rocket, &bass_cb, (void *)stream);
+		if (sync_connect(rocket, "localhost", SYNC_DEFAULT_PORT))
+			throw FatalException("failed to connect to host");
+#endif
 
-		Track &colorMapBlendTrack  = syncDevice->getTrack("cm.blend");
-		Track &colorMapPalTrack    = syncDevice->getTrack("cm.pal");
-		Track &colorMapFadeTrack   = syncDevice->getTrack("cm.fade");
-		Track &colorMapFlashTrack  = syncDevice->getTrack("cm.flash");
-		Track &colorMapDistortXTrack  = syncDevice->getTrack("cm.dist.x");
-		Track &colorMapDistortYTrack  = syncDevice->getTrack("cm.dist.y");
-		Track &overlayTrack  = syncDevice->getTrack("cm.overlay");
+		const sync_track *cameraDistanceTrack = sync_get_track(rocket, "cam.dist");
+		const sync_track *cameraRollTrack     = sync_get_track(rocket, "cam.roll");
+		const sync_track *cameraOffsetTrack   = sync_get_track(rocket, "cam.offset");
+		const sync_track *cameraIndexTrack    = sync_get_track(rocket, "cam.index");
 
-		Track &noiseAmtTrack  = syncDevice->getTrack("noise.amt");
-		Track &noiseFFTTrack  = syncDevice->getTrack("noise.fft");
-
-		Track &partTrack = syncDevice->getTrack("_part");
-		Track &logoCycleTrack     = syncDevice->getTrack("logo.cycle");
-
-		Track &starAlphaTrack     = syncDevice->getTrack("star.alpha");
-		Track &starRotTrack     = syncDevice->getTrack("star.rot");
+		const sync_track *colorMapBlendTrack  = sync_get_track(rocket, "cm.blend");
+		const sync_track *colorMapFadeTrack   = sync_get_track(rocket, "cm.fade");
+		const sync_track *colorMapFlashTrack  = sync_get_track(rocket, "cm.flash");
 
 //		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
 
@@ -300,9 +319,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
 
 		engine::VertexStreamer vertex_streamer(device);
-
-		scenegraph::Scene *testScene = loadScene(device, "data/testScene/test.scene");
-		engine::SceneRenderer testRenderer = engine::SceneRenderer(testScene, testScene->findCamera("Camera01-camera"));
 
 		Effect *tex_fx      = engine::loadEffect(device, "data/tex.fx");
 		Effect *tex_trans_fx      = engine::loadEffect(device, "data/tex.fx");
@@ -359,7 +375,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-		BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, 0.0f));
 
 		// todo: config this
 		bool dump_video = false;
@@ -368,20 +383,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 		bool done = false;
 		int frame = 0;
 		while (!done) {
-			if (dump_video)
-				BASS_ChannelSetPosition(stream, BASS_ChannelSeconds2Bytes(stream, frame / video_framerate));
+			if (dump_video) {
+				QWORD pos = BASS_ChannelSeconds2Bytes(stream, frame / video_framerate);
+				BASS_ChannelSetPosition(stream, pos, BASS_POS_BYTE);
+			}
 
-			static float last_time = 0.f;
-			static float time_offset = 0.f;
-			float time = synctimer.getTime();
-			float beat = synctimer.getRow();
+			double beat = bass_get_row(stream);
 
-#ifndef VJSYS
-			syncDevice->update(beat); //gets current timing info from the SyncTimer.
+#ifndef SYNC_PLAYER
+			sync_update(rocket, int(beat)); //gets current timing info from the SyncTimer.
 #endif
 
-			float camTime = beat / 4 + cameraOffsetTrack.getValue(beat);
-			int cameraIndex = cameraIndexTrack.getIntValue(beat);
+			float camTime = float(beat / 4) + sync_get_val(cameraOffsetTrack, beat);
+			int cameraIndex = int(sync_get_val(cameraIndexTrack, beat));
 
 			Vector3 camPos, camTarget;
 			switch (cameraIndex) {
@@ -394,11 +408,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 				camTarget = Vector3(0,0,50);
 				break;
 			default:
-				camPos = Vector3(sin(camTime * 0.25f) * 200, cos(camTime * 0.7f) * 70, -(120 + (camTime - 8) * 1.f)) * cameraDistanceTrack.getValue(beat);;
+				camPos = Vector3(sin(camTime * 0.25f) * 200, cos(camTime * 0.7f) * 70, -(120 + (camTime - 8) * 1.f)) * sync_get_val(cameraDistanceTrack, beat);
 				camTarget = Vector3(0,0,50);
 			}
 
-			float camRoll = cameraRollTrack.getValue(beat) * float(2 * M_PI);
+			float camRoll = sync_get_val(cameraRollTrack, beat) * float(2 * M_PI);
 			Matrix4x4 view  = Matrix4x4::lookAt(camPos, camTarget, camRoll);
 			Matrix4x4 world = Matrix4x4::rotation(Vector3(0, -M_PI / 2, 0));
 			Matrix4x4 proj  = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 1.0f, 10000.f);
@@ -463,10 +477,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->Clear(0, 0, D3DCLEAR_TARGET, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
 			device.setViewport(&letterbox_viewport);
 
-			float flash = (colorMapFlashTrack.getValue(beat) == 1000.f) ? float(rand() % 2) : colorMapFlashTrack.getValue(beat);
-			color_map_fx->setFloat("fade", colorMapBlendTrack.getValue(beat));
-			color_map_fx->setFloat("flash", pow(flash, 2.0f));
-			color_map_fx->setFloat("fade2", colorMapFadeTrack.getValue(beat));
+			float flash = sync_get_val(colorMapFlashTrack, beat);
+			color_map_fx->setFloat("fade", sync_get_val(colorMapBlendTrack, beat));
+			color_map_fx->setFloat("flash", flash < 0 ? randf() : pow(flash, 2.0f));
+			color_map_fx->setFloat("fade2", sync_get_val(colorMapFadeTrack, beat));
 			color_map_fx->setFloat("alpha", 0.25f);
 			color_map_fx->setTexture("tex", color1_hdr);
 			color_map_fx->setTexture("tex2", color_msaa);
@@ -496,7 +510,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			if (FAILED(res))
 				throw FatalException(std::string(DXGetErrorString(res)) + std::string(" : ") + std::string(DXGetErrorDescription(res)));
 
-			BASS_Update(); // decrease the chance of missing vsync
+			BASS_Update(0); // decrease the chance of missing vsync
 			frame++;
 			MSG msg;
 			while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {

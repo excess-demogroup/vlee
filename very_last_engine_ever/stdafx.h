@@ -28,7 +28,9 @@
 #include <dxerr.h>
 
 // got a nick, know what's BASS!
+#pragma warning (disable : 4200)
 #include <bass.h>
+#pragma warning (default : 4200)
 
 #include <stdio.h>
 #include <stdlib.h>

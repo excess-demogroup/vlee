@@ -1,46 +1,27 @@
-/* Copyright (C) 2007-2008 Erik Faye-Lund and Egbert Teeselink
- * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+/* Copyright (C) 2007-2010 Erik Faye-Lund and Egbert Teeselink
+ * For conditions of distribution and use, see copyright notice in COPYING
  */
 
-#pragma once
-
-#include <string>
-#include <map>
-#include <vector>
-
-#include <exception>
-#include <cmath>
-#include <cassert>
-
-#ifdef WIN32
-#include <tchar.h>
-#else
-#define TCHAR char
-#endif
+#ifndef SYNC_DATA_H
+#define SYNC_DATA_H
 
 #include "track.h"
 
-namespace sync
+struct sync_data {
+	struct sync_track **tracks;
+	size_t num_tracks;
+};
+
+static inline int sync_find_track(struct sync_data *data, const char *name)
 {
-	class Data
-	{
-	public:
-		~Data();
-		size_t getTrackIndex(const std::basic_string<TCHAR> &name);
-		Track &getTrack(const std::basic_string<TCHAR> &name);
-		
-		Track &getTrack(size_t track)
-		{
-			assert(track < actualTracks.size());
-			assert(NULL != actualTracks[track]);
-			return *actualTracks[track];
-		}
-		
-		size_t getTrackCount() const;
-		
-		typedef std::map<const std::basic_string<TCHAR>, size_t> TrackContainer;
-		TrackContainer tracks;
-	protected:
-		std::vector<Track*> actualTracks;
-	};
+	int i;
+	for (i = 0; i < (int)data->num_tracks; ++i)
+		if (!strcmp(name, data->tracks[i]->name))
+			return i;
+	return -1; /* not found */
 }
+
+void sync_data_deinit(struct sync_data *);
+int sync_create_track(struct sync_data *, const char *);
+
+#endif /* SYNC_DATA_H */
