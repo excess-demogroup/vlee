@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include;&quot;$(ProjectDir)&quot;"
+				AdditionalIncludeDirectories="include;&quot;$(ProjectDir)/src&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;D3D_DEBUG_INFO;_CRT_SECURE_NO_DEPRECATE;WINDOWED;SYNC_PLAYER"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -120,7 +120,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="include;&quot;$(ProjectDir)&quot;"
+				AdditionalIncludeDirectories="include;&quot;$(ProjectDir)/src&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;SYNC_PLAYER"
 				EnableEnhancedInstructionSet="0"
 				FloatingPointModel="2"
@@ -202,7 +202,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="1"
-				AdditionalIncludeDirectories="include;&quot;$(ProjectDir)&quot;"
+				AdditionalIncludeDirectories="include;&quot;$(ProjectDir)/src&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;SYNC"
 				FloatingPointModel="2"
 				UsePrecompiledHeader="2"
@@ -266,19 +266,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\configdialog.cpp"
+				RelativePath=".\src\configdialog.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\init.cpp"
+				RelativePath=".\src\init.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\main.cpp"
+				RelativePath=".\src\main.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\stdafx.cpp"
+				RelativePath=".\src\stdafx.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -309,55 +309,55 @@
 				Name="engine"
 				>
 				<File
-					RelativePath=".\engine\anim.cpp"
+					RelativePath=".\src\engine\anim.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\ccbsplines.cpp"
+					RelativePath=".\src\engine\ccbsplines.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\effect.cpp"
+					RelativePath=".\src\engine\effect.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\explosion.cpp"
+					RelativePath=".\src\engine\explosion.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\grow.cpp"
+					RelativePath=".\src\engine\grow.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\image.cpp"
+					RelativePath=".\src\engine\image.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\particlestreamer.cpp"
+					RelativePath=".\src\engine\particlestreamer.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\scenerender.cpp"
+					RelativePath=".\src\engine\scenerender.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\spectrumdata.cpp"
+					RelativePath=".\src\engine\spectrumdata.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\textureproxy.cpp"
+					RelativePath=".\src\engine\textureproxy.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\triangleeffect.cpp"
+					RelativePath=".\src\engine\triangleeffect.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\voxelgrid.cpp"
+					RelativePath=".\src\engine\voxelgrid.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\voxelmesh.cpp"
+					RelativePath=".\src\engine\voxelmesh.cpp"
 					>
 				</File>
 			</Filter>
@@ -365,7 +365,7 @@
 				Name="core"
 				>
 				<File
-					RelativePath=".\core\log.cpp"
+					RelativePath=".\src\core\log.cpp"
 					>
 				</File>
 			</Filter>
@@ -373,15 +373,15 @@
 				Name="scenegraph"
 				>
 				<File
-					RelativePath=".\scenegraph\node.cpp"
+					RelativePath=".\src\scenegraph\node.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\scenegraph\scene.cpp"
+					RelativePath=".\src\scenegraph\scene.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\scenegraph\sceneloader.cpp"
+					RelativePath=".\src\scenegraph\sceneloader.cpp"
 					>
 				</File>
 			</Filter>
@@ -389,7 +389,7 @@
 				Name="renderer"
 				>
 				<File
-					RelativePath=".\renderer\device.cpp"
+					RelativePath=".\src\renderer\device.cpp"
 					>
 				</File>
 			</Filter>
@@ -400,110 +400,110 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\config.h"
+				RelativePath=".\src\config.h"
 				>
 			</File>
 			<File
-				RelativePath=".\configdialog.h"
+				RelativePath=".\src\configdialog.h"
 				>
 			</File>
 			<File
-				RelativePath=".\init.h"
+				RelativePath=".\src\init.h"
 				>
 			</File>
 			<File
-				RelativePath=".\megademo.h"
+				RelativePath=".\src\megademo.h"
 				>
 			</File>
 			<File
-				RelativePath=".\resource.h"
+				RelativePath=".\src\resource.h"
 				>
 			</File>
 			<File
-				RelativePath=".\stdafx.h"
+				RelativePath=".\src\stdafx.h"
 				>
 			</File>
 			<Filter
 				Name="engine"
 				>
 				<File
-					RelativePath=".\engine\anim.h"
+					RelativePath=".\src\engine\anim.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\ccbsplines.h"
+					RelativePath=".\src\engine\ccbsplines.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\demo.h"
+					RelativePath=".\src\engine\demo.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\drawable.h"
+					RelativePath=".\src\engine\drawable.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\effect.h"
+					RelativePath=".\src\engine\effect.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\explosion.h"
+					RelativePath=".\src\engine\explosion.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\grow.h"
+					RelativePath=".\src\engine\grow.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\image.h"
+					RelativePath=".\src\engine\image.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\mesh.h"
+					RelativePath=".\src\engine\mesh.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\particlecloud.h"
+					RelativePath=".\src\engine\particlecloud.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\particlestreamer.h"
+					RelativePath=".\src\engine\particlestreamer.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\resourceproxy.h"
+					RelativePath=".\src\engine\resourceproxy.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\scenerender.h"
+					RelativePath=".\src\engine\scenerender.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\spectrumdata.h"
+					RelativePath=".\src\engine\spectrumdata.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\textureproxy.h"
+					RelativePath=".\src\engine\textureproxy.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\triangleeffect.h"
+					RelativePath=".\src\engine\triangleeffect.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\vertexstreamer.h"
+					RelativePath=".\src\engine\vertexstreamer.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\video.h"
+					RelativePath=".\src\engine\video.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\voxelgrid.h"
+					RelativePath=".\src\engine\voxelgrid.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\voxelmesh.h"
+					RelativePath=".\src\engine\voxelmesh.h"
 					>
 				</File>
 			</Filter>
@@ -511,23 +511,23 @@
 				Name="sync"
 				>
 				<File
-					RelativePath=".\sync\base.h"
+					RelativePath=".\src\sync\base.h"
 					>
 				</File>
 				<File
-					RelativePath=".\sync\data.h"
+					RelativePath=".\src\sync\data.h"
 					>
 				</File>
 				<File
-					RelativePath=".\sync\device.h"
+					RelativePath=".\src\sync\device.h"
 					>
 				</File>
 				<File
-					RelativePath=".\sync\sync.h"
+					RelativePath=".\src\sync\sync.h"
 					>
 				</File>
 				<File
-					RelativePath=".\sync\track.h"
+					RelativePath=".\src\sync\track.h"
 					>
 				</File>
 			</Filter>
@@ -535,39 +535,39 @@
 				Name="scenegraph"
 				>
 				<File
-					RelativePath=".\scenegraph\camera.h"
+					RelativePath=".\src\scenegraph\camera.h"
 					>
 				</File>
 				<File
-					RelativePath=".\scenegraph\drawable.h"
+					RelativePath=".\src\scenegraph\drawable.h"
 					>
 				</File>
 				<File
-					RelativePath=".\scenegraph\meshnode.h"
+					RelativePath=".\src\scenegraph\meshnode.h"
 					>
 				</File>
 				<File
-					RelativePath=".\scenegraph\node.h"
+					RelativePath=".\src\scenegraph\node.h"
 					>
 				</File>
 				<File
-					RelativePath=".\scenegraph\prstransform.h"
+					RelativePath=".\src\scenegraph\prstransform.h"
 					>
 				</File>
 				<File
-					RelativePath=".\scenegraph\scene.h"
+					RelativePath=".\src\scenegraph\scene.h"
 					>
 				</File>
 				<File
-					RelativePath=".\scenegraph\scenegraph.h"
+					RelativePath=".\src\scenegraph\scenegraph.h"
 					>
 				</File>
 				<File
-					RelativePath=".\scenegraph\sceneloader.h"
+					RelativePath=".\src\scenegraph\sceneloader.h"
 					>
 				</File>
 				<File
-					RelativePath=".\scenegraph\transform.h"
+					RelativePath=".\src\scenegraph\transform.h"
 					>
 				</File>
 			</Filter>
@@ -575,19 +575,19 @@
 				Name="core"
 				>
 				<File
-					RelativePath=".\core\comref.h"
+					RelativePath=".\src\core\comref.h"
 					>
 				</File>
 				<File
-					RelativePath=".\core\err.h"
+					RelativePath=".\src\core\err.h"
 					>
 				</File>
 				<File
-					RelativePath=".\core\fatalexception.h"
+					RelativePath=".\src\core\fatalexception.h"
 					>
 				</File>
 				<File
-					RelativePath=".\engine\core\log.h"
+					RelativePath=".\src\engine\core\log.h"
 					>
 				</File>
 			</Filter>
@@ -595,43 +595,43 @@
 				Name="renderer"
 				>
 				<File
-					RelativePath=".\renderer\cubetexture.h"
+					RelativePath=".\src\renderer\cubetexture.h"
 					>
 				</File>
 				<File
-					RelativePath=".\renderer\device.h"
+					RelativePath=".\src\renderer\device.h"
 					>
 				</File>
 				<File
-					RelativePath=".\renderer\indexbuffer.h"
+					RelativePath=".\src\renderer\indexbuffer.h"
 					>
 				</File>
 				<File
-					RelativePath=".\renderer\rendertexture.h"
+					RelativePath=".\src\renderer\rendertexture.h"
 					>
 				</File>
 				<File
-					RelativePath=".\renderer\stateblock.h"
+					RelativePath=".\src\renderer\stateblock.h"
 					>
 				</File>
 				<File
-					RelativePath=".\renderer\surface.h"
+					RelativePath=".\src\renderer\surface.h"
 					>
 				</File>
 				<File
-					RelativePath=".\renderer\texture.h"
+					RelativePath=".\src\renderer\texture.h"
 					>
 				</File>
 				<File
-					RelativePath=".\renderer\vertexbuffer.h"
+					RelativePath=".\src\renderer\vertexbuffer.h"
 					>
 				</File>
 				<File
-					RelativePath=".\renderer\vertexdeclaration.h"
+					RelativePath=".\src\renderer\vertexdeclaration.h"
 					>
 				</File>
 				<File
-					RelativePath=".\renderer\volumetexture.h"
+					RelativePath=".\src\renderer\volumetexture.h"
 					>
 				</File>
 			</Filter>
@@ -639,23 +639,23 @@
 				Name="math"
 				>
 				<File
-					RelativePath=".\math\math.h"
+					RelativePath=".\src\math\math.h"
 					>
 				</File>
 				<File
-					RelativePath=".\math\matrix4x4.h"
+					RelativePath=".\src\math\matrix4x4.h"
 					>
 				</File>
 				<File
-					RelativePath=".\math\notrand.h"
+					RelativePath=".\src\math\notrand.h"
 					>
 				</File>
 				<File
-					RelativePath=".\math\vector2.h"
+					RelativePath=".\src\math\vector2.h"
 					>
 				</File>
 				<File
-					RelativePath=".\math\vector3.h"
+					RelativePath=".\src\math\vector3.h"
 					>
 				</File>
 			</Filter>
@@ -670,7 +670,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\very_last_engine_ever.rc"
+				RelativePath=".\src\very_last_engine_ever.rc"
 				>
 			</File>
 		</Filter>
