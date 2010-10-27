@@ -379,199 +379,54 @@ int main(int /*argc*/, char* /*argv*/ [])
 #ifndef VJSYS
 			syncDevice->update(beat); //gets current timing info from the SyncTimer.
 #endif
-			device->BeginScene();
-			
-			/* setup multisampled stuffz */
-			device.setRenderTarget(color_msaa.getRenderTarget());
-			device.setDepthStencilSurface(depthstencil_msaa);
-			
-			D3DXCOLOR clear_color(0.45f, 0.25f, 0.25f, 0.f);
-			
-			float roll = cameraRollTrack.getValue(beat);
-			roll *= float(2 * M_PI);
-			float yRot = cameraYRotTrack.getValue(beat);
-			Vector3 up(float(sin(roll)), float(cos(roll)), 0.f);
-			Vector3 eye(
-				float(sin(yRot)),
-				float(0),
-				float(cos(yRot))
-			);
-			eye = normalize(eye);
 
-			float camera_distance = 360 * (cameraDistanceTrack.getValue(beat));
-			eye *= camera_distance;
-			Vector3 at(0, 0, 0);
+			float camTime = beat / 4 + cameraOffsetTrack.getValue(beat);
+			int cameraIndex = cameraIndexTrack.getIntValue(beat);
 
-			at = Vector3(0, 0, 0);
-			eye = Vector3(0, 0, -4);
-			Vector3 orig_at = at;
-			
-			Matrix4x4 world = Matrix4x4::identity();
-			Matrix4x4 view = Matrix4x4::lookAt(eye, at, roll);
-			Matrix4x4 proj = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 1.0f, 100000.f);
-
-//			testScene->anim(fmod(beat, 100));
-			scenegraph::Camera *cam = testScene->findCamera("Camera01-camera");
-			if (cam) {
-				Matrix4x4 camView = cam->getAbsoluteTransform();
-				view = camView.inverse();
-				proj = cam->getProjection();
+			Vector3 camPos, camTarget;
+			switch (cameraIndex) {
+			case 0:
+				camPos = Vector3(-sin(camTime*0.3f)*280, cos(camTime*0.3f)*80, cos(-camTime * 0.4f + 1)*220);
+				camTarget = Vector3(0,0,50);
+				break;
+			case 1:
+				camPos = Vector3(sin(camTime*0.3f)*200, cos(camTime*0.7f)*70, cos(-camTime*0.3f)*160);
+				camTarget = Vector3(0,0,50);
+				break;
+			default:
+				camPos = Vector3(sin(camTime * 0.25f) * 200, cos(camTime * 0.7f) * 70, -(120 + (camTime - 8) * 1.f)) * cameraDistanceTrack.getValue(beat);;
+				camTarget = Vector3(0,0,50);
 			}
 
+			float camRoll = cameraRollTrack.getValue(beat) * float(2 * M_PI);
+			Matrix4x4 view  = Matrix4x4::lookAt(camPos, camTarget, camRoll);
+			Matrix4x4 world = Matrix4x4::rotation(Vector3(0, -M_PI / 2, 0));
+			Matrix4x4 proj  = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 1.0f, 10000.f);
+
 			// render
+			device->BeginScene();
+			device.setRenderTarget(color_msaa.getRenderTarget());
+			device.setDepthStencilSurface(depthstencil_msaa);
+			D3DXCOLOR clear_color(0.45f, 0.25f, 0.25f, 0.f);
+
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 			device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, clear_color, 1.f, 0);
 
-			//	test_fx.draw(cube_x);
-			//	time /= 4;
-/*
-			testRenderer.view       = view;
-			testRenderer.projection = proj; // math::Matrix4x4::projection(60.0f, 16.0f / 9, 1.0f, 1000.0f);
-			testRenderer.draw(); */
-
-			float dist = cameraDistanceTrack.getValue(beat);
-			float rot = 0; // cameraRollTrack.getValue(beat);
-			int cameraIndex = cameraIndexTrack.getIntValue(beat);
-
-			float camTime = beat / 4 + cameraOffsetTrack.getValue(beat);
-			Vector3 camPos;
-			switch (cameraIndex) {
-			case 0:
-				camPos = Vector3(-sin(camTime*0.3f)*280, cos(camTime*0.3f)*80, cos(-camTime * 0.4f + 1)*220);
-				break;
-			case 1:
-				camPos = Vector3(sin(camTime*0.3f)*200, cos(camTime*0.7f)*70, cos(-camTime*0.3f)*160);
-				break;
-			default:
-				camPos = Vector3(sin(camTime * 0.25f) * 200, cos(camTime * 0.7f) * 70, -(120 + (camTime - 8) * 1.f)) * dist;
-			}
-
-			view = Matrix4x4::lookAt(camPos, Vector3(0,0,50), roll);
-			world = Matrix4x4::rotation(Vector3(0, -M_PI / 2, 0));
-
-			if (partTrack.getIntValue(beat) == 1) {
-				for (int j = -2; j < 3; ++j) {
-					float dir = j & 1 ? -1.0f : 1.0f;
-					for (int i = 0; i < 16; ++i) {
-						Matrix4x4 world = Matrix4x4::translation(Vector3(0, 30, 0));
-						world *= Matrix4x4::rotation(Vector3(0, 0, (float(i) / 16  + beat / 64) * 2 * M_PI * dir));
-						world *= Matrix4x4::translation(Vector3(0, j * 70, 0));
-
-						logoEffect->setMatrices(world, view, proj);
-						logoEffect->commitChanges();
-						logoEffect->draw(boxMesh);
-					}
-
-					for (int i = 0; i < 16; ++i) {
-						Matrix4x4 world = Matrix4x4::translation(Vector3(0, 30, 0));
-						world *= Matrix4x4::rotation(Vector3(0, 0, (float(i) / 16  + beat / 64) * 2 * M_PI * dir));
-						world *= Matrix4x4::rotation(Vector3(M_PI / 2, 0, 0));
-						world *= Matrix4x4::translation(Vector3(0, -35 + j * 70, 0));
-
-						logoEffect->setMatrices(world, view, proj);
-						logoEffect->commitChanges();
-						logoEffect->draw(boxMesh);
-					}
-				}
-			} else if (0 == partTrack.getIntValue(beat)) {
-				logoEffect->setMatrices(world, view, proj);
-				logoEffect->commitChanges();
-				logoEffect->draw(logoMesh);
-			} else if (2 == partTrack.getIntValue(beat)) {
-				logoEffect->setMatrices(world, view, proj);
-				logoEffect->commitChanges();
-				logoEffect->draw(discoTilesMesh);
-			} else {
-				logoEffect->setMatrices(world, view, proj);
-				logoEffect->commitChanges();
-
-				for (int y = -16; y < 16; ++y) {
-					for (int x = -16; x < 16; ++x) {
-						Vector3 center(y * 1.7, 0, x * 2 + y % 2);
-						center.y  = cos(center.x * 0.1f - center.z * 0.15f - beat);
-						center.y -= sin(center.x * 0.2f - center.z * 0.11f + beat);
-						center.y -= 3.0f;
-						Matrix4x4 world = Matrix4x4::translation(center) * Matrix4x4::scaling(Vector3(15, 30, 15)) ;
-						logoEffect->setMatrices(world, view, proj);
-						logoEffect->commitChanges();
-						logoEffect->draw(hexcol_x);
-					}
-				}
-			}
-
-			device->SetRenderState(D3DRS_ZWRITEENABLE, false);
-			device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-
-			for (int i = 0; i < 3; ++i) {
-				Matrix4x4 world = Matrix4x4::rotation(Vector3(0, -M_PI / 2, 0));
-				world *= Matrix4x4::scaling(Vector3(i + 3, i + 3, i + 3) * 3);
-				world *= Matrix4x4::rotation(Vector3(0, 0, beat + i));
-
-				float color = pow(fmod(logoCycleTrack.getValue(beat + i), 1), 3);
-				logoRingEffect->setFloat("alpha", color);
-				logoRingEffect->setMatrices(world, view, proj);
-				logoRingEffect->commitChanges();
-				logoRingEffect->draw(logoRingMesh);
-			}
-
-			Matrix4x4 modelview = world * view;
-			up = Vector3(modelview._12, modelview._22, modelview._32);
-			Vector3 left(modelview._11, modelview._21, modelview._31);
-			math::normalize(up);
-			math::normalize(left);
-			starParticleEffect->setFloatArray("up", up, 3);
-			starParticleEffect->setFloatArray("left", left, 3);
-			starParticleEffect->setMatrices(world, view, proj);
-			starParticleEffect->setFloat("alpha", starAlphaTrack.getValue(beat));
-			starParticleEffect->commitChanges();
-
-			if (2 == partTrack.getIntValue(beat)) {
-				particleStreamer.begin();
-				for (int i = 0; i < 256; ++i) {
-#if 1
-					int j = i - 8;
-					float scale = 1.0f / (1 + abs(j) * 0.5f);
-					Vector3 pos = Vector3(cos(float(i) * 350) * 50, cos(float(i) * 150) * 50, fabs(cos((beat + i * 0.1) * (M_PI / 8))) * 100 * scale - 100);
-#else
-					float rot = (float(i) / 16 + beat / 32) * (2 * M_PI);
-					float dist = (float(i) / 16) * 100;
-					float scale = float(i) / 16;
-					Vector3 pos = Vector3(sin(rot) * dist, 50, -cos(rot) * dist);
-#endif
-					particleStreamer.add(pos, 25 * scale);
-				}
-				particleStreamer.end();
-			} else {
-				particleStreamer.begin();
-				for (int i = 0; i < 256; ++i) {
-#if 0
-					int j = i - 8;
-					float scale = 1.0f / (1 + abs(j) * 0.5f);
-					Vector3 pos = Vector3(cos(float(i) * 350) * 150, 150 + cos(float(i) * 150) * 50, fabs(cos((beat + i * 0.1) * (M_PI / 8))) * 100 * scale - 50);
-#else
-					float rot = (float(i) / 16 + beat / 32) * float(2 * M_PI);
-					float dist = (float(i) / 16) * 100;
-					float scale = float(i) / 16;
-					Vector3 pos = Vector3(sin(rot) * dist, 50, -cos(rot) * dist);
-#endif
-					particleStreamer.add(pos, 25 * scale);
-				}
-				particleStreamer.end();
-			}
-			starParticleEffect->draw(&particleStreamer);
+			logoEffect->setMatrices(world, view, proj);
+			logoEffect->commitChanges();
+			logoEffect->draw(logoMesh);
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			color_msaa.resolve(device);
-#if 1
+
 			world.makeIdentity();
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 			device->SetRenderState(D3DRS_ZWRITEENABLE, false);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 
+			/* do the bloom */
 			device->StretchRect(color_msaa.getSurface(0), NULL, color1_hdr.getSurface(0), NULL, D3DTEXF_LINEAR);
 			blur_fx->setFloat("sub", 0.25f);
 			RenderTexture render_textures[2] = { color1_hdr, color2_hdr };
@@ -601,7 +456,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 					rtIndex = !rtIndex;
 				}
 			}
-#endif
 
 			/* letterbox */
 			device.setRenderTarget(backbuffer);
