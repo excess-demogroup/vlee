@@ -201,7 +201,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		ComRef<IDirect3D9> direct3d;
 		direct3d.attachRef(Direct3DCreate9(D3D_SDK_VERSION));
 		if (!direct3d)
-			throw FatalException("your directx-version is from the stone-age.\n\nTHRUG SAYS: UPGRADE!");
+			throw FatalException("Your directx-version is from the stone-age.\n\nTHRUG SAYS: UPGRADE!");
 
 		/* show config dialog */
 		INT_PTR result = config::showDialog(hInstance, direct3d);
@@ -215,12 +215,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			}
 		}
 
-		if (FAILED(direct3d->CheckDeviceFormat(config::adapter, DEVTYPE, config::mode.Format, D3DUSAGE_QUERY_FILTER, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F)))
-			MessageBox(NULL, "Selected mode does not support FP16 texture-filtering, demo will look crap.", "visual quality warning", MB_OK | MB_ICONWARNING);
-		
-		if (FAILED(direct3d->CheckDeviceFormat(config::adapter, DEVTYPE, config::mode.Format, D3DUSAGE_QUERY_POSTPIXELSHADER_BLENDING, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F)))
-			MessageBox(NULL, "Selected mode does not support FP16 blending, demo will look crap.", "visual quality warning", MB_OK | MB_ICONWARNING);
-		
 		/* create window */
 		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, config::mode.Width, config::mode.Height, 0, 0, GetModuleHandle(0), 0);
 		if (!win)
@@ -284,12 +278,26 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Surface backbuffer   = device.getRenderTarget(0);
 		Surface depthstencil = device.getDepthStencilSurface();
 
-		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F, config::multisample, D3DUSAGE_AUTOGENMIPMAP);
-		Surface depthstencil_msaa = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8, config::multisample);
+		D3DCAPS9 caps;
+		direct3d->GetDeviceCaps(config::adapter, D3DDEVTYPE_HAL, &caps);
+
+		bool use_sm20_codepath = false;
+		if (FAILED(direct3d->CheckDeviceFormat(config::adapter, D3DDEVTYPE_HAL, config::mode.Format, D3DUSAGE_QUERY_FILTER, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F)) ||
+			caps.PixelShaderVersion < D3DVS_VERSION(3, 0))
+			use_sm20_codepath = true;
+
+		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 0,
+		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F,
+		    use_sm20_codepath ? D3DMULTISAMPLE_NONE : config::multisample,
+		    D3DUSAGE_AUTOGENMIPMAP);
+		Surface depthstencil_msaa = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8,
+		    use_sm20_codepath ? D3DMULTISAMPLE_NONE : config::multisample);
 
 		/** DEMO ***/
-		RenderTexture color1_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
-		RenderTexture color2_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1, D3DFMT_A16B16G16R16F);
+		RenderTexture color1_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1,
+		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
+		RenderTexture color2_hdr(device, 800 / 2, int((800 / DEMO_ASPECT) / 2), 1,
+		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
 
 		engine::VertexStreamer vertex_streamer(device);
 

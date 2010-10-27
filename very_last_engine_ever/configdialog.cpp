@@ -56,8 +56,10 @@ static void refreshModes(HWND hDlg)
 	SendMessage(GetDlgItem(hDlg, IDC_RESOLUTION), (UINT)CB_SETCURSEL, (WPARAM)best_mode, 0);
 }
 
-static bool is_multisample_type_ok(IDirect3D9 *direct3d, UINT adapter, D3DFORMAT depthBufferFormat, D3DFORMAT adapterFormat, D3DFORMAT backBufferFormat, D3DMULTISAMPLE_TYPE multisample_type) {
+static bool is_multisample_type_ok(IDirect3D9 *direct3d, UINT adapter, D3DFORMAT depthBufferFormat, D3DFORMAT adapterFormat, D3DFORMAT backBufferFormat, D3DMULTISAMPLE_TYPE multisample_type)
+{
 	return
+		(multisample_type == D3DMULTISAMPLE_NONE || SUCCEEDED(direct3d->CheckDeviceFormat(adapter, D3DDEVTYPE_HAL, backBufferFormat, D3DUSAGE_QUERY_FILTER, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F))) &&
 	    SUCCEEDED(direct3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, backBufferFormat, FALSE, multisample_type, NULL)) &&
 	    SUCCEEDED(direct3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, D3DFMT_A16B16G16R16F, FALSE, multisample_type, NULL)) &&
 	    SUCCEEDED(direct3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, depthBufferFormat, FALSE, multisample_type, NULL));
@@ -104,6 +106,7 @@ static void refreshMultisampleTypes(HWND hDlg)
 
 	// select previous selected mode (if found)
 	SendMessage(GetDlgItem(hDlg, IDC_MULTISAMPLE), (UINT)CB_SETCURSEL, (WPARAM)best_hit, 0);
+	EnableWindow(GetDlgItem(hDlg, IDC_MULTISAMPLE), item > 1);
 }
 
 static void refreshFormats(HWND hDlg)
@@ -134,19 +137,6 @@ static void refreshFormats(HWND hDlg)
 	SendMessage(GetDlgItem(hDlg, IDC_FORMAT), (UINT)CB_SETCURSEL, (WPARAM)0, 0);
 	mode.Format = (D3DFORMAT)SendMessage(GetDlgItem(hDlg, IDC_FORMAT), (UINT)CB_GETITEMDATA, (WPARAM)best_hit, 0);
 }
-
-static void enableConfig(HWND hDlg, bool enable)
-{
-//	::ShowWindow(GetDlgItem(IDC_FORMAT), SW_HIDE);
-	::EnableWindow(GetDlgItem(hDlg, IDC_DEVICE), enable);
-	::EnableWindow(GetDlgItem(hDlg, IDC_FORMAT), enable);
-	::EnableWindow(GetDlgItem(hDlg, IDC_RESOLUTION), enable);
-	::EnableWindow(GetDlgItem(hDlg, IDC_MULTISAMPLE), enable);
-	::EnableWindow(GetDlgItem(hDlg, IDC_VSYNC), enable);
-	::EnableWindow(GetDlgItem(hDlg, IDC_SOUNDCARD), enable);
-}
-
-
 
 static LRESULT CALLBACK configDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
