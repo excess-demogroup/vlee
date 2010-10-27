@@ -14,7 +14,7 @@ IDirect3D9 *config::direct3d = NULL;
 UINT config::adapter = D3DADAPTER_DEFAULT;
 D3DDISPLAYMODE config::mode = 
 {
-	0,           // UINT Width;
+	0,          // UINT Width;
 	0,          // UINT Height;
 	D3DPRESENT_RATE_DEFAULT, // UINT RefreshRate;
 	DEFAULT_FORMAT           // D3DFORMAT Format;
@@ -28,14 +28,13 @@ unsigned config::soundcard = DEFAULT_SOUNDCARD;
 
 static void refreshModes(HWND hDlg)
 {
-	unsigned mode_count = direct3d->GetAdapterModeCount(adapter, mode.Format);
-	unsigned best_mode = 0;
-	unsigned best_mode_refresh_rate = 0;
+	int mode_count = direct3d->GetAdapterModeCount(adapter, mode.Format);
+	int best_mode = 0;
+	unsigned int best_mode_refresh_rate = 0;
 	
 	SendMessage(GetDlgItem(hDlg, IDC_RESOLUTION), (UINT)CB_RESETCONTENT, (WPARAM)0, 0);
 	
-	for (unsigned i = 0; i < mode_count; ++i)
-	{
+	for (int i = 0; i < mode_count; ++i) {
 		D3DDISPLAYMODE mode;
 		direct3d->EnumAdapterModes(adapter, config::mode.Format, i, &mode);
 
@@ -43,53 +42,62 @@ static void refreshModes(HWND hDlg)
 		sprintf_s(temp, 256, "%ux%u %uhz", mode.Width, mode.Height, mode.RefreshRate);
 		SendMessage(GetDlgItem(hDlg, IDC_RESOLUTION), CB_ADDSTRING, 0, (LPARAM)temp);
 
-		if ((config::mode.Width == mode.Width) && (config::mode.Height == mode.Height))
-		{
-			if (mode.RefreshRate == D3DPRESENT_RATE_DEFAULT)
-			{
-				if (best_mode_refresh_rate < mode.RefreshRate)
-				{
+		if ((config::mode.Width == mode.Width) && (config::mode.Height == mode.Height)) {
+			if (mode.RefreshRate == D3DPRESENT_RATE_DEFAULT) {
+				if (best_mode_refresh_rate < mode.RefreshRate) {
 					best_mode = i;
 					best_mode_refresh_rate = mode.RefreshRate;
 				}
-			}
-			else if (mode.RefreshRate == mode.RefreshRate)
-			{
+			} else if (mode.RefreshRate == mode.RefreshRate)
 				best_mode = i;
-			}
 		}
 	}
 
 	SendMessage(GetDlgItem(hDlg, IDC_RESOLUTION), (UINT)CB_SETCURSEL, (WPARAM)best_mode, 0);
 }
 
-static bool is_multisample_type_ok(IDirect3D9 *direct3d, UINT Adapter, D3DFORMAT DepthBufferFormat, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat, D3DMULTISAMPLE_TYPE multisample_type) {
-	if (SUCCEEDED(direct3d->CheckDeviceMultiSampleType(Adapter, D3DDEVTYPE_HAL, BackBufferFormat, FALSE, multisample_type, NULL)) &&
-	    SUCCEEDED(direct3d->CheckDeviceMultiSampleType(Adapter, D3DDEVTYPE_HAL, D3DFMT_A16B16G16R16F, FALSE, multisample_type, NULL)) &&
-	    SUCCEEDED(direct3d->CheckDeviceMultiSampleType(Adapter, D3DDEVTYPE_HAL, DepthBufferFormat, FALSE, multisample_type, NULL)))
-	{
-		return true;
-	}
-	return false;
+static bool is_multisample_type_ok(IDirect3D9 *direct3d, UINT adapter, D3DFORMAT depthBufferFormat, D3DFORMAT adapterFormat, D3DFORMAT backBufferFormat, D3DMULTISAMPLE_TYPE multisample_type) {
+	return
+	    SUCCEEDED(direct3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, backBufferFormat, FALSE, multisample_type, NULL)) &&
+	    SUCCEEDED(direct3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, D3DFMT_A16B16G16R16F, FALSE, multisample_type, NULL)) &&
+	    SUCCEEDED(direct3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, depthBufferFormat, FALSE, multisample_type, NULL));
 }
 
 static void refreshMultisampleTypes(HWND hDlg)
 {
 	SendMessage(GetDlgItem(hDlg, IDC_MULTISAMPLE), (UINT)CB_RESETCONTENT, (WPARAM)0, 0);
 
-	static const D3DMULTISAMPLE_TYPE types[] = { D3DMULTISAMPLE_NONE, /* D3DMULTISAMPLE_NONMASKABLE, */ D3DMULTISAMPLE_2_SAMPLES, D3DMULTISAMPLE_3_SAMPLES, D3DMULTISAMPLE_4_SAMPLES, D3DMULTISAMPLE_5_SAMPLES, D3DMULTISAMPLE_6_SAMPLES, D3DMULTISAMPLE_7_SAMPLES, D3DMULTISAMPLE_8_SAMPLES, D3DMULTISAMPLE_9_SAMPLES, D3DMULTISAMPLE_10_SAMPLES, D3DMULTISAMPLE_11_SAMPLES, D3DMULTISAMPLE_12_SAMPLES, D3DMULTISAMPLE_13_SAMPLES, D3DMULTISAMPLE_14_SAMPLES, D3DMULTISAMPLE_15_SAMPLES, D3DMULTISAMPLE_16_SAMPLES };
-//	static const char *type_strings[] = { "MULTISAMPLE NONE", /* "MULTISAMPLE NONMASKABLE", */ "MULTISAMPLE 2 SAMPLES", "MULTISAMPLE 3 SAMPLES", "MULTISAMPLE 4 SAMPLES", "MULTISAMPLE 5 SAMPLES", "MULTISAMPLE 6 SAMPLES", "MULTISAMPLE 7 SAMPLES", "MULTISAMPLE 8 SAMPLES", "MULTISAMPLE 9 SAMPLES", "MULTISAMPLE 10 SAMPLES", "MULTISAMPLE 11 SAMPLES", "MULTISAMPLE 12 SAMPLES", "MULTISAMPLE 13 SAMPLES", "MULTISAMPLE 14 SAMPLES", "MULTISAMPLE 15 SAMPLES", "MULTISAMPLE 16 SAMPLES" };
-	static const char *type_strings[] = { "no multisample", /* "MULTISAMPLE NONMASKABLE", */ "2x multisample", "3x multisample", "4x multisample", "5x multisample", "6x multisample", "7x multisample", "8x multisample", "9x multisample", "10x multisample", "11x multisample", "12x multisample", "13x multisample", "14x multisample", "15x multisample", "16x multisample" };
-	assert(ARRAY_SIZE(types) == ARRAY_SIZE(type_strings));
+	struct {
+		D3DMULTISAMPLE_TYPE type;
+		const char *string;
+	} ms_types[] = {
+		{ D3DMULTISAMPLE_NONE, "no multisample" },
+		{ D3DMULTISAMPLE_2_SAMPLES, "2x multisample" },
+		{ D3DMULTISAMPLE_3_SAMPLES, "3x multisample" },
+		{ D3DMULTISAMPLE_4_SAMPLES, "4x multisample" },
+		{ D3DMULTISAMPLE_5_SAMPLES, "5x multisample" },
+		{ D3DMULTISAMPLE_6_SAMPLES, "6x multisample" },
+		{ D3DMULTISAMPLE_7_SAMPLES, "7x multisample" },
+		{ D3DMULTISAMPLE_8_SAMPLES, "8x multisample" },
+		{ D3DMULTISAMPLE_9_SAMPLES, "9x multisample" },
+		{ D3DMULTISAMPLE_10_SAMPLES, "10x multisample" },
+		{ D3DMULTISAMPLE_11_SAMPLES, "11x multisample" },
+		{ D3DMULTISAMPLE_12_SAMPLES, "12x multisample" },
+		{ D3DMULTISAMPLE_13_SAMPLES, "13x multisample" },
+		{ D3DMULTISAMPLE_14_SAMPLES, "14x multisample" },
+		{ D3DMULTISAMPLE_15_SAMPLES, "15x multisample" },
+		{ D3DMULTISAMPLE_16_SAMPLES, "16x multisample" }
+	};
 
-	unsigned best_hit = 0;
-	unsigned item = 0;
-	for (unsigned i = 0; i < ARRAY_SIZE(types); ++i)
+	int best_hit = 0;
+	int item = 0;
+	for (int i = 0; i < ARRAY_SIZE(ms_types); ++i)
 	{
-		if (is_multisample_type_ok(direct3d, adapter, mode.Format, mode.Format, init::get_best_depth_stencil_format(direct3d, adapter, mode.Format), types[i])) {
-			SendMessage(GetDlgItem(hDlg, IDC_MULTISAMPLE), CB_ADDSTRING, 0, (LPARAM)type_strings[i]);
-			SendMessage(GetDlgItem(hDlg, IDC_MULTISAMPLE), CB_SETITEMDATA, item, (UINT)types[i]);
-			if (config::multisample == types[i]) best_hit = item;
+		if (is_multisample_type_ok(direct3d, adapter, mode.Format, mode.Format, init::get_best_depth_stencil_format(direct3d, adapter, mode.Format), ms_types[i].type)) {
+			SendMessage(GetDlgItem(hDlg, IDC_MULTISAMPLE), CB_ADDSTRING, 0, (LPARAM)ms_types[i].string);
+			SendMessage(GetDlgItem(hDlg, IDC_MULTISAMPLE), CB_SETITEMDATA, item, (UINT)ms_types[i].type);
+			if (config::multisample == ms_types[i].type)
+				best_hit = item;
 			item++;
 		}
 	}
@@ -157,12 +165,6 @@ INT_PTR config::showDialog(HINSTANCE hInstance, IDirect3D9 *direct3d)
 static LRESULT onInitDialog(HWND hDlg)
 {
 	direct3d->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode);
-#if WINDOWED
-	mode.Width = 1920 / 2;
-	mode.Height = 1080 / 2;
-//	EndDialog(hDlg, IDOK);
-#endif
-
 	aspect = float(mode.Width) / mode.Height;
 
 	// add adapters to list

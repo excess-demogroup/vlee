@@ -8,7 +8,8 @@ namespace core {
 		FatalException(std::string str) : exception(), str(str)
 		{
 #ifdef _DEBUG
-			if (IsDebuggerPresent()) _CrtDbgBreak();
+			if (IsDebuggerPresent())
+				_CrtDbgBreak();
 #endif
 		}
 
