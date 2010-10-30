@@ -176,7 +176,7 @@ Surface loadSurface(renderer::Device &device, std::string fileName)
 	return surface_wrapper;
 }
 
-const int rpb = 4; /* rows per beat */
+const int rpb = 8; /* rows per beat */
 const double row_rate = (double(BPM) / 60) * rpb;
 
 double bass_get_row(HSTREAM h)
@@ -326,8 +326,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *cube_light_fx = engine::loadEffect(device, "data/cube-light.fx");
 		Effect *cube_tops_fx = engine::loadEffect(device, "data/cube-grid-tops.fx");
 		Effect *cube_sides_fx = engine::loadEffect(device, "data/cube-grid-sides.fx");
+		Effect *cube_floor_fx = engine::loadEffect(device, "data/cube-grid-floor.fx");
 		cube_tops_fx->setTexture("cube_light_tex", cube_light_tex);
 		cube_sides_fx->setTexture("cube_light_tex", cube_light_tex);
+		cube_floor_fx->setTexture("cube_light_tex", cube_light_tex);
 
 		Texture cube_sides_n1_tex = engine::loadTexture(device, "data/cube-grid-sides-n1.png");
 		Texture cube_sides_n2_tex = engine::loadTexture(device, "data/cube-grid-sides-n2.png");
@@ -339,6 +341,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		cube_sides_fx->setTexture("n3_tex", cube_sides_n3_tex);
 		cube_sides_fx->setTexture("f_tex", cube_sides_f_tex);
 		cube_sides_fx->setTexture("ao_tex", cube_sides_ao_tex);
+
+		Texture cube_floor_ao_tex = engine::loadTexture(device, "data/cube-grid-floor-ao.png");
+		cube_floor_fx->setTexture("ao_tex", cube_floor_ao_tex);
 
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -362,22 +367,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 #endif
 
 			float camTime = float(beat / 4) + sync_get_val(cameraOffsetTrack, beat);
-			int cameraIndex = int(sync_get_val(cameraIndexTrack, beat));
-
-			Vector3 camPos, camTarget;
-			switch (cameraIndex) {
-			case 0:
-				camPos = Vector3(-sin(camTime*0.3f)*280, cos(camTime*0.3f)*80, cos(-camTime * 0.4f + 1)*220);
-				camTarget = Vector3(0,0,50);
-				break;
-			case 1:
-				camPos = Vector3(sin(camTime*0.3f)*200, cos(camTime*0.7f)*70, cos(-camTime*0.3f)*160);
-				camTarget = Vector3(0,0,50);
-				break;
-			default:
-				camPos = Vector3(sin(camTime * 0.25f) * 200, cos(camTime * 0.7f) * 70, -(120 + (camTime - 8) * 1.f)) * sync_get_val(cameraDistanceTrack, beat);
-				camTarget = Vector3(0,0,50);
-			}
+			Vector3 camPos(
+				256 + sin(camTime * 0.25f) * 50,
+				256 + cos(camTime * 0.7f) * 50,
+				sync_get_val(cameraDistanceTrack, beat)
+			);
+			Vector3 camTarget(256, 256, 0);
 
 			float camRoll = sync_get_val(cameraRollTrack, beat) * float(2 * M_PI);
 			Matrix4x4 view  = Matrix4x4::lookAt(camPos, camTarget, camRoll);
@@ -412,6 +407,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 			cube_sides_fx->setMatrices(world, view, proj);
 			cube_sides_fx->commitChanges();
 			cube_sides_fx->draw(cube_sides_x);
+
+			cube_floor_fx->setMatrices(world, view, proj);
+			cube_floor_fx->commitChanges();
+			cube_floor_fx->draw(cube_floor_x);
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			color_msaa.resolve(device);

@@ -1,0 +1,24 @@
+<tracks rows="4096">
+	<track name="cam.dist">
+		<key row="0" value="-1000.000000" interpolation="1"/>
+		<key row="63" value="-10.000000" interpolation="0"/>
+	</track>
+	<track name="cam.roll">
+		<key row="0" value="0.000000" interpolation="0"/>
+	</track>
+	<track name="cam.offset">
+		<key row="0" value="0.000000" interpolation="0"/>
+	</track>
+	<track name="cam.index">
+		<key row="0" value="0.000000" interpolation="0"/>
+	</track>
+	<track name="cm.blend">
+		<key row="0" value="0.000000" interpolation="0"/>
+	</track>
+	<track name="cm.fade">
+		<key row="0" value="1.000000" interpolation="0"/>
+	</track>
+	<track name="cm.flash">
+		<key row="0" value="0.000000" interpolation="0"/>
+	</track>
+</tracks>
