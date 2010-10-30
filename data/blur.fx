@@ -8,19 +8,17 @@ const float alpha[SAMPLE_COUNT] = { 0.03f, 0.075f, 0.15f, 0.3f, 0.3f, 0.15f, 0.0
 // textures
 texture blur_tex;
 
-sampler blur_sampler = sampler_state
-{
+sampler blur_sampler = sampler_state {
 	Texture = (blur_tex);
 	MipFilter = LINEAR;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
-	
 	AddressU = CLAMP;
 	AddressV = CLAMP;
+	sRGBTexture = TRUE;
 };
 
-struct VS_OUTPUT
-{
+struct VS_OUTPUT {
 	float4 pos  : POSITION;
 	float2 tex  : TEXCOORD1;
 };

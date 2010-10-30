@@ -2,33 +2,30 @@ float flash = 0;
 float fade  = 1;
 float blend = 0;
 
-texture tex;
-sampler tex_sampler = sampler_state
-{
-	Texture = (tex);
+texture bloom;
+sampler bloom_sampler = sampler_state {
+	Texture = (bloom);
 	MipFilter = NONE;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
 	AddressU = CLAMP;
 	AddressV = CLAMP;
-	sRGBTexture = FALSE;
+	sRGBTexture = TRUE;
 };
 
-texture tex2;
-sampler tex2_sampler = sampler_state
-{
-	Texture = (tex2);
+texture tex;
+sampler tex_sampler = sampler_state {
+	Texture = (tex);
 	MipFilter = NONE;
 	MinFilter = POINT;
 	MagFilter = POINT;
 	
 	AddressU = CLAMP;
 	AddressV = CLAMP;
-	sRGBTexture = FALSE;
+	sRGBTexture = TRUE;
 };
 
-struct VS_OUTPUT
-{
+struct VS_OUTPUT {
 	float4 pos  : POSITION;
 	float2 tex  : TEXCOORD1;
 };
@@ -50,7 +47,8 @@ float luminance(float3 color)
 
 float4 pixel(VS_OUTPUT In) : COLOR
 {
-	float4 color = tex2D(tex2_sampler, In.tex) * 1.0;
+	float4 color = tex2D(tex_sampler, In.tex);
+	color += tex2D(bloom_sampler, In.tex) * 0.1;
 	return color * fade + flash;
 }
 

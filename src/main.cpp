@@ -317,23 +317,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		RenderTexture color2_hdr(device, 1280 / 4, int((1280 / DEMO_ASPECT) / 4), 1,
 		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
 
-		engine::VertexStreamer vertex_streamer(device);
-
-		Effect *tex_fx      = engine::loadEffect(device, "data/tex.fx");
-		Effect *tex_trans_fx      = engine::loadEffect(device, "data/tex.fx");
-		tex_fx->setMatrix("transform", Matrix4x4::identity());
 		Effect *blur_fx     = engine::loadEffect(device, "data/blur.fx");
-
-		Effect *particle_fx = engine::loadEffect(device, "data/particle.fx");
-		Texture bartikkel_tex = engine::loadTexture(device, "data/spherenormal.png");
-		particle_fx->setTexture("tex", bartikkel_tex);
-
-		Texture desaturate_tex = engine::loadTexture(device, "data/desaturate.png");
 		Effect *color_map_fx = engine::loadEffect(device, "data/color_map.fx");
-		Texture color_maps[2] = {
-			engine::loadTexture(device, "data/color_map0.png"),
-			engine::loadTexture(device, "data/color_map1.png")
-		};
 
 		Mesh *cube_tops_x  = engine::loadMesh(device, "data/cube-grid-tops-32.x");
 		Mesh *cube_sides_x = engine::loadMesh(device, "data/cube-grid-sides-32.x");
@@ -477,8 +462,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setFloat("blend", sync_get_val(colorMapBlendTrack, beat));
 			color_map_fx->setFloat("flash", flash < 0 ? randf() : pow(flash, 2.0f));
 			color_map_fx->setFloat("fade", sync_get_val(colorMapFadeTrack, beat));
-			color_map_fx->setTexture("tex", color1_hdr);
-			color_map_fx->setTexture("tex2", color_msaa);
+			color_map_fx->setTexture("bloom", color1_hdr);
+			color_map_fx->setTexture("tex", color_msaa);
 
 			drawQuad(device, color_map_fx,
 			    -1.0f, -1.0f,
