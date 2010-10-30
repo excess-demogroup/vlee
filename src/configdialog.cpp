@@ -20,7 +20,7 @@ D3DDISPLAYMODE config::mode =
 	DEFAULT_FORMAT           // D3DFORMAT Format;
 };
 // D3DFORMAT config::format = DEFAULT_FORMAT;
-D3DMULTISAMPLE_TYPE config::multisample = DEFAULT_MULTISAMPLE;
+D3DMULTISAMPLE_TYPE config::multisample = D3DMULTISAMPLE_16_SAMPLES;
 float config::aspect = 1.0; // float(DEFAULT_WIDTH) / DEFAULT_HEIGHT;
 bool config::vsync = DEFAULT_VSYNC;
 unsigned config::soundcard = DEFAULT_SOUNDCARD;
@@ -93,18 +93,18 @@ static void refreshMultisampleTypes(HWND hDlg)
 
 	int best_hit = 0;
 	int item = 0;
-	for (int i = 0; i < ARRAY_SIZE(ms_types); ++i)
-	{
+	for (int i = 0; i < ARRAY_SIZE(ms_types); ++i) {
 		if (is_multisample_type_ok(direct3d, adapter, mode.Format, mode.Format, init::get_best_depth_stencil_format(direct3d, adapter, mode.Format), ms_types[i].type)) {
 			SendMessage(GetDlgItem(hDlg, IDC_MULTISAMPLE), CB_ADDSTRING, 0, (LPARAM)ms_types[i].string);
 			SendMessage(GetDlgItem(hDlg, IDC_MULTISAMPLE), CB_SETITEMDATA, item, (UINT)ms_types[i].type);
-			if (config::multisample == ms_types[i].type)
+			if (config::multisample >= ms_types[i].type)
 				best_hit = item;
 			item++;
 		}
 	}
 
 	// select previous selected mode (if found)
+	config::multisample = ms_types[best_hit].type;
 	SendMessage(GetDlgItem(hDlg, IDC_MULTISAMPLE), (UINT)CB_SETCURSEL, (WPARAM)best_hit, 0);
 	EnableWindow(GetDlgItem(hDlg, IDC_MULTISAMPLE), item > 1);
 }
@@ -113,10 +113,10 @@ static void refreshFormats(HWND hDlg)
 {
 	unsigned item = 0;
 
-	SendMessage(GetDlgItem(hDlg, IDC_FORMAT), (UINT)CB_RESETCONTENT, (WPARAM)0, 0);  
+	SendMessage(GetDlgItem(hDlg, IDC_FORMAT), (UINT)CB_RESETCONTENT, (WPARAM)0, 0);
 
-	static const D3DFORMAT formats[] = { D3DFMT_A8R8G8B8, D3DFMT_X8R8G8B8, D3DFMT_A2R10G10B10, D3DFMT_R5G6B5, D3DFMT_X1R5G5B5, D3DFMT_A1R5G5B5 };
-	static const char *format_strings[] = { "A8R8G8B8", "X8R8G8B8", "A2R10G10B10", "R5G6B5", "X1R5G5B5", "A1R5G5B5" };
+	static const D3DFORMAT formats[] = { D3DFMT_A8R8G8B8, D3DFMT_X8R8G8B8, D3DFMT_A2R10G10B10, D3DFMT_A2B10G10R10, D3DFMT_R5G6B5, D3DFMT_X1R5G5B5, D3DFMT_A1R5G5B5 };
+	static const char *format_strings[] = { "A8R8G8B8", "X8R8G8B8", "A2R10G10B10", "A2B10G10R10", "R5G6B5", "X1R5G5B5", "A1R5G5B5" };
 	assert(ARRAY_SIZE(formats) == ARRAY_SIZE(format_strings));
 
 	unsigned best_hit = 0;

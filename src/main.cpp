@@ -251,17 +251,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, config::mode.Width, config::mode.Height, 0, 0, GetModuleHandle(0), 0);
 		if (!win)
 			throw FatalException("CreateWindow() failed. something is VERY spooky.");
-		
+
 		/* create device */
 		Device device;
 		device.attachRef(init::initD3D(direct3d, win, config::mode, D3DMULTISAMPLE_NONE, config::adapter, config::vsync));
-		
+
 		/* showing window after initing d3d in order to be able to see warnings during init */
 		ShowWindow(win, TRUE);
 #if !WINDOWED
 		ShowCursor(0);
 #endif
-		
+
 		/* setup letterbox */
 		D3DVIEWPORT9 letterbox_viewport = device.getViewport();
 		makeLetterboxViewport(&letterbox_viewport, config::mode.Width, config::mode.Height, config::aspect, float(DEMO_ASPECT));
@@ -292,8 +292,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *colorMapFadeTrack   = sync_get_track(rocket, "cm.fade");
 		const sync_track *colorMapFlashTrack  = sync_get_track(rocket, "cm.flash");
 
-//		engine::SpectrumData noise_fft = engine::loadSpectrumData("data/noise.fft");
-
 		Surface backbuffer   = device.getRenderTarget(0);
 		Surface depthstencil = device.getDepthStencilSurface();
 
@@ -313,6 +311,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		    use_sm20_codepath ? D3DMULTISAMPLE_NONE : config::multisample);
 
 		/** DEMO ***/
+		RenderTexture cube_light_tex(device, 32, 32, 1, use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
 		RenderTexture color1_hdr(device, 1280 / 4, int((1280 / DEMO_ASPECT) / 4), 1,
 		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
 		RenderTexture color2_hdr(device, 1280 / 4, int((1280 / DEMO_ASPECT) / 4), 1,
@@ -329,49 +328,32 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture bartikkel_tex = engine::loadTexture(device, "data/spherenormal.png");
 		particle_fx->setTexture("tex", bartikkel_tex);
 
-		Effect *noise_fx = engine::loadEffect(device, "data/noise.fx");
-		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
-
 		Texture desaturate_tex = engine::loadTexture(device, "data/desaturate.png");
 		Effect *color_map_fx = engine::loadEffect(device, "data/color_map.fx");
-		Texture color_maps[2];
+		Texture color_maps[2] = {
+			engine::loadTexture(device, "data/color_map0.png"),
+			engine::loadTexture(device, "data/color_map1.png")
+		};
 
-		color_maps[0] = engine::loadTexture(device, "data/color_map0.png");
-		color_maps[1] = engine::loadTexture(device, "data/color_map1.png");
-		color_map_fx->setFloat("texel_width", 1.0f / color_msaa.getWidth());
-		color_map_fx->setFloat("texel_height", 1.0f / color_msaa.getHeight());
+		Mesh *cube_tops_x  = engine::loadMesh(device, "data/cube-grid-tops-32.x");
+		Mesh *cube_sides_x = engine::loadMesh(device, "data/cube-grid-sides-32.x");
+		Mesh *cube_floor_x = engine::loadMesh(device, "data/cube-grid-floor-32.x");
+		Effect *cube_light_fx = engine::loadEffect(device, "data/cube-light.fx");
+		Effect *cube_tops_fx = engine::loadEffect(device, "data/cube-grid-tops.fx");
+		Effect *cube_sides_fx = engine::loadEffect(device, "data/cube-grid-sides.fx");
+		cube_tops_fx->setTexture("cube_light_tex", cube_light_tex);
+		cube_sides_fx->setTexture("cube_light_tex", cube_light_tex);
 
-		engine::ParticleStreamer particleStreamer(device);
-		Texture starTexture = engine::loadTexture(device, "data/star.png");
-		Effect *starParticleEffect = engine::loadEffect(device, "data/star_particle.fx");
-		starParticleEffect->setTexture("tex", starTexture);
-
-		renderer::CubeTexture cubemap_tex = engine::loadCubeTexture(device, "data/diamond-env.dds");
-
-		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
-		skybox_fx->setTexture("reflectionMap", cubemap_tex);
-		Mesh *cube_x         = engine::loadMesh(device, "data/cube.X");
-		Mesh *hexcol_x         = engine::loadMesh(device, "data/hexcol.X");
-		Mesh *boxMesh        = engine::loadMesh(device, "data/box.x");
-		Mesh *discoTilesMesh = engine::loadMesh(device, "data/disco_tiles.x");
-
-		renderer::CubeTexture greeble_envmap = engine::loadCubeTexture(device, "data/stpeters_cross3.dds");
-		Mesh *greeble_cube_x = engine::loadMesh(device, "data/greeble_cube.x");
-		Effect *greeble_cube_fx = engine::loadEffect(device, "data/greeble_cube.fx");
-		greeble_cube_fx->setTexture("lightmap", engine::loadTexture(device, "data/greeble_cube_lightmap.png"));
-		greeble_cube_fx->setTexture("env", greeble_envmap);
-		Effect *black_fx = engine::loadEffect(device, "data/black.fx");
-
-		Anim overlaysAnim = engine::loadAnim(device, "data/overlays/");
-		Image overlaysImage(overlaysAnim.getTexture(0), tex_fx);
-
-		Image logoImage(engine::loadTexture(device, "data/komputerpop.png"), tex_fx);
-
-		Effect *logoEffect = greeble_cube_fx; // engine::loadEffect(device, "data/test2.fx");
-		Mesh   *logoMesh   = engine::loadMesh(device, "data/logo.x");
-		Mesh   *logoRingMesh   = engine::loadMesh(device, "data/logoring.x");
-		Effect *logoRingEffect = engine::loadEffect(device, "data/logoring.fx");
-		logoRingEffect->setTexture("tex", engine::loadTexture(device, "data/logoring.png"));
+		Texture cube_sides_n1_tex = engine::loadTexture(device, "data/cube-grid-sides-n1.png");
+		Texture cube_sides_n2_tex = engine::loadTexture(device, "data/cube-grid-sides-n2.png");
+		Texture cube_sides_n3_tex = engine::loadTexture(device, "data/cube-grid-sides-n3.png");
+		Texture cube_sides_f_tex = engine::loadTexture(device, "data/cube-grid-sides-f.png");
+		Texture cube_sides_ao_tex = engine::loadTexture(device, "data/cube-grid-sides-ao.png");
+		cube_sides_fx->setTexture("n1_tex", cube_sides_n1_tex);
+		cube_sides_fx->setTexture("n2_tex", cube_sides_n2_tex);
+		cube_sides_fx->setTexture("n3_tex", cube_sides_n3_tex);
+		cube_sides_fx->setTexture("f_tex", cube_sides_f_tex);
+		cube_sides_fx->setTexture("ao_tex", cube_sides_ao_tex);
 
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -419,18 +401,32 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			// render
 			device->BeginScene();
+			device->SetRenderState(D3DRS_SRGBWRITEENABLE, TRUE);
+			device.setRenderTarget(cube_light_tex.getRenderTarget());
+			drawQuad(
+				device, cube_light_fx,
+				-1.0f, -1.0f,
+				 2.0f, 2.0f,
+				1.0f / cube_light_tex.getWidth(),
+				1.0f / cube_light_tex.getHeight()
+			);
+
 			device.setRenderTarget(color_msaa.getRenderTarget());
 			device.setDepthStencilSurface(depthstencil_msaa);
-			D3DXCOLOR clear_color(0.45f, 0.25f, 0.25f, 0.f);
+			D3DXCOLOR clear_color(0.0f, 0.0f, 0.0f, 1.0f);
 
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 			device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, clear_color, 1.f, 0);
 
-			logoEffect->setMatrices(world, view, proj);
-			logoEffect->commitChanges();
-			logoEffect->draw(logoMesh);
+			cube_tops_fx->setMatrices(world, view, proj);
+			cube_tops_fx->commitChanges();
+			cube_tops_fx->draw(cube_tops_x);
+
+			cube_sides_fx->setMatrices(world, view, proj);
+			cube_sides_fx->commitChanges();
+			cube_sides_fx->draw(cube_sides_x);
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			color_msaa.resolve(device);
@@ -478,14 +474,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device.setViewport(&letterbox_viewport);
 
 			float flash = sync_get_val(colorMapFlashTrack, beat);
-			color_map_fx->setFloat("fade", sync_get_val(colorMapBlendTrack, beat));
+			color_map_fx->setFloat("blend", sync_get_val(colorMapBlendTrack, beat));
 			color_map_fx->setFloat("flash", flash < 0 ? randf() : pow(flash, 2.0f));
-			color_map_fx->setFloat("fade2", sync_get_val(colorMapFadeTrack, beat));
-			color_map_fx->setFloat("alpha", 0.25f);
+			color_map_fx->setFloat("fade", sync_get_val(colorMapFadeTrack, beat));
 			color_map_fx->setTexture("tex", color1_hdr);
 			color_map_fx->setTexture("tex2", color_msaa);
-			color_map_fx->setTexture("color_map", color_maps[0]);
-			color_map_fx->setTexture("desaturate", desaturate_tex);
 
 			drawQuad(device, color_map_fx,
 			    -1.0f, -1.0f,

@@ -6,17 +6,9 @@ namespace config
 {
 	INT_PTR showDialog(HINSTANCE hInstance, IDirect3D9 *direct3d);
 
-/*	UINT adapter;
-
-	void refreshFormats();
-	void refreshModes();
-	void refreshMultisampleTypes();
-	void enableConfig(bool enable);
-*/
 	extern IDirect3D9 *direct3d;
 	extern UINT adapter;
 	extern D3DDISPLAYMODE mode;
-//	extern D3DFORMAT format;
 	extern D3DMULTISAMPLE_TYPE multisample;
 	extern float aspect;
 	extern bool vsync;
