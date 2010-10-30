@@ -56,7 +56,7 @@ static void refreshModes(HWND hDlg)
 	SendMessage(GetDlgItem(hDlg, IDC_RESOLUTION), (UINT)CB_SETCURSEL, (WPARAM)best_mode, 0);
 }
 
-static bool is_multisample_type_ok(IDirect3D9 *direct3d, UINT adapter, D3DFORMAT depthBufferFormat, D3DFORMAT adapterFormat, D3DFORMAT backBufferFormat, D3DMULTISAMPLE_TYPE multisample_type)
+static bool is_multisample_type_ok(IDirect3D9 *direct3d, UINT adapter, D3DFORMAT adapterFormat, D3DFORMAT backBufferFormat, D3DFORMAT depthBufferFormat, D3DMULTISAMPLE_TYPE multisample_type)
 {
 	return
 		(multisample_type == D3DMULTISAMPLE_NONE || SUCCEEDED(direct3d->CheckDeviceFormat(adapter, D3DDEVTYPE_HAL, backBufferFormat, D3DUSAGE_QUERY_FILTER, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F))) &&
