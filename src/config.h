@@ -1,5 +1,7 @@
 #pragma once
 
+#define ARRAY_SIZE(x) (sizeof((x)) / sizeof((x)[0]))
+
 // #define VJSYS
 
 #define DEVTYPE D3DDEVTYPE_HAL
@@ -7,7 +9,7 @@
 #define DEFAULT_FORMAT D3DFMT_X8R8G8B8
 #define DEFAULT_VSYNC TRUE
 
-#define NEED_STENCIL TRUE
+#define NEED_STENCIL FALSE
 #define MIN_VS_VERSION D3DVS_VERSION(3, 0)
 // #define MIN_VS_VERSION D3DVS_VERSION(1, 1)
 

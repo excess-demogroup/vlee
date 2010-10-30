@@ -115,21 +115,28 @@ static void refreshFormats(HWND hDlg)
 
 	SendMessage(GetDlgItem(hDlg, IDC_FORMAT), (UINT)CB_RESETCONTENT, (WPARAM)0, 0);
 
-	static const D3DFORMAT formats[] = { D3DFMT_A8R8G8B8, D3DFMT_X8R8G8B8, D3DFMT_A2R10G10B10, D3DFMT_A2B10G10R10, D3DFMT_R5G6B5, D3DFMT_X1R5G5B5, D3DFMT_A1R5G5B5 };
-	static const char *format_strings[] = { "A8R8G8B8", "X8R8G8B8", "A2R10G10B10", "A2B10G10R10", "R5G6B5", "X1R5G5B5", "A1R5G5B5" };
-	assert(ARRAY_SIZE(formats) == ARRAY_SIZE(format_strings));
+	struct {
+		D3DFORMAT fmt;
+		const char *str;
+	} formats[] = {
+		{ D3DFMT_A2R10G10B10, "A2R10G10B10" },
+		{ D3DFMT_A2B10G10R10, "A2B10G10R10" },
+		{ D3DFMT_A8R8G8B8, "A8R8G8B8" },
+		{ D3DFMT_X8R8G8B8, "X8R8G8B8" },
+		{ D3DFMT_R5G6B5, "R5G6B5" },
+		{ D3DFMT_A1R5G5B5, "A1R5G5B5" },
+		{ D3DFMT_X1R5G5B5, "X1R5G5B5" },
+	};
 
-	unsigned best_hit = 0;
-
-	for (unsigned i = 0; i < (sizeof(formats) / sizeof(formats[0])); ++i)
-	{
+	int best_hit = 0;
+	for (int i = 0; i < ARRAY_SIZE(formats); ++i) {
 		D3DDISPLAYMODE mode;
-		if (SUCCEEDED(direct3d->EnumAdapterModes(adapter, formats[i], 0, &mode)))
-		{
-			SendMessage(GetDlgItem(hDlg, IDC_FORMAT), CB_ADDSTRING, 0, (LPARAM)format_strings[i]);
-			SendMessage(GetDlgItem(hDlg, IDC_FORMAT), CB_SETITEMDATA, item, formats[i]);
+		if (SUCCEEDED(direct3d->EnumAdapterModes(adapter, formats[i].fmt, 0, &mode))) {
+			SendMessage(GetDlgItem(hDlg, IDC_FORMAT), CB_ADDSTRING, 0, (LPARAM)formats[i].str);
+			SendMessage(GetDlgItem(hDlg, IDC_FORMAT), CB_SETITEMDATA, item, formats[i].fmt);
 
-			if (config::mode.Format == formats[i]) best_hit = item;
+			if (config::mode.Format == formats[i].fmt)
+				best_hit = item;
 			item++;
 		}
 	}

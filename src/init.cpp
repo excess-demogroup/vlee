@@ -5,7 +5,7 @@
 #include "core/fatalexception.h"
 using core::FatalException;
 
-static bool is_depth_format_ok(IDirect3D9 *direct3d, UINT Adapter, D3DFORMAT DepthFormat, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat)
+static bool is_depth_format_ok(IDirect3D9 *direct3d, UINT Adapter, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat, D3DFORMAT DepthFormat)
 {
 	// Verify that the depth format exists
 	HRESULT hr = direct3d->CheckDeviceFormat(Adapter, DEVTYPE, AdapterFormat, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, DepthFormat);
@@ -25,10 +25,10 @@ D3DFORMAT init::get_best_depth_stencil_format(IDirect3D9 *direct3d, UINT adapter
 	static const D3DFORMAT formats[] = { D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D15S1 };
 #endif
 	// loop through the list and check the formats
-	for (unsigned i = 0; i < (sizeof(formats) / sizeof(formats[0])); ++i)
-	{
+	for (int i = 0; i < ARRAY_SIZE(formats); ++i) {
 		// i'm not really sure what the difference between adapter-format and backbuffer-format is...
-		if (is_depth_format_ok(direct3d, adapter, formats[i], format, format)) return formats[i];
+		if (is_depth_format_ok(direct3d, adapter, format, format, formats[i]))
+			return formats[i];
 	}
 	throw FatalException("no proper depth/stencil format found.\ntry another device-format.");
 }
