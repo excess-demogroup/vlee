@@ -360,7 +360,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				BASS_ChannelSetPosition(stream, pos, BASS_POS_BYTE);
 			}
 
-			double beat = bass_get_row(stream);
+			double beat = bass_get_row(stream) / 2.0;
 
 #ifndef SYNC_PLAYER
 			sync_update(rocket, int(beat)); //gets current timing info from the SyncTimer.
@@ -383,6 +383,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->BeginScene();
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, TRUE);
 			device.setRenderTarget(cube_light_tex.getRenderTarget());
+			cube_light_fx->setFloat("time", beat * 0.1);
 			drawQuad(
 				device, cube_light_fx,
 				-1.0f, -1.0f,

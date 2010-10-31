@@ -109,8 +109,8 @@ float4 ps_main(VS_OUTPUT i) : COLOR0
 
 	i.cpos.xy += i.n.xy;
 	c += tex2D(n1, i.uv.xy).r * tex2D(light, i.cpos.xy).rgb;
-	c += tex2D(n2, i.uv.zy).r * tex2D(light, i.cpos.xy - i.n.zx * 2).rgb;
-	c += tex2D(n3, i.uv.zy).r * tex2D(light, i.cpos.xy - i.n.zx).rgb;
+	c += tex2D(n2, i.uv.zy).r * tex2D(light, i.cpos.xy - i.n.zx).rgb;
+	c += tex2D(n3, i.uv.zy).r * tex2D(light, i.cpos.xy - i.n.zx * 2).rgb;
 	c += tex2D(n2, i.uv.wy).r * tex2D(light, i.cpos.xy + i.n.zx).rgb;
 	c += tex2D(n3, i.uv.wy).r * tex2D(light, i.cpos.xy + i.n.zx * 2).rgb;
 

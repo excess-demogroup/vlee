@@ -19,7 +19,6 @@ sampler tex_sampler = sampler_state {
 	MipFilter = NONE;
 	MinFilter = POINT;
 	MagFilter = POINT;
-	
 	AddressU = CLAMP;
 	AddressV = CLAMP;
 	sRGBTexture = TRUE;
@@ -48,7 +47,7 @@ float luminance(float3 color)
 float4 pixel(VS_OUTPUT In) : COLOR
 {
 	float4 color = tex2D(tex_sampler, In.tex);
-	color += tex2D(bloom_sampler, In.tex) * 0.1;
+	color += tex2D(bloom_sampler, In.tex) * 0.05;
 	return color * fade + flash;
 }
 
