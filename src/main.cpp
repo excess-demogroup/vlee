@@ -295,6 +295,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *bloomPassesTrack    = sync_get_track(rocket, "bloom.passes");
 		const sync_track *bloomAmtTrack       = sync_get_track(rocket, "bloom.amt");
 
+		const sync_track *fogDensityTrack     = sync_get_track(rocket, "fog.density");
+
 		Surface backbuffer   = device.getRenderTarget(0);
 		Surface depthstencil = device.getDepthStencilSurface();
 
@@ -372,15 +374,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			float camTime = float(beat / 4) + sync_get_val(cameraOffsetTrack, row);
 			Vector3 camPos(
-				256 + sin(camTime * 0.25f) * 50,
-				256 + cos(camTime * 0.7f) * 50,
-				sync_get_val(cameraDistanceTrack, row)
-			);
-			Vector3 camTarget(256, 256, 0);
+				sin(camTime * 0.25f) * 2,
+				1.0,
+				cos(camTime * 0.33f) * 2);
+			camPos *= sync_get_val(cameraDistanceTrack, row);
+			Vector3 camTarget(0, 0, 0);
 
 			float camRoll = sync_get_val(cameraRollTrack, row) * float(2 * M_PI);
 			Matrix4x4 view  = Matrix4x4::lookAt(camPos, camTarget, camRoll);
-			Matrix4x4 world = Matrix4x4::rotation(Vector3(0, -M_PI / 2, 0));
+			Matrix4x4 world = Matrix4x4::identity();
 			Matrix4x4 proj  = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 1.0f, 10000.f);
 
 			// render
@@ -405,17 +407,27 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 			device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, clear_color, 1.f, 0);
 
-			cube_tops_fx->setMatrices(world, view, proj);
-			cube_tops_fx->commitChanges();
-			cube_tops_fx->draw(cube_tops_x);
+			float fog_density = sync_get_val(fogDensityTrack, row) / 100000;
 
-			cube_sides_fx->setMatrices(world, view, proj);
-			cube_sides_fx->commitChanges();
-			cube_sides_fx->draw(cube_sides_x);
+			for (int i = 0; i < 5; ++i)
+				for (int j = 0; j < 5; ++j) {
+					Matrix4x4 world = Matrix4x4::translation(Vector3((i - 2.5) * 512, 0, (j - 2.5) * 512));
 
-			cube_floor_fx->setMatrices(world, view, proj);
-			cube_floor_fx->commitChanges();
-			cube_floor_fx->draw(cube_floor_x);
+					cube_tops_fx->setMatrices(world, view, proj);
+					cube_tops_fx->setFloat("fog_density", fog_density);
+					cube_tops_fx->commitChanges();
+					cube_tops_fx->draw(cube_tops_x);
+
+					cube_sides_fx->setMatrices(world, view, proj);
+					cube_sides_fx->setFloat("fog_density", fog_density);
+					cube_sides_fx->commitChanges();
+					cube_sides_fx->draw(cube_sides_x);
+
+					cube_floor_fx->setMatrices(world, view, proj);
+					cube_floor_fx->setFloat("fog_density", fog_density);
+					cube_floor_fx->commitChanges();
+					cube_floor_fx->draw(cube_floor_x);
+				}
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			color_msaa.resolve(device);

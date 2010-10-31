@@ -46,10 +46,6 @@ float luminance(float3 color)
 
 float4 pixel(VS_OUTPUT In) : COLOR
 {
-	return tex2D(bloom_sampler, In.tex);
-
-
-
 	float4 color = tex2D(tex_sampler, In.tex);
 	color += pow(tex2D(bloom_sampler, In.tex) * 0.75, 1.5);
 	return color * fade + flash;

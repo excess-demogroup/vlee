@@ -2,6 +2,7 @@ float4x4 matView : WORLDVIEW;
 float4x4 matViewProjection : WORLDVIEWPROJECTION;
 const int2 mapSize = int2(32, 32);
 texture cube_light_tex;
+const float fog_density;
 
 sampler light = sampler_state {
 	Texture = (cube_light_tex);
@@ -96,14 +97,14 @@ VS_OUTPUT vs_main(VS_INPUT Input)
 	o.n = float3(Input.norm.xz / mapSize, -Input.norm.z / mapSize.y);
 
 	float eyez = mul(Input.pos, matView).z;
-	o.fog = exp(-(eyez * eyez * 0.004));
+	o.fog = exp(-(eyez * eyez * fog_density));
 
 	return o;
 }
 
 float4 ps_main(VS_OUTPUT i) : COLOR0
 {
-	float3 c = tex2D(light, i.cpos.xy).rgb * 2;
+	float3 c = tex2D(light, i.cpos.xy).rgb * 5;
 	float att = i.fog;
 	float ao = tex2D(cube_ao, i.uv2).r * 0.005;
 
@@ -118,10 +119,17 @@ float4 ps_main(VS_OUTPUT i) : COLOR0
 	c += tex2D(f, i.uv.zy).r * tex2D(light, i.cpos.xy - i.n.zx).rgb;
 	c += tex2D(f, i.uv.wy).r * tex2D(light, i.cpos.xy + i.n.zx).rgb;
 
-	return float4(ao + c * 2, 1.0);
+	return float4((ao + c * 2) * i.fog, 1.0);
 }
 
 technique cube_sides {
+	pass P0 {
+		VertexShader = compile vs_2_0 vs_main();
+		PixelShader  = compile ps_2_0 ps_main();
+	}
+}
+
+technique cube_sides2 {
 	pass P0 {
 		VertexShader = compile vs_2_0 vs_main();
 		PixelShader  = compile ps_2_0 ps_main();

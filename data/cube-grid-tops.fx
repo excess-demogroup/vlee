@@ -1,6 +1,7 @@
 float4x4 matView : WORLDVIEW;
 float4x4 matViewProjection : WORLDVIEWPROJECTION;
 const int2 mapSize = int2(32, 32);
+const float fog_density;
 texture cube_light_tex;
 
 sampler light = sampler_state {
@@ -25,7 +26,7 @@ VS_OUTPUT vs_main(float4 ipos : POSITION0)
 	o.pos = mul(ipos, matViewProjection);
 	o.cpos.xy = (floor(ipos.xz / 16) + 0.5) / mapSize;
 	float eyez = mul(ipos, matView).z;
-	o.fog = exp(-(eyez * eyez * 0.004));
+	o.fog = exp(-(eyez * eyez * fog_density));
 	return o;
 }
 
@@ -33,7 +34,7 @@ float4 ps_main(VS_OUTPUT i) : COLOR0
 {
 	float3 c = tex2D(light, i.cpos).rgb * 5;
 	float ao = 0.005;
-	return float4(ao + c * 2, 1.0);
+	return float4((ao + c * 2) * i.fog, 1.0);
 }
 
 technique cube_tops {
