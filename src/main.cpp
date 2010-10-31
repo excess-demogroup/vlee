@@ -291,6 +291,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *colorMapBlendTrack  = sync_get_track(rocket, "cm.blend");
 		const sync_track *colorMapFadeTrack   = sync_get_track(rocket, "cm.fade");
 		const sync_track *colorMapFlashTrack  = sync_get_track(rocket, "cm.flash");
+		const sync_track *bloomSizeTrack      = sync_get_track(rocket, "bloom.size");
+		const sync_track *bloomPassesTrack    = sync_get_track(rocket, "bloom.passes");
+		const sync_track *bloomAmtTrack       = sync_get_track(rocket, "bloom.amt");
 
 		Surface backbuffer   = device.getRenderTarget(0);
 		Surface depthstencil = device.getDepthStencilSurface();
@@ -312,9 +315,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		/** DEMO ***/
 		RenderTexture cube_light_tex(device, 32, 32, 1, use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
-		RenderTexture color1_hdr(device, 1280 / 4, int((1280 / DEMO_ASPECT) / 4), 1,
+		RenderTexture color1_hdr(device, 1280 / 2, int((1280 / DEMO_ASPECT) / 2), 1,
 		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
-		RenderTexture color2_hdr(device, 1280 / 4, int((1280 / DEMO_ASPECT) / 4), 1,
+		RenderTexture color2_hdr(device, 1280 / 2, int((1280 / DEMO_ASPECT) / 2), 1,
 		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
 
 		Effect *blur_fx     = engine::loadEffect(device, "data/blur.fx");
@@ -360,30 +363,31 @@ int main(int /*argc*/, char* /*argv*/ [])
 				BASS_ChannelSetPosition(stream, pos, BASS_POS_BYTE);
 			}
 
-			double beat = bass_get_row(stream) / 2.0;
+			double row = bass_get_row(stream);
 
 #ifndef SYNC_PLAYER
-			sync_update(rocket, int(beat)); //gets current timing info from the SyncTimer.
+			sync_update(rocket, int(row)); //gets current timing info from the SyncTimer.
 #endif
+			double beat = row / 4;
 
-			float camTime = float(beat / 4) + sync_get_val(cameraOffsetTrack, beat);
+			float camTime = float(beat / 4) + sync_get_val(cameraOffsetTrack, row);
 			Vector3 camPos(
 				256 + sin(camTime * 0.25f) * 50,
 				256 + cos(camTime * 0.7f) * 50,
-				sync_get_val(cameraDistanceTrack, beat)
+				sync_get_val(cameraDistanceTrack, row)
 			);
 			Vector3 camTarget(256, 256, 0);
 
-			float camRoll = sync_get_val(cameraRollTrack, beat) * float(2 * M_PI);
+			float camRoll = sync_get_val(cameraRollTrack, row) * float(2 * M_PI);
 			Matrix4x4 view  = Matrix4x4::lookAt(camPos, camTarget, camRoll);
 			Matrix4x4 world = Matrix4x4::rotation(Vector3(0, -M_PI / 2, 0));
 			Matrix4x4 proj  = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 1.0f, 10000.f);
 
 			// render
 			device->BeginScene();
-			device->SetRenderState(D3DRS_SRGBWRITEENABLE, TRUE);
+			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
 			device.setRenderTarget(cube_light_tex.getRenderTarget());
-			cube_light_fx->setFloat("time", beat * 0.1);
+			cube_light_fx->setFloat("time", float(beat * 0.1));
 			drawQuad(
 				device, cube_light_fx,
 				-1.0f, -1.0f,
@@ -423,31 +427,68 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			/* do the bloom */
 			device->StretchRect(color_msaa.getSurface(0), NULL, color1_hdr.getSurface(0), NULL, D3DTEXF_LINEAR);
-			blur_fx->setFloat("sub", 0.25f);
 			RenderTexture render_textures[2] = { color1_hdr, color2_hdr };
-			int rtIndex = 0;
 			device->SetDepthStencilSurface(NULL);
-			for (int i = 0; i < 3; i++) {
-				for (int j = 0; j < 2; j++) {
 
-					float dir_vec[2];
-					float dir = float(M_PI / 2 * j);
-					dir_vec[0] = cosf(dir) * (float(1 << i) / render_textures[rtIndex].getWidth());
-					dir_vec[1] = sinf(dir) * (float(1 << i) / render_textures[rtIndex].getWidth());
-					dir_vec[0] *= 3.f / 4.f;
+			float stdDev = std::max(sync_get_val(bloomSizeTrack, row), 0.0f);
+#if 1
+			int passes = std::max((int)sync_get_val(bloomPassesTrack, row), 1);
+#else
+			int passes = 1;
+			while (ceil(3 * stdDev) > 16) {
+				passes *= 2;
+				stdDev *= 0.5;
+			}
 
+			char temp[100];
+			sprintf(temp, "passes: %d\n", passes);
+			OutputDebugStringA(temp);
+#endif
+
+			int rtIndex = 0;
+			for (int j = 0; j < 2; j++) {
+				D3DXVECTOR4 gauss[8];
+				float sigma = stdDev;
+				float sigma_squared = sigma * sigma;
+
+				gauss[0].x = 0.0;
+				gauss[0].y = 0.0;
+				gauss[0].z = 1.0f / std::max(sqrt(2.0f * 3.14159265f * sigma_squared), 1.0f);
+				gauss[0].w = 0.0;
+
+				for (int k = 1; k < 8; ++k) {
+					int o1 = k * 2 - 1;
+					int o2 = k * 2;
+
+					float w1 = gauss[0].z * exp(-o1 * o1 / (2.0f * sigma_squared));
+					float w2 = gauss[0].z * exp(-o2 * o2 / (2.0f * sigma_squared));
+
+					float w = w1 + w2;
+					float o = (o1 * w1 + o2 * w2) / w;
+					gauss[k].z = w;
+					if (!j) {
+						gauss[k].x = o / render_textures[rtIndex].getWidth();
+						gauss[k].y = 0.0f;
+					} else {
+						gauss[k].x = 0.0f;
+						gauss[k].y = o / render_textures[rtIndex].getHeight();
+					}
+					gauss[k].w = 0.0f;
+				}
+				blur_fx->p->SetVectorArray("gauss", gauss, ARRAY_SIZE(gauss));
+
+				for (int i = 0; i < passes; i++) {
 					device.setRenderTarget(render_textures[!rtIndex].getRenderTarget(), 0);
-					blur_fx->setFloatArray("dir", dir_vec, 2);
 					blur_fx->setTexture("blur_tex", render_textures[rtIndex]);
+					blur_fx->commitChanges();
 
 					drawQuad(
 						device, blur_fx,
 						-1.0f, -1.0f,
 						 2.0f, 2.0f,
-						0.5f / render_textures[!rtIndex].getWidth(),
-						0.5f / render_textures[!rtIndex].getHeight()
+						0.5f / render_textures[rtIndex].getWidth(),
+						0.5f / render_textures[rtIndex].getHeight()
 					);
-					blur_fx->setFloat("sub", 0.0f);
 					rtIndex = !rtIndex;
 				}
 			}
@@ -458,18 +499,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->Clear(0, 0, D3DCLEAR_TARGET, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
 			device.setViewport(&letterbox_viewport);
 
-			float flash = sync_get_val(colorMapFlashTrack, beat);
-			color_map_fx->setFloat("blend", sync_get_val(colorMapBlendTrack, beat));
+			float flash = sync_get_val(colorMapFlashTrack, row);
+			color_map_fx->setFloat("blend", sync_get_val(colorMapBlendTrack, row));
 			color_map_fx->setFloat("flash", flash < 0 ? randf() : pow(flash, 2.0f));
-			color_map_fx->setFloat("fade", sync_get_val(colorMapFadeTrack, beat));
+			color_map_fx->setFloat("fade", sync_get_val(colorMapFadeTrack, row));
 			color_map_fx->setTexture("bloom", color1_hdr);
 			color_map_fx->setTexture("tex", color_msaa);
 
+			device->SetRenderState(D3DRS_SRGBWRITEENABLE, TRUE);
 			drawQuad(device, color_map_fx,
 			    -1.0f, -1.0f,
 			    2.0f, 2.0f,
 			    0.5f / backbuffer.getWidth(),
 			    0.5f / backbuffer.getHeight());
+			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
 			device->EndScene(); /* WE DONE IS! */
 
 			if (dump_video) {

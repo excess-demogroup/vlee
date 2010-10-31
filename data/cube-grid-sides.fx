@@ -121,7 +121,7 @@ float4 ps_main(VS_OUTPUT i) : COLOR0
 	return float4(ao + c * 2, 1.0);
 }
 
-technique cube_tops {
+technique cube_sides {
 	pass P0 {
 		VertexShader = compile vs_2_0 vs_main();
 		PixelShader  = compile ps_2_0 ps_main();

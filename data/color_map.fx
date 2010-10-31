@@ -10,7 +10,7 @@ sampler bloom_sampler = sampler_state {
 	MagFilter = LINEAR;
 	AddressU = CLAMP;
 	AddressV = CLAMP;
-	sRGBTexture = TRUE;
+	sRGBTexture = FALSE;
 };
 
 texture tex;
@@ -21,7 +21,7 @@ sampler tex_sampler = sampler_state {
 	MagFilter = POINT;
 	AddressU = CLAMP;
 	AddressV = CLAMP;
-	sRGBTexture = TRUE;
+	sRGBTexture = FALSE;
 };
 
 struct VS_OUTPUT {
@@ -46,12 +46,16 @@ float luminance(float3 color)
 
 float4 pixel(VS_OUTPUT In) : COLOR
 {
+	return tex2D(bloom_sampler, In.tex);
+
+
+
 	float4 color = tex2D(tex_sampler, In.tex);
-	color += tex2D(bloom_sampler, In.tex) * 0.05;
+	color += pow(tex2D(bloom_sampler, In.tex) * 0.75, 1.5);
 	return color * fade + flash;
 }
 
-technique blur_ps_vs_2_0 {
+technique color_map {
 	pass P0 {
 		VertexShader = compile vs_2_0 vertex();
 		PixelShader  = compile ps_2_0 pixel();

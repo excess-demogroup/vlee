@@ -25,7 +25,7 @@ namespace renderer {
 			texture_surf = this->getSurface(0);
 		}
 
-		~RenderTexture()
+		virtual ~RenderTexture()
 		{
 		}
 
@@ -41,10 +41,9 @@ namespace renderer {
 		{
 			if (multisampled)
 				device->StretchRect(shadow_surf, NULL, texture_surf, NULL, D3DTEXF_NONE);
-//			p->GenerateMipSubLevels();
 		}
 
-//	private:
+	private:
 		bool multisampled;
 		Surface shadow_surf;
 		Surface texture_surf;
