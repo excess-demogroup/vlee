@@ -18,7 +18,7 @@
 		<key row="0" value="0.000000" interpolation="0"/>
 	</track>
 	<track name="cm.fade">
-		<key row="0" value="5.000000" interpolation="0"/>
+		<key row="0" value="3.000000" interpolation="0"/>
 	</track>
 	<track name="cm.flash">
 		<key row="0" value="0.000000" interpolation="0"/>

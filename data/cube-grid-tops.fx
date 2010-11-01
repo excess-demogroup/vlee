@@ -1,6 +1,6 @@
 float4x4 matView : WORLDVIEW;
 float4x4 matViewProjection : WORLDVIEWPROJECTION;
-const int2 mapSize = int2(32, 32);
+const float2 invMapSize = float2(1.0 / 32, 1.0 / 32);
 const float fog_density;
 texture cube_light_tex;
 
@@ -24,7 +24,7 @@ VS_OUTPUT vs_main(float4 ipos : POSITION0)
 {
 	VS_OUTPUT o;
 	o.pos = mul(ipos, matViewProjection);
-	o.cpos.xy = (floor(ipos.xz / 16) + 0.5) / mapSize;
+	o.cpos.xy = (floor(ipos.xz / 16) + 0.5) * invMapSize;
 	float eyez = mul(ipos, matView).z;
 	o.fog = exp(-(eyez * eyez * fog_density));
 	return o;

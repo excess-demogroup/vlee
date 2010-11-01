@@ -1,16 +1,17 @@
 float4x4 matView : WORLDVIEW;
 float4x4 matViewProjection : WORLDVIEWPROJECTION;
 const int2 mapSize = int2(32, 32);
+const float2 invMapSize = float2(1.0 / 32, 1.0 / 32);
 const float fog_density;
 
 texture cube_light_tex;
 sampler light = sampler_state {
 	Texture = (cube_light_tex);
-	MipFilter = POINT;
-	MinFilter = POINT;
-	MagFilter = POINT;
 	AddressU = WRAP;
 	AddressV = WRAP;
+	MagFilter = POINT;
+	MinFilter = POINT;
+	MipFilter = NONE;
 	sRGBTexture = FALSE;
 };
 
@@ -20,19 +21,19 @@ sampler floor_ao = sampler_state {
 	MipFilter = LINEAR;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
-	AddressU = MIRRORONCE;
-	AddressV = MIRRORONCE;
+	AddressU = MIRROR;
+	AddressV = MIRROR;
 	sRGBTexture = FALSE;
 };
 
-texture radiosity_tex;
-sampler radiosity = sampler_state {
-	Texture = (radiosity_tex);
-	MipFilter = LINEAR;
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
+texture l_tex;
+sampler r = sampler_state {
+	Texture = (l_tex);
 	AddressU = MIRRORONCE;
 	AddressV = MIRRORONCE;
+	MagFilter = LINEAR;
+	MinFilter = LINEAR;
+	MipFilter = NONE;
 	sRGBTexture = TRUE;
 };
 
@@ -52,30 +53,28 @@ VS_OUTPUT vs_main(VS_INPUT i)
 {
 	VS_OUTPUT o;
 	o.pos = mul(i.pos, matViewProjection);
-	float3 p = i.pos.xyz / 16;
-	o.cpos = floor(p.xz);
+	o.cpos = (i.pos.xz / 16) * invMapSize;
 
 	float eyez = mul(i.pos, matView).z;
 	o.fog = exp(-(eyez * eyez * fog_density));
 
-	o.uv = (i.uv - 0.5);
-	o.cpos /= mapSize;
+	o.uv = float2(i.uv.x, -i.uv.y) * mapSize;
 	return o;
 }
 
+
 float4 ps_main(VS_OUTPUT i) : COLOR0
 {
-	float att = i.fog;
-	float ao = tex2D(floor_ao, i.uv * 2).r * 0.005;
+	float ao = tex2D(floor_ao, i.uv * 2 - 1).r * 0.005;
 
 	float3 c = 0;
 	for (int y = -1; y < 2; ++y) {
-		float2 pos = i.uv / 1.5 + float2(1.0 / 1.5, y / 1.5);
-		float2 cpos = i.cpos - float2(1.0 / 64, -y / 64.0);
+		float2 pos = (frac(i.uv) * 2 - 1) / 3 + float2(-2.0 / 3, y * 2.0 / 3);
+		float2 cpos = floor(i.uv) * invMapSize + float2(invMapSize.x, -y * invMapSize.y);
 		for (int x = -1; x < 2; ++x) {
-			c += tex2D(light, cpos).rgb * tex2D(radiosity, pos).r;
-			pos.x -= 1.0 / 1.5;
-			cpos.x += 1.0 / 64;
+			c += tex2D(light, cpos).rgb * tex2D(r, pos).r;
+			pos.x += 2.0 / 3;
+			cpos.x -= invMapSize.x;
 		}
 	}
 	return float4((ao + c * 2) * i.fog, 1.0);

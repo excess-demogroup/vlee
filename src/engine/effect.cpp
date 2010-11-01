@@ -13,7 +13,13 @@ namespace engine
 	{
 		ID3DXEffect *eff = NULL;
 		ID3DXBuffer *err_buf = NULL;
-		HRESULT hr = D3DXCreateEffectFromFile(device, filename.c_str(), NULL, NULL, D3DXSHADER_AVOID_FLOW_CONTROL, NULL, &eff, &err_buf);
+
+		DWORD flags = 0; // D3DXSHADER_USE_LEGACY_D3DX9_31_DLL;
+#ifdef _RELEASE
+		flags |= D3DXSHADER_SKIPVALIDATION;
+#endif
+
+		HRESULT hr = D3DXCreateEffectFromFile(device, filename.c_str(), NULL, NULL, 0, NULL, &eff, &err_buf);
 		
 		if (FAILED(hr)) {
 			if (NULL == err_buf)

@@ -327,7 +327,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Mesh *cube_tops_x  = engine::loadMesh(device, "data/cube-grid-tops-32.x");
 		Mesh *cube_sides_x = engine::loadMesh(device, "data/cube-grid-sides-32.x");
-		Mesh *cube_floor_x = engine::loadMesh(device, "data/cube-grid-floor-32.x");
+		Mesh *cube_floor_x = engine::loadMesh(device, "data/cube-grid-floor.x");
 		Effect *cube_light_fx = engine::loadEffect(device, "data/cube-light.fx");
 		Effect *cube_tops_fx = engine::loadEffect(device, "data/cube-grid-tops.fx");
 		Effect *cube_sides_fx = engine::loadEffect(device, "data/cube-grid-sides.fx");
@@ -347,8 +347,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		cube_sides_fx->setTexture("f_tex", cube_sides_f_tex);
 		cube_sides_fx->setTexture("ao_tex", cube_sides_ao_tex);
 
-		Texture cube_floor_ao_tex = engine::loadTexture(device, "data/cube-grid-floor-ao.png");
+		Texture cube_floor_ao_tex = engine::loadTexture(device, "data/cube-grid-floor-ao.dds");
+		Texture cube_floor_l_tex = engine::loadTexture(device, "data/cube-grid-floor-l.png");
 		cube_floor_fx->setTexture("ao_tex", cube_floor_ao_tex);
+		cube_floor_fx->setTexture("l_tex", cube_floor_l_tex);
 
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -374,9 +376,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			float camTime = float(beat / 4) + sync_get_val(cameraOffsetTrack, row);
 			Vector3 camPos(
-				sin(camTime * 0.25f) * 2,
+				sin(camTime * 0.25f) * 1.5,
 				1.0,
-				cos(camTime * 0.33f) * 2);
+				cos(camTime * 0.33f) * 1.5);
 			camPos *= sync_get_val(cameraDistanceTrack, row);
 			Vector3 camTarget(0, 0, 0);
 
@@ -409,9 +411,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			float fog_density = sync_get_val(fogDensityTrack, row) / 100000;
 
-			for (int i = 0; i < 5; ++i)
-				for (int j = 0; j < 5; ++j) {
-					Matrix4x4 world = Matrix4x4::translation(Vector3((i - 2.5) * 512, 0, (j - 2.5) * 512));
+			for (int i = 0; i < 4; ++i)
+				for (int j = 0; j < 4; ++j) {
+					Matrix4x4 world = Matrix4x4::translation(Vector3((i - 2) * 512, 0, (j - 2) * 512));
 
 					cube_tops_fx->setMatrices(world, view, proj);
 					cube_tops_fx->setFloat("fog_density", fog_density);
