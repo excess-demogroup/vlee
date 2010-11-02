@@ -12,7 +12,7 @@ using namespace config;
 IDirect3D9 *config::direct3d = NULL;
 
 UINT config::adapter = D3DADAPTER_DEFAULT;
-D3DDISPLAYMODE config::mode = 
+D3DDISPLAYMODE config::mode =
 {
 	0,          // UINT Width;
 	0,          // UINT Height;
@@ -145,6 +145,35 @@ static void refreshFormats(HWND hDlg)
 	mode.Format = (D3DFORMAT)SendMessage(GetDlgItem(hDlg, IDC_FORMAT), (UINT)CB_GETITEMDATA, (WPARAM)best_hit, 0);
 }
 
+static void refreshAspectRatios(HWND hDlg)
+{
+	int best_fit = 0;
+	float best_ratio = FLT_MAX;
+
+	static const struct {
+		int w, h;
+	} aspect_ratios[] = {
+		{5, 4},
+		{4, 3},
+		{16, 10},
+		{16, 9},
+	};
+
+	aspect = float(mode.Width) / mode.Height;
+	for (int i = 0; i < ARRAY_SIZE(aspect_ratios); ++i) {
+		char temp[256];
+		_snprintf(temp, 256, "%d:%d", aspect_ratios[i].w, aspect_ratios[i].h);
+		SendMessage(GetDlgItem(hDlg, IDC_ASPECT), CB_ADDSTRING, 0, (LPARAM)temp);
+
+		float curr_ratio = float(aspect_ratios[i].w) / aspect_ratios[i].h;
+		if (fabs(curr_ratio - config::aspect) < fabs(best_ratio - config::aspect)) {
+			best_fit = i;
+			best_ratio = curr_ratio;
+		}
+	}
+	SendMessage(GetDlgItem(hDlg, IDC_ASPECT), (UINT)CB_SETCURSEL, (WPARAM)best_fit, 0);
+}
+
 static LRESULT CALLBACK configDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 INT_PTR config::showDialog(HINSTANCE hInstance, IDirect3D9 *direct3d)
@@ -162,7 +191,6 @@ INT_PTR config::showDialog(HINSTANCE hInstance, IDirect3D9 *direct3d)
 static LRESULT onInitDialog(HWND hDlg)
 {
 	direct3d->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode);
-	aspect = float(mode.Width) / mode.Height;
 
 	// add adapters to list
 	unsigned adapter_count = direct3d->GetAdapterCount();
@@ -181,36 +209,10 @@ static LRESULT onInitDialog(HWND hDlg)
 	refreshFormats(hDlg);
 	refreshModes(hDlg);
 	refreshMultisampleTypes(hDlg);
+	refreshAspectRatios(hDlg);
 
 	// set vsync checkbutton to the default setting
 	CheckDlgButton(hDlg, IDC_VSYNC, DEFAULT_VSYNC);
-
-	int best_fit = 0;
-	float best_ratio = FLT_MAX;
-
-	static const struct {
-		int w, h;
-	} aspect_ratios[] = {
-		{5, 4},
-		{4, 3},
-		{16, 10},
-		{16, 9},
-	};
-
-	for (int i = 0; i < ARRAY_SIZE(aspect_ratios); ++i)
-	{
-		char temp[256];
-		_snprintf(temp, 256, "%d:%d", aspect_ratios[i].w, aspect_ratios[i].h);
-		SendMessage(GetDlgItem(hDlg, IDC_ASPECT), CB_ADDSTRING, 0, (LPARAM)temp);
-
-		float curr_ratio = float(aspect_ratios[i].w) / aspect_ratios[i].h;
-		if (fabs(curr_ratio - config::aspect) < fabs(best_ratio - config::aspect))
-		{
-			best_fit = i;
-			best_ratio = curr_ratio;
-		}
-	}
-	SendMessage(GetDlgItem(hDlg, IDC_ASPECT), (UINT)CB_SETCURSEL, (WPARAM)best_fit, 0);
 
 	// playback device
 	BASS_DEVICEINFO info;
@@ -244,6 +246,7 @@ static LRESULT onResolutionChange(HWND hDlg)
 {
 	direct3d->EnumAdapterModes(adapter, mode.Format, (UINT)SendMessage(GetDlgItem(hDlg, IDC_RESOLUTION), (UINT)CB_GETCURSEL, (WPARAM)0, 0), &mode);
 	refreshMultisampleTypes(hDlg);
+	refreshAspectRatios(hDlg);
 	return (LRESULT)TRUE;
 }
 
