@@ -59,7 +59,7 @@ static void refreshModes(HWND hDlg)
 static bool is_multisample_type_ok(IDirect3D9 *direct3d, UINT adapter, D3DFORMAT adapterFormat, D3DFORMAT backBufferFormat, D3DFORMAT depthBufferFormat, D3DMULTISAMPLE_TYPE multisample_type)
 {
 	return
-		(multisample_type == D3DMULTISAMPLE_NONE || SUCCEEDED(direct3d->CheckDeviceFormat(adapter, D3DDEVTYPE_HAL, backBufferFormat, D3DUSAGE_QUERY_FILTER, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F))) &&
+	    (multisample_type == D3DMULTISAMPLE_NONE || SUCCEEDED(direct3d->CheckDeviceFormat(adapter, D3DDEVTYPE_HAL, backBufferFormat, D3DUSAGE_QUERY_FILTER, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F))) &&
 	    SUCCEEDED(direct3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, backBufferFormat, FALSE, multisample_type, NULL)) &&
 	    SUCCEEDED(direct3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, D3DFMT_A16B16G16R16F, FALSE, multisample_type, NULL)) &&
 	    SUCCEEDED(direct3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, depthBufferFormat, FALSE, multisample_type, NULL));
@@ -180,12 +180,8 @@ INT_PTR config::showDialog(HINSTANCE hInstance, IDirect3D9 *direct3d)
 {
 	assert(NULL != direct3d);
 	config::direct3d = direct3d;
-	return DialogBox(
-		hInstance,
-		MAKEINTRESOURCE(IDD_CONFIG),
-		NULL,
-		(DLGPROC)configDialogProc
-	);
+	return DialogBox(hInstance, MAKEINTRESOURCE(IDD_CONFIG), NULL,
+	    (DLGPROC)configDialogProc);
 }
 
 static LRESULT onInitDialog(HWND hDlg)
@@ -259,8 +255,7 @@ static LRESULT onMultisampleChange(HWND hDlg)
 
 static LRESULT onCloseCmd(HWND hDlg, WORD wID)
 {
-	if (IDOK == wID)
-	{
+	if (IDOK == wID) {
 		vsync = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_VSYNC));
 		soundcard = (unsigned)SendMessage(GetDlgItem(hDlg, IDC_SOUNDCARD), (UINT)CB_GETCURSEL, (WPARAM)0, 0);
 
@@ -279,36 +274,39 @@ static LRESULT onCloseCmd(HWND hDlg, WORD wID)
 
 static LRESULT CALLBACK configDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	switch (message)
-	{
-	case WM_INITDIALOG: return onInitDialog(hDlg);
-	
+	switch (message) {
+	case WM_INITDIALOG:
+		return onInitDialog(hDlg);
+		break;
+
 	case WM_COMMAND:
-		switch (LOWORD(wParam))
-		{
+		switch (LOWORD(wParam)) {
 		case IDOK:
 		case IDCANCEL:
 			return onCloseCmd(hDlg, LOWORD(wParam));
 			break;
-		
+
 		case IDC_DEVICE:
-			if (CBN_SELCHANGE == HIWORD(wParam)) return onDeviceChange(hDlg);
+			if (CBN_SELCHANGE == HIWORD(wParam))
+				return onDeviceChange(hDlg);
 			break;
 
 		case IDC_FORMAT:
-			if (CBN_SELCHANGE == HIWORD(wParam)) return onFormatChange(hDlg);
+			if (CBN_SELCHANGE == HIWORD(wParam))
+				return onFormatChange(hDlg);
 			break;
 
 		case IDC_RESOLUTION:
-			if (CBN_SELCHANGE == HIWORD(wParam)) return onResolutionChange(hDlg);
+			if (CBN_SELCHANGE == HIWORD(wParam))
+				return onResolutionChange(hDlg);
 			break;
 
 		case IDC_MULTISAMPLE:
-			if (CBN_SELCHANGE == HIWORD(wParam)) return onMultisampleChange(hDlg);
+			if (CBN_SELCHANGE == HIWORD(wParam))
+				return onMultisampleChange(hDlg);
 			break;
 		}
-//	case WM_CLOSE: return onCloseCmd(hDlg, LOWORD(wParam));
 	}
-	
+
 	return FALSE;
 }

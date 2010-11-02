@@ -51,14 +51,14 @@ namespace engine {
 			assert( NULL != p );
 			p->SetFloatArray(param, f, UINT(count));
 		}
-		
+
 		void setVector3(D3DXHANDLE param, const math::Vector3 &v)
 		{
 			assert( NULL != p );
 			D3DXVECTOR4 v4(v.x, v.y, v.z, 1.0);
 			p->SetVector(param, &v4);
 		}
-		
+
 		void setTexture(D3DXHANDLE param, const renderer::Texture &texture)
 		{
 			p->SetTexture(param, texture.tex);
