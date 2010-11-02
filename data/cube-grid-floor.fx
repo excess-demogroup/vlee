@@ -65,9 +65,9 @@ static const float2 possy[3] = {
 };
 
 static const float2 cpossy[3] = {
-	float2(1, -1) * invMapSize,
+	float2(1,  1) * invMapSize,
 	float2(1,  0) * invMapSize,
-	float2(1,  1) * invMapSize
+	float2(1, -1) * invMapSize
 };
 
 float4 ps_main(VS_OUTPUT i) : COLOR0
