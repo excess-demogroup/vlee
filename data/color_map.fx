@@ -1,6 +1,7 @@
 float flash = 0;
 float fade  = 1;
 float blend = 0;
+float2 noffs = float2(0, 0);
 
 texture bloom;
 sampler bloom_sampler = sampler_state {
@@ -21,6 +22,17 @@ sampler tex_sampler = sampler_state {
 	MagFilter = POINT;
 	AddressU = CLAMP;
 	AddressV = CLAMP;
+	sRGBTexture = FALSE;
+};
+
+texture noise_tex;
+sampler noise = sampler_state {
+	Texture = (noise_tex);
+	MipFilter = NONE;
+	MinFilter = POINT;
+	MagFilter = POINT;
+	AddressU = WRAP;
+	AddressV = WRAP;
 	sRGBTexture = FALSE;
 };
 
@@ -48,6 +60,8 @@ float4 pixel(VS_OUTPUT In) : COLOR
 {
 	float4 color = tex2D(tex_sampler, In.tex);
 	color += pow(tex2D(bloom_sampler, In.tex) * 0.75, 1.5);
+	float n = tex2D(noise, In.tex * 15 + noffs).r;
+	color.rgb -= (n - 0.5) * 0.01;
 	return color * fade + flash;
 }
 

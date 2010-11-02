@@ -325,6 +325,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *blur_fx     = engine::loadEffect(device, "data/blur.fx");
 		Effect *color_map_fx = engine::loadEffect(device, "data/color_map.fx");
 
+		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
+		color_map_fx->setTexture("noise_tex", noise_tex);
+
 		Mesh *cube_tops_x  = engine::loadMesh(device, "data/cube-grid-tops-32.x");
 		Mesh *cube_sides_x = engine::loadMesh(device, "data/cube-grid-sides-32.x");
 		Mesh *cube_floor_x = engine::loadMesh(device, "data/cube-grid-floor.x");
@@ -514,6 +517,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device.setViewport(&letterbox_viewport);
 
 			float flash = sync_get_val(colorMapFlashTrack, row);
+			color_map_fx->setVector3("noffs", Vector3(math::notRandf(int(beat * 100)), math::notRandf(int(beat * 100) + 1), 0));
 			color_map_fx->setFloat("blend", sync_get_val(colorMapBlendTrack, row));
 			color_map_fx->setFloat("flash", flash < 0 ? randf() : pow(flash, 2.0f));
 			color_map_fx->setFloat("fade", sync_get_val(colorMapFadeTrack, row));
