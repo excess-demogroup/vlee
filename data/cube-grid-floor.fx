@@ -1,7 +1,7 @@
 float4x4 matView : WORLDVIEW;
 float4x4 matViewProjection : WORLDVIEWPROJECTION;
-const int2 mapSize = int2(32, 32);
-const float2 invMapSize = float2(1.0 / 32, 1.0 / 32);
+static const int2 mapSize = int2(32, 32);
+static const float2 invMapSize = 1.0 / mapSize;
 const float fog_density;
 
 texture cube_light_tex;
@@ -58,15 +58,26 @@ VS_OUTPUT vs_main(VS_INPUT i)
 	return o;
 }
 
+static const float2 possy[3] = {
+	float2(-2, -2) / 3,
+	float2(-2,  0) / 3,
+	float2(-2,  2) / 3
+};
+
+static const float2 cpossy[3] = {
+	float2(1, -1) * invMapSize,
+	float2(1,  0) * invMapSize,
+	float2(1,  1) * invMapSize
+};
 
 float4 ps_main(VS_OUTPUT i) : COLOR0
 {
 	float ao = tex2D(floor_ao, i.uv * 2 - 1).r * 0.005;
 
 	float3 c = 0;
-	for (int y = -1; y < 2; ++y) {
-		float2 pos = (frac(i.uv) * 2 - 1 + float2(-2, y * 2)) / 3;
-		float2 cpos = (floor(i.uv) + float2(1, -y)) * invMapSize;
+	for (int y = 0; y < 3; ++y) {
+		float2 pos = (frac(i.uv) * 2 - 1) / 3 + possy[y];
+		float2 cpos = floor(i.uv) * invMapSize + cpossy[y];
 		for (int x = -1; x < 2; ++x) {
 			c += tex2D(light, cpos).rgb * tex2D(r, pos).r;
 			pos.x += 2.0 / 3;
@@ -80,5 +91,23 @@ technique cube_floor {
 	pass P0 {
 		VertexShader = compile vs_2_0 vs_main();
 		PixelShader  = compile ps_2_0 ps_main();
+	}
+}
+
+float4 rgb_to_ergb(float3 rgb)
+{
+	float e = ceil(log2(max(max(rgb.r, rgb.g), rgb.b)));
+	return float4(rgb * exp2(-e), (e + 128) / 255);
+}
+
+float4 ps_main_rgbe(VS_OUTPUT i) : COLOR0
+{
+	return rgb_to_ergb(ps_main(i).rgb);
+}
+
+technique rgbe {
+	pass P0 {
+		VertexShader = compile vs_2_0 vs_main();
+		PixelShader  = compile ps_2_0 ps_main_rgbe();
 	}
 }

@@ -43,3 +43,21 @@ technique cube_tops {
 		PixelShader  = compile ps_2_0 ps_main();
 	}
 }
+
+float4 rgb_to_ergb(float3 rgb)
+{
+	float e = ceil(log2(max(max(rgb.r, rgb.g), rgb.b)));
+	return float4(rgb * exp2(-e), (e + 128) / 255);
+}
+
+float4 ps_main_rgbe(VS_OUTPUT i) : COLOR0
+{
+	return rgb_to_ergb(ps_main(i).rgb);
+}
+
+technique rgbe {
+	pass P0 {
+		VertexShader = compile vs_2_0 vs_main();
+		PixelShader  = compile ps_2_0 ps_main_rgbe();
+	}
+}

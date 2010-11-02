@@ -327,6 +327,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
 		color_map_fx->setTexture("noise_tex", noise_tex);
+		if (use_sm20_codepath)
+			color_map_fx->p->SetTechnique("rgbe");
 
 		Mesh *cube_tops_x  = engine::loadMesh(device, "data/cube-grid-tops-32.x");
 		Mesh *cube_sides_x = engine::loadMesh(device, "data/cube-grid-sides-32.x");
@@ -338,6 +340,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 		cube_tops_fx->setTexture("cube_light_tex", cube_light_tex);
 		cube_sides_fx->setTexture("cube_light_tex", cube_light_tex);
 		cube_floor_fx->setTexture("cube_light_tex", cube_light_tex);
+
+		if (use_sm20_codepath) {
+			cube_tops_fx->p->SetTechnique("rgbe");
+			cube_sides_fx->p->SetTechnique("rgbe");
+			cube_floor_fx->p->SetTechnique("rgbe");
+		}
 
 		Texture cube_sides_n1_tex = engine::loadTexture(device, "data/cube-grid-sides-n1.dds");
 		Texture cube_sides_n2_tex = engine::loadTexture(device, "data/cube-grid-sides-n2.dds");

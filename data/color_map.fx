@@ -71,3 +71,24 @@ technique color_map {
 		PixelShader  = compile ps_2_0 pixel();
 	}
 }
+
+float3 rgbe_to_rgb(float4 rgbe)
+{
+	return rgbe.rgb * exp2(rgbe.a * 255 - 128);
+}
+
+float4 pixel_rgbe(VS_OUTPUT In) : COLOR
+{
+	float3 color = rgbe_to_rgb(tex2D(tex_sampler, In.tex));
+//	color += pow(tex2D(bloom_sampler, In.tex) * 0.75, 1.5);
+	float n = tex2D(noise, In.tex * 15 + noffs).r;
+	color.rgb -= (n - 0.5) * 0.01;
+	return float4(color * fade + flash, 1);
+}
+
+technique rgbe {
+	pass P0 {
+		VertexShader = compile vs_2_0 vertex();
+		PixelShader  = compile ps_2_0 pixel_rgbe();
+	}
+}
