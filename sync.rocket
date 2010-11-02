@@ -1,12 +1,15 @@
 <tracks rows="4096">
 	<track name="cam.dist">
-		<key row="0" value="1000.000000" interpolation="1"/>
+		<key row="0" value="500.000000" interpolation="1"/>
 		<key row="63" value="20.000000" interpolation="0"/>
 		<key row="95" value="20.000000" interpolation="2"/>
 		<key row="97" value="40.000000" interpolation="0"/>
 	</track>
 	<track name="cam.roll">
-		<key row="0" value="0.000000" interpolation="0"/>
+		<key row="0" value="0.000000" interpolation="1"/>
+		<key row="63" value="0.100000" interpolation="0"/>
+		<key row="95" value="0.100000" interpolation="2"/>
+		<key row="97" value="0.030000" interpolation="0"/>
 	</track>
 	<track name="cam.offset">
 		<key row="0" value="0.000000" interpolation="0"/>
@@ -18,7 +21,7 @@
 		<key row="0" value="0.000000" interpolation="0"/>
 	</track>
 	<track name="cm.fade">
-		<key row="0" value="3.000000" interpolation="0"/>
+		<key row="0" value="1.000000" interpolation="0"/>
 	</track>
 	<track name="cm.flash">
 		<key row="0" value="0.000000" interpolation="0"/>
