@@ -223,7 +223,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr.lib lib/bass.lib lib/tinyxml.lib lib/sync_player-release-client.lib winmm.lib Ws2_32.lib"
-				OutputFile="$(OutDir)\editor.exe"
+				OutputFile="$(OutDir)\demo_client.exe"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
