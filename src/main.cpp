@@ -336,11 +336,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 		cube_sides_fx->setTexture("cube_light_tex", cube_light_tex);
 		cube_floor_fx->setTexture("cube_light_tex", cube_light_tex);
 
-		Texture cube_sides_n1_tex = engine::loadTexture(device, "data/cube-grid-sides-n1.png");
-		Texture cube_sides_n2_tex = engine::loadTexture(device, "data/cube-grid-sides-n2.png");
-		Texture cube_sides_n3_tex = engine::loadTexture(device, "data/cube-grid-sides-n3.png");
-		Texture cube_sides_f_tex = engine::loadTexture(device, "data/cube-grid-sides-f.png");
-		Texture cube_sides_ao_tex = engine::loadTexture(device, "data/cube-grid-sides-ao.png");
+		Texture cube_sides_n1_tex = engine::loadTexture(device, "data/cube-grid-sides-n1.dds");
+		Texture cube_sides_n2_tex = engine::loadTexture(device, "data/cube-grid-sides-n2.dds");
+		Texture cube_sides_n3_tex = engine::loadTexture(device, "data/cube-grid-sides-n3.dds");
+		Texture cube_sides_f_tex = engine::loadTexture(device, "data/cube-grid-sides-f.dds");
+		Texture cube_sides_ao_tex = engine::loadTexture(device, "data/cube-grid-sides-ao.dds");
 		cube_sides_fx->setTexture("n1_tex", cube_sides_n1_tex);
 		cube_sides_fx->setTexture("n2_tex", cube_sides_n2_tex);
 		cube_sides_fx->setTexture("n3_tex", cube_sides_n3_tex);
@@ -348,7 +348,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		cube_sides_fx->setTexture("ao_tex", cube_sides_ao_tex);
 
 		Texture cube_floor_ao_tex = engine::loadTexture(device, "data/cube-grid-floor-ao.dds");
-		Texture cube_floor_l_tex = engine::loadTexture(device, "data/cube-grid-floor-l.png");
+		Texture cube_floor_l_tex = engine::loadTexture(device, "data/cube-grid-floor-l.dds");
 		cube_floor_fx->setTexture("ao_tex", cube_floor_ao_tex);
 		cube_floor_fx->setTexture("l_tex", cube_floor_l_tex);
 
