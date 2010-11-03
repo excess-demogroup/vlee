@@ -302,6 +302,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *light2IndexTrack    = sync_get_track(rocket, "light2.index");
 		const sync_track *light2AlphaTrack    = sync_get_track(rocket, "light2.alpha");
 
+		const sync_track *pulseSpeedTrack     = sync_get_track(rocket, "pulse.speed");
+		const sync_track *pulseAmtTrack       = sync_get_track(rocket, "pulse.amt");
 
 		Surface backbuffer   = device.getRenderTarget(0);
 		Surface depthstencil = device.getDepthStencilSurface();
@@ -413,7 +415,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
 			device.setRenderTarget(cube_light_tex.getRenderTarget());
 			cube_light_fx->setFloat("time", float(beat * 0.1));
-			cube_light_fx->setFloat("pulse_amt", 0.5);
+			cube_light_fx->setFloat("pulse_phase", float((beat / 16) * sync_get_val(pulseSpeedTrack, row)));
+			cube_light_fx->setFloat("pulse_amt", sync_get_val(pulseAmtTrack, row));
 
 			cube_light_fx->setTexture("light1_tex", lights.getTexture((int)sync_get_val(light1IndexTrack, row) % lights.getTextureCount()));
 			cube_light_fx->setTexture("light2_tex", lights.getTexture((int)sync_get_val(light2IndexTrack, row) % lights.getTextureCount()));

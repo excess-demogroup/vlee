@@ -83,7 +83,7 @@ float4 pixel_rgbe(VS_OUTPUT In) : COLOR
 	float3 color = rgbe_to_rgb(tex2D(tex_sampler, In.tex));
 //	color += pow(tex2D(bloom_sampler, In.tex) * 0.75, 1.5);
 	float n = tex2D(noise, In.tex * 15 + noffs).r;
-	color.rgb -= (n - 0.5) * 0.01;
+	color.rgb += (n - 0.5) * 0.1;
 	return float4(color * fade + flash, 1);
 }
 

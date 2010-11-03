@@ -1,5 +1,6 @@
 float time;
 float pulse_amt;
+float pulse_phase;
 
 texture noise_tex;
 sampler noise = sampler_state {
@@ -64,7 +65,7 @@ float4 ps_main(float2 texCoord : TEXCOORD0) : COLOR
 	c *= 0.2;
 	c += tex2D(light1, texCoord) * light1_alpha;
 	c += tex2D(light2, texCoord) * light2_alpha;
-	c = c + c * sin(time + tex2D(noise, texCoord)) * pulse_amt;
+	c = c + c * sin((pulse_phase + tex2D(noise, texCoord).r) * 2 * 3.1415926) * pulse_amt;
 	return float4(c, 1);
 }
 
