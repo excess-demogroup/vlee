@@ -1,6 +1,7 @@
 float4x4 matView : WORLDVIEW;
 float4x4 matViewProjection : WORLDVIEWPROJECTION;
-const float2 invMapSize = float2(1.0 / 32, 1.0 / 32);
+const float2 invMapSize = float2(1.0 / 128, 1.0 / 128);
+const float2 uv_offs;
 const float fog_density;
 texture cube_light_tex;
 
@@ -24,7 +25,9 @@ VS_OUTPUT vs_main(float4 ipos : POSITION0)
 {
 	VS_OUTPUT o;
 	o.pos = mul(ipos, matViewProjection);
-	o.cpos.xy = (floor(ipos.xz / 16) + 0.5) * invMapSize;
+	o.cpos = (floor(ipos.xz / 16) + 0.5) * invMapSize;
+	o.cpos += uv_offs;
+	o.cpos.x = 1 - o.cpos.x;
 	float eyez = mul(ipos, matView).z;
 	o.fog = exp(-(eyez * eyez * fog_density));
 	return o;
@@ -34,7 +37,7 @@ float4 ps_main(VS_OUTPUT i) : COLOR0
 {
 	float3 c = tex2D(light, i.cpos).rgb * 5;
 	float ao = 0.005;
-	return float4((ao + c * 2) * i.fog, 1.0);
+	return float4((ao + c) * i.fog, 1.0);
 }
 
 technique cube_tops {

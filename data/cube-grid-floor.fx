@@ -2,6 +2,7 @@ float4x4 matView : WORLDVIEW;
 float4x4 matViewProjection : WORLDVIEWPROJECTION;
 static const int2 mapSize = int2(32, 32);
 static const float2 invMapSize = 1.0 / mapSize;
+const float2 uv_offs;
 const float fog_density;
 
 texture cube_light_tex;
@@ -54,7 +55,7 @@ VS_OUTPUT vs_main(VS_INPUT i)
 	o.pos = mul(i.pos, matViewProjection);
 	float eyez = mul(i.pos, matView).z;
 	o.fog = exp(-(eyez * eyez * fog_density));
-	o.uv = float2(i.uv.x, -i.uv.y) * mapSize;
+	o.uv = float2(i.uv.x, 1 - i.uv.y) * 32;
 	return o;
 }
 
@@ -65,9 +66,9 @@ static const float2 possy[3] = {
 };
 
 static const float2 cpossy[3] = {
-	float2(1,  1) * invMapSize,
-	float2(1,  0) * invMapSize,
-	float2(1, -1) * invMapSize
+	float2(1.5,  1) / 128,
+	float2(1.5,  0) / 128,
+	float2(1.5, -1) / 128
 };
 
 float4 ps_main(VS_OUTPUT i) : COLOR0
@@ -77,14 +78,15 @@ float4 ps_main(VS_OUTPUT i) : COLOR0
 	float3 c = 0;
 	for (int y = 0; y < 3; ++y) {
 		float2 pos = (frac(i.uv) * 2 - 1) / 3 + possy[y];
-		float2 cpos = floor(i.uv) * invMapSize + cpossy[y];
+		float2 cpos = floor(i.uv) / 128 + cpossy[y] + uv_offs;
+		cpos.x = 1.0 - cpos.x;
 		for (int x = -1; x < 2; ++x) {
 			c += tex2D(light, cpos).rgb * tex2D(r, pos).r;
 			pos.x += 2.0 / 3;
-			cpos.x -= invMapSize.x;
+			cpos.x += 1.0 / 128;
 		}
 	}
-	return float4((ao + c * 2) * i.fog, 1.0);
+	return float4((ao + c) * i.fog, 1.0);
 }
 
 technique cube_floor {

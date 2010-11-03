@@ -1,6 +1,7 @@
 float4x4 matView : WORLDVIEW;
 float4x4 matViewProjection : WORLDVIEWPROJECTION;
-const float2 invMapSize = float2(1.0 / 32, 1.0 / 32);
+const float2 invMapSize = float2(1.0 / 128, 1.0 / 128);
+const float2 uv_offs;
 texture cube_light_tex;
 const float fog_density;
 
@@ -89,6 +90,7 @@ VS_OUTPUT vs_main(VS_INPUT Input)
 	VS_OUTPUT o;
 	o.pos = mul(Input.pos, matViewProjection);
 	o.cpos = (floor(Input.pos.xz / 16) + 0.5) * invMapSize;
+	o.cpos += uv_offs;
 
 	o.uv.xy = Input.uv * 2 - 1;
 	o.uv.z = Input.uv.x;
@@ -98,6 +100,10 @@ VS_OUTPUT vs_main(VS_INPUT Input)
 
 	float eyez = mul(Input.pos, matView).z;
 	o.fog = exp(-(eyez * eyez * fog_density));
+
+	// jalla-flipping
+	o.cpos.x = 1 - o.cpos.x;
+	o.n.x = -o.n.x;
 
 	return o;
 }
@@ -110,16 +116,16 @@ float4 ps_main(VS_OUTPUT i) : COLOR0
 
 	i.cpos.xy += i.n.xy;
 	c += tex2D(n1, i.uv.xy).r * tex2D(light, i.cpos.xy).rgb;
-	c += tex2D(n2, i.uv.zy).r * tex2D(light, i.cpos.xy - i.n.zx).rgb;
-	c += tex2D(n3, i.uv.zy).r * tex2D(light, i.cpos.xy - i.n.zx * 2).rgb;
-	c += tex2D(n2, i.uv.wy).r * tex2D(light, i.cpos.xy + i.n.zx).rgb;
-	c += tex2D(n3, i.uv.wy).r * tex2D(light, i.cpos.xy + i.n.zx * 2).rgb;
+	c += tex2D(n2, i.uv.zy).r * tex2D(light, i.cpos.xy + i.n.zx).rgb;
+	c += tex2D(n3, i.uv.zy).r * tex2D(light, i.cpos.xy + i.n.zx * 2).rgb;
+	c += tex2D(n2, i.uv.wy).r * tex2D(light, i.cpos.xy - i.n.zx).rgb;
+	c += tex2D(n3, i.uv.wy).r * tex2D(light, i.cpos.xy - i.n.zx * 2).rgb;
 
 	i.cpos.xy += i.n.xy;
-	c += tex2D(f, i.uv.zy).r * tex2D(light, i.cpos.xy - i.n.zx).rgb;
-	c += tex2D(f, i.uv.wy).r * tex2D(light, i.cpos.xy + i.n.zx).rgb;
+	c += tex2D(f, i.uv.zy).r * tex2D(light, i.cpos.xy + i.n.zx).rgb;
+	c += tex2D(f, i.uv.wy).r * tex2D(light, i.cpos.xy - i.n.zx).rgb;
 
-	return float4((ao + c * 2) * i.fog, 1.0);
+	return float4((ao + c) * i.fog, 1.0);
 }
 
 technique cube_sides {

@@ -297,6 +297,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		const sync_track *fogDensityTrack     = sync_get_track(rocket, "fog.density");
 
+		const sync_track *light1IndexTrack    = sync_get_track(rocket, "light1.index");
+		const sync_track *light1AlphaTrack    = sync_get_track(rocket, "light1.alpha");
+		const sync_track *light2IndexTrack    = sync_get_track(rocket, "light2.index");
+		const sync_track *light2AlphaTrack    = sync_get_track(rocket, "light2.alpha");
+
+
 		Surface backbuffer   = device.getRenderTarget(0);
 		Surface depthstencil = device.getDepthStencilSurface();
 
@@ -316,7 +322,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		    use_sm20_codepath ? D3DMULTISAMPLE_NONE : config::multisample);
 
 		/** DEMO ***/
-		RenderTexture cube_light_tex(device, 32, 32, 1, use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
+		RenderTexture cube_light_tex(device, 128, 128, 1, use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
 		RenderTexture color1_hdr(device, 1280 / 2, int((1280 / DEMO_ASPECT) / 2), 1,
 		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
 		RenderTexture color2_hdr(device, 1280 / 2, int((1280 / DEMO_ASPECT) / 2), 1,
@@ -330,10 +336,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 		if (use_sm20_codepath)
 			color_map_fx->p->SetTechnique("rgbe");
 
+		Effect *cube_light_fx = engine::loadEffect(device, "data/cube-light.fx");
+		cube_light_fx->setTexture("noise_tex", noise_tex);
+
 		Mesh *cube_tops_x  = engine::loadMesh(device, "data/cube-grid-tops-32.x");
 		Mesh *cube_sides_x = engine::loadMesh(device, "data/cube-grid-sides-32.x");
 		Mesh *cube_floor_x = engine::loadMesh(device, "data/cube-grid-floor.x");
-		Effect *cube_light_fx = engine::loadEffect(device, "data/cube-light.fx");
 		Effect *cube_tops_fx = engine::loadEffect(device, "data/cube-grid-tops.fx");
 		Effect *cube_sides_fx = engine::loadEffect(device, "data/cube-grid-sides.fx");
 		Effect *cube_floor_fx = engine::loadEffect(device, "data/cube-grid-floor.fx");
@@ -362,6 +370,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture cube_floor_l_tex = engine::loadTexture(device, "data/cube-grid-floor-l.dds");
 		cube_floor_fx->setTexture("ao_tex", cube_floor_ao_tex);
 		cube_floor_fx->setTexture("l_tex", cube_floor_l_tex);
+
+		Anim lights = engine::loadAnim(device, "data/lights");
 
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -403,6 +413,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
 			device.setRenderTarget(cube_light_tex.getRenderTarget());
 			cube_light_fx->setFloat("time", float(beat * 0.1));
+			cube_light_fx->setFloat("pulse_amt", 0.5);
+
+			cube_light_fx->setTexture("light1_tex", lights.getTexture((int)sync_get_val(light1IndexTrack, row) % lights.getTextureCount()));
+			cube_light_fx->setTexture("light2_tex", lights.getTexture((int)sync_get_val(light2IndexTrack, row) % lights.getTextureCount()));
+			cube_light_fx->setFloat("light1_alpha", sync_get_val(light1AlphaTrack, row));
+			cube_light_fx->setFloat("light2_alpha", sync_get_val(light2AlphaTrack, row));
 			drawQuad(
 				device, cube_light_fx,
 				-1.0f, -1.0f,
@@ -424,20 +440,24 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			for (int i = 0; i < 4; ++i)
 				for (int j = 0; j < 4; ++j) {
+					Vector3 uv_offs = Vector3(i / 4.0f, j / 4.0f, 0);
 					Matrix4x4 world = Matrix4x4::translation(Vector3((i - 2) * 512, 0, (j - 2) * 512));
 
 					cube_tops_fx->setMatrices(world, view, proj);
 					cube_tops_fx->setFloat("fog_density", fog_density);
+					cube_tops_fx->setVector3("uv_offs", uv_offs);
 					cube_tops_fx->commitChanges();
 					cube_tops_fx->draw(cube_tops_x);
 
 					cube_sides_fx->setMatrices(world, view, proj);
 					cube_sides_fx->setFloat("fog_density", fog_density);
+					cube_sides_fx->setVector3("uv_offs", uv_offs);
 					cube_sides_fx->commitChanges();
 					cube_sides_fx->draw(cube_sides_x);
 
 					cube_floor_fx->setMatrices(world, view, proj);
 					cube_floor_fx->setFloat("fog_density", fog_density);
+					cube_floor_fx->setVector3("uv_offs", uv_offs);
 					cube_floor_fx->commitChanges();
 					cube_floor_fx->draw(cube_floor_x);
 				}
@@ -529,6 +549,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setFloat("blend", sync_get_val(colorMapBlendTrack, row));
 			color_map_fx->setFloat("flash", flash < 0 ? randf() : pow(flash, 2.0f));
 			color_map_fx->setFloat("fade", sync_get_val(colorMapFadeTrack, row));
+			color_map_fx->setFloat("bloom_amt", sync_get_val(bloomAmtTrack, row));
 			color_map_fx->setTexture("bloom", color1_hdr);
 			color_map_fx->setTexture("tex", color_msaa);
 
