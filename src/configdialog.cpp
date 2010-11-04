@@ -43,12 +43,12 @@ static void refreshModes(HWND hDlg)
 		SendMessage(GetDlgItem(hDlg, IDC_RESOLUTION), CB_ADDSTRING, 0, (LPARAM)temp);
 
 		if ((config::mode.Width == mode.Width) && (config::mode.Height == mode.Height)) {
-			if (mode.RefreshRate == D3DPRESENT_RATE_DEFAULT) {
+			if (config::mode.RefreshRate == D3DPRESENT_RATE_DEFAULT) {
 				if (best_mode_refresh_rate < mode.RefreshRate) {
 					best_mode = i;
 					best_mode_refresh_rate = mode.RefreshRate;
 				}
-			} else if (mode.RefreshRate == mode.RefreshRate)
+			} else if (config::mode.RefreshRate == mode.RefreshRate)
 				best_mode = i;
 		}
 	}
@@ -104,8 +104,8 @@ static void refreshMultisampleTypes(HWND hDlg)
 	}
 
 	// select previous selected mode (if found)
-	config::multisample = ms_types[best_hit].type;
 	SendMessage(GetDlgItem(hDlg, IDC_MULTISAMPLE), (UINT)CB_SETCURSEL, (WPARAM)best_hit, 0);
+	multisample = (D3DMULTISAMPLE_TYPE)SendMessage(GetDlgItem(hDlg, IDC_MULTISAMPLE), (UINT)CB_GETITEMDATA, (WPARAM)SendMessage(GetDlgItem(hDlg, IDC_MULTISAMPLE), (UINT)CB_GETCURSEL, (WPARAM)0, 0), 0);
 	EnableWindow(GetDlgItem(hDlg, IDC_MULTISAMPLE), item > 1);
 }
 
@@ -249,7 +249,6 @@ static LRESULT onResolutionChange(HWND hDlg)
 static LRESULT onMultisampleChange(HWND hDlg)
 {
 	multisample = (D3DMULTISAMPLE_TYPE)SendMessage(GetDlgItem(hDlg, IDC_MULTISAMPLE), (UINT)CB_GETITEMDATA, (WPARAM)SendMessage(GetDlgItem(hDlg, IDC_MULTISAMPLE), (UINT)CB_GETCURSEL, (WPARAM)0, 0), 0);
-		// throw FatalException("mordi");
 	return 0;
 }
 
