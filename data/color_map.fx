@@ -1,6 +1,5 @@
 float flash = 0;
 float fade  = 1;
-float blend = 0;
 float2 noffs = float2(0, 0);
 float bloom_amt = 0.2;
 

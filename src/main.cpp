@@ -288,7 +288,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *cameraOffsetTrack   = sync_get_track(rocket, "cam.offset");
 		const sync_track *cameraIndexTrack    = sync_get_track(rocket, "cam.index");
 
-		const sync_track *colorMapBlendTrack  = sync_get_track(rocket, "cm.blend");
 		const sync_track *colorMapFadeTrack   = sync_get_track(rocket, "cm.fade");
 		const sync_track *colorMapFlashTrack  = sync_get_track(rocket, "cm.flash");
 		const sync_track *bloomSizeTrack      = sync_get_track(rocket, "bloom.size");
@@ -549,9 +548,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			float flash = sync_get_val(colorMapFlashTrack, row);
 			color_map_fx->setVector3("noffs", Vector3(math::notRandf(int(beat * 100)), math::notRandf(int(beat * 100) + 1), 0));
-			color_map_fx->setFloat("blend", sync_get_val(colorMapBlendTrack, row));
 			color_map_fx->setFloat("flash", flash < 0 ? randf() : pow(flash, 2.0f));
-			color_map_fx->setFloat("fade", sync_get_val(colorMapFadeTrack, row));
+			color_map_fx->setFloat("fade", pow(sync_get_val(colorMapFadeTrack, row), 0.25f));
 			color_map_fx->setFloat("bloom_amt", sync_get_val(bloomAmtTrack, row));
 			color_map_fx->setTexture("bloom", color1_hdr);
 			color_map_fx->setTexture("tex", color_msaa);
