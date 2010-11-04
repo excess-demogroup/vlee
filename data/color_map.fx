@@ -1,7 +1,6 @@
-float flash = 0;
-float fade  = 1;
-float2 noffs = float2(0, 0);
-float bloom_amt = 0.2;
+const float flash, fade;
+const float2 noffs;
+const float bloom_amt, blur_amt, noise_amt;
 
 texture bloom;
 sampler bloom_sampler = sampler_state {
@@ -58,10 +57,11 @@ float luminance(float3 color)
 
 float4 pixel(VS_OUTPUT In) : COLOR
 {
-	float4 color = tex2D(tex_sampler, In.tex);
+	float4 color;
+	color = lerp(tex2D(tex_sampler, In.tex), tex2D(bloom_sampler, In.tex), blur_amt);
 	color += pow(tex2D(bloom_sampler, In.tex) * bloom_amt, 1.5);
 	float n = tex2D(noise, In.tex * 15 + noffs).r;
-	color.rgb -= (n - 0.5) * 0.01;
+	color.rgb -= (n - 0.5) * 0.01 * noise_amt;
 	return color * fade + flash;
 }
 

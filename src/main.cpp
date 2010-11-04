@@ -269,7 +269,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		/* setup sound-playback */
 		if (!BASS_Init(config::soundcard, 44100, 0, 0, 0))
 			throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/tune.mp3", 0, 0, BASS_MP3_SETPOS | BASS_STREAM_PRESCAN | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
+		stream = BASS_StreamCreateFile(false, "data/tune.ogg", 0, 0, BASS_MP3_SETPOS | BASS_STREAM_PRESCAN | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
 		if (!stream)
 			throw FatalException("failed to open tune");
 
@@ -290,6 +290,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		const sync_track *colorMapFadeTrack   = sync_get_track(rocket, "cm.fade");
 		const sync_track *colorMapFlashTrack  = sync_get_track(rocket, "cm.flash");
+		const sync_track *colorMapBlurTrack   = sync_get_track(rocket, "cm.blur");
+		const sync_track *colorMapNoiseTrack  = sync_get_track(rocket, "cm.noise");
 		const sync_track *bloomSizeTrack      = sync_get_track(rocket, "bloom.size");
 		const sync_track *bloomPassesTrack    = sync_get_track(rocket, "bloom.passes");
 		const sync_track *bloomAmtTrack       = sync_get_track(rocket, "bloom.amt");
@@ -551,6 +553,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setFloat("flash", flash < 0 ? randf() : pow(flash, 2.0f));
 			color_map_fx->setFloat("fade", pow(sync_get_val(colorMapFadeTrack, row), 0.25f));
 			color_map_fx->setFloat("bloom_amt", sync_get_val(bloomAmtTrack, row));
+			color_map_fx->setFloat("blur_amt", sync_get_val(colorMapBlurTrack, row));
+			color_map_fx->setFloat("noise_amt", sync_get_val(colorMapNoiseTrack, row));
 			color_map_fx->setTexture("bloom", color1_hdr);
 			color_map_fx->setTexture("tex", color_msaa);
 
