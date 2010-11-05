@@ -292,6 +292,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *colorMapFlashTrack  = sync_get_track(rocket, "cm.flash");
 		const sync_track *colorMapBlurTrack   = sync_get_track(rocket, "cm.blur");
 		const sync_track *colorMapNoiseTrack  = sync_get_track(rocket, "cm.noise");
+		const sync_track *colorMapScrollTrack = sync_get_track(rocket, "scroll");
 		const sync_track *bloomSizeTrack      = sync_get_track(rocket, "bloom.size");
 		const sync_track *bloomPassesTrack    = sync_get_track(rocket, "bloom.passes");
 		const sync_track *bloomAmtTrack       = sync_get_track(rocket, "bloom.amt");
@@ -333,6 +334,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Effect *blur_fx     = engine::loadEffect(device, "data/blur.fx");
 		Effect *color_map_fx = engine::loadEffect(device, "data/color_map.fx");
+
+		Texture scroller_tex = engine::loadTexture(device, "data/scroller.png");
+		color_map_fx->setTexture("scroller_tex", scroller_tex);
 
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
 		color_map_fx->setTexture("noise_tex", noise_tex);
@@ -552,6 +556,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setVector3("noffs", Vector3(math::notRandf(int(beat * 100)), math::notRandf(int(beat * 100) + 1), 0));
 			color_map_fx->setFloat("flash", flash < 0 ? randf() : pow(flash, 2.0f));
 			color_map_fx->setFloat("fade", pow(sync_get_val(colorMapFadeTrack, row), 0.25f));
+			color_map_fx->setFloat("scroll", sync_get_val(colorMapScrollTrack, row) / 100.0);
 			color_map_fx->setFloat("bloom_amt", sync_get_val(bloomAmtTrack, row));
 			color_map_fx->setFloat("blur_amt", sync_get_val(colorMapBlurTrack, row));
 			color_map_fx->setFloat("noise_amt", sync_get_val(colorMapNoiseTrack, row));

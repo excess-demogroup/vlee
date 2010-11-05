@@ -1,4 +1,4 @@
-const float flash, fade;
+const float flash, fade, scroll;
 const float2 noffs;
 const float bloom_amt, blur_amt, noise_amt;
 
@@ -19,6 +19,17 @@ sampler tex_sampler = sampler_state {
 	MipFilter = NONE;
 	MinFilter = POINT;
 	MagFilter = POINT;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	sRGBTexture = FALSE;
+};
+
+texture scroller_tex;
+sampler scroller = sampler_state {
+	Texture = (scroller_tex);
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
 	AddressU = CLAMP;
 	AddressV = CLAMP;
 	sRGBTexture = FALSE;
@@ -62,6 +73,10 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	color += pow(tex2D(bloom_sampler, In.tex) * bloom_amt, 1.5);
 	float n = tex2D(noise, In.tex * 15 + noffs).r;
 	color.rgb -= (n - 0.5) * 0.01 * noise_amt;
+
+	float4 s = tex2D(scroller, In.tex * float2(1, 720.0 / 4096) + float2(0, scroll));
+	color.rgb *= 1 - s.a;
+	color.rgb += s.rgb * s.a;
 	return color * fade + flash;
 }
 
