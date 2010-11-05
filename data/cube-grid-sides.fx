@@ -110,7 +110,7 @@ VS_OUTPUT vs_main(VS_INPUT Input)
 
 float4 ps_main(VS_OUTPUT i) : COLOR0
 {
-	float3 c = tex2D(light, i.cpos.xy).rgb * 5;
+	float3 c = tex2D(light, i.cpos.xy).rgb * 2.5;
 	float att = i.fog;
 	float ao = tex2D(cube_ao, i.uv2).r * 0.005;
 

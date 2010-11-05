@@ -46,6 +46,30 @@ sampler noise = sampler_state {
 	sRGBTexture = FALSE;
 };
 
+float loking1_alpha, loking2_alpha;
+
+texture loking1_tex;
+sampler loking1 = sampler_state {
+	Texture = (loking1_tex);
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	sRGBTexture = TRUE;
+};
+
+texture loking2_tex;
+sampler loking2 = sampler_state {
+	Texture = (loking2_tex);
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	sRGBTexture = TRUE;
+};
+
 struct VS_OUTPUT {
 	float4 pos  : POSITION;
 	float2 tex  : TEXCOORD1;
@@ -78,6 +102,11 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	float4 s = tex2D(scroller, uv * float2(1, 720.0 / 2048) + float2(0, scroll));
 	color.rgb *= 1 - s.a;
 	color.rgb += s.rgb * s.a;
+
+	if (loking1_alpha > 1e-10) {
+		float3 loking = lerp(tex2D(loking1, In.tex).rgb, tex2D(loking2, In.tex).rgb, loking2_alpha);
+		color.rgb = lerp(color.rgb, loking, loking1_alpha);
+	}
 
 	color.rgb = color.rgb * fade + flash;
 

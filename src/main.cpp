@@ -297,6 +297,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *bloomPassesTrack    = sync_get_track(rocket, "bloom.passes");
 		const sync_track *bloomAmtTrack       = sync_get_track(rocket, "bloom.amt");
 
+		const sync_track *lokingFrame1Track    = sync_get_track(rocket, "loking.frame1");
+		const sync_track *lokingAlpha1Track    = sync_get_track(rocket, "loking.alpha1");
+		const sync_track *lokingFrame2Track    = sync_get_track(rocket, "loking.frame2");
+		const sync_track *lokingAlpha2Track    = sync_get_track(rocket, "loking.alpha2");
+
 		const sync_track *fogDensityTrack     = sync_get_track(rocket, "fog.density");
 
 		const sync_track *light1IndexTrack    = sync_get_track(rocket, "light1.index");
@@ -381,6 +386,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		cube_floor_fx->setTexture("l_tex", cube_floor_l_tex);
 
 		Anim lights = engine::loadAnim(device, "data/lights");
+		Anim loking = engine::loadAnim(device, "data/loking");
 
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -566,6 +572,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setFloat("noise_amt", sync_get_val(colorMapNoiseTrack, row));
 			color_map_fx->setTexture("bloom", color1_hdr);
 			color_map_fx->setTexture("tex", color_msaa);
+
+			color_map_fx->setTexture("loking1_tex", loking.getTexture((int)sync_get_val(lokingFrame1Track, row)));
+			color_map_fx->setTexture("loking2_tex", loking.getTexture((int)sync_get_val(lokingFrame2Track, row)));
+			color_map_fx->setFloat("loking1_alpha", sync_get_val(lokingAlpha1Track, row));
+			color_map_fx->setFloat("loking2_alpha", sync_get_val(lokingAlpha2Track, row));
 
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, TRUE);
 			drawQuad(device, color_map_fx,

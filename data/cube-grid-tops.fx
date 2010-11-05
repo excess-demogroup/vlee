@@ -35,7 +35,7 @@ VS_OUTPUT vs_main(float4 ipos : POSITION0)
 
 float4 ps_main(VS_OUTPUT i) : COLOR0
 {
-	float3 c = tex2D(light, i.cpos).rgb * 5;
+	float3 c = tex2D(light, i.cpos).rgb * 2.5;
 	float ao = 0.005;
 	return float4((ao + c) * i.fog, 1.0);
 }

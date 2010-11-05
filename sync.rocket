@@ -8,16 +8,31 @@
 		<key row="575" value="10.000000" interpolation="0"/>
 		<key row="576" value="40.000000" interpolation="1"/>
 		<key row="639" value="100.000000" interpolation="0"/>
+		<key row="640" value="40.000000" interpolation="0"/>
+		<key row="896" value="70.000000" interpolation="0"/>
+		<key row="960" value="70.000000" interpolation="1"/>
+		<key row="1023" value="10.000000" interpolation="0"/>
+		<key row="1024" value="70.000000" interpolation="0"/>
+		<key row="1536" value="100.000000" interpolation="0"/>
 	</track>
 	<track name="cam.roll">
 		<key row="0" value="1.000000" interpolation="0"/>
 		<key row="512" value="1.100000" interpolation="0"/>
 		<key row="576" value="-1.100000" interpolation="0"/>
+		<key row="640" value="-0.100000" interpolation="0"/>
+		<key row="768" value="0.100000" interpolation="0"/>
+		<key row="896" value="-0.100000" interpolation="0"/>
 	</track>
 	<track name="cam.offset">
 		<key row="512" value="0.000000" interpolation="1"/>
 		<key row="575" value="15.000000" interpolation="0"/>
 		<key row="576" value="0.000000" interpolation="0"/>
+		<key row="640" value="120.000000" interpolation="0"/>
+		<key row="688" value="120.000000" interpolation="1"/>
+		<key row="692" value="119.500000" interpolation="0"/>
+		<key row="696" value="119.000000" interpolation="1"/>
+		<key row="700" value="118.500000" interpolation="0"/>
+		<key row="768" value="20.000000" interpolation="0"/>
 	</track>
 	<track name="cam.index">
 		<key row="0" value="0.000000" interpolation="0"/>
@@ -27,6 +42,7 @@
 	</track>
 	<track name="cm.fade">
 		<key row="0" value="0.500000" interpolation="0"/>
+		<key row="512" value="1.000000" interpolation="0"/>
 		<key row="568" value="1.000000" interpolation="1"/>
 		<key row="575" value="0.000000" interpolation="0"/>
 		<key row="576" value="1.000000" interpolation="0"/>
@@ -37,6 +53,8 @@
 		<key row="1528" value="1.000000" interpolation="1"/>
 		<key row="1535" value="0.000000" interpolation="0"/>
 		<key row="1536" value="1.000000" interpolation="0"/>
+		<key row="2272" value="1.000000" interpolation="1"/>
+		<key row="2304" value="0.000000" interpolation="0"/>
 	</track>
 	<track name="cm.flash">
 		<key row="0" value="0.000000" interpolation="0"/>
@@ -63,6 +81,7 @@
 		<key row="724" value="4.000000" interpolation="1"/>
 		<key row="732" value="2.000000" interpolation="0"/>
 		<key row="768" value="3.000000" interpolation="0"/>
+		<key row="1536" value="2.000000" interpolation="0"/>
 	</track>
 	<track name="bloom.passes">
 		<key row="0" value="2.000000" interpolation="0"/>
@@ -75,14 +94,17 @@
 		<key row="768" value="3.899998" interpolation="1"/>
 		<key row="783" value="1.000000" interpolation="0"/>
 		<key row="1024" value="0.000000" interpolation="0"/>
+		<key row="1536" value="2.000000" interpolation="0"/>
 	</track>
 	<track name="fog.density">
 		<key row="0" value="500.000000" interpolation="0"/>
 		<key row="248" value="0.200000" interpolation="0"/>
+		<key row="1536" value="0.400000" interpolation="0"/>
 	</track>
 	<track name="light1.index">
 		<key row="0" value="0.000000" interpolation="0"/>
 		<key row="248" value="0.000000" interpolation="0"/>
+		<key row="1536" value="3.000000" interpolation="0"/>
 	</track>
 	<track name="light1.alpha">
 		<key row="0" value="0.000000" interpolation="0"/>
@@ -96,8 +118,7 @@
 		<key row="274" value="1.000000" interpolation="1"/>
 		<key row="279" value="0.250000" interpolation="0"/>
 		<key row="280" value="1.000000" interpolation="1"/>
-		<key row="282" value="0.000000" interpolation="0"/>
-		<key row="286" value="1.000000" interpolation="1"/>
+		<key row="287" value="0.250000" interpolation="0"/>
 		<key row="288" value="0.000000" interpolation="0"/>
 		<key row="292" value="1.000000" interpolation="1"/>
 		<key row="294" value="0.000000" interpolation="0"/>
@@ -167,6 +188,7 @@
 		<key row="486" value="0.000000" interpolation="0"/>
 		<key row="490" value="1.000000" interpolation="1"/>
 		<key row="492" value="0.000000" interpolation="0"/>
+		<key row="1536" value="0.500000" interpolation="0"/>
 	</track>
 	<track name="light2.index">
 		<key row="0" value="1.000000" interpolation="0"/>
@@ -189,7 +211,7 @@
 	</track>
 	<track name="pulse.amt">
 		<key row="0" value="1.000000" interpolation="0"/>
-		<key row="256" value="0.200000" interpolation="0"/>
+		<key row="248" value="0.000000" interpolation="0"/>
 		<key row="640" value="1.000000" interpolation="1"/>
 		<key row="656" value="0.700000" interpolation="0"/>
 	</track>
@@ -232,5 +254,59 @@
 		<key row="248" value="0.000000" interpolation="0"/>
 		<key row="512" value="1.000000" interpolation="0"/>
 		<key row="1024" value="1.000000" interpolation="0"/>
+		<key row="1536" value="0.500000" interpolation="1"/>
+		<key row="1567" value="0.000000" interpolation="0"/>
+		<key row="1568" value="0.500000" interpolation="1"/>
+		<key row="1599" value="0.000000" interpolation="0"/>
+		<key row="1600" value="0.500000" interpolation="1"/>
+		<key row="1631" value="0.000000" interpolation="0"/>
+		<key row="1632" value="0.500000" interpolation="1"/>
+		<key row="1663" value="0.000000" interpolation="0"/>
+		<key row="1664" value="0.500000" interpolation="1"/>
+		<key row="1695" value="0.000000" interpolation="0"/>
+	</track>
+	<track name="radial.amt">
+		<key row="1535" value="0.000000" interpolation="0"/>
+		<key row="1536" value="3.000000" interpolation="0"/>
+	</track>
+	<track name="loking.frame1">
+		<key row="2080" value="0.000000" interpolation="0"/>
+		<key row="2096" value="2.000000" interpolation="0"/>
+		<key row="2128" value="5.000000" interpolation="0"/>
+		<key row="2160" value="7.000000" interpolation="0"/>
+		<key row="2192" value="9.000000" interpolation="0"/>
+		<key row="2224" value="11.000000" interpolation="0"/>
+		<key row="2256" value="13.000000" interpolation="0"/>
+		<key row="2288" value="15.000000" interpolation="0"/>
+	</track>
+	<track name="loking.alpha1">
+		<key row="2080" value="0.000000" interpolation="1"/>
+		<key row="2088" value="1.000000" interpolation="0"/>
+	</track>
+	<track name="loking.frame2">
+		<key row="2080" value="1.000000" interpolation="0"/>
+		<key row="2112" value="3.000000" interpolation="0"/>
+		<key row="2144" value="6.000000" interpolation="0"/>
+		<key row="2176" value="8.000000" interpolation="0"/>
+		<key row="2208" value="10.000000" interpolation="0"/>
+		<key row="2240" value="12.000000" interpolation="0"/>
+		<key row="2272" value="14.000000" interpolation="0"/>
+	</track>
+	<track name="loking.alpha2">
+		<key row="2080" value="0.000000" interpolation="1"/>
+		<key row="2096" value="1.000000" interpolation="1"/>
+		<key row="2112" value="0.000000" interpolation="1"/>
+		<key row="2128" value="1.000000" interpolation="1"/>
+		<key row="2144" value="0.000000" interpolation="1"/>
+		<key row="2160" value="1.000000" interpolation="1"/>
+		<key row="2176" value="0.000000" interpolation="1"/>
+		<key row="2192" value="1.000000" interpolation="1"/>
+		<key row="2208" value="0.000000" interpolation="1"/>
+		<key row="2224" value="1.000000" interpolation="1"/>
+		<key row="2240" value="0.000000" interpolation="1"/>
+		<key row="2256" value="1.000000" interpolation="1"/>
+		<key row="2272" value="0.000000" interpolation="1"/>
+		<key row="2288" value="1.000000" interpolation="1"/>
+		<key row="2304" value="0.000000" interpolation="1"/>
 	</track>
 </tracks>
