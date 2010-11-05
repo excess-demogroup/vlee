@@ -304,6 +304,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *light2IndexTrack    = sync_get_track(rocket, "light2.index");
 		const sync_track *light2AlphaTrack    = sync_get_track(rocket, "light2.alpha");
 
+		const sync_track *lineAmtTrack        = sync_get_track(rocket, "line.amt");
+		const sync_track *radialAmtTrack      = sync_get_track(rocket, "radial.amt");
 		const sync_track *pulseSpeedTrack     = sync_get_track(rocket, "pulse.speed");
 		const sync_track *pulseAmtTrack       = sync_get_track(rocket, "pulse.amt");
 
@@ -419,14 +421,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->BeginScene();
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
 			device.setRenderTarget(cube_light_tex.getRenderTarget());
-			cube_light_fx->setFloat("time", float(beat * 0.1));
+			cube_light_fx->setFloat("time", float(beat));
 			cube_light_fx->setFloat("pulse_phase", float((beat / 16) * sync_get_val(pulseSpeedTrack, row)));
 			cube_light_fx->setFloat("pulse_amt", sync_get_val(pulseAmtTrack, row));
+			cube_light_fx->setFloat("line_amt", sync_get_val(lineAmtTrack, row));
+			cube_light_fx->setFloat("radial_amt", sync_get_val(radialAmtTrack, row));
 
 			cube_light_fx->setTexture("light1_tex", lights.getTexture((int)sync_get_val(light1IndexTrack, row) % lights.getTextureCount()));
 			cube_light_fx->setTexture("light2_tex", lights.getTexture((int)sync_get_val(light2IndexTrack, row) % lights.getTextureCount()));
-			cube_light_fx->setFloat("light1_alpha", sync_get_val(light1AlphaTrack, row));
-			cube_light_fx->setFloat("light2_alpha", sync_get_val(light2AlphaTrack, row));
+			cube_light_fx->setFloat("light1_alpha", pow(sync_get_val(light1AlphaTrack, row), 2.2f));
+			cube_light_fx->setFloat("light2_alpha", pow(sync_get_val(light2AlphaTrack, row), 2.2f));
 			drawQuad(
 				device, cube_light_fx,
 				-1.0f, -1.0f,
@@ -555,7 +559,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float flash = sync_get_val(colorMapFlashTrack, row);
 			color_map_fx->setVector3("noffs", Vector3(math::notRandf(int(beat * 100)), math::notRandf(int(beat * 100) + 1), 0));
 			color_map_fx->setFloat("flash", flash < 0 ? randf() : pow(flash, 2.0f));
-			color_map_fx->setFloat("fade", pow(sync_get_val(colorMapFadeTrack, row), 0.25f));
+			color_map_fx->setFloat("fade", pow(sync_get_val(colorMapFadeTrack, row), 2.2f));
 			color_map_fx->setFloat("scroll", sync_get_val(colorMapScrollTrack, row) / 100.0);
 			color_map_fx->setFloat("bloom_amt", sync_get_val(bloomAmtTrack, row));
 			color_map_fx->setFloat("blur_amt", sync_get_val(colorMapBlurTrack, row));

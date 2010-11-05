@@ -1,6 +1,8 @@
+float line_amt;
 float time;
 float pulse_amt;
 float pulse_phase;
+float radial_amt = 1;
 
 texture noise_tex;
 sampler noise = sampler_state {
@@ -56,13 +58,19 @@ VS_OUTPUT vs_main(float4 pos: POSITION, float4 texCoord: TEXCOORD0)
 float4 ps_main(float2 texCoord : TEXCOORD0) : COLOR
 {
 	float2 v = float3(
-	    sin(texCoord.y + texCoord.x * 30 + time * 0.2),
-	    cos(texCoord.x + texCoord.y * 30 + time * 0.2),
+	    sin(texCoord.y + texCoord.x * 30 + time * 0.02),
+	    cos(texCoord.x + texCoord.y * 30 + time * 0.02),
 	    0);
 	v = pow(v, 1000);
-	float3 c = float3(0.5, 0.5, 1.7) * smoothstep(0.1, 0.9, v.x) * 2 +
-	           float3(1.0, 0.5, 1.7) * smoothstep(0.1, 0.9, v.y) * 2;
-	c *= 0.2;
+	float3 c = 0;
+	c += (float3(0.5, 0.5, 1.7) * smoothstep(0.1, 0.9, v.x) +
+	      float3(1.0, 0.5, 1.7) * smoothstep(0.1, 0.9, v.y)) * 0.3 * line_amt;
+
+	float d = distance(texCoord, float2(0.5, 0.5));
+//	d = pow(d, 0.5);
+	float att = 0.2 / (1 + d * 4);
+	c += float3(0.5, 0.5, 1.7) * pow((0.5 + frac(d * 4 - time / 8) * 0.5), 64) * att * radial_amt;
+
 	c += tex2D(light1, texCoord) * light1_alpha;
 	c += tex2D(light2, texCoord) * light2_alpha;
 	c = c + c * sin((pulse_phase + tex2D(noise, texCoord).r) * 2 * 3.1415926) * pulse_amt;
@@ -71,7 +79,7 @@ float4 ps_main(float2 texCoord : TEXCOORD0) : COLOR
 
 technique cube_tops {
 	pass P0 {
-		VertexShader = compile vs_2_0 vs_main();
-		PixelShader  = compile ps_2_0 ps_main();
+		VertexShader = compile vs_3_0 vs_main();
+		PixelShader  = compile ps_3_0 ps_main();
 	}
 }
