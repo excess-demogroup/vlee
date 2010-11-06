@@ -312,6 +312,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *light2IndexTrack    = sync_get_track(rocket, "light2.index");
 		const sync_track *light2AlphaTrack    = sync_get_track(rocket, "light2.alpha");
 
+		const sync_track *lineSpeedTrack      = sync_get_track(rocket, "line.speed");
+		const sync_track *lineOffsetTrack     = sync_get_track(rocket, "line.offset");
 		const sync_track *lineAmtTrack        = sync_get_track(rocket, "line.amt");
 		const sync_track *radialAmtTrack      = sync_get_track(rocket, "radial.amt");
 		const sync_track *pulseSpeedTrack     = sync_get_track(rocket, "pulse.speed");
@@ -437,7 +439,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->BeginScene();
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
 			device.setRenderTarget(cube_light_tex.getRenderTarget());
-			cube_light_fx->setFloat("time", float(beat));
+			cube_light_fx->setFloat("time", float(beat) * sync_get_val(lineSpeedTrack, row) + sync_get_val(lineOffsetTrack, row));
 			cube_light_fx->setFloat("pulse_phase", float((beat / 16) * sync_get_val(pulseSpeedTrack, row)));
 			cube_light_fx->setFloat("pulse_amt", sync_get_val(pulseAmtTrack, row));
 			cube_light_fx->setFloat("line_amt", sync_get_val(lineAmtTrack, row));

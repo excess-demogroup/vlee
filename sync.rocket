@@ -275,7 +275,7 @@
 	</track>
 	<track name="line.amt">
 		<key row="0" value="1.000000" interpolation="0"/>
-		<key row="248" value="0.000000" interpolation="0"/>
+		<key row="248" value="0.500000" interpolation="0"/>
 		<key row="512" value="1.000000" interpolation="0"/>
 		<key row="1024" value="1.000000" interpolation="0"/>
 		<key row="1536" value="0.500000" interpolation="1"/>
@@ -349,5 +349,17 @@
 	<track name="cm.pulse.speed">
 		<key row="0" value="2.000000" interpolation="0"/>
 		<key row="1024" value="2.000000" interpolation="0"/>
+	</track>
+	<track name="line.speed">
+		<key row="0" value="1.000000" interpolation="0"/>
+		<key row="248" value="0.000000" interpolation="0"/>
+		<key row="512" value="1.000000" interpolation="0"/>
+	</track>
+	<track name="line.offset">
+		<key row="0" value="0.000000" interpolation="0"/>
+		<key row="248" value="0.000000" interpolation="0"/>
+		<key row="496" value="0.000000" interpolation="3"/>
+		<key row="511" value="10.000000" interpolation="0"/>
+		<key row="512" value="0.000000" interpolation="0"/>
 	</track>
 </tracks>
