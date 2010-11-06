@@ -284,9 +284,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 #endif
 
 		const sync_track *cameraDistanceTrack = sync_get_track(rocket, "cam.dist");
+		const sync_track *cameraYTrack        = sync_get_track(rocket, "cam.y");
 		const sync_track *cameraRollTrack     = sync_get_track(rocket, "cam.roll");
 		const sync_track *cameraOffsetTrack   = sync_get_track(rocket, "cam.offset");
 		const sync_track *cameraIndexTrack    = sync_get_track(rocket, "cam.index");
+		const sync_track *cameraShakeAmtTrack = sync_get_track(rocket, "cam.shake.amt");
+		const sync_track *cameraShakeSpeedTrack = sync_get_track(rocket, "cam.shake.speed");
 
 		const sync_track *colorMapFadeTrack   = sync_get_track(rocket, "cm.fade");
 		const sync_track *colorMapFlashTrack  = sync_get_track(rocket, "cm.flash");
@@ -316,6 +319,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *lineOffsetTrack     = sync_get_track(rocket, "line.offset");
 		const sync_track *lineAmtTrack        = sync_get_track(rocket, "line.amt");
 		const sync_track *radialAmtTrack      = sync_get_track(rocket, "radial.amt");
+		const sync_track *radialAmt2Track      = sync_get_track(rocket, "radial.amt2");
 		const sync_track *pulseSpeedTrack     = sync_get_track(rocket, "pulse.speed");
 		const sync_track *pulseAmtTrack       = sync_get_track(rocket, "pulse.amt");
 
@@ -423,12 +427,35 @@ int main(int /*argc*/, char* /*argv*/ [])
 			double beat = row / 4;
 
 			float camTime = float(beat / 4) + sync_get_val(cameraOffsetTrack, row);
-			Vector3 camPos(
-				sin(camTime * 0.25f) * 1.5,
-				1.0,
-				cos(camTime * 0.33f) * 1.5);
-			camPos *= sync_get_val(cameraDistanceTrack, row);
-			Vector3 camTarget(0, 0, 0);
+			Vector3 camPos, camTarget;
+			switch ((int)sync_get_val(cameraIndexTrack, row)) {
+			case 0:
+				camPos = Vector3(sin(camTime * 0.25f) * 1.5f,
+					1,
+					cos(camTime * 0.33f) * 1.5f) * sync_get_val(cameraDistanceTrack, row);
+				camTarget = Vector3(0, 0, 0);
+				break;
+			case 1:
+				camPos = Vector3((math::frac(4 * camTime / 128) - 0.5f) * 16 * 128,
+					sync_get_val(cameraDistanceTrack, row),
+					0);
+				camTarget = camPos + Vector3(1, sync_get_val(cameraYTrack, row), 0);
+				break;
+			case 2:
+				camPos = Vector3(sin(camTime / 4) * sync_get_val(cameraDistanceTrack, row),
+					sync_get_val(cameraYTrack, row),
+					cos(camTime / 4) * sync_get_val(cameraDistanceTrack, row));
+				camTarget = Vector3(0, 0, 0);
+				break;
+			default:
+				camPos = Vector3(0, 1, 0) * sync_get_val(cameraDistanceTrack, row);
+				camTarget = Vector3(0, 0, 0);
+			}
+
+			double shake_phase = beat * 32 * sync_get_val(cameraShakeSpeedTrack, row);
+			Vector3 camOffs(sin(shake_phase), cos(shake_phase * 0.9), sin(shake_phase - 0.5));
+			camPos += camOffs * sync_get_val(cameraShakeAmtTrack, row);
+			camTarget += camOffs * sync_get_val(cameraShakeAmtTrack, row);
 
 			float camRoll = sync_get_val(cameraRollTrack, row) * float(2 * M_PI);
 			Matrix4x4 view  = Matrix4x4::lookAt(camPos, camTarget, camRoll);
@@ -444,6 +471,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			cube_light_fx->setFloat("pulse_amt", sync_get_val(pulseAmtTrack, row));
 			cube_light_fx->setFloat("line_amt", sync_get_val(lineAmtTrack, row));
 			cube_light_fx->setFloat("radial_amt", sync_get_val(radialAmtTrack, row));
+			cube_light_fx->setFloat("radial_amt2", sync_get_val(radialAmt2Track, row));
 
 			cube_light_fx->setTexture("light1_tex", lights.getTexture((int)sync_get_val(light1IndexTrack, row) % lights.getTextureCount()));
 			cube_light_fx->setTexture("light2_tex", lights.getTexture((int)sync_get_val(light2IndexTrack, row) % lights.getTextureCount()));
@@ -504,20 +532,28 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			particle_fx->setFloatArray("up", up, 3);
 			particle_fx->setFloatArray("left", left, 3);
-			particle_fx->setFloat("alpha", pow(0.75f, 2.2f));
+			particle_fx->setFloat("alpha", pow(0.5f, 2.2f));
 			particle_fx->setMatrices(world, view, proj);
 
-			for (int j = 0; j < 3; ++j) {
-				particleStreamer.begin();
-				for (int i = 0; i < 1024; ++i) {
-					int idx = j * 1024 + i;
-					Vector3 pos((math::notRandf(idx * 4) - 0.5f) * 500,
-						9 + pow(math::notRandf(idx * 4 + 1), 2) * 150,  (math::notRandf(idx * 4 + 2) - 0.5f) * 500);
-					particleStreamer.add(pos, 0.15f + math::notRandf(i * 4 + 1) * 0.05f);
+			particleStreamer.begin();
+			for (int i = 0; i < 12 * 1024; ++i) {
+				Vector3 pos(
+					(       math::notRandf(i * 4) - 0.5f) * 16 * 64,
+					9 + pow(math::notRandf(i * 4 + 1), 2) * 300,
+					(       math::notRandf(i * 4 + 2) - 0.5f) * 16 * 64);
+				float size = 0.2f + math::notRandf(i * 4 + 1) * 0.4f;
+//				if (distance(pos, camPos) < 200)
+				Vector3 temp = pos - camPos;
+				if (dot(temp, temp) < 200 * 200)
+					particleStreamer.add(pos, size);
+				if (!particleStreamer.getRoom()) {
+					particleStreamer.end();
+					particle_fx->draw(&particleStreamer);
+					particleStreamer.begin();
 				}
-				particleStreamer.end();
-				particle_fx->draw(&particleStreamer);
 			}
+			particleStreamer.end();
+			particle_fx->draw(&particleStreamer);
 
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 			color_msaa.resolve(device);
@@ -614,7 +650,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setFloat("noise_amt", pow(sync_get_val(colorMapNoiseTrack, row) / 255, 2.2f));
 			color_map_fx->setTexture("bloom", color1_hdr);
 			color_map_fx->setTexture("tex", color_msaa);
-			color_map_fx->setTexture("overlay_tex", overlays.getTexture((int)sync_get_val(colorMapOverlayTrack, row)));
+			color_map_fx->setTexture("overlay_tex", overlays.getTexture((int)sync_get_val(colorMapOverlayTrack, row) % overlays.getTextureCount()));
 
 			color_map_fx->setTexture("loking1_tex", loking.getTexture((int)sync_get_val(lokingFrame1Track, row)));
 			color_map_fx->setTexture("loking2_tex", loking.getTexture((int)sync_get_val(lokingFrame2Track, row)));

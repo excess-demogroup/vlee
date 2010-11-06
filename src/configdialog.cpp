@@ -189,8 +189,10 @@ static LRESULT onInitDialog(HWND hDlg)
 	direct3d->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode);
 
 #ifndef SYNC_PLAYER
-	mode.Width /= 2;
-	mode.Height /= 2;
+	if (direct3d->GetAdapterCount() == 1) {
+		mode.Width /= 2;
+		mode.Height /= 2;
+	}
 	aspect = float(mode.Width) / mode.Height;
 	EndDialog(hDlg, IDOK);
 #endif

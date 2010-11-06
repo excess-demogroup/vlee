@@ -1,8 +1,8 @@
-float line_amt;
-float time;
-float pulse_amt;
-float pulse_phase;
-float radial_amt = 1;
+const float line_amt;
+const float time;
+const float pulse_amt;
+const float pulse_phase;
+const float radial_amt, radial_amt2;
 
 texture noise_tex;
 sampler noise = sampler_state {
@@ -66,10 +66,11 @@ float4 ps_main(float2 texCoord : TEXCOORD0) : COLOR
 	c += (float3(0.5, 0.5, 1.7) * smoothstep(0.1, 0.9, v.x) +
 	      float3(1.0, 0.5, 1.7) * smoothstep(0.1, 0.9, v.y)) * 0.3 * line_amt;
 
-	float d = distance(texCoord, float2(0.5, 0.5));
-//	d = pow(d, 0.5);
-	float att = 0.2 / (1 + d * 4);
-	c += float3(0.5, 0.5, 1.7) * pow((0.5 + frac(d * 4 - time / 8) * 0.5), 64) * att * radial_amt;
+	float d = distance(texCoord, float2(0.5, 0.5)) * 4;
+	float att = 0.2 / (1 + d);
+	float tmp = time / 16;
+	c += float3(0.5, 0.5, 1.7) * pow(frac(d - tmp), 64) * att * radial_amt;
+	c += float3(1.0, 0.5, 1.7) * pow(frac(d - tmp - 0.5), 64) * att * radial_amt2;
 
 	c += tex2D(light1, texCoord) * light1_alpha;
 	c += tex2D(light2, texCoord) * light2_alpha;

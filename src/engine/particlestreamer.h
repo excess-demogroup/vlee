@@ -11,10 +11,8 @@
 
 #define PARTICLE_STREAMER_PARTICLE_COUNT 1024
 #define PARTICLE_STREAMER_VERTEX_COUNT (PARTICLE_STREAMER_PARTICLE_COUNT * 4)
-namespace engine
-{
-	class ParticleStreamer : public Drawable
-	{
+namespace engine {
+	class ParticleStreamer : public Drawable {
 	public:
 		ParticleStreamer() {}
 		ParticleStreamer(renderer::Device &device);
@@ -35,8 +33,7 @@ namespace engine
 			assert(NULL != locked_pointer);
 			assert(0 != locked_particles);
 			
-			for (int i = 0; i < 4; ++i)
-			{
+			for (int i = 0; i < 4; ++i) {
 				*locked_pointer++ = pos.x;
 				*locked_pointer++ = pos.y;
 				*locked_pointer++ = pos.z;
@@ -53,6 +50,7 @@ namespace engine
 
 		void draw();
 
+		int getRoom() { return locked_particles; }
 	private:
 		renderer::Device device;
 		int    locked_particles;
