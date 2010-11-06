@@ -183,7 +183,11 @@ double bass_get_row(HSTREAM h)
 {
 	QWORD pos = BASS_ChannelGetPosition(h, BASS_POS_BYTE);
 	double time = BASS_ChannelBytes2Seconds(h, pos);
+#ifndef SYNC_PLAYER
 	return time * row_rate + 0.005;
+#else
+	return time * row_rate;
+#endif
 }
 
 #ifndef SYNC_PLAYER
@@ -535,16 +539,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			particle_fx->setFloatArray("up", up, 3);
 			particle_fx->setFloatArray("left", left, 3);
-			particle_fx->setFloat("alpha", pow(0.5f, 2.2f));
+			particle_fx->setFloat("alpha", pow(0.25f, 2.2f));
 			particle_fx->setMatrices(world, view, proj);
 
 			particleStreamer.begin();
-			for (int i = 0; i < 12 * 1024; ++i) {
+			for (int i = 0; i < 60 * 1024; ++i) {
 				Vector3 pos(
 					(       math::notRandf(i * 4) - 0.5f) * 16 * 64,
 					9 + pow(math::notRandf(i * 4 + 1), 2) * 300,
 					(       math::notRandf(i * 4 + 2) - 0.5f) * 16 * 64);
-				float size = 0.2f + math::notRandf(i * 4 + 1) * 0.4f;
+				float size = 0.4f + math::notRandf(i * 4 + 1) * 0.5f;
 //				if (distance(pos, camPos) < 200)
 				Vector3 temp = pos - camPos;
 				if (dot(temp, temp) < 200 * 200)
