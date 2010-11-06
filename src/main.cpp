@@ -293,6 +293,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *colorMapBlurTrack   = sync_get_track(rocket, "cm.blur");
 		const sync_track *colorMapNoiseTrack  = sync_get_track(rocket, "cm.noise");
 		const sync_track *colorMapScrollTrack = sync_get_track(rocket, "scroll");
+		const sync_track *colorMapSPulseTrack = sync_get_track(rocket, "scroll.pulse");
 		const sync_track *bloomSizeTrack      = sync_get_track(rocket, "bloom.size");
 		const sync_track *bloomPassesTrack    = sync_get_track(rocket, "bloom.passes");
 		const sync_track *bloomAmtTrack       = sync_get_track(rocket, "bloom.amt");
@@ -349,6 +350,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 		color_map_fx->setTexture("noise_tex", noise_tex);
 		if (use_sm20_codepath)
 			color_map_fx->p->SetTechnique("rgbe");
+
+		engine::ParticleStreamer particleStreamer(device);
+		Effect *particle_fx = engine::loadEffect(device, "data/particle.fx");
+		Texture particle_tex = engine::loadTexture(device, "data/particle.png");
+		particle_fx->setTexture("tex", particle_tex);
 
 		Effect *cube_light_fx = engine::loadEffect(device, "data/cube-light.fx");
 		cube_light_fx->setTexture("noise_tex", noise_tex);
@@ -480,7 +486,34 @@ int main(int /*argc*/, char* /*argv*/ [])
 					cube_floor_fx->draw(cube_floor_x);
 				}
 
-			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+			Matrix4x4 modelview = world * view;
+			Vector3 up(modelview._12, modelview._22, modelview._32);
+			Vector3 left(modelview._11, modelview._21, modelview._31);
+			math::normalize(up);
+			math::normalize(left);
+			device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+			device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+
+			particle_fx->setFloatArray("up", up, 3);
+			particle_fx->setFloatArray("left", left, 3);
+			particle_fx->setFloat("alpha", pow(0.75f, 2.2f));
+			particle_fx->setMatrices(world, view, proj);
+
+			for (int j = 0; j < 3; ++j) {
+				particleStreamer.begin();
+				for (int i = 0; i < 1024; ++i) {
+					int idx = j * 1024 + i;
+					Vector3 pos((math::notRandf(idx * 4) - 0.5f) * 500,
+						9 + pow(math::notRandf(idx * 4 + 1), 2) * 150,  (math::notRandf(idx * 4 + 2) - 0.5f) * 500);
+					particleStreamer.add(pos, 0.15f + math::notRandf(i * 4 + 1) * 0.05f);
+				}
+				particleStreamer.end();
+				particle_fx->draw(&particleStreamer);
+			}
+
+			device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 			color_msaa.resolve(device);
 
 			world.makeIdentity();
@@ -563,10 +596,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device.setViewport(&letterbox_viewport);
 
 			float flash = sync_get_val(colorMapFlashTrack, row);
+			float fade = sync_get_val(colorMapFadeTrack, row);
+			float pulse = sync_get_val(colorMapSPulseTrack, row);
+			fade = std::max(0.0, fade - pulse + cos(beat * 2 * M_PI) * pulse);
 			color_map_fx->setVector3("noffs", Vector3(math::notRandf(int(beat * 100)), math::notRandf(int(beat * 100) + 1), 0));
 			color_map_fx->setFloat("flash", flash < 0 ? randf() : pow(flash, 2.0f));
-			color_map_fx->setFloat("fade", pow(sync_get_val(colorMapFadeTrack, row), 2.2f));
-			color_map_fx->setFloat("scroll", sync_get_val(colorMapScrollTrack, row) / 100.0);
+			color_map_fx->setFloat("fade", pow(fade, 2.2f));
+			color_map_fx->setFloat("scroll", sync_get_val(colorMapScrollTrack, row) / 100.0f);
 			color_map_fx->setFloat("bloom_amt", sync_get_val(bloomAmtTrack, row));
 			color_map_fx->setFloat("blur_amt", sync_get_val(colorMapBlurTrack, row));
 			color_map_fx->setFloat("noise_amt", sync_get_val(colorMapNoiseTrack, row));

@@ -96,10 +96,7 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	color = lerp(tex2D(tex_sampler, In.tex), tex2D(bloom_sampler, In.tex), blur_amt);
 	color += pow(tex2D(bloom_sampler, In.tex) * bloom_amt, 1.5);
 
-	float2 uv = In.tex;
-/*	uv.xy += sin(uv.yx * 4 + scroll * 4) * 0.04;
-	uv.xy -= cos(uv.yx * 8 - scroll * 5) * 0.01; */
-	float4 s = tex2D(scroller, uv * float2(1, 720.0 / 2048) + float2(0, scroll));
+	float4 s = tex2D(scroller, In.tex * float2(1, 720.0 / 2048) + float2(0, scroll));
 	color.rgb *= 1 - s.a;
 	color.rgb += s.rgb * s.a;
 
