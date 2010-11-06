@@ -509,30 +509,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="sync"
-				>
-				<File
-					RelativePath=".\src\sync\base.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\sync\data.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\sync\device.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\sync\sync.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\sync\track.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="scenegraph"
 				>
 				<File

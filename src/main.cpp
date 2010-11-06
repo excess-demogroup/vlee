@@ -38,7 +38,7 @@
 #include "engine/spectrumdata.h"
 #include "engine/video.h"
 
-#include "sync/sync.h"
+#include <sync.h>
 
 using math::Vector2;
 using math::Vector3;
@@ -292,8 +292,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *colorMapFlashTrack  = sync_get_track(rocket, "cm.flash");
 		const sync_track *colorMapBlurTrack   = sync_get_track(rocket, "cm.blur");
 		const sync_track *colorMapNoiseTrack  = sync_get_track(rocket, "cm.noise");
+		const sync_track *colorMapOverlayTrack = sync_get_track(rocket, "cm.overlay");
 		const sync_track *colorMapScrollTrack = sync_get_track(rocket, "scroll");
-		const sync_track *colorMapSPulseTrack = sync_get_track(rocket, "scroll.pulse");
+		const sync_track *pulseAmt2Track      = sync_get_track(rocket, "cm.pulse.amt");
+		const sync_track *pulseSpeed2Track    = sync_get_track(rocket, "cm.pulse.speed");
 		const sync_track *bloomSizeTrack      = sync_get_track(rocket, "bloom.size");
 		const sync_track *bloomPassesTrack    = sync_get_track(rocket, "bloom.passes");
 		const sync_track *bloomAmtTrack       = sync_get_track(rocket, "bloom.amt");
@@ -348,6 +350,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
 		color_map_fx->setTexture("noise_tex", noise_tex);
+		color_map_fx->setVector3("nscale", Vector3(config::mode.Width / 128.0, config::mode.Height / 128.0, 0.0f));
 		if (use_sm20_codepath)
 			color_map_fx->p->SetTechnique("rgbe");
 
@@ -393,6 +396,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Anim lights = engine::loadAnim(device, "data/lights");
 		Anim loking = engine::loadAnim(device, "data/loking");
+		Anim overlays = engine::loadAnim(device, "data/overlays");
 
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -597,17 +601,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			float flash = sync_get_val(colorMapFlashTrack, row);
 			float fade = sync_get_val(colorMapFadeTrack, row);
-			float pulse = sync_get_val(colorMapSPulseTrack, row);
-			fade = std::max(0.0, fade - pulse + cos(beat * 2 * M_PI) * pulse);
+			float pulse = sync_get_val(pulseAmt2Track, row);
+			fade = std::max(0.0f, fade - pulse + float(cos(beat * sync_get_val(pulseSpeed2Track, row) * M_PI)) * pulse);
 			color_map_fx->setVector3("noffs", Vector3(math::notRandf(int(beat * 100)), math::notRandf(int(beat * 100) + 1), 0));
 			color_map_fx->setFloat("flash", flash < 0 ? randf() : pow(flash, 2.0f));
 			color_map_fx->setFloat("fade", pow(fade, 2.2f));
 			color_map_fx->setFloat("scroll", sync_get_val(colorMapScrollTrack, row) / 100.0f);
 			color_map_fx->setFloat("bloom_amt", sync_get_val(bloomAmtTrack, row));
 			color_map_fx->setFloat("blur_amt", sync_get_val(colorMapBlurTrack, row));
-			color_map_fx->setFloat("noise_amt", sync_get_val(colorMapNoiseTrack, row));
+			color_map_fx->setFloat("noise_amt", pow(sync_get_val(colorMapNoiseTrack, row) / 255, 2.2f));
 			color_map_fx->setTexture("bloom", color1_hdr);
 			color_map_fx->setTexture("tex", color_msaa);
+			color_map_fx->setTexture("overlay_tex", overlays.getTexture((int)sync_get_val(colorMapOverlayTrack, row)));
 
 			color_map_fx->setTexture("loking1_tex", loking.getTexture((int)sync_get_val(lokingFrame1Track, row)));
 			color_map_fx->setTexture("loking2_tex", loking.getTexture((int)sync_get_val(lokingFrame2Track, row)));
@@ -651,14 +656,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 				    (WM_KEYDOWN == msg.message && VK_ESCAPE == LOWORD(msg.wParam)))
 					done = true;
 			}
+#ifdef SYNC_PLAYER
+			if (BASS_ChannelIsActive(stream) == BASS_ACTIVE_STOPPED)
+				done = true;
+#endif
 		}
-
 
 
 
 		/** END OF DEMO ***/
 
 		// cleanup
+		sync_destroy_device(rocket);
 		if (stream)
 			BASS_StreamFree(stream);
 		BASS_Free();

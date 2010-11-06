@@ -1,5 +1,5 @@
 const float flash, fade, scroll;
-const float2 noffs;
+const float2 noffs, nscale;
 const float bloom_amt, blur_amt, noise_amt;
 
 texture bloom;
@@ -70,6 +70,17 @@ sampler loking2 = sampler_state {
 	sRGBTexture = TRUE;
 };
 
+texture overlay_tex;
+sampler overlay = sampler_state {
+	Texture = (overlay_tex);
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	sRGBTexture = TRUE;
+};
+
 struct VS_OUTPUT {
 	float4 pos  : POSITION;
 	float2 tex  : TEXCOORD1;
@@ -105,10 +116,14 @@ float4 pixel(VS_OUTPUT In) : COLOR
 		color.rgb = lerp(color.rgb, loking, loking1_alpha);
 	}
 
+	float4 o = tex2D(overlay, In.tex);
+	color.rgb *= 1 - o.a;
+	color.rgb += o.rgb * o.a;
+
 	color.rgb = color.rgb * fade + flash;
 
-	float n = tex2D(noise, In.tex * 15 + noffs).r;
-	color.rgb += (n - 0.5) * 0.01 * noise_amt;
+	float n = tex2D(noise, In.tex * nscale + noffs).r;
+	color.rgb += (n - 0.5) * noise_amt;
 
 	return color;
 }
