@@ -1,6 +1,7 @@
 const float flash, fade, scroll;
 const float2 noffs, nscale;
 const float bloom_amt, blur_amt, noise_amt;
+const float dist_amt, dist_freq, dist_time;
 
 texture bloom;
 sampler bloom_sampler = sampler_state {
@@ -17,8 +18,8 @@ texture tex;
 sampler tex_sampler = sampler_state {
 	Texture = (tex);
 	MipFilter = NONE;
-	MinFilter = POINT;
-	MagFilter = POINT;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
 	AddressU = CLAMP;
 	AddressV = CLAMP;
 	sRGBTexture = FALSE;
@@ -103,35 +104,39 @@ float luminance(float3 color)
 
 float4 pixel(VS_OUTPUT In) : COLOR
 {
-	float4 color;
-	color = lerp(tex2D(tex_sampler, In.tex), tex2D(bloom_sampler, In.tex), blur_amt);
-	color += pow(tex2D(bloom_sampler, In.tex) * bloom_amt, 1.5);
+	float3 color;
+	float2 dist = float2(
+		sin(In.tex.y * dist_freq + dist_time) * dist_amt,
+		sin(In.tex.x * dist_freq + dist_time) * dist_amt);
+
+	color = lerp(tex2D(tex_sampler, In.tex + dist).r, tex2D(bloom_sampler, In.tex + dist).rgb, blur_amt);
+	color += pow(tex2D(bloom_sampler, In.tex + dist).rgb * bloom_amt, 1.5);
 
 	float4 s = tex2D(scroller, In.tex * float2(1, 720.0 / 2048) + float2(0, scroll));
-	color.rgb *= 1 - s.a;
-	color.rgb += s.rgb * s.a;
+	color *= 1 - s.a;
+	color += s.rgb * s.a;
 
 	if (loking1_alpha > 1e-10) {
 		float3 loking = lerp(tex2D(loking1, In.tex).rgb, tex2D(loking2, In.tex).rgb, loking2_alpha);
-		color.rgb = lerp(color.rgb, loking, loking1_alpha);
+		color = lerp(color, loking, loking1_alpha);
 	}
 
 	float4 o = tex2D(overlay, In.tex);
-	color.rgb *= 1 - o.a;
-	color.rgb += o.rgb * o.a;
+	color *= 1 - o.a;
+	color += o.rgb * o.a;
 
-	color.rgb = color.rgb * fade + flash;
+	color = color * fade + flash;
 
 	float n = tex2D(noise, In.tex * nscale + noffs).r;
-	color.rgb += (n - 0.5) * noise_amt;
+	color += (n - 0.5) * noise_amt;
 
-	return color;
+	return float4(color, 1);
 }
 
 technique color_map {
 	pass P0 {
-		VertexShader = compile vs_2_0 vertex();
-		PixelShader  = compile ps_2_0 pixel();
+		VertexShader = compile vs_3_0 vertex();
+		PixelShader  = compile ps_3_0 pixel();
 	}
 }
 

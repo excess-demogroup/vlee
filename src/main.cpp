@@ -323,6 +323,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *pulseSpeedTrack     = sync_get_track(rocket, "pulse.speed");
 		const sync_track *pulseAmtTrack       = sync_get_track(rocket, "pulse.amt");
 
+		const sync_track *distAmtTrack        = sync_get_track(rocket, "dist.amt");
+		const sync_track *distFreqTrack       = sync_get_track(rocket, "dist.freq");
+
 		Surface backbuffer   = device.getRenderTarget(0);
 		Surface depthstencil = device.getDepthStencilSurface();
 
@@ -648,6 +651,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setFloat("bloom_amt", sync_get_val(bloomAmtTrack, row));
 			color_map_fx->setFloat("blur_amt", sync_get_val(colorMapBlurTrack, row));
 			color_map_fx->setFloat("noise_amt", pow(sync_get_val(colorMapNoiseTrack, row) / 255, 2.2f));
+			color_map_fx->setFloat("dist_amt", sync_get_val(distAmtTrack, row));
+			color_map_fx->setFloat("dist_freq", sync_get_val(distFreqTrack, row) * 2 * M_PI);
+			color_map_fx->setFloat("dist_time", beat * 4);
 			color_map_fx->setTexture("bloom", color1_hdr);
 			color_map_fx->setTexture("tex", color_msaa);
 			color_map_fx->setTexture("overlay_tex", overlays.getTexture((int)sync_get_val(colorMapOverlayTrack, row) % overlays.getTextureCount()));
