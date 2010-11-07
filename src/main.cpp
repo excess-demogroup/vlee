@@ -280,6 +280,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		const sync_track *distAmtTrack        = sync_get_track(rocket, "dist.amt");
 		const sync_track *distFreqTrack       = sync_get_track(rocket, "dist.freq");
+		const sync_track *distOffsetTrack       = sync_get_track(rocket, "dist.offset");
 
 		Surface backbuffer   = device.getRenderTarget(0);
 
@@ -611,7 +612,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setFloat("noise_amt", pow(sync_get_val(colorMapNoiseTrack, row) / 255, 2.2f));
 			color_map_fx->setFloat("dist_amt", sync_get_val(distAmtTrack, row));
 			color_map_fx->setFloat("dist_freq", sync_get_val(distFreqTrack, row) * 2 * float(M_PI));
-			color_map_fx->setFloat("dist_time", float(beat * 4));
+			color_map_fx->setFloat("dist_time", float(beat * 4) + sync_get_val(distOffsetTrack, row));
 			color_map_fx->setTexture("bloom", color1_hdr);
 			color_map_fx->setTexture("tex", color_msaa);
 			color_map_fx->setTexture("overlay_tex", overlays.getTexture((int)sync_get_val(colorMapOverlayTrack, row) % overlays.getTextureCount()));
