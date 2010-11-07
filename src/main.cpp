@@ -491,7 +491,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				float size = 0.4f + math::notRandf(i * 4 + 1) * 0.5f;
 //				if (distance(pos, camPos) < 200)
 				Vector3 temp = pos - camPos;
-				if (dot(temp, temp) < 200 * 200)
+				if (dot(temp, temp) < 400 * 400)
 					particleStreamer.add(pos, size);
 				if (!particleStreamer.getRoom()) {
 					particleStreamer.end();
