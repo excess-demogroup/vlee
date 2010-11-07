@@ -77,11 +77,6 @@ using namespace core;
 HWND win = 0;
 HSTREAM stream = 0;
 
-float randf()
-{
-	return rand() * (1.f / RAND_MAX);
-}
-
 void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_height, float screen_aspect, float demo_aspect)
 {
 	int letterbox_width, letterbox_height;
@@ -589,7 +584,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float pulse = sync_get_val(pulseAmt2Track, row);
 			fade = std::max(0.0f, fade - pulse + float(cos(beat * sync_get_val(pulseSpeed2Track, row) * M_PI)) * pulse);
 			color_map_fx->setVector3("noffs", Vector3(math::notRandf(int(beat * 100)), math::notRandf(int(beat * 100) + 1), 0));
-			color_map_fx->setFloat("flash", flash < 0 ? randf() : pow(flash, 2.0f));
+			color_map_fx->setFloat("flash", flash < 0 ? math::randf() : pow(flash, 2.0f));
 			color_map_fx->setFloat("fade", pow(fade, 2.2f));
 			color_map_fx->setFloat("scroll", sync_get_val(colorMapScrollTrack, row) / 100.0f);
 			color_map_fx->setFloat("bloom_amt", sync_get_val(bloomAmtTrack, row));

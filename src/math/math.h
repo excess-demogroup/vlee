@@ -33,4 +33,9 @@ namespace math
 	{
 		return f - floor(f);
 	}
+
+	inline float randf()
+	{
+		return rand() * (1.f / RAND_MAX);
+	}
 }
