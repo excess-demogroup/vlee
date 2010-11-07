@@ -95,19 +95,12 @@ VS_OUTPUT vertex(float4 ipos : POSITION, float2 tex  : TEXCOORD0)
 	return Out;
 }
 
-float luminance(float3 color)
-{
-	return color.r * 0.299 +
-	       color.g * 0.587 +
-	       color.b * 0.114;
-}
-
 float4 pixel(VS_OUTPUT In) : COLOR
 {
 	float3 color;
 	float2 dist = float2(
-		sin(In.tex.y * dist_freq + dist_time) * dist_amt,
-		sin(In.tex.x * dist_freq + dist_time) * dist_amt);
+		(sin(In.tex.y * dist_freq + dist_time) * 2 - 1) * dist_amt,
+		(sin(In.tex.x * dist_freq + dist_time) * 2 - 1) * dist_amt);
 
 	color = lerp(tex2D(tex_sampler, In.tex + dist).r, tex2D(bloom_sampler, In.tex + dist).rgb, blur_amt);
 	color += pow(tex2D(bloom_sampler, In.tex + dist).rgb * bloom_amt, 1.5);
@@ -135,8 +128,8 @@ float4 pixel(VS_OUTPUT In) : COLOR
 
 technique color_map {
 	pass P0 {
-		VertexShader = compile vs_3_0 vertex();
-		PixelShader  = compile ps_3_0 pixel();
+		VertexShader = compile vs_2_0 vertex();
+		PixelShader  = compile ps_2_0 pixel();
 	}
 }
 

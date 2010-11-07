@@ -86,94 +86,23 @@ void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_
 {
 	int letterbox_width, letterbox_height;
 
-	if (demo_aspect > screen_aspect)
-	{
+	if (demo_aspect > screen_aspect) {
 		/* demo is wider than screen, letterbox */
 		float aspect_change = screen_aspect / demo_aspect;
 		letterbox_width  = screen_width;
 		letterbox_height = int(math::round(screen_height * aspect_change));
-	}
-	else
-	{
+	} else {
 		/* screen is wider than demo, pillarbox */
 		float aspect_change = demo_aspect / screen_aspect;
 		letterbox_width  = int(math::round(screen_width * aspect_change));
 		letterbox_height = screen_height;
 	}
-	
-	viewport->X = (screen_width  - letterbox_width ) / 2;
+
+	viewport->X = (screen_width  - letterbox_width) / 2;
 	viewport->Y = (screen_height - letterbox_height) / 2;
-	
+
 	viewport->Width  = letterbox_width;
 	viewport->Height = letterbox_height;
-}
-
-#include "engine/vertexstreamer.h"
-void drawFuzz(Effect *effect, engine::VertexStreamer &streamer, float time, float hardness, float xdist_amt, float ydist_amt, float s_nudge = 0.0f, float t_nudge = 0.0f)
-{
-	UINT passes;
-	(*effect)->Begin(&passes, 0);
-	for (UINT pass = 0; pass < passes; ++pass)
-	{
-		(*effect)->BeginPass( pass );
-		const int SEGS = 235;
-		streamer.begin(D3DPT_TRIANGLELIST);
-		float last_xoffs = 0.f;
-		float last_yoffs = 0.f;
-		for (unsigned i = 0; i < SEGS; ++i)
-		{
-			float y1 = float(i) * (1.f / SEGS);
-			float y2 = y1 + (1.f / SEGS);
-			
-			float xoffs = 0.0f;
-//			xoffs = (randf() - 0.5f) * 0.75f;
-			xoffs += sinf(y1 * float(M_PI) + time);
-			xoffs += sinf(y1 * 4.2f * float(M_PI) + time) * 0.5f;
-			xoffs += fmod(tan(cos(y1) * 18.7f * float(M_PI) + time), 0.9f) * 0.25f * hardness;
-			xoffs *= 0.05f * xdist_amt;
-
-			float yoffs = 0.0f;
-			yoffs += fmodf(tanf(y1 * float(M_PI) * 4 + time), 0.9f) * hardness;
-			yoffs *= 0.05f * ydist_amt;
-
-			streamer.uv(    D3DXVECTOR2(0.f + last_xoffs + s_nudge, 1 - y1 + last_yoffs + t_nudge));
-			streamer.vertex(D3DXVECTOR3(-1, (y1 * 2) - 1, 0));
-			
-			streamer.uv(    D3DXVECTOR2( 0.f + xoffs + s_nudge, 1 - y2 + yoffs + t_nudge));
-			streamer.vertex(D3DXVECTOR3(-1, (y2 * 2) - 1, 0));
-			
-			streamer.uv(    D3DXVECTOR2( 1.f + xoffs + s_nudge, 1 - y2 + yoffs + t_nudge));
-			streamer.vertex(D3DXVECTOR3( 1, (y2 * 2) - 1, 0));
-			
-			streamer.uv(    D3DXVECTOR2( 0 + last_xoffs + s_nudge, 1 - y1 + last_yoffs + t_nudge));
-			streamer.vertex(D3DXVECTOR3(-1, (y1 * 2) - 1, 0));
-			
-			streamer.uv(    D3DXVECTOR2( 1 + xoffs + s_nudge, 1 - y2 + yoffs + t_nudge));
-			streamer.vertex(D3DXVECTOR3( 1, (y2 * 2) - 1, 0));
-			
-			streamer.uv(    D3DXVECTOR2( 1 + last_xoffs + s_nudge, 1 - y1 + last_yoffs + t_nudge));
-			streamer.vertex(D3DXVECTOR3( 1, (y1 * 2) - 1, 0));
-			last_xoffs = xoffs;
-			last_yoffs = yoffs;
-		}
-		streamer.end();
-		(*effect)->EndPass();
-	}
-	(*effect)->End();
-}
-
-Surface loadSurface(renderer::Device &device, std::string fileName)
-{
-	D3DXIMAGE_INFO srcInfo;
-	core::d3dErr(D3DXGetImageInfoFromFile(fileName.c_str(), &srcInfo));
-	
-	IDirect3DSurface9 *surface = NULL;
-	core::d3dErr(device->CreateOffscreenPlainSurface(srcInfo.Width, srcInfo.Height, D3DFMT_A8R8G8B8, D3DPOOL_SCRATCH, &surface, NULL));
-	core::d3dErr(D3DXLoadSurfaceFromFile(surface, NULL, NULL, fileName.c_str(), NULL, D3DX_FILTER_NONE, NULL, NULL));
-	
-	Surface surface_wrapper;
-	surface_wrapper.attachRef(surface);
-	return surface_wrapper;
 }
 
 const int rpb = 8; /* rows per beat */
@@ -375,6 +304,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *cube_light_fx = engine::loadEffect(device, "data/cube-light.fx");
 		cube_light_fx->setTexture("noise_tex", noise_tex);
 
+		Texture cos_tex = device.createTexture(128, 1, 0, 0, D3DFMT_L16, D3DPOOL_MANAGED);
+		D3DLOCKED_RECT rect;
+		d3dErr(cos_tex.tex->LockRect(0, &rect, NULL, D3DLOCK_DISCARD));
+		for (int i = 0; i < 128; ++i) {
+			double th = (i + 0.5) * ((2 * M_PI) / 128.0);
+			unsigned short v = (unsigned short)(32767.5 + cos(th) * 32767.5);
+			((unsigned short*)rect.pBits)[i] = v;
+		}
+		d3dErr(cos_tex.tex->UnlockRect(0));
+		cube_light_fx->setTexture("cos_tex", cos_tex);
+
 		Mesh *cube_tops_x  = engine::loadMesh(device, "data/cube-grid-tops-32.x");
 		Mesh *cube_sides_x = engine::loadMesh(device, "data/cube-grid-sides-32.x");
 		Mesh *cube_floor_x = engine::loadMesh(device, "data/cube-grid-floor.x");
@@ -476,7 +416,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			cube_light_fx->setFloat("time", float(beat) * sync_get_val(lineSpeedTrack, row) + sync_get_val(lineOffsetTrack, row));
 			cube_light_fx->setFloat("pulse_phase", float((beat / 16) * sync_get_val(pulseSpeedTrack, row)));
 			cube_light_fx->setFloat("pulse_amt", sync_get_val(pulseAmtTrack, row));
-			cube_light_fx->setFloat("line_amt", sync_get_val(lineAmtTrack, row));
+			cube_light_fx->setFloat("line_amt", sync_get_val(lineAmtTrack, row) * 0.3f);
 			cube_light_fx->setFloat("radial_amt", sync_get_val(radialAmtTrack, row));
 			cube_light_fx->setFloat("radial_amt2", sync_get_val(radialAmt2Track, row));
 
@@ -656,8 +596,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setFloat("blur_amt", sync_get_val(colorMapBlurTrack, row));
 			color_map_fx->setFloat("noise_amt", pow(sync_get_val(colorMapNoiseTrack, row) / 255, 2.2f));
 			color_map_fx->setFloat("dist_amt", sync_get_val(distAmtTrack, row));
-			color_map_fx->setFloat("dist_freq", sync_get_val(distFreqTrack, row) * 2 * M_PI);
-			color_map_fx->setFloat("dist_time", beat * 4);
+			color_map_fx->setFloat("dist_freq", sync_get_val(distFreqTrack, row) * 2 * float(M_PI));
+			color_map_fx->setFloat("dist_time", float(beat * 4));
 			color_map_fx->setTexture("bloom", color1_hdr);
 			color_map_fx->setTexture("tex", color_msaa);
 			color_map_fx->setTexture("overlay_tex", overlays.getTexture((int)sync_get_val(colorMapOverlayTrack, row) % overlays.getTextureCount()));
