@@ -287,7 +287,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
 		color_map_fx->setTexture("noise_tex", noise_tex);
-		color_map_fx->setVector3("nscale", Vector3(config::mode.Width / 128.0, config::mode.Height / 128.0, 0.0f));
+
+		color_map_fx->setVector3("nscale", Vector3(letterbox_viewport.Width / 128.0, letterbox_viewport.Height / 128.0, 0.0f));
 		if (use_sm20_codepath)
 			color_map_fx->p->SetTechnique("rgbe");
 
