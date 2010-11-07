@@ -542,19 +542,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_ZENABLE, false);
 
 			float stdDev = std::max(sync_get_val(bloomSizeTrack, row), 0.0f);
-#if 1
 			int passes = std::max((int)sync_get_val(bloomPassesTrack, row), 1);
-#else
-			int passes = 1;
-			while (ceil(3 * stdDev) > 16) {
-				passes *= 2;
-				stdDev *= 0.5;
-			}
-
-			char temp[100];
-			sprintf(temp, "passes: %d\n", passes);
-			OutputDebugStringA(temp);
-#endif
 
 			int rtIndex = 0;
 			for (int j = 0; j < 2; j++) {
