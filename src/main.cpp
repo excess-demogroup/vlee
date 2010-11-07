@@ -154,7 +154,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 #endif
 	
 	HINSTANCE hInstance = GetModuleHandle(0);
-//	_Module.Init(NULL, hInstance);
 	
 	try {
 		/* create d3d object */
@@ -175,20 +174,48 @@ int main(int /*argc*/, char* /*argv*/ [])
 			}
 		}
 
-		/* create window */
-		win = CreateWindow("static", "very last engine ever", WS_POPUP, 0, 0, config::mode.Width, config::mode.Height, 0, 0, GetModuleHandle(0), 0);
+		WNDCLASSEX wc;
+		wc.cbSize        = sizeof(WNDCLASSEX);
+		wc.style         = 0;
+		wc.lpfnWndProc   = DefWindowProc;
+		wc.cbClsExtra    = 0;
+		wc.cbWndExtra    = 0;
+		wc.hInstance     = hInstance;
+		wc.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
+		wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
+		wc.hbrBackground = (HBRUSH)NULL;
+		wc.lpszMenuName  = NULL;
+		wc.lpszClassName = "d3dwin";
+		wc.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
+		RegisterClassEx(&wc);
+
+		DWORD ws = config::fullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW;
+		RECT rect = {0, 0, config::mode.Width, config::mode.Height};
+		AdjustWindowRect(&rect, ws, FALSE);
+		win = CreateWindow("d3dwin", "very last engine ever", ws, 0, 0, rect.right - rect.left, rect.bottom - rect.top, 0, 0, hInstance, 0);
+
 		if (!win)
 			throw FatalException("CreateWindow() failed. something is VERY spooky.");
 
 		/* create device */
 		Device device;
-		device.attachRef(init::initD3D(direct3d, win, config::mode, D3DMULTISAMPLE_NONE, config::adapter, config::vsync));
+		device.attachRef(init::initD3D(direct3d, win, config::mode, D3DMULTISAMPLE_NONE, config::adapter, config::vsync, config::fullscreen));
 
 		/* showing window after initing d3d in order to be able to see warnings during init */
 		ShowWindow(win, TRUE);
-#if !WINDOWED
-		ShowCursor(0);
-#endif
+		if (config::fullscreen)
+			ShowCursor(FALSE);
+
+		MSG msg;
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+
+		device->Clear(0, 0, D3DCLEAR_TARGET, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
+		HRESULT res = device->Present(0, 0, 0, 0);
+		if (FAILED(res))
+			throw FatalException(std::string(DXGetErrorString(res)) + std::string(" : ") + std::string(DXGetErrorDescription(res)));
 
 		/* setup letterbox */
 		D3DVIEWPORT9 letterbox_viewport = device.getViewport();
@@ -255,7 +282,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *distFreqTrack       = sync_get_track(rocket, "dist.freq");
 
 		Surface backbuffer   = device.getRenderTarget(0);
-		Surface depthstencil = device.getDepthStencilSurface();
 
 		D3DCAPS9 caps;
 		direct3d->GetDeviceCaps(config::adapter, D3DDEVTYPE_HAL, &caps);
@@ -301,14 +327,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 		cube_light_fx->setTexture("noise_tex", noise_tex);
 
 		Texture cos_tex = device.createTexture(128, 1, 0, 0, D3DFMT_L16, D3DPOOL_MANAGED);
-		D3DLOCKED_RECT rect;
-		d3dErr(cos_tex.tex->LockRect(0, &rect, NULL, D3DLOCK_DISCARD));
-		for (int i = 0; i < 128; ++i) {
-			double th = (i + 0.5) * ((2 * M_PI) / 128.0);
-			unsigned short v = (unsigned short)(32767.5 + cos(th) * 32767.5);
-			((unsigned short*)rect.pBits)[i] = v;
+		{
+			D3DLOCKED_RECT rect;
+			d3dErr(cos_tex.tex->LockRect(0, &rect, NULL, D3DLOCK_DISCARD));
+			for (int i = 0; i < 128; ++i) {
+				double th = (i + 0.5) * ((2 * M_PI) / 128.0);
+				unsigned short v = (unsigned short)(32767.5 + cos(th) * 32767.5);
+				((unsigned short*)rect.pBits)[i] = v;
+			}
+			d3dErr(cos_tex.tex->UnlockRect(0));
 		}
-		d3dErr(cos_tex.tex->UnlockRect(0));
 		cube_light_fx->setTexture("cos_tex", cos_tex);
 
 		Mesh *cube_tops_x  = engine::loadMesh(device, "data/cube-grid-tops-32.x");
@@ -430,6 +458,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			device.setRenderTarget(color_msaa.getRenderTarget());
 			device.setDepthStencilSurface(depthstencil_msaa);
+			device->SetRenderState(D3DRS_ZENABLE, true);
 			D3DXCOLOR clear_color(0.0f, 0.0f, 0.0f, 1.0f);
 
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
@@ -510,6 +539,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->StretchRect(color_msaa.getSurface(0), NULL, color1_hdr.getSurface(0), NULL, D3DTEXF_LINEAR);
 			RenderTexture render_textures[2] = { color1_hdr, color2_hdr };
 			device->SetDepthStencilSurface(NULL);
+			device->SetRenderState(D3DRS_ZENABLE, false);
 
 			float stdDev = std::max(sync_get_val(bloomSizeTrack, row), 0.0f);
 #if 1
@@ -657,9 +687,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		BASS_Free();
 		if (win)
 			DestroyWindow(win);
-#if !WINDOWED
-		ShowCursor(TRUE);
-#endif
+		if (config::fullscreen)
+			ShowCursor(TRUE);
 	} catch (const std::exception &e) {
 		// cleanup
 		if (stream)
@@ -667,9 +696,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		BASS_Free();
 		if (win)
 			DestroyWindow(win);
-#if !WINDOWED
-		ShowCursor(TRUE);
-#endif
+		if (config::fullscreen)
+			ShowCursor(TRUE);
 
 		log::printf("\n*** error : %s\n", e.what());
 		log::save("errorlog.txt");

@@ -1,13 +1,13 @@
 // Microsoft Visual C++ generated resource script.
 //
-#include "src/resource.h"
+#include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include <windows.h>
+#include "afxres.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -72,7 +72,6 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Go gadget go",IDOK,156,161,50,14
     PUSHBUTTON      "I'm outie",IDCANCEL,209,161,50,14
-	
     GROUPBOX        "Display",IDC_DISPLAY,113,6,147,113
     COMBOBOX        IDC_DEVICE,120,17,137,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_FORMAT,120,36,137,90,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -80,11 +79,10 @@ BEGIN
     COMBOBOX        IDC_MULTISAMPLE,120,71,137,74,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_ASPECT,120,88,137,74,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "vertical sync",IDC_VSYNC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,120,106,54,8
-	
     GROUPBOX        "Sound",IDC_SOUND,114,125,146,30
     COMBOBOX        IDC_SOUNDCARD,119,138,137,74,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-	
     CONTROL         102,IDC_BITMAP,"Static",SS_BITMAP | WS_BORDER,6,6,101,166
+    CONTROL         "Fullscreen",IDC_FULLSCREEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,190,105,64,10
 END
 
 
@@ -112,7 +110,7 @@ END
 // Bitmap
 //
 
-IDB_BITMAP1             BITMAP                  "dialog.bmp"
+IDB_BITMAP1             BITMAP                  "..\\dialog.bmp"
 #endif    // Norwegian (Bokmal) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -127,3 +125,4 @@ IDB_BITMAP1             BITMAP                  "dialog.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+

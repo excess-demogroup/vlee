@@ -11,6 +11,6 @@ namespace config
 	extern D3DDISPLAYMODE mode;
 	extern D3DMULTISAMPLE_TYPE multisample;
 	extern float aspect;
-	extern bool vsync;
+	extern bool vsync, fullscreen;
 	extern unsigned soundcard;
 };
