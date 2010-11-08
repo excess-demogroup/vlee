@@ -361,13 +361,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		// todo: config this
 		bool dump_video = false;
-		float video_framerate = 60.0f;
 
 		bool done = false;
 		int frame = 0;
 		while (!done) {
 			if (dump_video) {
-				QWORD pos = BASS_ChannelSeconds2Bytes(stream, frame / video_framerate);
+				QWORD pos = BASS_ChannelSeconds2Bytes(stream, float(frame) / config::mode.RefreshRate);
 				BASS_ChannelSetPosition(stream, pos, BASS_POS_BYTE);
 			}
 
