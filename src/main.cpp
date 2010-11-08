@@ -55,9 +55,6 @@ using engine::Anim;
 
 using namespace core;
 
-HWND win = 0;
-HSTREAM stream = 0;
-
 void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_height, float screen_aspect, float demo_aspect)
 {
 	int letterbox_width, letterbox_height;
@@ -133,9 +130,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
 /*	_CrtSetBreakAlloc(68); */
 #endif
-	
+
 	HINSTANCE hInstance = GetModuleHandle(0);
-	
+	HWND win = 0;
+	HSTREAM stream = 0;
+
 	try {
 		/* create d3d object */
 		ComRef<IDirect3D9> direct3d;
