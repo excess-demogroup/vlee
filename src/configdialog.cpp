@@ -60,7 +60,7 @@ static void refreshModes(HWND hDlg)
 static bool is_multisample_type_ok(IDirect3D9 *direct3d, UINT adapter, D3DFORMAT backBufferFormat, D3DMULTISAMPLE_TYPE multisample_type)
 {
 	return
-	    (multisample_type == D3DMULTISAMPLE_NONE || SUCCEEDED(direct3d->CheckDeviceFormat(adapter, D3DDEVTYPE_HAL, backBufferFormat, D3DUSAGE_QUERY_FILTER, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F))) &&
+	    (multisample_type == D3DMULTISAMPLE_NONE || SUCCEEDED(direct3d->CheckDeviceFormat(adapter, D3DDEVTYPE_HAL, backBufferFormat, D3DUSAGE_QUERY_FILTER | D3DUSAGE_RENDERTARGET, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F))) &&
 	    SUCCEEDED(direct3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, backBufferFormat, FALSE, multisample_type, NULL)) &&
 	    SUCCEEDED(direct3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, D3DFMT_A16B16G16R16F, FALSE, multisample_type, NULL));
 }

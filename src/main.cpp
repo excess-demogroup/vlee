@@ -268,7 +268,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		direct3d->GetDeviceCaps(config::adapter, D3DDEVTYPE_HAL, &caps);
 
 		bool use_sm20_codepath = false;
-		if (FAILED(direct3d->CheckDeviceFormat(config::adapter, D3DDEVTYPE_HAL, config::mode.Format, D3DUSAGE_QUERY_FILTER, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F)) ||
+		if (FAILED(direct3d->CheckDeviceFormat(config::adapter, D3DDEVTYPE_HAL, config::mode.Format, D3DUSAGE_QUERY_FILTER | D3DUSAGE_RENDERTARGET, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F)) ||
 			caps.PixelShaderVersion < D3DVS_VERSION(3, 0))
 			use_sm20_codepath = true;
 
