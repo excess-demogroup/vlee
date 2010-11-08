@@ -18,8 +18,8 @@ sampler tex_samp = sampler_state {
 struct VS_INPUT
 {
 	float3 pos  : POSITION;
-	float  size : TEXCOORD1;
-	float2 uv   : TEXCOORD2;
+	float  size : TEXCOORD0;
+	float2 uv   : TEXCOORD1;
 };
 
 struct VS_OUTPUT

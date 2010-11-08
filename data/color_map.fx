@@ -84,7 +84,7 @@ sampler overlay = sampler_state {
 
 struct VS_OUTPUT {
 	float4 pos  : POSITION;
-	float2 tex  : TEXCOORD1;
+	float2 tex  : TEXCOORD0;
 };
 
 VS_OUTPUT vertex(float4 ipos : POSITION, float2 tex  : TEXCOORD0)
