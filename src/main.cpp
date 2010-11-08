@@ -433,12 +433,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device.setRenderTarget(color_msaa.getRenderTarget());
 			device.setDepthStencilSurface(depthstencil_msaa);
 			device->SetRenderState(D3DRS_ZENABLE, true);
-			D3DXCOLOR clear_color(0.0f, 0.0f, 0.0f, 1.0f);
 
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			device->SetRenderState(D3DRS_ZWRITEENABLE, true);
-			device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, clear_color, 1.f, 0);
+			device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
 
 			float fog_density = sync_get_val(fogDensityTrack, row) / 100000;
 
