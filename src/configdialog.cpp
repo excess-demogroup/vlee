@@ -20,7 +20,7 @@ D3DDISPLAYMODE config::mode =
 	DEFAULT_FORMAT           // D3DFORMAT Format;
 };
 // D3DFORMAT config::format = DEFAULT_FORMAT;
-D3DMULTISAMPLE_TYPE config::multisample = D3DMULTISAMPLE_16_SAMPLES;
+D3DMULTISAMPLE_TYPE config::multisample = DEFAULT_MULTISAMPLE;
 float config::aspect = 1.0; // float(DEFAULT_WIDTH) / DEFAULT_HEIGHT;
 bool config::vsync = DEFAULT_VSYNC;
 bool config::fullscreen = DEFAULT_FULLSCREEN;
