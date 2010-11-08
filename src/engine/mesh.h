@@ -31,31 +31,6 @@ namespace engine
 			core::d3dErr(p->GetIndexBuffer(&indexBuffer));
 			return renderer::IndexBuffer(indexBuffer);
 		}
-
-		void computeBinormalTangents()
-		{
-#if 0
-			ID3DXMesh *result;
-			core::d3dErr(
-				D3DXComputeTangentFrameEx(
-					p,
-					D3DX_DEFAULT, 0,
-					D3DDECLUSAGE_TANGENT, 0,
-					D3DDECLUSAGE_BINORMAL, 0,
-					D3DDECLUSAGE_NORMAL, 0,
-					D3DXTANGENT_CALCULATE_NORMALS,
-					CONST DWORD * pdwAdjacency,
-					FLOAT fPartialEdgeThreshold,
-					FLOAT fSingularPointThreshold,
-					FLOAT fNormalEdgeThreshold,
-					&result,
-					NULL
-				)
-			);
-			
-			p = result;
-#endif
-		}
 	};
 
 	inline Mesh *loadMesh(renderer::Device &device, std::string filename)

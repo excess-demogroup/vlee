@@ -26,7 +26,6 @@ VS_OUTPUT vertex(float4 pos : POSITION, float2 tex : TEXCOORD0)
 
 float4 pixel(VS_OUTPUT In) : COLOR
 {
-//	return tex2D(tex, In.tex);
 	float4 c = tex2D(tex, In.tex) * gauss[0].z;
 	for (int i = 1; i < 8; i++) {
 		c += tex2D(tex, In.tex + gauss[i].xy) * gauss[i].z;

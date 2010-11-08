@@ -53,24 +53,6 @@ using engine::Mesh;
 using engine::Effect;
 using engine::Anim;
 
-Matrix4x4 radialblur_matrix(const Texture &tex, const Vector2 &center, const float amt = 1.01)
-{
-	Matrix4x4 trans1;
-	trans1.makeIdentity();
-	trans1._13 = 0.5f - center.x / 2;
-	trans1._23 = 0.5f - center.y / 2;
-	
-	Matrix4x4 mat;
-	mat.makeScaling(Vector3(amt, amt, 1));
-	
-	Matrix4x4 trans2;
-	trans2.makeIdentity();
-	trans2._13 = -(0.5f - center.x / 2);
-	trans2._23 = -(0.5f - center.y / 2);
-	
-	return trans1 * mat * trans2;
-}
-
 using namespace core;
 
 HWND win = 0;
