@@ -59,11 +59,10 @@ struct VS_OUTPUT {
 
 VS_OUTPUT vs_main(float4 pos: POSITION, float2 texCoord: TEXCOORD0)
 {
-	VS_OUTPUT o = (VS_OUTPUT) 0;
+	VS_OUTPUT o;
 	o.pos = pos;
-	o.pos.x += 1.0 / 128;
-	o.pos.y -= 1.0 / 128;
 	o.texCoord = texCoord;
+
 	o.snakeCoord.x = 0.25 + (texCoord.y + texCoord.x * 30 + time * 0.02) / (2.0 * 3.1415926);
 	o.snakeCoord.y = (texCoord.x + texCoord.y * 30 + time * 0.02) / (2.0 * 3.1415926);
 	return o;

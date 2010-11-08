@@ -51,7 +51,6 @@ using renderer::RenderTexture;
 
 using engine::Mesh;
 using engine::Effect;
-using engine::Image;
 using engine::Anim;
 
 Matrix4x4 radialblur_matrix(const Texture &tex, const Vector2 &center, const float amt = 1.01)
@@ -449,13 +448,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			cube_light_fx->setTexture("light2_tex", lights.getTexture((int)sync_get_val(light2IndexTrack, row) % lights.getTextureCount()));
 			cube_light_fx->setFloat("light1_alpha", pow(sync_get_val(light1AlphaTrack, row), 2.2f));
 			cube_light_fx->setFloat("light2_alpha", pow(sync_get_val(light2AlphaTrack, row), 2.2f));
-			drawQuad(
-				device, cube_light_fx,
-				-1.0f, -1.0f,
-				 2.0f, 2.0f,
-				1.0f / cube_light_tex.getWidth(),
-				1.0f / cube_light_tex.getHeight()
-			);
+			drawQuad(device, cube_light_fx, -1, -1, 2, 2);
 
 			device.setRenderTarget(color_msaa.getRenderTarget());
 			device.setDepthStencilSurface(depthstencil_msaa);
@@ -582,13 +575,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					blur_fx->setTexture("blur_tex", render_textures[rtIndex]);
 					blur_fx->commitChanges();
 
-					drawQuad(
-						device, blur_fx,
-						-1.0f, -1.0f,
-						 2.0f, 2.0f,
-						0.5f / render_textures[rtIndex].getWidth(),
-						0.5f / render_textures[rtIndex].getHeight()
-					);
+					drawRect(device, blur_fx, 0, 0, float(render_textures[rtIndex].getWidth()), float(render_textures[rtIndex].getHeight()));
 					rtIndex = !rtIndex;
 				}
 			}
@@ -623,11 +610,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setFloat("loking2_alpha", sync_get_val(lokingAlpha2Track, row));
 
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, TRUE);
-			drawQuad(device, color_map_fx,
-			    -1.0f, -1.0f,
-			    2.0f, 2.0f,
-			    0.5f / backbuffer.getWidth(),
-			    0.5f / backbuffer.getHeight());
+			drawRect(device, color_map_fx, float(letterbox_viewport.X), float(letterbox_viewport.Y), float(letterbox_viewport.Width), float(letterbox_viewport.Height));
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
 			device->EndScene(); /* WE DONE IS! */
 
