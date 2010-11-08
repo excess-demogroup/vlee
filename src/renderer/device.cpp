@@ -51,14 +51,13 @@ namespace renderer
 
 	VertexBuffer Device::createVertexBuffer(UINT length, DWORD usage, DWORD fvf, D3DPOOL pool, HANDLE* handle)
 	{
-		core::log::printf("creating vertexbuffer... ");
+		core::log::printf("creating vertex buffer... ");
 
 		assert(NULL != p);
 		IDirect3DVertexBuffer9 *vb;
 		if (FAILED(p->CreateVertexBuffer(length, usage, fvf, pool, &vb, handle)))
-		{
 			throw core::FatalException("failed to create vertex buffer");
-		}
+
 		assert(NULL != vb);
 		core::log::printf("done.\n");
 		
@@ -69,14 +68,13 @@ namespace renderer
 
 	IndexBuffer Device::createIndexBuffer(UINT length, DWORD usage, D3DFORMAT format, D3DPOOL pool, HANDLE* handle)
 	{
-		core::log::printf("creating vertexbuffer... ");
+		core::log::printf("creating index buffer... ");
 
 		assert(NULL != p);
 		IDirect3DIndexBuffer9 *ib;
 		if (FAILED(p->CreateIndexBuffer(length, usage, format, pool, &ib, handle)))
-		{
-			throw core::FatalException("failed to create vertex buffer");
-		}
+			throw core::FatalException("failed to create index buffer");
+
 		assert(NULL != ib);
 		core::log::printf("done.\n");
 
