@@ -1,7 +1,6 @@
 float alpha = 1.0;
 const float3 up;
 const float3 left;
-const float4x4 World : WORLD;
 const float4x4 WorldViewProjection : WORLDVIEWPROJECTION;
 
 // textures
@@ -31,10 +30,9 @@ struct VS_OUTPUT
 VS_OUTPUT vertex(VS_INPUT In)
 {
 	VS_OUTPUT Out;
-	float3 pos = mul(float4(In.pos, 1), World).xyz;
 	In.pos += left * In.uv.x * In.size;
 	In.pos += up   * In.uv.y * In.size;
-	Out.pos   = mul(float4(In.pos,  1), WorldViewProjection);
+	Out.pos = mul(float4(In.pos,  1), WorldViewProjection);
 	Out.uv = (In.uv + 1) / 2;
 	return Out;
 }
