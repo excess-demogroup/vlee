@@ -330,7 +330,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture cos_tex = device.createTexture(128, 1, 0, 0, D3DFMT_L16, D3DPOOL_MANAGED);
 		{
 			D3DLOCKED_RECT rect;
-			d3dErr(cos_tex.tex->LockRect(0, &rect, NULL, D3DLOCK_DISCARD));
+			d3dErr(cos_tex.tex->LockRect(0, &rect, NULL, 0));
 			for (int i = 0; i < 128; ++i) {
 				double th = (i + 0.5) * ((2 * M_PI) / 128.0);
 				unsigned short v = (unsigned short)(32767.5 + cos(th) * 32767.5);
