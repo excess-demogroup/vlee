@@ -131,7 +131,13 @@ static void refreshFormats(HWND hDlg)
 	int best_hit = 0;
 	for (int i = 0; i < ARRAY_SIZE(formats); ++i) {
 		D3DDISPLAYMODE mode;
-		if (SUCCEEDED(direct3d->EnumAdapterModes(adapter, formats[i].fmt, 0, &mode))) {
+		HRESULT hr = direct3d->EnumAdapterModes(config::adapter, formats[i].fmt, 0, &mode);
+#if 0
+		// WTF?! The documentation says D3DERR_NOTAVAILABLE should be returned if format is not available
+		// ...but I keep getting D3DERR_INVALIDCALL!!
+		assert(hr != D3DERR_INVALIDCALL);
+#endif
+		if (hr == D3D_OK) {
 			SendMessage(GetDlgItem(hDlg, IDC_FORMAT), CB_ADDSTRING, 0, (LPARAM)formats[i].str);
 			SendMessage(GetDlgItem(hDlg, IDC_FORMAT), CB_SETITEMDATA, item, formats[i].fmt);
 

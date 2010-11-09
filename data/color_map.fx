@@ -6,7 +6,7 @@ const float dist_amt, dist_freq, dist_time;
 texture bloom;
 sampler bloom_sampler = sampler_state {
 	Texture = (bloom);
-	MipFilter = NONE;
+	MipFilter = POINT;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
 	AddressU = CLAMP;
@@ -20,6 +20,16 @@ sampler tex_sampler = sampler_state {
 	MipFilter = NONE;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	sRGBTexture = FALSE;
+};
+
+sampler tex_point_sampler = sampler_state {
+	Texture = (tex);
+	MipFilter = NONE;
+	MinFilter = POINT;
+	MagFilter = POINT;
 	AddressU = CLAMP;
 	AddressV = CLAMP;
 	sRGBTexture = FALSE;
@@ -102,7 +112,7 @@ float4 pixel(VS_OUTPUT In) : COLOR
 		(sin(In.tex.y * dist_freq + dist_time) * 2 - 1) * dist_amt,
 		(sin(In.tex.x * dist_freq + dist_time) * 2 - 1) * dist_amt);
 
-	color = lerp(tex2D(tex_sampler, In.tex + dist).r, tex2D(bloom_sampler, In.tex + dist).rgb, blur_amt);
+	color = lerp(tex2D(tex_sampler, In.tex + dist).rgb, tex2D(bloom_sampler, In.tex + dist).rgb, blur_amt);
 	color += pow(tex2D(bloom_sampler, In.tex + dist).rgb * bloom_amt, 1.5);
 
 	float4 s = tex2D(scroller, In.tex * float2(1, 720.0 / 2048) + float2(0, scroll));
@@ -141,9 +151,12 @@ float3 rgbe_to_rgb(float4 rgbe)
 float4 pixel_rgbe(VS_OUTPUT In) : COLOR
 {
 	float3 color = rgbe_to_rgb(tex2D(tex_sampler, In.tex));
+//	float3 color = rgbe_to_rgb(tex2D(tex_point_sampler, In.tex));
 //	color += pow(tex2D(bloom_sampler, In.tex) * 0.75, 1.5);
-	float n = tex2D(noise, In.tex * 15 + noffs).r;
-	color.rgb += (n - 0.5) * 0.1;
+
+	float n = tex2D(noise, In.tex * nscale + noffs).r;
+	color += (n - 0.5) * noise_amt;
+
 	return float4(color * fade + flash, 1);
 }
 

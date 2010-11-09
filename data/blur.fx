@@ -3,7 +3,7 @@ const float4 gauss[8];
 texture blur_tex;
 sampler tex = sampler_state {
 	Texture = (blur_tex);
-	MipFilter = LINEAR;
+	MipFilter = POINT;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
 	AddressU = CLAMP;

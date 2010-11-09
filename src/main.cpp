@@ -274,17 +274,24 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 0,
 		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F,
-		    use_sm20_codepath ? D3DMULTISAMPLE_NONE : config::multisample,
-		    D3DUSAGE_AUTOGENMIPMAP);
+		    use_sm20_codepath ? D3DMULTISAMPLE_NONE : config::multisample);
 		Surface depthstencil_msaa = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8,
 		    use_sm20_codepath ? D3DMULTISAMPLE_NONE : config::multisample);
 
 		/** DEMO ***/
 		RenderTexture cube_light_tex(device, 128, 128, 1, use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
-		RenderTexture color1_hdr(device, 1280 / 2, int((1280 / DEMO_ASPECT) / 2), 1,
+		std::vector<RenderTexture> color1_hdr, color2_hdr;
+		int w = letterbox_viewport.Width, h = letterbox_viewport.Height;
+		D3DFORMAT fmt = use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F;
+		for (int i = 0; w > 0 || h > 0; ++i, w /= 2, h /= 2) {
+			color1_hdr.push_back(RenderTexture(device, std::max(w, 1), std::max(h, 1), 1, fmt));
+			color2_hdr.push_back(RenderTexture(device, std::max(w, 1), std::max(h, 1), 1, fmt));
+		}
+
+/*		RenderTexture color1_hdr(device, letterbox_viewport.Width, letterbox_viewport.Height, 0,
 		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
-		RenderTexture color2_hdr(device, 1280 / 2, int((1280 / DEMO_ASPECT) / 2), 1,
-		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
+		RenderTexture color2_hdr(device, letterbox_viewport.Width, letterbox_viewport.Height, 0,
+		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F); */
 
 		Effect *blur_fx     = engine::loadEffect(device, "data/blur.fx");
 		Effect *color_map_fx = engine::loadEffect(device, "data/color_map.fx");
@@ -508,14 +515,21 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_ZWRITEENABLE, false);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 
+			device->StretchRect(color_msaa.getSurface(0), NULL, color1_hdr[0].getSurface(), NULL, D3DTEXF_LINEAR);
+
+			/* downsample until bloom fits */
+			float stdDev = std::max(sync_get_val(bloomSizeTrack, row), 0.0f);
+			int level = 0;
+			while (3 * stdDev > 16) {
+				d3dErr(device->StretchRect(color1_hdr[level].getSurface(0), NULL, color1_hdr[level + 1].getSurface(0), NULL, D3DTEXF_LINEAR));
+				stdDev /= 2;
+				level++;
+			}
+
 			/* do the bloom */
-			device->StretchRect(color_msaa.getSurface(0), NULL, color1_hdr.getSurface(0), NULL, D3DTEXF_LINEAR);
-			RenderTexture render_textures[2] = { color1_hdr, color2_hdr };
+			RenderTexture render_textures[2] = { color1_hdr[level], color2_hdr[level] };
 			device->SetDepthStencilSurface(NULL);
 			device->SetRenderState(D3DRS_ZENABLE, false);
-
-			float stdDev = std::max(sync_get_val(bloomSizeTrack, row), 0.0f);
-			int passes = std::max((int)sync_get_val(bloomPassesTrack, row), 1);
 
 			int rtIndex = 0;
 			for (int j = 0; j < 2; j++) {
@@ -528,6 +542,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				gauss[0].z = 1.0f / std::max(sqrt(2.0f * 3.14159265f * sigma_squared), 1.0f);
 				gauss[0].w = 0.0;
 
+				float total = gauss[0].z;
 				for (int k = 1; k < 8; ++k) {
 					int o1 = k * 2 - 1;
 					int o2 = k * 2;
@@ -546,17 +561,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 						gauss[k].y = o / render_textures[rtIndex].getHeight();
 					}
 					gauss[k].w = 0.0f;
+					total += 2 * w;
 				}
+
+				for (int k = 0; k < 8; ++k)
+					gauss[k].z /= total;
+
 				blur_fx->p->SetVectorArray("gauss", gauss, ARRAY_SIZE(gauss));
+				blur_fx->setTexture("blur_tex", render_textures[rtIndex]);
 
-				for (int i = 0; i < passes; i++) {
-					device.setRenderTarget(render_textures[!rtIndex].getRenderTarget(), 0);
-					blur_fx->setTexture("blur_tex", render_textures[rtIndex]);
-					blur_fx->commitChanges();
-
-					drawRect(device, blur_fx, 0, 0, float(render_textures[rtIndex].getWidth()), float(render_textures[rtIndex].getHeight()));
-					rtIndex = !rtIndex;
-				}
+				device.setRenderTarget(render_textures[!rtIndex].getSurface(0), 0);
+				int w = render_textures[rtIndex].getSurface(0).getWidth();
+				int h = render_textures[rtIndex].getSurface(0).getHeight();
+				drawRect(device, blur_fx, 0, 0, float(w), float(h));
+				rtIndex = !rtIndex;
 			}
 
 			/* letterbox */
@@ -579,14 +597,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setFloat("dist_amt", sync_get_val(distAmtTrack, row));
 			color_map_fx->setFloat("dist_freq", sync_get_val(distFreqTrack, row) * 2 * float(M_PI));
 			color_map_fx->setFloat("dist_time", float(beat * 4) + sync_get_val(distOffsetTrack, row));
-			color_map_fx->setTexture("bloom", color1_hdr);
+			color_map_fx->setTexture("bloom", color1_hdr[level]);
 			color_map_fx->setTexture("tex", color_msaa);
 			color_map_fx->setTexture("overlay_tex", overlays.getTexture((int)sync_get_val(colorMapOverlayTrack, row) % overlays.getTextureCount()));
-
 			color_map_fx->setTexture("loking1_tex", loking.getTexture((int)sync_get_val(lokingFrame1Track, row)));
 			color_map_fx->setTexture("loking2_tex", loking.getTexture((int)sync_get_val(lokingFrame2Track, row)));
 			color_map_fx->setFloat("loking1_alpha", sync_get_val(lokingAlpha1Track, row));
 			color_map_fx->setFloat("loking2_alpha", sync_get_val(lokingAlpha2Track, row));
+			color_map_fx->commitChanges();
+
 
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, TRUE);
 			drawRect(device, color_map_fx, float(letterbox_viewport.X), float(letterbox_viewport.Y), float(letterbox_viewport.Width), float(letterbox_viewport.Height));

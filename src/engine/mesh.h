@@ -37,9 +37,10 @@ namespace engine
 	{
 		ID3DXMesh *mesh = NULL;
 		HRESULT hr = D3DXLoadMeshFromX(filename.c_str(), 0, device, 0, 0, 0, 0, &mesh);
-		if (FAILED(hr)) throw core::FatalException(std::string("failed to load mesh \"") + filename + std::string("\"\n\n") + core::d3dGetError(hr));
+		if (FAILED(hr))
+			throw core::FatalException(std::string("failed to load mesh \"") + filename + std::string("\"\n\n") + core::d3dGetError(hr));
 		assert(NULL != mesh);
-		
+
 		Mesh *mesh_wrapper = new Mesh;
 		mesh_wrapper->attachRef(mesh);
 		return mesh_wrapper;

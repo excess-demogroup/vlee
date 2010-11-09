@@ -16,6 +16,19 @@ IDirect3DDevice9 *init::initD3D(IDirect3D9 *direct3d, HWND win, D3DDISPLAYMODE m
 		MessageBox(NULL, "your gpu is still from poland!", "performance warning", MB_OK | MB_ICONWARNING);
 	}
 
+	D3DDEVTYPE devtype = D3DDEVTYPE_HAL;
+#if 1
+	for (UINT i = 0; i < direct3d->GetAdapterCount(); i++) {
+		D3DADAPTER_IDENTIFIER9 id;
+		direct3d->GetAdapterIdentifier(i, 0, &id);
+		if (strstr(id.Description, "PerfHUD")) {
+			adapter = i;
+			devtype = D3DDEVTYPE_REF;
+			break;
+		}
+	}
+#endif
+
 	D3DPRESENT_PARAMETERS pp;
 	ZeroMemory(&pp, sizeof(pp));
 	pp.BackBufferWidth = mode.Width;
@@ -33,11 +46,11 @@ IDirect3DDevice9 *init::initD3D(IDirect3D9 *direct3d, HWND win, D3DDISPLAYMODE m
 	pp.FullScreen_RefreshRateInHz = fullscreen ? mode.RefreshRate : 0;
 
 	IDirect3DDevice9 *device;
-	HRESULT result = direct3d->CreateDevice(adapter, D3DDEVTYPE_HAL, win, tnl, &pp, &device);
+	HRESULT result = direct3d->CreateDevice(adapter, devtype, win, tnl, &pp, &device);
 
 	if (FAILED(result)) {
 		// in case the backbuffer-count was too high, try again (it should be turned down to max by the driver)
-		result = direct3d->CreateDevice(adapter, D3DDEVTYPE_HAL, win, tnl, &pp, &device);
+		result = direct3d->CreateDevice(adapter, devtype, win, tnl, &pp, &device);
 		if (FAILED(result))
 			throw FatalException(std::string(DXGetErrorString(result)) + std::string(" : ") + std::string(DXGetErrorDescription(result)));
 	}
