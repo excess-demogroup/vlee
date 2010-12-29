@@ -282,7 +282,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 //		D3DFORMAT render_fmt = use_sm20_codepath ? D3DFMT_A2R10G10B10 : D3DFMT_A16B16G16R16F;
 		D3DFORMAT render_fmt = use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F;
 
-		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, render_fmt,
+		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, render_fmt,
 		    use_sm20_codepath ? D3DMULTISAMPLE_NONE : config::multisample);
 		Surface depthstencil_msaa = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8,
 		    use_sm20_codepath ? D3DMULTISAMPLE_NONE : config::multisample);
