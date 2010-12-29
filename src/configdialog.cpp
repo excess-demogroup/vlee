@@ -119,24 +119,16 @@ static void refreshFormats(HWND hDlg)
 		D3DFORMAT fmt;
 		const char *str;
 	} formats[] = {
-		{ D3DFMT_A2R10G10B10, "A2R10G10B10" },
-		{ D3DFMT_A2B10G10R10, "A2B10G10R10" },
-		{ D3DFMT_A8R8G8B8, "A8R8G8B8" },
-		{ D3DFMT_X8R8G8B8, "X8R8G8B8" },
-		{ D3DFMT_R5G6B5, "R5G6B5" },
-		{ D3DFMT_A1R5G5B5, "A1R5G5B5" },
-		{ D3DFMT_X1R5G5B5, "X1R5G5B5" },
+		{ D3DFMT_A2R10G10B10, "30 bpp" },
+		{ D3DFMT_X8R8G8B8, "24 bpp" },
+		{ D3DFMT_R5G6B5, "16 bpp" },
+		{ D3DFMT_X1R5G5B5, "15 bpp" },
 	};
 
 	int best_hit = 0;
 	for (int i = 0; i < ARRAY_SIZE(formats); ++i) {
-		D3DDISPLAYMODE mode;
-		HRESULT hr = direct3d->EnumAdapterModes(config::adapter, formats[i].fmt, 0, &mode);
-#if 0
-		// WTF?! The documentation says D3DERR_NOTAVAILABLE should be returned if format is not available
-		// ...but I keep getting D3DERR_INVALIDCALL!!
+		HRESULT hr = direct3d->CheckDeviceType(config::adapter, D3DDEVTYPE_HAL, formats[i].fmt, formats[i].fmt, !config::fullscreen);
 		assert(hr != D3DERR_INVALIDCALL);
-#endif
 		if (hr == D3D_OK) {
 			SendMessage(GetDlgItem(hDlg, IDC_FORMAT), CB_ADDSTRING, 0, (LPARAM)formats[i].str);
 			SendMessage(GetDlgItem(hDlg, IDC_FORMAT), CB_SETITEMDATA, item, formats[i].fmt);
@@ -256,6 +248,14 @@ static LRESULT onDeviceChange(HWND hDlg)
 	return (LRESULT)TRUE;
 }
 
+static LRESULT onFullscreenChange(HWND hDlg)
+{
+	refreshFormats(hDlg);
+	refreshModes(hDlg);
+	refreshMultisampleTypes(hDlg);
+	return (LRESULT)TRUE;
+}
+
 static LRESULT onFormatChange(HWND hDlg)
 {
 	mode.Format = (D3DFORMAT)SendMessage(GetDlgItem(hDlg, IDC_FORMAT), (UINT)CB_GETITEMDATA, (WPARAM)SendMessage(GetDlgItem(hDlg, IDC_FORMAT), (UINT)CB_GETCURSEL, (WPARAM)0, 0), 0);
@@ -308,6 +308,11 @@ static LRESULT CALLBACK configDialogProc(HWND hDlg, UINT message, WPARAM wParam,
 		case IDC_DEVICE:
 			if (CBN_SELCHANGE == HIWORD(wParam))
 				return onDeviceChange(hDlg);
+			break;
+
+		case IDC_FULLSCREEN:
+			if (CBN_SELCHANGE == HIWORD(wParam))
+				return onFullscreenChange(hDlg);
 			break;
 
 		case IDC_FORMAT:
