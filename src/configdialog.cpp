@@ -200,7 +200,7 @@ static LRESULT onInitDialog(HWND hDlg)
 		mode.Height /= 2;
 	}
 	aspect = float(mode.Width) / mode.Height;
-	EndDialog(hDlg, IDOK);
+//	EndDialog(hDlg, IDOK);
 #endif
 
 	// add adapters to list

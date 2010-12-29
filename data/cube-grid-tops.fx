@@ -1,6 +1,6 @@
 float4x4 matView : WORLDVIEW;
 float4x4 matViewProjection : WORLDVIEWPROJECTION;
-const float2 invMapSize = float2(1.0 / 128, 1.0 / 128);
+static const float2 invMapSize = float2(1.0 / 128, 1.0 / 128);
 const float2 uv_offs;
 const float fog_density;
 texture cube_light_tex;
@@ -33,34 +33,30 @@ VS_OUTPUT vs_main(float4 ipos : POSITION0)
 	return o;
 }
 
-float4 ps_main(VS_OUTPUT i) : COLOR0
-{
-	float3 c = tex2D(light, i.cpos).rgb * 2.5;
-	float ao = 0.005;
-	return float4((ao + c) * i.fog, 1.0);
-}
-
-technique cube_tops {
-	pass P0 {
-		VertexShader = compile vs_2_0 vs_main();
-		PixelShader  = compile ps_2_0 ps_main();
-	}
-}
-
-float4 rgb_to_ergb(float3 rgb)
+float4 rgb_to_rgbe(float3 rgb)
 {
 	float e = ceil(log2(max(max(rgb.r, rgb.g), rgb.b)));
 	return float4(rgb * exp2(-e), (e + 128) / 255);
 }
 
-float4 ps_main_rgbe(VS_OUTPUT i) : COLOR0
+float4 ps_main(VS_OUTPUT i, uniform bool rgbe) : COLOR0
 {
-	return rgb_to_ergb(ps_main(i).rgb);
+	float3 c = tex2D(light, i.cpos).rgb * 2.5;
+	float ao = 0.005;
+	c = (ao + c) * i.fog;
+	return rgbe ? rgb_to_rgbe(c) : float4(c, 1.0);
+}
+
+technique cube_tops {
+	pass P0 {
+		VertexShader = compile vs_2_0 vs_main();
+		PixelShader  = compile ps_2_0 ps_main(false);
+	}
 }
 
 technique rgbe {
 	pass P0 {
 		VertexShader = compile vs_2_0 vs_main();
-		PixelShader  = compile ps_2_0 ps_main_rgbe();
+		PixelShader  = compile ps_2_0 ps_main(true);
 	}
 }

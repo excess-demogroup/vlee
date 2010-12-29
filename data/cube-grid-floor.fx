@@ -71,7 +71,13 @@ static const float2 cpossy[3] = {
 	float2(1.5, -1) / 128
 };
 
-float4 ps_main(VS_OUTPUT i) : COLOR0
+float4 rgb_to_rgbe(float3 rgb)
+{
+	float e = ceil(log2(max(max(rgb.r, rgb.g), rgb.b)));
+	return float4(rgb * exp2(-e), (e + 128) / 255);
+}
+
+float4 ps_main(VS_OUTPUT i, uniform bool rgbe) : COLOR0
 {
 	float ao = tex2D(floor_ao, i.uv * 2 - 1).r * 0.005;
 
@@ -86,30 +92,21 @@ float4 ps_main(VS_OUTPUT i) : COLOR0
 			cpos.x += 1.0 / 128;
 		}
 	}
-	return float4((ao + c) * i.fog, 1.0);
+
+	c = (ao + c) * i.fog;
+	return rgbe ? rgb_to_rgbe(c) : float4(c, 1.0);
 }
 
 technique cube_floor {
 	pass P0 {
 		VertexShader = compile vs_2_0 vs_main();
-		PixelShader  = compile ps_2_0 ps_main();
+		PixelShader  = compile ps_2_0 ps_main(false);
 	}
-}
-
-float4 rgb_to_ergb(float3 rgb)
-{
-	float e = ceil(log2(max(max(rgb.r, rgb.g), rgb.b)));
-	return float4(rgb * exp2(-e), (e + 128) / 255);
-}
-
-float4 ps_main_rgbe(VS_OUTPUT i) : COLOR0
-{
-	return rgb_to_ergb(ps_main(i).rgb);
 }
 
 technique rgbe {
 	pass P0 {
 		VertexShader = compile vs_2_0 vs_main();
-		PixelShader  = compile ps_2_0 ps_main_rgbe();
+		PixelShader  = compile ps_2_0 ps_main(true);
 	}
 }

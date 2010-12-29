@@ -171,15 +171,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 		wc.lpszMenuName  = NULL;
 		wc.lpszClassName = "d3dwin";
 		wc.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
-		RegisterClassEx(&wc);
+		if (!RegisterClassEx(&wc))
+			throw FatalException("RegisterClassEx() failed.");
 
 		DWORD ws = config::fullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW;
 		RECT rect = {0, 0, config::mode.Width, config::mode.Height};
 		AdjustWindowRect(&rect, ws, FALSE);
 		win = CreateWindow("d3dwin", "very last engine ever", ws, 0, 0, rect.right - rect.left, rect.bottom - rect.top, 0, 0, hInstance, 0);
-
 		if (!win)
-			throw FatalException("CreateWindow() failed. something is VERY spooky.");
+			throw FatalException("CreateWindow() failed.");
+
+		GetClientRect(win, &rect);
+		config::mode.Width = rect.right - rect.left;
+		config::mode.Height = rect.bottom - rect.top;
 
 		/* create device */
 		Device device;
@@ -239,7 +243,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *pulseAmt2Track      = sync_get_track(rocket, "cm.pulse.amt");
 		const sync_track *pulseSpeed2Track    = sync_get_track(rocket, "cm.pulse.speed");
 		const sync_track *bloomSizeTrack      = sync_get_track(rocket, "bloom.size");
-		const sync_track *bloomPassesTrack    = sync_get_track(rocket, "bloom.passes");
 		const sync_track *bloomAmtTrack       = sync_get_track(rocket, "bloom.amt");
 
 		const sync_track *lokingFrame1Track    = sync_get_track(rocket, "loking.frame1");
@@ -276,28 +279,25 @@ int main(int /*argc*/, char* /*argv*/ [])
 			caps.PixelShaderVersion < D3DVS_VERSION(3, 0))
 			use_sm20_codepath = true;
 
-		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 0,
-		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F,
+//		D3DFORMAT render_fmt = use_sm20_codepath ? D3DFMT_A2R10G10B10 : D3DFMT_A16B16G16R16F;
+		D3DFORMAT render_fmt = use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F;
+
+		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, render_fmt,
 		    use_sm20_codepath ? D3DMULTISAMPLE_NONE : config::multisample);
 		Surface depthstencil_msaa = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8,
 		    use_sm20_codepath ? D3DMULTISAMPLE_NONE : config::multisample);
 
 		/** DEMO ***/
-		RenderTexture cube_light_tex(device, 128, 128, 1, use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
+		RenderTexture cube_light_tex(device, 128, 128, 1, render_fmt);
 		std::vector<RenderTexture> color1_hdr, color2_hdr;
 		int w = letterbox_viewport.Width, h = letterbox_viewport.Height;
-		D3DFORMAT fmt = use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F;
+		D3DFORMAT fmt = use_sm20_codepath ? D3DFMT_A2R10G10B10 : D3DFMT_A16B16G16R16F;
 		for (int i = 0; w > 0 || h > 0; ++i, w /= 2, h /= 2) {
 			color1_hdr.push_back(RenderTexture(device, std::max(w, 1), std::max(h, 1), 1, fmt));
 			color2_hdr.push_back(RenderTexture(device, std::max(w, 1), std::max(h, 1), 1, fmt));
 		}
 
-/*		RenderTexture color1_hdr(device, letterbox_viewport.Width, letterbox_viewport.Height, 0,
-		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F);
-		RenderTexture color2_hdr(device, letterbox_viewport.Width, letterbox_viewport.Height, 0,
-		    use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F); */
-
-		Effect *blur_fx     = engine::loadEffect(device, "data/blur.fx");
+		Effect *blur_fx      = engine::loadEffect(device, "data/blur.fx");
 		Effect *color_map_fx = engine::loadEffect(device, "data/color_map.fx");
 
 		Texture scroller_tex = engine::loadTexture(device, "data/scroller.png");
@@ -476,42 +476,44 @@ int main(int /*argc*/, char* /*argv*/ [])
 					cube_floor_fx->draw(cube_floor_x);
 				}
 
-			Matrix4x4 modelview = world * view;
-			Vector3 up(modelview._12, modelview._22, modelview._32);
-			Vector3 left(modelview._11, modelview._21, modelview._31);
-			math::normalize(up);
-			math::normalize(left);
-			device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-			device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+			if (!use_sm20_codepath) {
+				Matrix4x4 modelview = world * view;
+				Vector3 up(modelview._12, modelview._22, modelview._32);
+				Vector3 left(modelview._11, modelview._21, modelview._31);
+				math::normalize(up);
+				math::normalize(left);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
 
-			particle_fx->setFloatArray("up", up, 3);
-			particle_fx->setFloatArray("left", left, 3);
-			particle_fx->setFloat("alpha", pow(0.25f, 2.2f));
-			particle_fx->setMatrices(world, view, proj);
+				particle_fx->setFloatArray("up", up, 3);
+				particle_fx->setFloatArray("left", left, 3);
+				particle_fx->setFloat("alpha", pow(0.25f, 2.2f));
+				particle_fx->setMatrices(world, view, proj);
 
-			particleStreamer.begin();
-			for (int i = 0; i < 60 * 1024; ++i) {
-				Vector3 pos(
-					(       math::notRandf(i * 4) - 0.5f) * 16 * 64,
-					9 + pow(math::notRandf(i * 4 + 1), 2) * 300,
-					(       math::notRandf(i * 4 + 2) - 0.5f) * 16 * 64);
-				float size = 0.4f + math::notRandf(i * 4 + 1) * 0.5f;
-//				if (distance(pos, camPos) < 200)
-				Vector3 temp = pos - camPos;
-				if (dot(temp, temp) < 400 * 400)
-					particleStreamer.add(pos, size);
-				if (!particleStreamer.getRoom()) {
-					particleStreamer.end();
-					particle_fx->draw(&particleStreamer);
-					particleStreamer.begin();
+				particleStreamer.begin();
+				for (int i = 0; i < 60 * 1024; ++i) {
+					Vector3 pos(
+						(       math::notRandf(i * 4) - 0.5f) * 16 * 64,
+						9 + pow(math::notRandf(i * 4 + 1), 2) * 300,
+						(       math::notRandf(i * 4 + 2) - 0.5f) * 16 * 64);
+					float size = 0.4f + math::notRandf(i * 4 + 1) * 0.5f;
+	//				if (distance(pos, camPos) < 200)
+					Vector3 temp = pos - camPos;
+					if (dot(temp, temp) < 400 * 400)
+						particleStreamer.add(pos, size);
+					if (!particleStreamer.getRoom()) {
+						particleStreamer.end();
+						particle_fx->draw(&particleStreamer);
+						particleStreamer.begin();
+					}
 				}
-			}
-			particleStreamer.end();
-			particle_fx->draw(&particleStreamer);
+				particleStreamer.end();
+				particle_fx->draw(&particleStreamer);
 
-			device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+			}
 			color_msaa.resolve(device);
 
 			world.makeIdentity();
@@ -519,16 +521,30 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_ZWRITEENABLE, false);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 
-			device->StretchRect(color_msaa.getSurface(0), NULL, color1_hdr[0].getSurface(), NULL, D3DTEXF_LINEAR);
+			if (use_sm20_codepath) {
+				blur_fx->p->SetTechnique("hack");
+				blur_fx->setTexture("blur_tex", color_msaa);
+
+				device.setRenderTarget(color1_hdr[0].getSurface(), 0);
+				int w = color_msaa.getWidth();
+				int h = color_msaa.getHeight();
+				drawRect(device, blur_fx, 0, 0, float(w), float(h));
+
+				blur_fx->p->SetTechnique("blur");
+			} else
+				device->StretchRect(color_msaa.getSurface(0), NULL, color1_hdr[0].getSurface(), NULL, D3DTEXF_LINEAR);
 
 			/* downsample until bloom fits */
-			float stdDev = std::max(sync_get_val(bloomSizeTrack, row), 0.0f);
-			int level = 0;
-			while (3 * stdDev > 16) {
-				d3dErr(device->StretchRect(color1_hdr[level].getSurface(0), NULL, color1_hdr[level + 1].getSurface(0), NULL, D3DTEXF_LINEAR));
+			float stdDev = std::max(sync_get_val(bloomSizeTrack, row), 0.0f) * (letterbox_viewport.Width / (1280.0f / 2));
+			float flevel = ::log(stdDev * 3 / 16) / ::log(2.0f);
+			flevel = std::max(flevel, 0.0f);
+			flevel = std::min(flevel, color1_hdr.size() - 1.0f);
+			int level = int(ceil(flevel));
+			for (int i = 0; i < level; ++i) {
+				d3dErr(device->StretchRect(color1_hdr[i].getSurface(0), NULL, color1_hdr[i + 1].getSurface(0), NULL, D3DTEXF_LINEAR));
 				stdDev /= 2;
-				level++;
 			}
+			assert(3 * stdDev <= 16.0f);
 
 			/* do the bloom */
 			RenderTexture render_textures[2] = { color1_hdr[level], color2_hdr[level] };
@@ -538,21 +554,27 @@ int main(int /*argc*/, char* /*argv*/ [])
 			int rtIndex = 0;
 			for (int j = 0; j < 2; j++) {
 				D3DXVECTOR4 gauss[8];
-				float sigma = stdDev;
-				float sigma_squared = sigma * sigma;
+				float sigma_squared = stdDev * stdDev;
+				double tmp = 1.0 / std::max(sqrt(2.0f * M_PI * sigma_squared), 1.0);
+				float w1 = (float)tmp;
+				w1 = std::max(float(w1 * 1.004 - 0.004), 0.0f);
 
 				gauss[0].x = 0.0;
 				gauss[0].y = 0.0;
-				gauss[0].z = 1.0f / std::max(sqrt(2.0f * 3.14159265f * sigma_squared), 1.0f);
+				gauss[0].z = w1;
 				gauss[0].w = 0.0;
 
-				float total = gauss[0].z;
-				for (int k = 1; k < 8; ++k) {
+				float total = w1;
+				int size = int(ceil(3 * stdDev / 2));
+				for (int k = 1; k < size; ++k) {
 					int o1 = k * 2 - 1;
 					int o2 = k * 2;
 
-					float w1 = gauss[0].z * exp(-o1 * o1 / (2.0f * sigma_squared));
-					float w2 = gauss[0].z * exp(-o2 * o2 / (2.0f * sigma_squared));
+					float w1 = float(tmp * exp(-o1 * o1 / (2.0f * sigma_squared)));
+					float w2 = float(tmp * exp(-o2 * o2 / (2.0f * sigma_squared)));
+
+					w1 = std::max(float(w1 * 1.004 - 0.004), 0.0f);
+					w2 = std::max(float(w2 * 1.004 - 0.004), 0.0f);
 
 					float w = w1 + w2;
 					float o = (o1 * w1 + o2 * w2) / w;
@@ -568,11 +590,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 					total += 2 * w;
 				}
 
-				for (int k = 0; k < 8; ++k)
+				for (int k = 0; k < size; ++k)
 					gauss[k].z /= total;
 
-				blur_fx->p->SetVectorArray("gauss", gauss, ARRAY_SIZE(gauss));
+				blur_fx->p->SetVectorArray("gauss", gauss, size);
 				blur_fx->setTexture("blur_tex", render_textures[rtIndex]);
+				blur_fx->p->SetInt("size", size);
 
 				device.setRenderTarget(render_textures[!rtIndex].getSurface(0), 0);
 				int w = render_textures[rtIndex].getSurface(0).getWidth();

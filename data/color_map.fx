@@ -89,7 +89,7 @@ sampler overlay = sampler_state {
 	MagFilter = LINEAR;
 	AddressU = CLAMP;
 	AddressV = CLAMP;
-	sRGBTexture = TRUE;
+	sRGBTexture = FALSE;
 };
 
 struct VS_OUTPUT {
@@ -105,14 +105,23 @@ VS_OUTPUT vertex(float4 ipos : POSITION, float2 tex  : TEXCOORD0)
 	return Out;
 }
 
-float4 pixel(VS_OUTPUT In) : COLOR
+float3 rgbe_to_rgb(float4 rgbe)
+{
+	return rgbe.rgb * exp2(rgbe.a * 255 - 128);
+}
+
+float4 pixel(VS_OUTPUT In, uniform bool rgbe) : COLOR
 {
 	float3 color;
 	float2 dist = float2(
 		(sin(In.tex.y * dist_freq + dist_time) * 2 - 1) * dist_amt,
 		(sin(In.tex.x * dist_freq + dist_time) * 2 - 1) * dist_amt);
 
-	color = lerp(tex2D(tex_sampler, In.tex + dist).rgb, tex2D(bloom_sampler, In.tex + dist).rgb, blur_amt);
+	float3 tmp = rgbe ?
+		rgbe_to_rgb(tex2D(tex_point_sampler, In.tex + dist)) :
+		tex2D(tex_sampler, In.tex + dist).rgb;
+
+	color = lerp(tmp, tex2D(bloom_sampler, In.tex + dist).rgb, blur_amt);
 	color += pow(tex2D(bloom_sampler, In.tex + dist).rgb * bloom_amt, 1.5);
 
 	float4 s = tex2D(scroller, In.tex * float2(1, 720.0 / 2048) + float2(0, scroll));
@@ -139,30 +148,13 @@ float4 pixel(VS_OUTPUT In) : COLOR
 technique color_map {
 	pass P0 {
 		VertexShader = compile vs_2_0 vertex();
-		PixelShader  = compile ps_2_0 pixel();
+		PixelShader  = compile ps_2_0 pixel(false);
 	}
-}
-
-float3 rgbe_to_rgb(float4 rgbe)
-{
-	return rgbe.rgb * exp2(rgbe.a * 255 - 128);
-}
-
-float4 pixel_rgbe(VS_OUTPUT In) : COLOR
-{
-	float3 color = rgbe_to_rgb(tex2D(tex_sampler, In.tex));
-//	float3 color = rgbe_to_rgb(tex2D(tex_point_sampler, In.tex));
-//	color += pow(tex2D(bloom_sampler, In.tex) * 0.75, 1.5);
-
-	float n = tex2D(noise, In.tex * nscale + noffs).r;
-	color += (n - 0.5) * noise_amt;
-
-	return float4(color * fade + flash, 1);
 }
 
 technique rgbe {
 	pass P0 {
 		VertexShader = compile vs_2_0 vertex();
-		PixelShader  = compile ps_2_0 pixel_rgbe();
+		PixelShader  = compile ps_2_0 pixel(true);
 	}
 }
