@@ -136,11 +136,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 	HSTREAM stream = 0;
 
 	try {
+		if (!D3DXCheckVersion(D3D_SDK_VERSION, D3DX_SDK_VERSION)) {
+			ShellExecute(NULL, "open", "http://www.gamesforwindows.com/directx/", NULL, NULL, SW_SHOWNORMAL);
+			throw FatalException("Please download a newer version of the DirectX runtime from http://www.gamesforwindows.com/directx/");
+		}
+
 		/* create d3d object */
 		ComRef<IDirect3D9> direct3d;
 		direct3d.attachRef(Direct3DCreate9(D3D_SDK_VERSION));
-		if (!direct3d)
-			throw FatalException("Your directx-version is from the stone-age.\n\nTHRUG SAYS: UPGRADE!");
+		assert(direct3d);
 
 		/* show config dialog */
 		INT_PTR result = config::showDialog(hInstance, direct3d);
