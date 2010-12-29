@@ -55,27 +55,22 @@ using engine::Anim;
 
 using namespace core;
 
-void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int screen_width, int screen_height, float screen_aspect, float demo_aspect)
+void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int w, int h, float monitor_aspect, float demo_aspect)
 {
-	int letterbox_width, letterbox_height;
+	float backbuffer_aspect = float(w) / h;
+	float w_ratio = 1.0f,
+	      h_ratio = (monitor_aspect / demo_aspect) / (demo_aspect / backbuffer_aspect);
 
-	if (demo_aspect > screen_aspect) {
-		/* demo is wider than screen, letterbox */
-		float aspect_change = screen_aspect / demo_aspect;
-		letterbox_width  = screen_width;
-		letterbox_height = int(math::round(screen_height * aspect_change));
-	} else {
-		/* screen is wider than demo, pillarbox */
-		float aspect_change = demo_aspect / screen_aspect;
-		letterbox_width  = int(math::round(screen_width * aspect_change));
-		letterbox_height = screen_height;
+	if (h_ratio > 1.0f) {
+		/* pillar box, yo! */
+		w_ratio /= h_ratio;
+		h_ratio = 1.0f;
 	}
 
-	viewport->X = (screen_width  - letterbox_width) / 2;
-	viewport->Y = (screen_height - letterbox_height) / 2;
-
-	viewport->Width  = letterbox_width;
-	viewport->Height = letterbox_height;
+	viewport->Width = int(math::round(w * w_ratio));
+	viewport->Height = int(math::round(h * h_ratio));
+	viewport->X = (w - viewport->Width) / 2;
+	viewport->Y = (h - viewport->Height) / 2;
 }
 
 const int rpb = 8; /* rows per beat */

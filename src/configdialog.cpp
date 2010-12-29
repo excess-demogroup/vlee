@@ -151,30 +151,50 @@ static void refreshFormats(HWND hDlg)
 	mode.Format = (D3DFORMAT)SendMessage(GetDlgItem(hDlg, IDC_FORMAT), (UINT)CB_GETITEMDATA, (WPARAM)best_hit, 0);
 }
 
-static void refreshAspectRatios(HWND hDlg)
+static void addAdapters(HWND hDlg)
+{
+	// add adapters to list
+	unsigned adapter_count = direct3d->GetAdapterCount();
+	for (unsigned i = 0; i < adapter_count; ++i) {
+		D3DADAPTER_IDENTIFIER9 identifier;
+		memset(&identifier, 0, sizeof(D3DADAPTER_IDENTIFIER9));
+		direct3d->GetAdapterIdentifier(i, 0, &identifier);
+		static char temp[256];
+		sprintf_s(temp, 256, "%s on %s", identifier.DeviceName, identifier.Description);
+		SendMessage(GetDlgItem(hDlg, IDC_DEVICE), CB_ADDSTRING, 0, (LPARAM)temp);
+	}
+
+	// select first adapter by default
+	SendMessage(GetDlgItem(hDlg, IDC_DEVICE), (UINT)CB_SETCURSEL, (WPARAM)adapter, 0);
+}
+
+static const struct {
+	const char *str;
+	float ratio;
+} aspect_ratios[] = {
+	{"5:4", 5.0f / 4},
+	{"4:3", 4.0f / 3},
+	{"3:2", 3.0f / 2},
+	{"16:10", 16.0f / 10},
+	{"16:9", 16.0f / 9},
+	{"1.85:1", 1.85f / 1},
+	{"21:9", 21.0f / 9},
+	{"2.39:1", 2.39f / 1},
+};
+
+
+static void addAspectRatios(HWND hDlg)
 {
 	int best_fit = 0;
 	float best_ratio = FLT_MAX;
 
-	static const struct {
-		int w, h;
-	} aspect_ratios[] = {
-		{5, 4},
-		{4, 3},
-		{16, 10},
-		{16, 9},
-	};
-
 	aspect = float(mode.Width) / mode.Height;
 	for (int i = 0; i < ARRAY_SIZE(aspect_ratios); ++i) {
-		char temp[256];
-		_snprintf(temp, 256, "%d:%d", aspect_ratios[i].w, aspect_ratios[i].h);
-		SendMessage(GetDlgItem(hDlg, IDC_ASPECT), CB_ADDSTRING, 0, (LPARAM)temp);
+		SendMessage(GetDlgItem(hDlg, IDC_ASPECT), CB_ADDSTRING, 0, (LPARAM)aspect_ratios[i].str);
 
-		float curr_ratio = float(aspect_ratios[i].w) / aspect_ratios[i].h;
-		if (fabs(curr_ratio - config::aspect) < fabs(best_ratio - config::aspect)) {
+		if (fabs(aspect_ratios[i].ratio - config::aspect) < fabs(best_ratio - config::aspect)) {
 			best_fit = i;
-			best_ratio = curr_ratio;
+			best_ratio = aspect_ratios[i].ratio;
 		}
 	}
 	SendMessage(GetDlgItem(hDlg, IDC_ASPECT), (UINT)CB_SETCURSEL, (WPARAM)best_fit, 0);
@@ -203,24 +223,12 @@ static LRESULT onInitDialog(HWND hDlg)
 //	EndDialog(hDlg, IDOK);
 #endif
 
-	// add adapters to list
-	unsigned adapter_count = direct3d->GetAdapterCount();
-	for (unsigned i = 0; i < adapter_count; ++i) {
-		D3DADAPTER_IDENTIFIER9 identifier;
-		memset(&identifier, 0, sizeof(D3DADAPTER_IDENTIFIER9));
-		direct3d->GetAdapterIdentifier(i, 0, &identifier);
-		static char temp[256];
-		sprintf_s(temp, 256, "%s on %s", identifier.DeviceName, identifier.Description);
-		SendMessage(GetDlgItem(hDlg, IDC_DEVICE), CB_ADDSTRING, 0, (LPARAM)temp);
-	}
-
-	// select first adapter by default
-	SendMessage(GetDlgItem(hDlg, IDC_DEVICE), (UINT)CB_SETCURSEL, (WPARAM)adapter, 0);
+	addAdapters(hDlg);
+	addAspectRatios(hDlg);
 
 	refreshFormats(hDlg);
 	refreshModes(hDlg);
 	refreshMultisampleTypes(hDlg);
-	refreshAspectRatios(hDlg);
 
 	// set vsync checkbutton to the default setting
 	CheckDlgButton(hDlg, IDC_VSYNC, DEFAULT_VSYNC);
@@ -260,7 +268,6 @@ static LRESULT onResolutionChange(HWND hDlg)
 {
 	direct3d->EnumAdapterModes(adapter, mode.Format, (UINT)SendMessage(GetDlgItem(hDlg, IDC_RESOLUTION), (UINT)CB_GETCURSEL, (WPARAM)0, 0), &mode);
 	refreshMultisampleTypes(hDlg);
-	refreshAspectRatios(hDlg);
 	return (LRESULT)TRUE;
 }
 
@@ -277,14 +284,8 @@ static LRESULT onCloseCmd(HWND hDlg, WORD wID)
 		fullscreen = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_FULLSCREEN));
 		soundcard = (unsigned)SendMessage(GetDlgItem(hDlg, IDC_SOUNDCARD), (UINT)CB_GETCURSEL, (WPARAM)0, 0);
 
-		char temp[256];
 		int sel = (unsigned)SendMessage(GetDlgItem(hDlg, IDC_ASPECT), (UINT)CB_GETCURSEL, (WPARAM)0, 0);
-
-		SendMessage(GetDlgItem(hDlg, IDC_ASPECT), (UINT)CB_GETLBTEXT, (WPARAM)sel, (LPARAM)temp);
-		int w, h;
-		sscanf(temp, "%d:%d", &w, &h);
-		aspect = float(w) / h;
-		sprintf(temp, "test %d:%d, %f\n", w, h, aspect);
+		aspect = aspect_ratios[sel].ratio;
 	}
 	EndDialog(hDlg, wID);
 	return 0;
