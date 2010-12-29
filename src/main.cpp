@@ -283,7 +283,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		    use_sm20_codepath ? D3DMULTISAMPLE_NONE : config::multisample);
 
 		/** DEMO ***/
-		RenderTexture cube_light_tex(device, 128, 128, 1, render_fmt);
+		RenderTexture cube_light_tex(device, 128, 128, 1, use_sm20_codepath ? D3DFMT_A2R10G10B10 : D3DFMT_A16B16G16R16F);
 		std::vector<RenderTexture> color1_hdr, color2_hdr;
 		int w = letterbox_viewport.Width, h = letterbox_viewport.Height;
 		D3DFORMAT fmt = use_sm20_codepath ? D3DFMT_A2R10G10B10 : D3DFMT_A16B16G16R16F;
