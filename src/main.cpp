@@ -216,7 +216,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			throw FatalException("something went wrong - failed to connect to host?");
 
 #ifndef SYNC_PLAYER
-		sync_set_callbacks(rocket, &bass_cb, (void *)stream);
 		if (sync_connect(rocket, "localhost", SYNC_DEFAULT_PORT))
 			throw FatalException("failed to connect to host");
 #endif
@@ -379,7 +378,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			double row = bass_get_row(stream);
 
 #ifndef SYNC_PLAYER
-			sync_update(rocket, int(row)); //gets current timing info from the SyncTimer.
+			sync_update(rocket, int(row), &bass_cb, (void *)stream);
 #endif
 			double beat = row / 4;
 
