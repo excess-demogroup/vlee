@@ -9,7 +9,7 @@ sampler tex_samp = sampler_state {
 	Texture = (tex);
 	MipFilter = LINEAR;
 	MinFilter = LINEAR;
-	MagFilter = LINEAR;	
+	MagFilter = LINEAR;
 	AddressU = CLAMP;
 	AddressV = CLAMP;
 };
@@ -39,7 +39,7 @@ VS_OUTPUT vertex(VS_INPUT In)
 
 float4 pixel(VS_OUTPUT In)  : COLOR
 {
-	return tex2D(tex_samp, In.uv) * alpha * 0.2;
+	return tex2D(tex_samp, In.uv) * alpha;
 }
 
 technique fx {

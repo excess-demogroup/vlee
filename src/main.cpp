@@ -38,6 +38,8 @@
 #include "engine/spectrumdata.h"
 #include "engine/video.h"
 
+#include "NVMeshMender.h"
+
 #include <sync.h>
 
 using math::Vector2;
@@ -233,7 +235,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *colorMapBlurTrack   = sync_get_track(rocket, "cm.blur");
 		const sync_track *colorMapNoiseTrack  = sync_get_track(rocket, "cm.noise");
 		const sync_track *colorMapOverlayTrack = sync_get_track(rocket, "cm.overlay");
-		const sync_track *colorMapScrollTrack = sync_get_track(rocket, "scroll");
 		const sync_track *pulseAmt2Track      = sync_get_track(rocket, "cm.pulse.amt");
 		const sync_track *pulseSpeed2Track    = sync_get_track(rocket, "cm.pulse.speed");
 		const sync_track *bloomSizeTrack      = sync_get_track(rocket, "bloom.size");
@@ -294,9 +295,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *blur_fx      = engine::loadEffect(device, "data/blur.fx");
 		Effect *color_map_fx = engine::loadEffect(device, "data/color_map.fx");
 
-		Texture scroller_tex = engine::loadTexture(device, "data/scroller.png");
-		color_map_fx->setTexture("scroller_tex", scroller_tex);
-
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
 		color_map_fx->setTexture("noise_tex", noise_tex);
 
@@ -310,6 +308,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		particle_fx->setTexture("tex", particle_tex);
 
 		Effect *cube_light_fx = engine::loadEffect(device, "data/cube-light.fx");
+		
 		cube_light_fx->setTexture("noise_tex", noise_tex);
 
 		Texture cos_tex = device.createTexture(128, 1, 0, 0, D3DFMT_L16, D3DPOOL_MANAGED);
@@ -325,37 +324,58 @@ int main(int /*argc*/, char* /*argv*/ [])
 		}
 		cube_light_fx->setTexture("cos_tex", cos_tex);
 
-		Mesh *cube_tops_x  = engine::loadMesh(device, "data/cube-grid-tops-32.x");
-		Mesh *cube_sides_x = engine::loadMesh(device, "data/cube-grid-sides-32.x");
-		Mesh *cube_floor_x = engine::loadMesh(device, "data/cube-grid-floor.x");
-		Effect *cube_tops_fx = engine::loadEffect(device, "data/cube-grid-tops.fx");
-		Effect *cube_sides_fx = engine::loadEffect(device, "data/cube-grid-sides.fx");
-		Effect *cube_floor_fx = engine::loadEffect(device, "data/cube-grid-floor.fx");
-		cube_tops_fx->setTexture("cube_light_tex", cube_light_tex);
-		cube_sides_fx->setTexture("cube_light_tex", cube_light_tex);
-		cube_floor_fx->setTexture("cube_light_tex", cube_light_tex);
+		Mesh *cube_room_x = engine::loadMesh(device, "data/cube-room.x");
+		Effect *cube_room_fx = engine::loadEffect(device, "data/cube-room.fx");
+		Texture cube_room_ao_tex = engine::loadTexture(device, "data/cube-room-ao.png");
+		Texture cube_room_diff_tex = engine::loadTexture(device, "data/cube-room-diff.png");
+		Texture cube_room_norm_tex = engine::loadTexture(device, "data/cube-room-norm.png");
+		Texture cube_room_spec_tex = engine::loadTexture(device, "data/cube-room-spec.png");
+		cube_room_fx->setTexture("ao_tex", cube_room_ao_tex);
+		cube_room_fx->setTexture("diff_tex", cube_room_diff_tex);
+		cube_room_fx->setTexture("norm_tex", cube_room_norm_tex);
+		cube_room_fx->setTexture("spec_tex", cube_room_spec_tex);
 
-		if (use_sm20_codepath) {
-			cube_tops_fx->p->SetTechnique("rgbe");
-			cube_sides_fx->p->SetTechnique("rgbe");
-			cube_floor_fx->p->SetTechnique("rgbe");
+#if 0
+		DWORD FVF = cube_room_x->p->GetFVF();
+		if (1 && FVF & D3DFVF_NORMAL) {
+			FVF |= D3DFVF_TEX3 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE3(1) | D3DFVF_TEXCOORDSIZE3(2);
+			LPD3DXMESH tmp_mesh;
+			cube_room_x->p->CloneMeshFVF(cube_room_x->p->GetOptions(), FVF, device, &tmp_mesh);
+			cube_room_x->attachRef(tmp_mesh);
+			DWORD *ad1 = new DWORD[cube_room_x->p->GetNumFaces() * sizeof(DWORD) * 3];
+			cube_room_x->p->GenerateAdjacency(1e-6f, ad1);
+//			D3DXComputeNormals(cube_room_x->p, ad1);
+#if 1
+			D3DXComputeTangentFrameEx(cube_room_x->p,
+				D3DDECLUSAGE_TEXCOORD, 0,
+				D3DDECLUSAGE_TEXCOORD, 1,
+				D3DDECLUSAGE_TEXCOORD, 2,
+				D3DDECLUSAGE_NORMAL, 0,
+				D3DXTANGENT_GENERATE_IN_PLACE | D3DXTANGENT_CALCULATE_NORMALS,
+				ad1, 2.0f, 0.0f, 2.0f,
+				NULL, NULL);
+#else
+//			D3DXComputeTangent(cube_room_x->p, 0, 1, 2, 1, ad1);
+			D3DXComputeTangentFrame(cube_room_x->p, D3DXTANGENT_GENERATE_IN_PLACE);
+#endif
+			delete [] ad1;
+//			D3DXSaveMeshToX("data/cube-room.x", cube_room_x->p, NULL, NULL, NULL, 0, D3DXF_FILEFORMAT_BINARY | D3DXF_FILEFORMAT_COMPRESSED);
 		}
+#endif
+#if 0
+		if (1) {
+			NVMeshMender aMender;
+			cube_room_x->p->LockVertexBuffer(D
+			for (int i = 0; i < cube_room_x->p->GetNumVertices(); ++i)
+			std::vector<NVMeshMender::VertexAttribute> inputAtts; // What you have
+			std::vector<NVMeshMender::VertexAttribute> outputAtts; // What you want.
 
-		Texture cube_sides_n1_tex = engine::loadTexture(device, "data/cube-grid-sides-n1.dds");
-		Texture cube_sides_n2_tex = engine::loadTexture(device, "data/cube-grid-sides-n2.dds");
-		Texture cube_sides_n3_tex = engine::loadTexture(device, "data/cube-grid-sides-n3.dds");
-		Texture cube_sides_f_tex = engine::loadTexture(device, "data/cube-grid-sides-f.dds");
-		Texture cube_sides_ao_tex = engine::loadTexture(device, "data/cube-grid-sides-ao.dds");
-		cube_sides_fx->setTexture("n1_tex", cube_sides_n1_tex);
-		cube_sides_fx->setTexture("n2_tex", cube_sides_n2_tex);
-		cube_sides_fx->setTexture("n3_tex", cube_sides_n3_tex);
-		cube_sides_fx->setTexture("f_tex", cube_sides_f_tex);
-		cube_sides_fx->setTexture("ao_tex", cube_sides_ao_tex);
+			NVMeshMender::VertexAttribute posAtt;
+			posAtt.Name_ = "position";
+			posAtt.floatVector_ = vpos;
 
-		Texture cube_floor_ao_tex = engine::loadTexture(device, "data/cube-grid-floor-ao.dds");
-		Texture cube_floor_l_tex = engine::loadTexture(device, "data/cube-grid-floor-l.dds");
-		cube_floor_fx->setTexture("ao_tex", cube_floor_ao_tex);
-		cube_floor_fx->setTexture("l_tex", cube_floor_l_tex);
+		}
+#endif
 
 		Anim lights = engine::loadAnim(device, "data/lights");
 		Anim loking = engine::loadAnim(device, "data/loking");
@@ -416,7 +436,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float camRoll = sync_get_val(cameraRollTrack, row) * float(2 * M_PI);
 			Matrix4x4 view  = Matrix4x4::lookAt(camPos, camTarget, camRoll);
 			Matrix4x4 world = Matrix4x4::identity();
-			Matrix4x4 proj  = Matrix4x4::projection(60.0f, float(DEMO_ASPECT), 1.0f, 10000.f);
+			Matrix4x4 proj  = Matrix4x4::projection(80.0f, float(DEMO_ASPECT), 1.0f, 10000.f);
 
 			// render
 			device->BeginScene();
@@ -446,28 +466,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			float fog_density = sync_get_val(fogDensityTrack, row) / 100000;
 
-			for (int i = 0; i < 4; ++i)
-				for (int j = 0; j < 4; ++j) {
-					Vector3 uv_offs = Vector3(i / 4.0f, j / 4.0f, 0);
-					Matrix4x4 world = Matrix4x4::translation(Vector3((i - 2) * 512, 0, (j - 2) * 512));
+			Vector3 worldLightPosition = Vector3(0, sin(beat * 0.25) * 100, 0);
+//			Vector3 worldLightPosition = Vector3(0, 0, 0);
+			Vector3 viewLightPosition = mul(view, worldLightPosition);
+			cube_room_fx->setVector3("viewLightPosition", viewLightPosition);
 
-					cube_tops_fx->setMatrices(world, view, proj);
-					cube_tops_fx->setFloat("fog_density", fog_density);
-					cube_tops_fx->setVector3("uv_offs", uv_offs);
-					cube_tops_fx->commitChanges();
-					cube_tops_fx->draw(cube_tops_x);
+			for (int i = -1; i < 2; ++i)
+				for (int j = -1; j < 2; ++j) {
+					Matrix4x4 world = Matrix4x4::translation(Vector3(i * 120, 0, j * 120));
 
-					cube_sides_fx->setMatrices(world, view, proj);
-					cube_sides_fx->setFloat("fog_density", fog_density);
-					cube_sides_fx->setVector3("uv_offs", uv_offs);
-					cube_sides_fx->commitChanges();
-					cube_sides_fx->draw(cube_sides_x);
-
-					cube_floor_fx->setMatrices(world, view, proj);
-					cube_floor_fx->setFloat("fog_density", fog_density);
-					cube_floor_fx->setVector3("uv_offs", uv_offs);
-					cube_floor_fx->commitChanges();
-					cube_floor_fx->draw(cube_floor_x);
+					cube_room_fx->setMatrices(world, view, proj);
+					cube_room_fx->commitChanges();
+					cube_room_fx->draw(cube_room_x);
 				}
 
 			if (!use_sm20_codepath) {
@@ -481,12 +491,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
 				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
 
-				particle_fx->setFloatArray("up", up, 3);
-				particle_fx->setFloatArray("left", left, 3);
-				particle_fx->setFloat("alpha", pow(0.25f, 2.2f));
+				particle_fx->setVector3("up", up);
+				particle_fx->setVector3("left", left);
+				particle_fx->setFloat("alpha", pow(1.0f, 2.2f));
 				particle_fx->setMatrices(world, view, proj);
 
 				particleStreamer.begin();
+#if 0
 				for (int i = 0; i < 60 * 1024; ++i) {
 					Vector3 pos(
 						(       math::notRandf(i * 4) - 0.5f) * 16 * 64,
@@ -503,6 +514,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 						particleStreamer.begin();
 					}
 				}
+#endif
+				particleStreamer.add(worldLightPosition, 10.0f);
 				particleStreamer.end();
 				particle_fx->draw(&particleStreamer);
 
@@ -611,7 +624,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setVector3("noffs", Vector3(math::notRandf(int(beat * 100)), math::notRandf(int(beat * 100) + 1), 0));
 			color_map_fx->setFloat("flash", flash < 0 ? math::randf() : pow(flash, 2.0f));
 			color_map_fx->setFloat("fade", pow(fade, 2.2f));
-			color_map_fx->setFloat("scroll", sync_get_val(colorMapScrollTrack, row) / 100.0f);
 			color_map_fx->setFloat("bloom_amt", sync_get_val(bloomAmtTrack, row));
 			color_map_fx->setFloat("blur_amt", sync_get_val(colorMapBlurTrack, row));
 			color_map_fx->setFloat("noise_amt", pow(sync_get_val(colorMapNoiseTrack, row) / 255, 2.2f));
