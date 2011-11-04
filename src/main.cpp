@@ -230,18 +230,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		const sync_track *colorMapFadeTrack   = sync_get_track(rocket, "cm.fade");
 		const sync_track *colorMapFlashTrack  = sync_get_track(rocket, "cm.flash");
-		const sync_track *colorMapBlurTrack   = sync_get_track(rocket, "cm.blur");
-		const sync_track *colorMapNoiseTrack  = sync_get_track(rocket, "cm.noise");
 		const sync_track *colorMapOverlayTrack = sync_get_track(rocket, "cm.overlay");
 		const sync_track *pulseAmt2Track      = sync_get_track(rocket, "cm.pulse.amt");
 		const sync_track *pulseSpeed2Track    = sync_get_track(rocket, "cm.pulse.speed");
-		const sync_track *bloomSizeTrack      = sync_get_track(rocket, "bloom.size");
-		const sync_track *bloomAmtTrack       = sync_get_track(rocket, "bloom.amt");
-
-		const sync_track *lokingFrame1Track    = sync_get_track(rocket, "loking.frame1");
-		const sync_track *lokingAlpha1Track    = sync_get_track(rocket, "loking.alpha1");
-		const sync_track *lokingFrame2Track    = sync_get_track(rocket, "loking.frame2");
-		const sync_track *lokingAlpha2Track    = sync_get_track(rocket, "loking.alpha2");
 
 		const sync_track *fogDensityTrack     = sync_get_track(rocket, "fog.density");
 
@@ -282,39 +273,23 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		/** DEMO ***/
 
-		Effect *dof_fx      = engine::loadEffect(device, "data/dof.fx");
-		Effect *blur_fx      = engine::loadEffect(device, "data/blur.fx");
-		Effect *color_map_fx = engine::loadEffect(device, "data/color_map.fx");
+		Effect *dof_fx = engine::loadEffect(device, "data/dof.fx");
 		dof_fx->setVector3("viewport", Vector3(letterbox_viewport.Width, letterbox_viewport.Height, 0.0f));
 
-		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
-		color_map_fx->setTexture("noise_tex", noise_tex);
+		Effect *postprocess_fx = engine::loadEffect(device, "data/postprocess.fx");
+		postprocess_fx->setVector3("viewport", Vector3(letterbox_viewport.Width, letterbox_viewport.Height, 0.0f));
 
-		color_map_fx->setVector3("nscale", Vector3(letterbox_viewport.Width / 128.0, letterbox_viewport.Height / 128.0, 0.0f));
-		if (use_sm20_codepath)
-			color_map_fx->p->SetTechnique("rgbe");
+		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
+		postprocess_fx->setTexture("noise_tex", noise_tex);
+		postprocess_fx->setVector3("nscale", Vector3(letterbox_viewport.Width / 128.0, letterbox_viewport.Height / 128.0, 0.0f));
+
+		Texture spectrum_tex = engine::loadTexture(device, "data/spectrum.png");
+		postprocess_fx->setTexture("spectrum_tex", spectrum_tex);
 
 		engine::ParticleStreamer particleStreamer(device);
 		Effect *particle_fx = engine::loadEffect(device, "data/particle.fx");
 		Texture particle_tex = engine::loadTexture(device, "data/particle.png");
 		particle_fx->setTexture("tex", particle_tex);
-
-		Effect *cube_light_fx = engine::loadEffect(device, "data/cube-light.fx");
-		
-		cube_light_fx->setTexture("noise_tex", noise_tex);
-
-		Texture cos_tex = device.createTexture(128, 1, 0, 0, D3DFMT_L16, D3DPOOL_MANAGED);
-		{
-			D3DLOCKED_RECT rect;
-			d3dErr(cos_tex.tex->LockRect(0, &rect, NULL, 0));
-			for (int i = 0; i < 128; ++i) {
-				double th = (i + 0.5) * ((2 * M_PI) / 128.0);
-				unsigned short v = (unsigned short)(32767.5 + cos(th) * 32767.5);
-				((unsigned short*)rect.pBits)[i] = v;
-			}
-			d3dErr(cos_tex.tex->UnlockRect(0));
-		}
-		cube_light_fx->setTexture("cos_tex", cos_tex);
 
 		Mesh *cube_room_x = engine::loadMesh(device, "data/cube-room.x");
 		Effect *cube_room_fx = engine::loadEffect(device, "data/cube-room.fx");
@@ -327,50 +302,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		cube_room_fx->setTexture("norm_tex", cube_room_norm_tex);
 		cube_room_fx->setTexture("spec_tex", cube_room_spec_tex);
 
-#if 0
-		DWORD FVF = cube_room_x->p->GetFVF();
-		if (1 && FVF & D3DFVF_NORMAL) {
-			FVF |= D3DFVF_TEX3 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE3(1) | D3DFVF_TEXCOORDSIZE3(2);
-			LPD3DXMESH tmp_mesh;
-			cube_room_x->p->CloneMeshFVF(cube_room_x->p->GetOptions(), FVF, device, &tmp_mesh);
-			cube_room_x->attachRef(tmp_mesh);
-			DWORD *ad1 = new DWORD[cube_room_x->p->GetNumFaces() * sizeof(DWORD) * 3];
-			cube_room_x->p->GenerateAdjacency(1e-6f, ad1);
-//			D3DXComputeNormals(cube_room_x->p, ad1);
-#if 1
-			D3DXComputeTangentFrameEx(cube_room_x->p,
-				D3DDECLUSAGE_TEXCOORD, 0,
-				D3DDECLUSAGE_TEXCOORD, 1,
-				D3DDECLUSAGE_TEXCOORD, 2,
-				D3DDECLUSAGE_NORMAL, 0,
-				D3DXTANGENT_GENERATE_IN_PLACE | D3DXTANGENT_CALCULATE_NORMALS,
-				ad1, 2.0f, 0.0f, 2.0f,
-				NULL, NULL);
-#else
-//			D3DXComputeTangent(cube_room_x->p, 0, 1, 2, 1, ad1);
-			D3DXComputeTangentFrame(cube_room_x->p, D3DXTANGENT_GENERATE_IN_PLACE);
-#endif
-			delete [] ad1;
-//			D3DXSaveMeshToX("data/cube-room.x", cube_room_x->p, NULL, NULL, NULL, 0, D3DXF_FILEFORMAT_BINARY | D3DXF_FILEFORMAT_COMPRESSED);
-		}
-#endif
-#if 0
-		if (1) {
-			NVMeshMender aMender;
-			cube_room_x->p->LockVertexBuffer(D
-			for (int i = 0; i < cube_room_x->p->GetNumVertices(); ++i)
-			std::vector<NVMeshMender::VertexAttribute> inputAtts; // What you have
-			std::vector<NVMeshMender::VertexAttribute> outputAtts; // What you want.
-
-			NVMeshMender::VertexAttribute posAtt;
-			posAtt.Name_ = "position";
-			posAtt.floatVector_ = vpos;
-
-		}
-#endif
-
-		Anim lights = engine::loadAnim(device, "data/lights");
-		Anim loking = engine::loadAnim(device, "data/loking");
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
 		BASS_Start();
@@ -554,27 +485,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float fade = sync_get_val(colorMapFadeTrack, row);
 			float pulse = sync_get_val(pulseAmt2Track, row);
 			fade = std::max(0.0f, fade - pulse + float(cos(beat * sync_get_val(pulseSpeed2Track, row) * M_PI)) * pulse);
-			color_map_fx->setVector3("noffs", Vector3(math::notRandf(int(beat * 100)), math::notRandf(int(beat * 100) + 1), 0));
-			color_map_fx->setFloat("flash", flash < 0 ? math::randf() : pow(flash, 2.0f));
-			color_map_fx->setFloat("fade", pow(fade, 2.2f));
-			color_map_fx->setFloat("bloom_amt", sync_get_val(bloomAmtTrack, row));
-			color_map_fx->setFloat("blur_amt", sync_get_val(colorMapBlurTrack, row));
-			color_map_fx->setFloat("noise_amt", pow(sync_get_val(colorMapNoiseTrack, row) / 255, 2.2f));
-			color_map_fx->setFloat("dist_amt", sync_get_val(distAmtTrack, row));
-			color_map_fx->setFloat("dist_freq", sync_get_val(distFreqTrack, row) * 2 * float(M_PI));
-			color_map_fx->setFloat("dist_time", float(beat * 4) + sync_get_val(distOffsetTrack, row));
-			color_map_fx->setTexture("bloom", dof_target);
-			color_map_fx->setTexture("tex", dof_target);
-			color_map_fx->setTexture("overlay_tex", overlays.getTexture((int)sync_get_val(colorMapOverlayTrack, row) % overlays.getTextureCount()));
-			color_map_fx->setTexture("loking1_tex", loking.getTexture((int)sync_get_val(lokingFrame1Track, row)));
-			color_map_fx->setTexture("loking2_tex", loking.getTexture((int)sync_get_val(lokingFrame2Track, row)));
-			color_map_fx->setFloat("loking1_alpha", sync_get_val(lokingAlpha1Track, row));
-			color_map_fx->setFloat("loking2_alpha", sync_get_val(lokingAlpha2Track, row));
-			color_map_fx->commitChanges();
+			postprocess_fx->setVector3("noffs", Vector3(math::notRandf(int(beat * 100)), math::notRandf(int(beat * 100) + 1), 0));
+			postprocess_fx->setFloat("flash", flash < 0 ? math::randf() : pow(flash, 2.0f));
+			postprocess_fx->setFloat("fade", pow(fade, 2.2f));
+			postprocess_fx->setFloat("dist_amt", sync_get_val(distAmtTrack, row));
+			postprocess_fx->setFloat("dist_freq", sync_get_val(distFreqTrack, row) * 2 * float(M_PI));
+			postprocess_fx->setFloat("dist_time", float(beat * 4) + sync_get_val(distOffsetTrack, row));
+			postprocess_fx->setTexture("color_tex", dof_target);
+			postprocess_fx->setTexture("overlay_tex", overlays.getTexture((int)sync_get_val(colorMapOverlayTrack, row) % overlays.getTextureCount()));
+			postprocess_fx->commitChanges();
 
 
-			device->SetRenderState(D3DRS_SRGBWRITEENABLE, TRUE);
-			drawRect(device, color_map_fx, float(letterbox_viewport.X), float(letterbox_viewport.Y), float(letterbox_viewport.Width), float(letterbox_viewport.Height));
+			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
+			drawRect(device, postprocess_fx, float(letterbox_viewport.X), float(letterbox_viewport.Y), float(letterbox_viewport.Width), float(letterbox_viewport.Height));
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
 			device->EndScene(); /* WE DONE IS! */
 

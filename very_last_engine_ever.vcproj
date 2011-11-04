@@ -649,15 +649,15 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\data\color_map.fx"
-			>
-		</File>
-		<File
 			RelativePath=".\data\dof.fx"
 			>
 		</File>
 		<File
 			RelativePath=".\data\particle.fx"
+			>
+		</File>
+		<File
+			RelativePath=".\data\postprocess.fx"
 			>
 		</File>
 	</Files>
