@@ -95,9 +95,9 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	float3 col = sum;
 #endif
 
-	float4 o = tex2D(overlay_samp, In.uv);
+/*	float4 o = tex2D(overlay_samp, In.uv);
 	col *= 1 - o.a;
-	col += o.rgb * o.a;
+	col += o.rgb * o.a; */
 
 	col = col * fade + flash;
 

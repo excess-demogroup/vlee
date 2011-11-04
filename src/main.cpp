@@ -47,6 +47,8 @@ using math::Matrix4x4;
 using renderer::Device;
 using renderer::Surface;
 using renderer::Texture;
+using renderer::CubeTexture;
+using renderer::VolumeTexture;
 using renderer::RenderTexture;
 
 using engine::Mesh;
@@ -207,7 +209,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		/* setup sound-playback */
 		if (!BASS_Init(config::soundcard, 44100, 0, 0, 0))
 			throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/tune.ogg", 0, 0, BASS_MP3_SETPOS | BASS_STREAM_PRESCAN | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
+		stream = BASS_StreamCreateFile(false, "data/tune.mp3", 0, 0, BASS_MP3_SETPOS | BASS_STREAM_PRESCAN | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
 		if (!stream)
 			throw FatalException("failed to open tune");
 
@@ -220,38 +222,25 @@ int main(int /*argc*/, char* /*argv*/ [])
 			throw FatalException("failed to connect to host");
 #endif
 
-		const sync_track *cameraDistanceTrack = sync_get_track(rocket, "cam.dist");
-		const sync_track *cameraYTrack        = sync_get_track(rocket, "cam.y");
-		const sync_track *cameraRollTrack     = sync_get_track(rocket, "cam.roll");
-		const sync_track *cameraOffsetTrack   = sync_get_track(rocket, "cam.offset");
-		const sync_track *cameraIndexTrack    = sync_get_track(rocket, "cam.index");
-		const sync_track *cameraShakeAmtTrack = sync_get_track(rocket, "cam.shake.amt");
+		const sync_track *cameraDistanceTrack   = sync_get_track(rocket, "cam.dist");
+		const sync_track *cameraYTrack          = sync_get_track(rocket, "cam.y");
+		const sync_track *cameraRollTrack       = sync_get_track(rocket, "cam.roll");
+		const sync_track *cameraOffsetTrack     = sync_get_track(rocket, "cam.offset");
+		const sync_track *cameraIndexTrack      = sync_get_track(rocket, "cam.index");
+		const sync_track *cameraShakeAmtTrack   = sync_get_track(rocket, "cam.shake.amt");
 		const sync_track *cameraShakeSpeedTrack = sync_get_track(rocket, "cam.shake.speed");
 
-		const sync_track *colorMapFadeTrack   = sync_get_track(rocket, "cm.fade");
-		const sync_track *colorMapFlashTrack  = sync_get_track(rocket, "cm.flash");
+		const sync_track *colorMapFadeTrack    = sync_get_track(rocket, "cm.fade");
+		const sync_track *colorMapFlashTrack   = sync_get_track(rocket, "cm.flash");
 		const sync_track *colorMapOverlayTrack = sync_get_track(rocket, "cm.overlay");
-		const sync_track *pulseAmt2Track      = sync_get_track(rocket, "cm.pulse.amt");
-		const sync_track *pulseSpeed2Track    = sync_get_track(rocket, "cm.pulse.speed");
+		const sync_track *pulseAmt2Track       = sync_get_track(rocket, "cm.pulse.amt");
+		const sync_track *pulseSpeed2Track     = sync_get_track(rocket, "cm.pulse.speed");
 
-		const sync_track *fogDensityTrack     = sync_get_track(rocket, "fog.density");
+		const sync_track *fogDensityTrack = sync_get_track(rocket, "fog.density");
 
-		const sync_track *light1IndexTrack    = sync_get_track(rocket, "light1.index");
-		const sync_track *light1AlphaTrack    = sync_get_track(rocket, "light1.alpha");
-		const sync_track *light2IndexTrack    = sync_get_track(rocket, "light2.index");
-		const sync_track *light2AlphaTrack    = sync_get_track(rocket, "light2.alpha");
-
-		const sync_track *lineSpeedTrack      = sync_get_track(rocket, "line.speed");
-		const sync_track *lineOffsetTrack     = sync_get_track(rocket, "line.offset");
-		const sync_track *lineAmtTrack        = sync_get_track(rocket, "line.amt");
-		const sync_track *radialAmtTrack      = sync_get_track(rocket, "radial.amt");
-		const sync_track *radialAmt2Track      = sync_get_track(rocket, "radial.amt2");
-		const sync_track *pulseSpeedTrack     = sync_get_track(rocket, "pulse.speed");
-		const sync_track *pulseAmtTrack       = sync_get_track(rocket, "pulse.amt");
-
-		const sync_track *distAmtTrack        = sync_get_track(rocket, "dist.amt");
-		const sync_track *distFreqTrack       = sync_get_track(rocket, "dist.freq");
-		const sync_track *distOffsetTrack       = sync_get_track(rocket, "dist.offset");
+		const sync_track *distAmtTrack    = sync_get_track(rocket, "dist.amt");
+		const sync_track *distFreqTrack   = sync_get_track(rocket, "dist.freq");
+		const sync_track *distOffsetTrack = sync_get_track(rocket, "dist.offset");
 
 		Surface backbuffer   = device.getRenderTarget(0);
 
@@ -301,6 +290,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 		cube_room_fx->setTexture("diff_tex", cube_room_diff_tex);
 		cube_room_fx->setTexture("norm_tex", cube_room_norm_tex);
 		cube_room_fx->setTexture("spec_tex", cube_room_spec_tex);
+
+		Mesh *neuron_cluster_x = engine::loadMesh(device, "data/neuron-cluster.x");
+		Effect *neuron_cluster_fx = engine::loadEffect(device, "data/neuron-cluster.fx");
+		CubeTexture neuron_cluster_env_tex = engine::loadCubeTexture(device, "data/neuron-cluster-env.dds");
+		VolumeTexture volume_noise_tex = engine::loadVolumeTexture(device, "data/volume-noise.dds");
+		neuron_cluster_fx->setTexture("env_tex", neuron_cluster_env_tex);
+		neuron_cluster_fx->setTexture("noise_tex", volume_noise_tex);
+		Mesh *neuron_cluster_skybox_x = engine::loadMesh(device, "data/neuron-cluster-skybox.x");
+		Effect *neuron_cluster_skybox_fx = engine::loadEffect(device, "data/neuron-cluster-skybox.fx");
+		neuron_cluster_skybox_fx->setTexture("env_tex", neuron_cluster_env_tex);
+		CubeTexture neuron_cluster_env_details_tex = engine::loadCubeTexture(device, "data/neuron-cluster-skybox-details.dds");
+		neuron_cluster_skybox_fx->setTexture("env_details_tex", neuron_cluster_env_details_tex);
 
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
@@ -377,20 +378,35 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float fog_density = sync_get_val(fogDensityTrack, row) / 100000;
 
 			Vector3 worldLightPosition = Vector3(0, sin(beat * 0.25) * 100, 0);
-//			Vector3 worldLightPosition = Vector3(0, 0, 0);
 			Vector3 viewLightPosition = mul(view, worldLightPosition);
 			cube_room_fx->setVector3("viewLightPosition", viewLightPosition);
 
-			for (int i = -1; i < 2; ++i)
-				for (int j = -1; j < 2; ++j) {
-					Matrix4x4 world = Matrix4x4::translation(Vector3(i * 120, 0, j * 120));
+			if (0) {
+				// cube rooms
+				for (int i = -1; i < 2; ++i)
+					for (int j = -1; j < 2; ++j) {
+						Matrix4x4 world = Matrix4x4::translation(Vector3(i * 120, 0, j * 120));
 
-					cube_room_fx->setMatrices(world, view, proj);
-					cube_room_fx->commitChanges();
-					cube_room_fx->draw(cube_room_x);
-				}
+						cube_room_fx->setMatrices(world, view, proj);
+						cube_room_fx->commitChanges();
+						cube_room_fx->draw(cube_room_x);
+					}
+			}
 
-			if (!use_sm20_codepath) {
+			if (1) {
+				// neuron cluster
+				neuron_cluster_fx->setFloat("time", beat / 4);
+				neuron_cluster_fx->setMatrices(world, view, proj);
+				neuron_cluster_fx->commitChanges();
+				neuron_cluster_fx->draw(neuron_cluster_x);
+
+				neuron_cluster_skybox_fx->setMatrices(world, view, proj);
+				neuron_cluster_skybox_fx->commitChanges();
+				neuron_cluster_skybox_fx->draw(neuron_cluster_skybox_x);
+			}
+
+			if (1) {
+				// particles
 				Matrix4x4 modelview = world * view;
 				Vector3 up(modelview._12, modelview._22, modelview._32);
 				Vector3 left(modelview._11, modelview._21, modelview._31);

@@ -649,7 +649,19 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath=".\data\cube-room.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\dof.fx"
+			>
+		</File>
+		<File
+			RelativePath=".\data\neuron-cluster-skybox.fx"
+			>
+		</File>
+		<File
+			RelativePath=".\data\neuron-cluster.fx"
 			>
 		</File>
 		<File
