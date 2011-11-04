@@ -236,6 +236,8 @@ static LRESULT onInitDialog(HWND hDlg)
 	// select default soundcard
 	SendMessage(GetDlgItem(hDlg, IDC_SOUNDCARD), (UINT)CB_SETCURSEL, (WPARAM)DEFAULT_SOUNDCARD, 0);
 
+	EnableWindow(GetDlgItem(hDlg, IDC_MULTISAMPLE), FALSE); // disable multisampling selection
+
 	return (LRESULT)TRUE;
 }
 

@@ -280,30 +280,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\nv_algebra.cpp"
-				>
-				<FileConfiguration
-					Name="SyncRelease|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\src\NVMeshMender.cpp"
-				>
-				<FileConfiguration
-					Name="SyncRelease|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\src\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -435,22 +411,6 @@
 			</File>
 			<File
 				RelativePath=".\src\init.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\nv_algebra.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\nv_math.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\nv_mathdecl.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\NVMeshMender.h"
 				>
 			</File>
 			<File
@@ -690,6 +650,10 @@
 		</Filter>
 		<File
 			RelativePath=".\data\color_map.fx"
+			>
+		</File>
+		<File
+			RelativePath=".\data\dof.fx"
 			>
 		</File>
 		<File

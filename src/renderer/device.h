@@ -51,7 +51,7 @@ namespace renderer
 	public:
 		
 		/* render targets */
-		void setRenderTarget(Surface &surface, unsigned index = 0);
+		void Device::setRenderTarget(IDirect3DSurface9 *surface, unsigned index = 0);
 		Surface getRenderTarget(unsigned index = 0);
 
 		void setDepthStencilSurface(Surface &surface);

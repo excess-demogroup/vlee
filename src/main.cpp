@@ -38,8 +38,6 @@
 #include "engine/spectrumdata.h"
 #include "engine/video.h"
 
-#include "NVMeshMender.h"
-
 #include <sync.h>
 
 using math::Vector2;
@@ -274,26 +272,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 			caps.PixelShaderVersion < D3DVS_VERSION(3, 0))
 			use_sm20_codepath = true;
 
-//		D3DFORMAT render_fmt = use_sm20_codepath ? D3DFMT_A2R10G10B10 : D3DFMT_A16B16G16R16F;
-		D3DFORMAT render_fmt = use_sm20_codepath ? D3DFMT_A8R8G8B8 : D3DFMT_A16B16G16R16F;
+		RenderTexture color_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
+		RenderTexture depth_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_R32F);
+		Surface depthstencil = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8);
 
-		RenderTexture color_msaa(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, render_fmt,
-		    use_sm20_codepath ? D3DMULTISAMPLE_NONE : config::multisample);
-		Surface depthstencil_msaa = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8,
-		    use_sm20_codepath ? D3DMULTISAMPLE_NONE : config::multisample);
+		RenderTexture dof_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
+		RenderTexture dof_temp1_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
+		RenderTexture dof_temp2_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
 
 		/** DEMO ***/
-		RenderTexture cube_light_tex(device, 128, 128, 1, use_sm20_codepath ? D3DFMT_A2R10G10B10 : D3DFMT_A16B16G16R16F);
-		std::vector<RenderTexture> color1_hdr, color2_hdr;
-		int w = letterbox_viewport.Width, h = letterbox_viewport.Height;
-		D3DFORMAT fmt = use_sm20_codepath ? D3DFMT_A2R10G10B10 : D3DFMT_A16B16G16R16F;
-		for (int i = 0; w > 0 || h > 0; ++i, w /= 2, h /= 2) {
-			color1_hdr.push_back(RenderTexture(device, std::max(w, 1), std::max(h, 1), 1, fmt));
-			color2_hdr.push_back(RenderTexture(device, std::max(w, 1), std::max(h, 1), 1, fmt));
-		}
 
+		Effect *dof_fx      = engine::loadEffect(device, "data/dof.fx");
 		Effect *blur_fx      = engine::loadEffect(device, "data/blur.fx");
 		Effect *color_map_fx = engine::loadEffect(device, "data/color_map.fx");
+		dof_fx->setVector3("viewport", Vector3(letterbox_viewport.Width, letterbox_viewport.Height, 0.0f));
 
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
 		color_map_fx->setTexture("noise_tex", noise_tex);
@@ -441,22 +433,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			// render
 			device->BeginScene();
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
-			device.setRenderTarget(cube_light_tex.getRenderTarget());
-			cube_light_fx->setFloat("time", float(beat) * sync_get_val(lineSpeedTrack, row) + sync_get_val(lineOffsetTrack, row));
-			cube_light_fx->setFloat("pulse_phase", float((beat / 16) * sync_get_val(pulseSpeedTrack, row)));
-			cube_light_fx->setFloat("pulse_amt", sync_get_val(pulseAmtTrack, row));
-			cube_light_fx->setFloat("line_amt", sync_get_val(lineAmtTrack, row) * 0.3f);
-			cube_light_fx->setFloat("radial_amt", sync_get_val(radialAmtTrack, row));
-			cube_light_fx->setFloat("radial_amt2", sync_get_val(radialAmt2Track, row));
-
-			cube_light_fx->setTexture("light1_tex", lights.getTexture((int)sync_get_val(light1IndexTrack, row) % lights.getTextureCount()));
-			cube_light_fx->setTexture("light2_tex", lights.getTexture((int)sync_get_val(light2IndexTrack, row) % lights.getTextureCount()));
-			cube_light_fx->setFloat("light1_alpha", pow(sync_get_val(light1AlphaTrack, row), 2.2f));
-			cube_light_fx->setFloat("light2_alpha", pow(sync_get_val(light2AlphaTrack, row), 2.2f));
-			drawQuad(device, cube_light_fx, -1, -1, 2, 2);
-
-			device.setRenderTarget(color_msaa.getRenderTarget());
-			device.setDepthStencilSurface(depthstencil_msaa);
+			device.setRenderTarget(color_target.getRenderTarget(), 0);
+			device.setRenderTarget(depth_target.getRenderTarget(), 1);
+			device.setDepthStencilSurface(depthstencil);
 			device->SetRenderState(D3DRS_ZENABLE, true);
 
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
@@ -521,98 +500,52 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 			}
-			color_msaa.resolve(device);
 
-			world.makeIdentity();
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 			device->SetRenderState(D3DRS_ZWRITEENABLE, false);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 
-			if (use_sm20_codepath) {
-				blur_fx->p->SetTechnique("hack");
-				blur_fx->setTexture("blur_tex", color_msaa);
+			const float verts[] = {
+				-0.5f,                                   -0.5f,                                    0.5f, 1.0f, 0.0f, 0.0f,
+				-0.5f + float(letterbox_viewport.Width), -0.5f,                                    0.5f, 1.0f, 1.0f, 0.0f,
+				-0.5f + float(letterbox_viewport.Width), -0.5f + float(letterbox_viewport.Height), 0.5f, 1.0f, 1.0f, 1.0f,
+				-0.5f,                                   -0.5f + float(letterbox_viewport.Height), 0.5f, 1.0f, 0.0f, 1.0f,
+			};
+			device->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
 
-				device.setRenderTarget(color1_hdr[0].getSurface(), 0);
-				int w = color_msaa.getWidth();
-				int h = color_msaa.getHeight();
-				drawRect(device, blur_fx, 0, 0, float(w), float(h));
+			dof_fx->p->Begin(NULL, 0);
 
-				blur_fx->p->SetTechnique("blur");
-			} else
-				device->StretchRect(color_msaa.getSurface(0), NULL, color1_hdr[0].getSurface(), NULL, D3DTEXF_LINEAR);
+			device.setRenderTarget(dof_target.getSurface(0), 0);
+			device.setRenderTarget(NULL, 1);
+			dof_fx->setTexture("color_tex", color_target);
+			dof_fx->setTexture("depth_tex", depth_target);
+			dof_fx->setFloat("focal_distance", 100);
+			dof_fx->setFloat("focal_length", 10);
+			dof_fx->setFloat("f_stop", 25);
+			dof_fx->p->BeginPass(0);
+			core::d3dErr(device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 6));
+			dof_fx->p->EndPass();
 
-			/* downsample until bloom fits */
-			float stdDev = std::max(sync_get_val(bloomSizeTrack, row), 0.0f) * (letterbox_viewport.Width / (1280.0f / 2));
-			float flevel = ::log(stdDev * 3 / 16) / ::log(2.0f);
-			flevel = std::max(flevel, 0.0f);
-			flevel = std::min(flevel, color1_hdr.size() - 1.0f);
-			int level = int(ceil(flevel));
-			for (int i = 0; i < level; ++i) {
-				d3dErr(device->StretchRect(color1_hdr[i].getSurface(0), NULL, color1_hdr[i + 1].getSurface(0), NULL, D3DTEXF_LINEAR));
-				stdDev /= 2;
-			}
-			assert(3 * stdDev <= 16.0f);
+			dof_fx->setTexture("premult_tex", dof_target);
+			device.setRenderTarget(dof_temp1_target.getSurface(0), 0);
+			device.setRenderTarget(dof_temp2_target.getSurface(0), 1);
+			dof_fx->p->BeginPass(1);
+			core::d3dErr(device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 6));
+			dof_fx->p->EndPass();
 
-			/* do the bloom */
-			RenderTexture render_textures[2] = { color1_hdr[level], color2_hdr[level] };
-			device->SetDepthStencilSurface(NULL);
-			device->SetRenderState(D3DRS_ZENABLE, false);
+			dof_fx->setTexture("temp1_tex", dof_temp1_target);
+			dof_fx->setTexture("temp2_tex", dof_temp2_target);
+			device.setRenderTarget(dof_target.getSurface(0), 0);
+			device.setRenderTarget(NULL, 1);
+			dof_fx->p->BeginPass(2);
+			core::d3dErr(device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 6));
+			dof_fx->p->EndPass();
 
-			int rtIndex = 0;
-			for (int j = 0; j < 2; j++) {
-				D3DXVECTOR4 gauss[8];
-				float sigma_squared = stdDev * stdDev;
-				double tmp = 1.0 / std::max(sqrt(2.0f * M_PI * sigma_squared), 1.0);
-				float w1 = (float)tmp;
-				w1 = std::max(float(w1 * 1.004 - 0.004), 0.0f);
-
-				gauss[0].x = 0.0;
-				gauss[0].y = 0.0;
-				gauss[0].z = w1;
-				gauss[0].w = 0.0;
-
-				float total = w1;
-				int size = int(ceil(3 * stdDev / 2));
-				for (int k = 1; k < size; ++k) {
-					int o1 = k * 2 - 1;
-					int o2 = k * 2;
-
-					float w1 = float(tmp * exp(-o1 * o1 / (2.0f * sigma_squared)));
-					float w2 = float(tmp * exp(-o2 * o2 / (2.0f * sigma_squared)));
-
-					w1 = std::max(float(w1 * 1.004 - 0.004), 0.0f);
-					w2 = std::max(float(w2 * 1.004 - 0.004), 0.0f);
-
-					float w = w1 + w2;
-					float o = (o1 * w1 + o2 * w2) / w;
-					gauss[k].z = w;
-					if (!j) {
-						gauss[k].x = o / render_textures[rtIndex].getWidth();
-						gauss[k].y = 0.0f;
-					} else {
-						gauss[k].x = 0.0f;
-						gauss[k].y = o / render_textures[rtIndex].getHeight();
-					}
-					gauss[k].w = 0.0f;
-					total += 2 * w;
-				}
-
-				for (int k = 0; k < size; ++k)
-					gauss[k].z /= total;
-
-				blur_fx->p->SetVectorArray("gauss", gauss, size);
-				blur_fx->setTexture("blur_tex", render_textures[rtIndex]);
-				blur_fx->p->SetInt("size", size);
-
-				device.setRenderTarget(render_textures[!rtIndex].getSurface(0), 0);
-				int w = render_textures[rtIndex].getSurface(0).getWidth();
-				int h = render_textures[rtIndex].getSurface(0).getHeight();
-				drawRect(device, blur_fx, 0, 0, float(w), float(h));
-				rtIndex = !rtIndex;
-			}
+			dof_fx->p->End();
 
 			/* letterbox */
 			device.setRenderTarget(backbuffer);
+			device.setRenderTarget(NULL, 1);
 			device->SetDepthStencilSurface(NULL);
 			device->Clear(0, 0, D3DCLEAR_TARGET, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
 			device.setViewport(&letterbox_viewport);
@@ -630,8 +563,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			color_map_fx->setFloat("dist_amt", sync_get_val(distAmtTrack, row));
 			color_map_fx->setFloat("dist_freq", sync_get_val(distFreqTrack, row) * 2 * float(M_PI));
 			color_map_fx->setFloat("dist_time", float(beat * 4) + sync_get_val(distOffsetTrack, row));
-			color_map_fx->setTexture("bloom", color1_hdr[level]);
-			color_map_fx->setTexture("tex", color_msaa);
+			color_map_fx->setTexture("bloom", dof_target);
+			color_map_fx->setTexture("tex", dof_target);
 			color_map_fx->setTexture("overlay_tex", overlays.getTexture((int)sync_get_val(colorMapOverlayTrack, row) % overlays.getTextureCount()));
 			color_map_fx->setTexture("loking1_tex", loking.getTexture((int)sync_get_val(lokingFrame1Track, row)));
 			color_map_fx->setTexture("loking2_tex", loking.getTexture((int)sync_get_val(lokingFrame2Track, row)));

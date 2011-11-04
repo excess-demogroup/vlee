@@ -12,11 +12,10 @@
 
 namespace renderer
 {
-	void Device::setRenderTarget(Surface &surface, unsigned index)
+	void Device::setRenderTarget(IDirect3DSurface9 *surface, unsigned index)
 	{
 		assert(NULL != p);
-		assert(NULL != surface);
-		core::d3dErr(p->SetRenderTarget(index, surface.p));
+		core::d3dErr(p->SetRenderTarget(index, surface));
 	}
 
 	Surface Device::getRenderTarget(unsigned index)
