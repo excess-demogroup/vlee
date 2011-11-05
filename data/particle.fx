@@ -1,4 +1,4 @@
-float alpha = 1.0;
+const float alpha;
 const float3 up;
 const float3 left;
 const float4x4 WorldViewProjection : WORLDVIEWPROJECTION;
@@ -12,6 +12,7 @@ sampler tex_samp = sampler_state {
 	MagFilter = LINEAR;
 	AddressU = CLAMP;
 	AddressV = CLAMP;
+	sRGBTexture = FALSE;
 };
 
 struct VS_INPUT
@@ -25,6 +26,7 @@ struct VS_OUTPUT
 {
 	float4 pos : POSITION;
 	float2 uv  : TEXCOORD0;
+	float  alpha : TEXCOORD1;
 };
 
 VS_OUTPUT vertex(VS_INPUT In)
@@ -34,12 +36,14 @@ VS_OUTPUT vertex(VS_INPUT In)
 	In.pos += up   * In.uv.y * In.size;
 	Out.pos = mul(float4(In.pos,  1), WorldViewProjection);
 	Out.uv = (In.uv + 1) / 2;
+	Out.alpha = In.size / 15;
 	return Out;
 }
 
 float4 pixel(VS_OUTPUT In)  : COLOR
 {
-	return tex2D(tex_samp, In.uv) * alpha;
+	float4 col = tex2D(tex_samp, In.uv);
+	return float4(col.rgb * In.alpha * alpha, col.a * In.alpha * alpha);
 }
 
 technique fx {

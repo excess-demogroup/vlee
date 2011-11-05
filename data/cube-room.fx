@@ -4,7 +4,7 @@ float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
 
 texture diff_tex;
-sampler diff_sampler = sampler_state {
+sampler diff_samp = sampler_state {
 	Texture = (diff_tex);
 	MipFilter = LINEAR;
 	MinFilter = LINEAR;
@@ -15,7 +15,7 @@ sampler diff_sampler = sampler_state {
 };
 
 texture ao_tex;
-sampler ao_sampler = sampler_state {
+sampler ao_samp = sampler_state {
 	Texture = (ao_tex);
 	MipFilter = LINEAR;
 	MinFilter = LINEAR;
@@ -26,7 +26,7 @@ sampler ao_sampler = sampler_state {
 };
 
 texture norm_tex;
-sampler norm_sampler = sampler_state {
+sampler norm_samp = sampler_state {
 	Texture = (norm_tex);
 	MipFilter = LINEAR;
 	MinFilter = LINEAR;
@@ -37,7 +37,7 @@ sampler norm_sampler = sampler_state {
 };
 
 texture spec_tex;
-sampler spec_sampler = sampler_state {
+sampler spec_samp = sampler_state {
 	Texture = (spec_tex);
 	MipFilter = LINEAR;
 	MinFilter = LINEAR;
@@ -83,16 +83,16 @@ struct PS_OUTPUT {
 
 PS_OUTPUT ps_main(VS_OUTPUT i)
 {
-	float3 albedo = tex2D(diff_sampler, i.uv * 15).rgb;
+	float3 albedo = tex2D(diff_samp, i.uv * 15).rgb;
 
-	float3 normal = tex2D(norm_sampler, i.uv * 15).xyz * 2 - 1;
+	float3 normal = tex2D(norm_samp, i.uv * 15).xyz * 2 - 1;
 	normal = normalize(mul(normal, i.TangentToView));
 
-	float ao = tex2D(ao_sampler, i.uv).r;
+	float ao = tex2D(ao_samp, i.uv).r;
 
 	float3 col = ao * albedo * float3(0.8, 0.85, 1) * 0.6;
 	float3 light = normalize(viewLightPosition - i.viewPos);
-	float s = pow(tex2D(spec_sampler, i.uv * 15).r, 2) * 40;
+	float s = pow(tex2D(spec_samp, i.uv * 15).r, 2) * 40;
 
 	float n_dot_l = dot(normal, light);
 	if (0 < n_dot_l) {

@@ -118,6 +118,69 @@ struct sync_cb bass_cb = {
 
 #endif /* !defined(SYNC_PLAYER) */
 
+Vector3 getCubeKeyframe(int key)
+{
+	const Vector3 keyframes[] = {
+		Vector3(0,   0,   0),
+		Vector3(60,  0,   0),
+		Vector3(120, 0,   0),
+		Vector3(120, 60,  0),
+		Vector3(120, 120, 0),
+		Vector3(60,  120, 0),
+		Vector3(0,   120, 0),
+		Vector3(0,   120, 60),
+		Vector3(0,   120, 120),
+		Vector3(0,   60,  120),
+		Vector3(0,   0,   120),
+		Vector3(0,   0,   60),
+		Vector3(0,   0,   0),
+		Vector3(0,   0,  -60),
+		Vector3(0,   0,  -120),
+		Vector3(60,  0,  -120),
+		Vector3(120, 0,  -120),
+		Vector3(120,-60,  -120),
+		Vector3(120,-120,-120),
+		Vector3(60, -120,-120),
+		Vector3(0,  -120,-120),
+		Vector3(0,  -120,-60),
+		Vector3(0,  -120, 0),
+		Vector3(0,  -60, 0)
+	};
+	if (key % 1)
+		return keyframes[key % ARRAY_SIZE(keyframes)];
+	else
+		return keyframes[key % ARRAY_SIZE(keyframes)] * 0.5 + keyframes[(key - 1) % ARRAY_SIZE(keyframes)] * 0.25 + keyframes[(key + 1) % ARRAY_SIZE(keyframes)] * 0.25;
+}
+
+Vector3 getCubePos(float cam_time)
+{
+	int k0 = int(floor(cam_time) - 1);
+	int k1 = k0 + 1;
+	int k2 = k1 + 1;
+	int k3 = k2 + 1;
+
+	Vector3 samples[4] = {
+		getCubeKeyframe(k0), getCubeKeyframe(k1), getCubeKeyframe(k2), getCubeKeyframe(k3)
+	};
+
+	Vector3 tangents[2] = {
+		(samples[2] - samples[0]) / 2.0,
+		(samples[3] - samples[1]) / 2.0
+	};
+
+	float t = cam_time - floor(cam_time);
+	float t2 = t * t;
+	float t3 = t2 * t;
+	float w[4] = {
+		2.0f * t3 - 3.0f * t2 + 1.0f,
+		1.0f * t3 - 2.0f * t2 + t,
+		w[2] = -2.0f * t3 + 3.0f * t2,
+		w[3] =  1.0f * t3 - 1.0f * t2
+	};
+
+	return samples[1] * w[0] + tangents[0] * w[1] + samples[2] * w[2] + tangents[1] * w[3];
+}
+
 int main(int /*argc*/, char* /*argv*/ [])
 {
 #ifdef _DEBUG
@@ -225,12 +288,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *partTrack = sync_get_track(rocket, "part");
 
 		const sync_track *cameraDistanceTrack   = sync_get_track(rocket, "cam.dist");
+		const sync_track *cameraTimeTrack       = sync_get_track(rocket, "cam.time");
 		const sync_track *cameraYTrack          = sync_get_track(rocket, "cam.y");
 		const sync_track *cameraRollTrack       = sync_get_track(rocket, "cam.roll");
 		const sync_track *cameraOffsetTrack     = sync_get_track(rocket, "cam.offset");
 		const sync_track *cameraIndexTrack      = sync_get_track(rocket, "cam.index");
 		const sync_track *cameraShakeAmtTrack   = sync_get_track(rocket, "cam.shake.amt");
 		const sync_track *cameraShakeSpeedTrack = sync_get_track(rocket, "cam.shake.speed");
+
+		const sync_track *lightOffsetTrack = sync_get_track(rocket, "light.offset");
+		const sync_track *lightAlphaTrack = sync_get_track(rocket, "light.alpha");
+		const sync_track *darkOffsetTrack  = sync_get_track(rocket, "dark.offset");
 
 		const sync_track *colorMapFadeTrack    = sync_get_track(rocket, "cm.fade");
 		const sync_track *colorMapFlashTrack   = sync_get_track(rocket, "cm.flash");
@@ -289,6 +357,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		engine::ParticleStreamer particleStreamer(device);
 		Effect *particle_fx = engine::loadEffect(device, "data/particle.fx");
 		Texture particle_tex = engine::loadTexture(device, "data/particle.png");
+		Texture darksmoke_tex = engine::loadTexture(device, "data/darksmoke.png");
 		particle_fx->setTexture("tex", particle_tex);
 
 		Mesh *excess_logo_x = engine::loadMesh(device, "data/excess-logo.x");
@@ -298,14 +367,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture excess_logo_tex = engine::loadTexture(device, "data/excess-logo.png");
 		Texture cube_room_diff_tex = engine::loadTexture(device, "data/cube-room-diff.png");
 		Texture cube_room_norm_tex = engine::loadTexture(device, "data/cube-room-norm.png");
+		Texture cube_room_spec_tex = engine::loadTexture(device, "data/cube-room-spec.png");
 		excess_logo_floor_fx->setTexture("logo_tex", excess_logo_tex);
-		excess_logo_floor_fx->setTexture("norm_tex", cube_room_norm_tex);
+		excess_logo_floor_fx->setTexture("norm_tex", cube_room_norm_tex); // tekstur-tyveri! ring snuten!
 		excess_logo_floor_fx->setTexture("diff_tex", cube_room_diff_tex);
+		excess_logo_floor_fx->setTexture("spec_tex", cube_room_spec_tex);
 
 		Mesh *cube_room_x = engine::loadMesh(device, "data/cube-room.x");
 		Effect *cube_room_fx = engine::loadEffect(device, "data/cube-room.fx");
 		Texture cube_room_ao_tex = engine::loadTexture(device, "data/cube-room-ao.png");
-		Texture cube_room_spec_tex = engine::loadTexture(device, "data/cube-room-spec.png");
 		cube_room_fx->setTexture("ao_tex", cube_room_ao_tex);
 		cube_room_fx->setTexture("diff_tex", cube_room_diff_tex);
 		cube_room_fx->setTexture("norm_tex", cube_room_norm_tex);
@@ -355,29 +425,27 @@ int main(int /*argc*/, char* /*argv*/ [])
 			double beat = row / 4;
 
 			float camTime = float(beat / 4) + sync_get_val(cameraOffsetTrack, row);
-			Vector3 camPos, camTarget;
+			Vector3 camPos, camTarget, camUp;
 			switch ((int)sync_get_val(cameraIndexTrack, row)) {
 			case 0:
-				camPos = Vector3(sin(camTime * 0.25f) * 1.5f,
-					1,
-					cos(camTime * 0.33f) * 1.5f) * sync_get_val(cameraDistanceTrack, row);
-				camTarget = Vector3(0, 0, 0);
-				break;
-			case 1:
-				camPos = Vector3((math::frac(4 * camTime / 128) - 0.5f) * 16 * 128,
-					sync_get_val(cameraDistanceTrack, row),
-					0);
-				camTarget = camPos + Vector3(1, sync_get_val(cameraYTrack, row), 0);
-				break;
-			case 2:
-				camPos = Vector3(sin(camTime / 4) * sync_get_val(cameraDistanceTrack, row),
+				camPos = Vector3(sin(camTime / 2) * sync_get_val(cameraDistanceTrack, row),
 					sync_get_val(cameraYTrack, row),
-					cos(camTime / 4) * sync_get_val(cameraDistanceTrack, row));
+					cos(camTime / 2) * sync_get_val(cameraDistanceTrack, row));
 				camTarget = Vector3(0, 0, 0);
+				camUp = Vector3(0, 1, 0);
 				break;
+
+			case 1:
+				camPos = getCubePos(sync_get_val(cameraTimeTrack, row) / 16);
+				camTarget = getCubePos(sync_get_val(cameraTimeTrack, row) / 16 + sync_get_val(cameraOffsetTrack, row));
+				camUp = camPos - camTarget;
+				camUp = Vector3(camUp.y, camUp.z, camUp.x);
+				break;
+
 			default:
 				camPos = Vector3(0, 1, 0) * sync_get_val(cameraDistanceTrack, row);
 				camTarget = Vector3(0, 0, 0);
+				camUp = Vector3(0, 1, 0);
 			}
 
 			bool particles = false;
@@ -387,7 +455,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			bool cluster = false;
 			bool greeble = false;
 
-			switch (int(sync_get_val(partTrack, row))) {
+			int part = int(sync_get_val(partTrack, row));
+			switch (part) {
 			case 0:
 				logo = true;
 				break;
@@ -404,13 +473,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 			case 3:
 				greeble = true;
 				break;
+			}
 
 #ifdef SYNC_PLAYER
-			case -1:
+			if (part < 0)
 				done = true;
-				break;
 #endif
-			}
 
 			double shake_phase = beat * 32 * sync_get_val(cameraShakeSpeedTrack, row);
 			Vector3 camOffs(sin(shake_phase), cos(shake_phase * 0.9), sin(shake_phase - 0.5));
@@ -419,6 +487,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			float camRoll = sync_get_val(cameraRollTrack, row) * float(2 * M_PI);
 			Matrix4x4 view  = Matrix4x4::lookAt(camPos, camTarget, camRoll);
+			D3DXMatrixLookAtLH(&view, &camPos, &camTarget, &camUp);
+
 			Matrix4x4 world = Matrix4x4::identity();
 			Matrix4x4 proj  = Matrix4x4::projection(80.0f, float(DEMO_ASPECT), 1.0f, 10000.f);
 
@@ -437,7 +507,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			float fog_density = sync_get_val(fogDensityTrack, row) / 100000;
 
-			Vector3 worldLightPosition = Vector3(0, sin(beat * 0.25) * 100, 0);
+//			Vector3 worldLightPosition = Vector3(0, sin(beat * 0.25) * 100, 0);
+			float ltime = sync_get_val(cameraTimeTrack, row) / 16 + sync_get_val(lightOffsetTrack, row) / 16;
+			Vector3 worldLightPosition = getCubePos(ltime);
 
 			if (logo) {
 				excess_logo_fx->setMatrices(world, view, proj);
@@ -457,18 +529,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 				cube_room_fx->setVector3("viewLightPosition", viewLightPosition);
 
 				for (int i = -1; i < 2; ++i)
-					for (int j = -1; j < 2; ++j) {
-						Matrix4x4 world = Matrix4x4::translation(Vector3(i * 120, 0, j * 120));
+					for (int j = -1; j < 2; ++j)
+						for (int k = -1; k < 2; ++k) {
+							Matrix4x4 world = Matrix4x4::translation(Vector3(i * 120, j * 120, k * 120));
 
-						cube_room_fx->setMatrices(world, view, proj);
-						cube_room_fx->commitChanges();
-						cube_room_fx->draw(cube_room_x);
-					}
+							cube_room_fx->setMatrices(world, view, proj);
+							cube_room_fx->commitChanges();
+							cube_room_fx->draw(cube_room_x);
+						}
 			}
 
 			if (cluster) {
 				// neuron cluster
-				neuron_cluster_fx->setFloat("time", beat / 4);
+				neuron_cluster_fx->setFloat("time", float(beat / 4));
 				neuron_cluster_fx->setMatrices(world, view, proj);
 				neuron_cluster_fx->commitChanges();
 				neuron_cluster_fx->draw(neuron_cluster_x);
@@ -487,49 +560,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 				greeble_tunnel_lights_fx->setMatrices(world, view, proj);
 				greeble_tunnel_lights_fx->commitChanges();
 				greeble_tunnel_lights_fx->draw(greeble_tunnel_lights_x);
-			}
-
-			if (particles) {
-				// particles
-				Matrix4x4 modelview = world * view;
-				Vector3 up(modelview._12, modelview._22, modelview._32);
-				Vector3 left(modelview._11, modelview._21, modelview._31);
-				math::normalize(up);
-				math::normalize(left);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-
-				particle_fx->setVector3("up", up);
-				particle_fx->setVector3("left", left);
-				particle_fx->setFloat("alpha", pow(1.0f, 2.2f));
-				particle_fx->setMatrices(world, view, proj);
-
-				particleStreamer.begin();
-#if 0
-				for (int i = 0; i < 60 * 1024; ++i) {
-					Vector3 pos(
-						(       math::notRandf(i * 4) - 0.5f) * 16 * 64,
-						9 + pow(math::notRandf(i * 4 + 1), 2) * 300,
-						(       math::notRandf(i * 4 + 2) - 0.5f) * 16 * 64);
-					float size = 0.4f + math::notRandf(i * 4 + 1) * 0.5f;
-	//				if (distance(pos, camPos) < 200)
-					Vector3 temp = pos - camPos;
-					if (dot(temp, temp) < 400 * 400)
-						particleStreamer.add(pos, size);
-					if (!particleStreamer.getRoom()) {
-						particleStreamer.end();
-						particle_fx->draw(&particleStreamer);
-						particleStreamer.begin();
-					}
-				}
-#endif
-				particleStreamer.add(worldLightPosition, 10.0f);
-				particleStreamer.end();
-				particle_fx->draw(&particleStreamer);
-
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 			}
 
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
@@ -579,6 +609,107 @@ int main(int /*argc*/, char* /*argv*/ [])
 			fxaa_fx->setTexture("color_tex", dof_target);
 			drawRect(device, fxaa_fx, 0, 0, float(letterbox_viewport.Width), float(letterbox_viewport.Height));
 
+			device.setDepthStencilSurface(depthstencil);
+			if (particles) {
+				// particles
+				Matrix4x4 modelview = world * view;
+				Vector3 up(modelview._12, modelview._22, modelview._32);
+				Vector3 left(modelview._11, modelview._21, modelview._31);
+				math::normalize(up);
+				math::normalize(left);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+
+				particle_fx->setVector3("up", up);
+				particle_fx->setVector3("left", left);
+				particle_fx->setFloat("alpha", pow(1.0f, 2.2f));
+				particle_fx->setMatrices(world, view, proj);
+
+				if (true) {
+					float dtime = sync_get_val(cameraTimeTrack, row) / 16 + sync_get_val(darkOffsetTrack, row) / 16;
+
+					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+					particle_fx->setTexture("tex", darksmoke_tex);
+					particleStreamer.begin();
+					const int num_particles = 500;
+					for (int i = 2 * num_particles - 1; i != -1; --i) {
+						int part = floor(dtime * num_particles - i);
+						float ptime2 = float(part / float(num_particles));
+						float ptime = float(beat * 0.01 + part * 135);
+						Vector3 pos = getCubePos(part / float(num_particles));
+						float prand = math::notRandf(part);
+						Vector3 temp(cos(ptime + prand * 43) - sin(ptime * 0.8 + prand * 34), sin(ptime + prand * 12), sin(ptime + 20 + prand - 20));
+						float woom = math::notRandf(part);
+						pos += normalize(temp) * pow(woom, 1.5f) * 5;
+						float fade = 1.0f;
+						float dist = dtime - ptime2;
+						float size = 5.0f / (1 + dist); // 0.3f / (1 + woom);
+						if (dist < 0.1)
+							size *= dist * 10;
+						particleStreamer.add(pos, size);
+						if (!particleStreamer.getRoom()) {
+							particleStreamer.end();
+							particle_fx->draw(&particleStreamer);
+							particleStreamer.begin();
+						}
+					}
+					particleStreamer.end();
+					particle_fx->draw(&particleStreamer);
+				}
+
+				float light_alpha = sync_get_val(lightAlphaTrack, row);
+				if (light_alpha > 0.0f) {
+					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+					particle_fx->setTexture("tex", particle_tex);
+					particle_fx->setFloat("alpha", pow(light_alpha, 2.2f));
+					particleStreamer.begin();
+					particleStreamer.add(worldLightPosition, 6.0f);
+					for (int i = 0; i < 300; ++i) {
+						float ptime = float(beat * 0.25 + i * 1235);
+						float jalla = math::notRandf(i);
+						Vector3 pos(cos(ptime + jalla * 24) - sin(ptime * 0.8 + jalla * 721), sin(ptime + jalla * 121), sin(ptime + 20 + jalla * 541));
+						pos = normalize(pos) * 0.5;
+	//					float woom = math::notRandf(i);
+						float woom = 0.5 + cos(math::notRandf(part) + ptime) * 0.5 + cos(beat + length(pos)) * 0.2;
+
+						pos = worldLightPosition + normalize(pos) * (1 + woom) * 3;
+						float size = 0.4f / (1 + woom);
+		//				if (distance(pos, camPos) < 200)
+						particleStreamer.add(pos, size);
+						if (!particleStreamer.getRoom()) {
+							particleStreamer.end();
+							particle_fx->draw(&particleStreamer);
+							particleStreamer.begin();
+						}
+					}
+
+					const int num_particles = 200;
+					for (int i = 0; i < num_particles; ++i) {
+						int part = floor(ltime * num_particles - i);
+						float ptime2 = float(part / float(num_particles));
+						float ptime = float(beat * 0.25 + part * 135);
+						Vector3 pos = getCubePos(part / float(num_particles));
+						Vector3 temp(cos(ptime) - sin(ptime * 0.8), sin(ptime), sin(ptime + 20));
+						float woom = math::notRandf(part);
+						pos += normalize(temp) * (1 + woom) * 2;
+						float size = 0.3f / (1 + abs(ptime2 - ltime));// 0.3f / (1 + woom);
+						particleStreamer.add(pos, size);
+						if (!particleStreamer.getRoom()) {
+							particleStreamer.end();
+							particle_fx->draw(&particleStreamer);
+							particleStreamer.begin();
+						}
+					}
+
+					particleStreamer.end();
+					particle_fx->draw(&particleStreamer);
+				}
+
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+			}
+
 			/* letterbox */
 			device.setRenderTarget(backbuffer);
 			device.setRenderTarget(NULL, 1);
@@ -599,7 +730,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			postprocess_fx->setTexture("color_tex", fxaa_target);
 			postprocess_fx->setTexture("overlay_tex", overlays.getTexture((int)sync_get_val(colorMapOverlayTrack, row) % overlays.getTextureCount()));
 			postprocess_fx->commitChanges();
-
 
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
 			drawRect(device, postprocess_fx, float(letterbox_viewport.X), float(letterbox_viewport.Y), float(letterbox_viewport.Width), float(letterbox_viewport.Height));

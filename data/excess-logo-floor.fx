@@ -26,6 +26,17 @@ sampler diff_samp = sampler_state {
 	sRGBTexture = TRUE;
 };
 
+texture spec_tex;
+sampler spec_samp = sampler_state {
+	Texture = (spec_tex);
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = WRAP;
+	AddressV = WRAP;
+	sRGBTexture = FALSE;
+};
+
 texture logo_tex;
 sampler logo_samp = sampler_state {
 	Texture = (logo_tex);
@@ -72,8 +83,9 @@ struct PS_OUTPUT {
 
 PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
+	float2 uv = Input.Pos3.xz * 0.005;
 	float3 n = normalize(Input.Normal);
-	float3 wn = tex2D(norm_samp, Input.Pos3.xz * 0.005).xyz * 2 - 1;
+	float3 wn = tex2D(norm_samp, uv).xyz * 2 - 1;
 	wn = normalize(wn.xzy);
 
 	float3 pos = Input.Pos3;
@@ -84,12 +96,13 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 
 	PS_OUTPUT o;
 	o.col.a = 1;
-	o.col.rgb = tex2D(diff_samp, Input.Pos3.xz * 0.005).xyz * 0.4;
+	o.col.rgb = tex2D(diff_samp, uv).xyz * 0.4;
 //	o.col.rgb = 1.25 - pow(max(0, dot(-normalize(Input.Pos2), n)), 1) * 0.5;
 	o.z = Input.Pos2.z;
 
-	float2 uv = float2(1, -1) * ((pos.xy) / 650) + float2(0.5, 0.75);
-	o.col.rgb += tex2D(logo_samp, uv);
+	float2 refl_uv = float2(1, -1) * ((pos.xy) / 650) + float2(0.5, 0.75);
+	float s = 0.5 + pow(tex2D(spec_samp, uv).r, 2) * 60;
+	o.col.rgb += tex2D(logo_samp, refl_uv) * s;
 	return o;
 }
 

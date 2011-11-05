@@ -1,23 +1,70 @@
-<tracks rows="128">
+<tracks rows="4000">
 	<track name="cam.dist">
 		<key row="0" value="200.000000" interpolation="0"/>
-		<key row="16" value="10.000000" interpolation="0"/>
-		<key row="32" value="100.000000" interpolation="0"/>
-		<key row="48" value="20.000000" interpolation="0"/>
+		<key row="712" value="5.000000" interpolation="0"/>
+		<key row="1216" value="210.000000" interpolation="0"/>
+		<key row="2048" value="40.000000" interpolation="0"/>
 	</track>
 	<track name="cam.y"/>
 	<track name="cam.roll"/>
-	<track name="cam.offset"/>
+	<track name="cam.offset">
+		<key row="0" value="10.000000" interpolation="0"/>
+		<key row="712" value="1.000000" interpolation="0"/>
+		<key row="960" value="-1.000000" interpolation="0"/>
+	</track>
 	<track name="cam.index">
 		<key row="0" value="0.000000" interpolation="0"/>
-		<key row="48" value="2.000000" interpolation="0"/>
+		<key row="712" value="1.000000" interpolation="0"/>
+		<key row="1216" value="0.000000" interpolation="0"/>
 	</track>
 	<track name="cam.shake.amt"/>
 	<track name="cam.shake.speed"/>
 	<track name="cm.fade">
-		<key row="0" value="1.000000" interpolation="0"/>
+		<key row="0" value="0.000000" interpolation="1"/>
+		<key row="16" value="1.000000" interpolation="0"/>
+		<key row="32" value="1.500000" interpolation="0"/>
+		<key row="48" value="1.000000" interpolation="0"/>
+		<key row="80" value="1.000000" interpolation="1"/>
+		<key row="96" value="0.000000" interpolation="0"/>
+		<key row="448" value="1.000000" interpolation="0"/>
+		<key row="712" value="1.500000" interpolation="0"/>
+		<key row="1211" value="1.400000" interpolation="1"/>
+		<key row="1215" value="0.000000" interpolation="0"/>
+		<key row="1216" value="1.000000" interpolation="0"/>
 	</track>
-	<track name="cm.flash"/>
+	<track name="cm.flash">
+		<key row="0" value="0.000000" interpolation="0"/>
+		<key row="416" value="0.800000" interpolation="1"/>
+		<key row="420" value="0.000000" interpolation="0"/>
+		<key row="421" value="0.800000" interpolation="1"/>
+		<key row="424" value="0.000000" interpolation="0"/>
+		<key row="425" value="0.800000" interpolation="1"/>
+		<key row="427" value="0.000000" interpolation="0"/>
+		<key row="428" value="0.800000" interpolation="1"/>
+		<key row="429" value="0.000000" interpolation="0"/>
+		<key row="430" value="0.800000" interpolation="1"/>
+		<key row="439" value="0.000000" interpolation="0"/>
+		<key row="440" value="0.800000" interpolation="1"/>
+		<key row="447" value="0.000000" interpolation="0"/>
+		<key row="448" value="0.800000" interpolation="1"/>
+		<key row="463" value="0.000000" interpolation="0"/>
+		<key row="712" value="0.800000" interpolation="1"/>
+		<key row="727" value="0.000000" interpolation="0"/>
+		<key row="960" value="0.800000" interpolation="1"/>
+		<key row="975" value="0.000000" interpolation="0"/>
+		<key row="1216" value="0.800000" interpolation="1"/>
+		<key row="1231" value="0.000000" interpolation="0"/>
+		<key row="2048" value="0.800000" interpolation="1"/>
+		<key row="2063" value="0.000000" interpolation="0"/>
+		<key row="2800" value="0.800000" interpolation="1"/>
+		<key row="2805" value="0.000000" interpolation="0"/>
+		<key row="2806" value="0.800000" interpolation="1"/>
+		<key row="2811" value="0.000000" interpolation="0"/>
+		<key row="2812" value="0.800000" interpolation="1"/>
+		<key row="2815" value="0.000000" interpolation="0"/>
+		<key row="2816" value="0.800000" interpolation="1"/>
+		<key row="2839" value="0.000000" interpolation="0"/>
+	</track>
 	<track name="cm.overlay"/>
 	<track name="cm.pulse.amt"/>
 	<track name="cm.pulse.speed"/>
@@ -27,17 +74,46 @@
 	<track name="dist.offset"/>
 	<track name="dof.fstop">
 		<key row="0" value="0.000000" interpolation="0"/>
+		<key row="712" value="20.000000" interpolation="0"/>
 	</track>
 	<track name="dof.flen">
 		<key row="0" value="0.000000" interpolation="0"/>
+		<key row="712" value="6.000000" interpolation="0"/>
+		<key row="1216" value="10.000000" interpolation="0"/>
 	</track>
 	<track name="dof.fdist">
 		<key row="0" value="500.000000" interpolation="0"/>
+		<key row="712" value="70.000000" interpolation="0"/>
+		<key row="1216" value="200.000000" interpolation="0"/>
 	</track>
 	<track name="part">
 		<key row="0" value="0.000000" interpolation="0"/>
-		<key row="16" value="1.000000" interpolation="0"/>
-		<key row="32" value="2.000000" interpolation="0"/>
-		<key row="48" value="3.000000" interpolation="0"/>
+		<key row="96" value="-1.000000" interpolation="0"/>
+		<key row="448" value="0.000000" interpolation="0"/>
+		<key row="712" value="1.000000" interpolation="0"/>
+		<key row="1216" value="2.000000" interpolation="0"/>
+		<key row="2048" value="3.000000" interpolation="0"/>
+	</track>
+	<track name="cam.time">
+		<key row="712" value="11.000000" interpolation="1"/>
+		<key row="959" value="128.000000" interpolation="0"/>
+		<key row="960" value="30.000000" interpolation="1"/>
+		<key row="1216" value="128.000000" interpolation="0"/>
+	</track>
+	<track name="light.offset">
+		<key row="712" value="30.000000" interpolation="1"/>
+		<key row="959" value="5.000000" interpolation="0"/>
+		<key row="960" value="-8.000000" interpolation="1"/>
+		<key row="1215" value="-2.000000" interpolation="0"/>
+	</track>
+	<track name="dark.offset">
+		<key row="960" value="-20.000000" interpolation="1"/>
+		<key row="1216" value="-1.000000" interpolation="0"/>
+	</track>
+	<track name="light.alpha">
+		<key row="712" value="1.000000" interpolation="0"/>
+		<key row="960" value="0.000000" interpolation="0"/>
+		<key row="1200" value="1.000000" interpolation="1"/>
+		<key row="1216" value="-1.000000" interpolation="0"/>
 	</track>
 </tracks>
