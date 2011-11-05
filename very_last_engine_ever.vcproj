@@ -657,6 +657,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\data\excess-logo-floor.fx"
+			>
+		</File>
+		<File
+			RelativePath=".\data\excess-logo.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\greeble-tunnel-lights.fx"
 			>
 		</File>

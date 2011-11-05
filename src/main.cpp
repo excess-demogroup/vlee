@@ -280,11 +280,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture particle_tex = engine::loadTexture(device, "data/particle.png");
 		particle_fx->setTexture("tex", particle_tex);
 
+		Mesh *excess_logo_x = engine::loadMesh(device, "data/excess-logo.x");
+		Effect *excess_logo_fx = engine::loadEffect(device, "data/excess-logo.fx");
+		Mesh *excess_logo_floor_x = engine::loadMesh(device, "data/excess-logo-floor.x");
+		Effect *excess_logo_floor_fx = engine::loadEffect(device, "data/excess-logo-floor.fx");
+		Texture excess_logo_tex = engine::loadTexture(device, "data/excess-logo.png");
+		Texture cube_room_norm_tex = engine::loadTexture(device, "data/cube-room-norm.png");
+		excess_logo_floor_fx->setTexture("logo_tex", excess_logo_tex);
+		excess_logo_floor_fx->setTexture("norm_tex", cube_room_norm_tex);
+
 		Mesh *cube_room_x = engine::loadMesh(device, "data/cube-room.x");
 		Effect *cube_room_fx = engine::loadEffect(device, "data/cube-room.fx");
 		Texture cube_room_ao_tex = engine::loadTexture(device, "data/cube-room-ao.png");
 		Texture cube_room_diff_tex = engine::loadTexture(device, "data/cube-room-diff.png");
-		Texture cube_room_norm_tex = engine::loadTexture(device, "data/cube-room-norm.png");
 		Texture cube_room_spec_tex = engine::loadTexture(device, "data/cube-room-spec.png");
 		cube_room_fx->setTexture("ao_tex", cube_room_ao_tex);
 		cube_room_fx->setTexture("diff_tex", cube_room_diff_tex);
@@ -362,9 +370,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			bool particles = true;
 
+			bool logo = true;
 			bool cluster = false;
 			bool rooms = false;
-			bool greeble = true;
+			bool greeble = false;
 
 			double shake_phase = beat * 32 * sync_get_val(cameraShakeSpeedTrack, row);
 			Vector3 camOffs(sin(shake_phase), cos(shake_phase * 0.9), sin(shake_phase - 0.5));
@@ -392,6 +401,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float fog_density = sync_get_val(fogDensityTrack, row) / 100000;
 
 			Vector3 worldLightPosition = Vector3(0, sin(beat * 0.25) * 100, 0);
+
+			if (logo) {
+				excess_logo_fx->setMatrices(world, view, proj);
+				excess_logo_fx->commitChanges();
+				excess_logo_fx->draw(excess_logo_x);
+
+				excess_logo_floor_fx->setVector3("viewPos", camPos);
+				excess_logo_floor_fx->setMatrices(world, view, proj);
+				excess_logo_floor_fx->commitChanges();
+				excess_logo_floor_fx->draw(excess_logo_floor_x);
+			}
 
 			if (rooms) {
 				// cube rooms
