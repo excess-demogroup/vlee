@@ -665,6 +665,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\data\fxaa.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\greeble-tunnel-lights.fx"
 			>
 		</File>

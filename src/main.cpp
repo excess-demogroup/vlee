@@ -242,6 +242,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *distFreqTrack   = sync_get_track(rocket, "dist.freq");
 		const sync_track *distOffsetTrack = sync_get_track(rocket, "dist.offset");
 
+		const sync_track *dofFStopTrack = sync_get_track(rocket, "dof.fstop");
+		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
+		const sync_track *dofFocalDistTrack = sync_get_track(rocket, "dof.fdist");
+
 		Surface backbuffer   = device.getRenderTarget(0);
 
 		D3DCAPS9 caps;
@@ -260,10 +264,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 		RenderTexture dof_temp1_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
 		RenderTexture dof_temp2_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
 
+		RenderTexture fxaa_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
+
 		/** DEMO ***/
 
 		Effect *dof_fx = engine::loadEffect(device, "data/dof.fx");
 		dof_fx->setVector3("viewport", Vector3(letterbox_viewport.Width, letterbox_viewport.Height, 0.0f));
+
+		Effect *fxaa_fx = engine::loadEffect(device, "data/fxaa.fx");
+		fxaa_fx->setVector3("viewportInv", Vector3(1.0f / letterbox_viewport.Width, 1.0f / letterbox_viewport.Height, 0.0f));
 
 		Effect *postprocess_fx = engine::loadEffect(device, "data/postprocess.fx");
 		postprocess_fx->setVector3("viewport", Vector3(letterbox_viewport.Width, letterbox_viewport.Height, 0.0f));
@@ -513,9 +522,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device.setRenderTarget(NULL, 1);
 			dof_fx->setTexture("color_tex", color_target);
 			dof_fx->setTexture("depth_tex", depth_target);
-			dof_fx->setFloat("focal_distance", 100);
-			dof_fx->setFloat("focal_length", 10);
-			dof_fx->setFloat("f_stop", 25);
+			dof_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
+			dof_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
+			dof_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
 			dof_fx->p->BeginPass(0);
 			core::d3dErr(device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 6));
 			dof_fx->p->EndPass();
@@ -537,6 +546,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			dof_fx->p->End();
 
+			device.setRenderTarget(fxaa_target.getSurface(0), 0);
+			device.setRenderTarget(NULL, 1);
+			fxaa_fx->setTexture("color_tex", dof_target);
+			drawRect(device, fxaa_fx, 0, 0, float(letterbox_viewport.Width), float(letterbox_viewport.Height));
+
 			/* letterbox */
 			device.setRenderTarget(backbuffer);
 			device.setRenderTarget(NULL, 1);
@@ -554,7 +568,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			postprocess_fx->setFloat("dist_amt", sync_get_val(distAmtTrack, row));
 			postprocess_fx->setFloat("dist_freq", sync_get_val(distFreqTrack, row) * 2 * float(M_PI));
 			postprocess_fx->setFloat("dist_time", float(beat * 4) + sync_get_val(distOffsetTrack, row));
-			postprocess_fx->setTexture("color_tex", dof_target);
+			postprocess_fx->setTexture("color_tex", fxaa_target);
 			postprocess_fx->setTexture("overlay_tex", overlays.getTexture((int)sync_get_val(colorMapOverlayTrack, row) % overlays.getTextureCount()));
 			postprocess_fx->commitChanges();
 
