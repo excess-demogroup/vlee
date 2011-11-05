@@ -270,7 +270,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
 		postprocess_fx->setTexture("noise_tex", noise_tex);
-		postprocess_fx->setVector3("nscale", Vector3(letterbox_viewport.Width / 128.0, letterbox_viewport.Height / 128.0, 0.0f));
+		postprocess_fx->setVector3("nscale", Vector3(letterbox_viewport.Width / 256.0f, letterbox_viewport.Height / 256.0f, 0.0f));
 
 		Texture spectrum_tex = engine::loadTexture(device, "data/spectrum.png");
 		postprocess_fx->setTexture("spectrum_tex", spectrum_tex);
@@ -352,6 +352,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 				camTarget = Vector3(0, 0, 0);
 			}
 
+			bool cluster = false;
+			bool rooms = true;
+			bool particles = true;
+
 			double shake_phase = beat * 32 * sync_get_val(cameraShakeSpeedTrack, row);
 			Vector3 camOffs(sin(shake_phase), cos(shake_phase * 0.9), sin(shake_phase - 0.5));
 			camPos += camOffs * sync_get_val(cameraShakeAmtTrack, row);
@@ -378,11 +382,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float fog_density = sync_get_val(fogDensityTrack, row) / 100000;
 
 			Vector3 worldLightPosition = Vector3(0, sin(beat * 0.25) * 100, 0);
-			Vector3 viewLightPosition = mul(view, worldLightPosition);
-			cube_room_fx->setVector3("viewLightPosition", viewLightPosition);
 
-			if (0) {
+			if (rooms) {
 				// cube rooms
+
+				Vector3 viewLightPosition = mul(view, worldLightPosition);
+				cube_room_fx->setVector3("viewLightPosition", viewLightPosition);
+
 				for (int i = -1; i < 2; ++i)
 					for (int j = -1; j < 2; ++j) {
 						Matrix4x4 world = Matrix4x4::translation(Vector3(i * 120, 0, j * 120));
@@ -393,7 +399,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					}
 			}
 
-			if (1) {
+			if (cluster) {
 				// neuron cluster
 				neuron_cluster_fx->setFloat("time", beat / 4);
 				neuron_cluster_fx->setMatrices(world, view, proj);
@@ -405,7 +411,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				neuron_cluster_skybox_fx->draw(neuron_cluster_skybox_x);
 			}
 
-			if (1) {
+			if (particles) {
 				// particles
 				Matrix4x4 modelview = world * view;
 				Vector3 up(modelview._12, modelview._22, modelview._32);

@@ -51,7 +51,6 @@ sampler overlay_samp = sampler_state {
 struct VS_OUTPUT {
 	float4 pos : POSITION;
 	float2 uv  : TEXCOORD0;
-	float2 nuv : TEXCOORD1;
 };
 
 VS_OUTPUT vertex(float4 ipos : POSITION, float2 uv : TEXCOORD0)
@@ -59,14 +58,11 @@ VS_OUTPUT vertex(float4 ipos : POSITION, float2 uv : TEXCOORD0)
 	VS_OUTPUT Out;
 	Out.pos = ipos;
 	Out.uv = uv;
-	Out.nuv = uv * nscale + noffs;
 	return Out;
 }
 
 float4 pixel(VS_OUTPUT In) : COLOR
 {
-//	return float4(tex2Dlod(color_samp, float4(In.uv, 0, 0)).rgb, 1);
-
 	const float sep = 0.03;
 	float dist = pow(2 * distance(In.uv, float2(0.5, 0.5)), 2);
 	float2 pos = In.uv;
@@ -101,7 +97,7 @@ float4 pixel(VS_OUTPUT In) : COLOR
 
 	col = col * fade + flash;
 
-	col += (tex2D(noise_samp, In.nuv) - 0.5) * (1.0 / 8);
+	col += (tex2D(noise_samp, In.uv * nscale + noffs) - 0.5) * (1.0 / 8);
 
 	return float4(col, 1);
 }
