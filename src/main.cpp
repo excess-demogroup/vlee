@@ -222,6 +222,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			throw FatalException("failed to connect to host");
 #endif
 
+		const sync_track *partTrack = sync_get_track(rocket, "part");
+
 		const sync_track *cameraDistanceTrack   = sync_get_track(rocket, "cam.dist");
 		const sync_track *cameraYTrack          = sync_get_track(rocket, "cam.y");
 		const sync_track *cameraRollTrack       = sync_get_track(rocket, "cam.roll");
@@ -294,14 +296,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Mesh *excess_logo_floor_x = engine::loadMesh(device, "data/excess-logo-floor.x");
 		Effect *excess_logo_floor_fx = engine::loadEffect(device, "data/excess-logo-floor.fx");
 		Texture excess_logo_tex = engine::loadTexture(device, "data/excess-logo.png");
+		Texture cube_room_diff_tex = engine::loadTexture(device, "data/cube-room-diff.png");
 		Texture cube_room_norm_tex = engine::loadTexture(device, "data/cube-room-norm.png");
 		excess_logo_floor_fx->setTexture("logo_tex", excess_logo_tex);
 		excess_logo_floor_fx->setTexture("norm_tex", cube_room_norm_tex);
+		excess_logo_floor_fx->setTexture("diff_tex", cube_room_diff_tex);
 
 		Mesh *cube_room_x = engine::loadMesh(device, "data/cube-room.x");
 		Effect *cube_room_fx = engine::loadEffect(device, "data/cube-room.fx");
 		Texture cube_room_ao_tex = engine::loadTexture(device, "data/cube-room-ao.png");
-		Texture cube_room_diff_tex = engine::loadTexture(device, "data/cube-room-diff.png");
 		Texture cube_room_spec_tex = engine::loadTexture(device, "data/cube-room-spec.png");
 		cube_room_fx->setTexture("ao_tex", cube_room_ao_tex);
 		cube_room_fx->setTexture("diff_tex", cube_room_diff_tex);
@@ -377,12 +380,37 @@ int main(int /*argc*/, char* /*argv*/ [])
 				camTarget = Vector3(0, 0, 0);
 			}
 
-			bool particles = true;
+			bool particles = false;
 
-			bool logo = true;
-			bool cluster = false;
+			bool logo = false;
 			bool rooms = false;
+			bool cluster = false;
 			bool greeble = false;
+
+			switch (int(sync_get_val(partTrack, row))) {
+			case 0:
+				logo = true;
+				break;
+
+			case 1:
+				rooms = true;
+				particles = true;
+				break;
+
+			case 2:
+				cluster = true;
+				break;
+
+			case 3:
+				greeble = true;
+				break;
+
+#ifdef SYNC_PLAYER
+			case -1:
+				done = true;
+				break;
+#endif
+			}
 
 			double shake_phase = beat * 32 * sync_get_val(cameraShakeSpeedTrack, row);
 			Vector3 camOffs(sin(shake_phase), cos(shake_phase * 0.9), sin(shake_phase - 0.5));
