@@ -649,6 +649,10 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath=".\data\clouds.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\cube-room.fx"
 			>
 		</File>

@@ -3,6 +3,7 @@ float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
 float3 viewPos;
+const float lum[6];
 
 texture norm_tex;
 sampler norm_samp = sampler_state {
@@ -37,9 +38,64 @@ sampler spec_samp = sampler_state {
 	sRGBTexture = FALSE;
 };
 
-texture logo_tex;
-sampler logo_samp = sampler_state {
-	Texture = (logo_tex);
+texture logo0_tex;
+sampler logo0_samp = sampler_state {
+	Texture = (logo0_tex);
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = BORDER;
+	AddressV = BORDER;
+	sRGBTexture = TRUE;
+};
+
+texture logo1_tex;
+sampler logo1_samp = sampler_state {
+	Texture = (logo1_tex);
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = BORDER;
+	AddressV = BORDER;
+	sRGBTexture = TRUE;
+};
+
+texture logo2_tex;
+sampler logo2_samp = sampler_state {
+	Texture = (logo2_tex);
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = BORDER;
+	AddressV = BORDER;
+	sRGBTexture = TRUE;
+};
+
+texture logo3_tex;
+sampler logo3_samp = sampler_state {
+	Texture = (logo3_tex);
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = BORDER;
+	AddressV = BORDER;
+	sRGBTexture = TRUE;
+};
+
+texture logo4_tex;
+sampler logo4_samp = sampler_state {
+	Texture = (logo4_tex);
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = BORDER;
+	AddressV = BORDER;
+	sRGBTexture = TRUE;
+};
+
+texture logo5_tex;
+sampler logo5_samp = sampler_state {
+	Texture = (logo5_tex);
 	MipFilter = LINEAR;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
@@ -102,7 +158,14 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 
 	float2 refl_uv = float2(1, -1) * ((pos.xy) / 650) + float2(0.5, 0.75);
 	float s = 0.5 + pow(tex2D(spec_samp, uv).r, 2) * 60;
-	o.col.rgb += tex2D(logo_samp, refl_uv) * s;
+	o.col.rgb  = tex2D(logo0_samp, refl_uv) * s * lum[0];
+	o.col.rgb += tex2D(logo1_samp, refl_uv) * s * lum[1];
+	o.col.rgb += tex2D(logo2_samp, refl_uv) * s * lum[2];
+	o.col.rgb += tex2D(logo3_samp, refl_uv) * s * lum[3];
+	o.col.rgb += tex2D(logo4_samp, refl_uv) * s * lum[4];
+	o.col.rgb += tex2D(logo5_samp, refl_uv) * s * lum[5];
+//	o.col.rgb = lerp(o.col.rgb, 0.1, saturate(length(Input.Pos2) / 500));
+
 	return o;
 }
 

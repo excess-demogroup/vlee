@@ -2,6 +2,7 @@ float4x4 matView : VIEW;
 float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
+const float lum;
 
 struct VS_INPUT {
 	float4 Position : POSITION0;
@@ -39,7 +40,7 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 	float3 n = normalize(Input.Normal);
 
 	PS_OUTPUT o;
-	o.col = 1.5 / (1 + Input.dist / 2);
+	o.col = lum / (1 + Input.dist / 2);
 	o.col.rgb *= 1.25 - pow(max(0, dot(-normalize(Input.Pos2), n)), 1) * 0.5;
 	o.z = Input.Pos2.z;
 	return o;

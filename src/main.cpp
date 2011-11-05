@@ -289,7 +289,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		const sync_track *cameraDistanceTrack   = sync_get_track(rocket, "cam.dist");
 		const sync_track *cameraTimeTrack       = sync_get_track(rocket, "cam.time");
+		const sync_track *cameraXTrack          = sync_get_track(rocket, "cam.x");
 		const sync_track *cameraYTrack          = sync_get_track(rocket, "cam.y");
+		const sync_track *cameraZTrack          = sync_get_track(rocket, "cam.z");
+		const sync_track *cameraAtXTrack          = sync_get_track(rocket, "cam.at.x");
+		const sync_track *cameraAtYTrack          = sync_get_track(rocket, "cam.at.y");
+		const sync_track *cameraAtZTrack          = sync_get_track(rocket, "cam.at.z");
 		const sync_track *cameraRollTrack       = sync_get_track(rocket, "cam.roll");
 		const sync_track *cameraOffsetTrack     = sync_get_track(rocket, "cam.offset");
 		const sync_track *cameraIndexTrack      = sync_get_track(rocket, "cam.index");
@@ -297,16 +302,24 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *cameraShakeSpeedTrack = sync_get_track(rocket, "cam.shake.speed");
 
 		const sync_track *lightOffsetTrack = sync_get_track(rocket, "light.offset");
-		const sync_track *lightAlphaTrack = sync_get_track(rocket, "light.alpha");
+		const sync_track *lightAlphaTrack  = sync_get_track(rocket, "light.alpha");
 		const sync_track *darkOffsetTrack  = sync_get_track(rocket, "dark.offset");
+
+		const sync_track *cloudsZoomTrack  = sync_get_track(rocket, "clouds.zoom");
+		const sync_track *cloudsAlphaTrack = sync_get_track(rocket, "clouds.alpha");
 
 		const sync_track *colorMapFadeTrack    = sync_get_track(rocket, "cm.fade");
 		const sync_track *colorMapFlashTrack   = sync_get_track(rocket, "cm.flash");
 		const sync_track *colorMapOverlayTrack = sync_get_track(rocket, "cm.overlay");
+		const sync_track *colorMapOverlayAlphaTrack = sync_get_track(rocket, "cm.overlay_alpha");
 		const sync_track *pulseAmt2Track       = sync_get_track(rocket, "cm.pulse.amt");
 		const sync_track *pulseSpeed2Track     = sync_get_track(rocket, "cm.pulse.speed");
 
-		const sync_track *fogDensityTrack = sync_get_track(rocket, "fog.density");
+//		const sync_track *fogDensityTrack = sync_get_track(rocket, "fog.density");
+		const sync_track *tunnelLights1Track = sync_get_track(rocket, "tunnel.l1");
+		const sync_track *tunnelLights2Track = sync_get_track(rocket, "tunnel.l2");
+		const sync_track *tunnelLights3Track = sync_get_track(rocket, "tunnel.l3");
+		const sync_track *tunnelLights4Track = sync_get_track(rocket, "tunnel.l4");
 
 		const sync_track *distAmtTrack    = sync_get_track(rocket, "dist.amt");
 		const sync_track *distFreqTrack   = sync_get_track(rocket, "dist.freq");
@@ -315,6 +328,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *dofFStopTrack = sync_get_track(rocket, "dof.fstop");
 		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
 		const sync_track *dofFocalDistTrack = sync_get_track(rocket, "dof.fdist");
+
+		const sync_track *logoL0Track = sync_get_track(rocket, "logo.l0");
+		const sync_track *logoL1Track = sync_get_track(rocket, "logo.l1");
+		const sync_track *logoL2Track = sync_get_track(rocket, "logo.l2");
+		const sync_track *logoL3Track = sync_get_track(rocket, "logo.l3");
+		const sync_track *logoL4Track = sync_get_track(rocket, "logo.l4");
+		const sync_track *logoL5Track = sync_get_track(rocket, "logo.l5");
 
 		Surface backbuffer   = device.getRenderTarget(0);
 
@@ -360,15 +380,31 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture darksmoke_tex = engine::loadTexture(device, "data/darksmoke.png");
 		particle_fx->setTexture("tex", particle_tex);
 
-		Mesh *excess_logo_x = engine::loadMesh(device, "data/excess-logo.x");
+		Mesh *excess_logo_x[6];
+		excess_logo_x[0] = engine::loadMesh(device, "data/excess-logo0.x");
+		excess_logo_x[1] = engine::loadMesh(device, "data/excess-logo1.x");
+		excess_logo_x[2] = engine::loadMesh(device, "data/excess-logo2.x");
+		excess_logo_x[3] = engine::loadMesh(device, "data/excess-logo3.x");
+		excess_logo_x[4] = engine::loadMesh(device, "data/excess-logo4.x");
+		excess_logo_x[5] = engine::loadMesh(device, "data/excess-logo5.x");
 		Effect *excess_logo_fx = engine::loadEffect(device, "data/excess-logo.fx");
 		Mesh *excess_logo_floor_x = engine::loadMesh(device, "data/excess-logo-floor.x");
 		Effect *excess_logo_floor_fx = engine::loadEffect(device, "data/excess-logo-floor.fx");
-		Texture excess_logo_tex = engine::loadTexture(device, "data/excess-logo.png");
+		Texture excess_logo0_tex = engine::loadTexture(device, "data/excess-logo0.png");
+		Texture excess_logo1_tex = engine::loadTexture(device, "data/excess-logo1.png");
+		Texture excess_logo2_tex = engine::loadTexture(device, "data/excess-logo2.png");
+		Texture excess_logo3_tex = engine::loadTexture(device, "data/excess-logo3.png");
+		Texture excess_logo4_tex = engine::loadTexture(device, "data/excess-logo4.png");
+		Texture excess_logo5_tex = engine::loadTexture(device, "data/excess-logo5.png");
 		Texture cube_room_diff_tex = engine::loadTexture(device, "data/cube-room-diff.png");
 		Texture cube_room_norm_tex = engine::loadTexture(device, "data/cube-room-norm.png");
 		Texture cube_room_spec_tex = engine::loadTexture(device, "data/cube-room-spec.png");
-		excess_logo_floor_fx->setTexture("logo_tex", excess_logo_tex);
+		excess_logo_floor_fx->setTexture("logo0_tex", excess_logo0_tex);
+		excess_logo_floor_fx->setTexture("logo1_tex", excess_logo1_tex);
+		excess_logo_floor_fx->setTexture("logo2_tex", excess_logo2_tex);
+		excess_logo_floor_fx->setTexture("logo3_tex", excess_logo3_tex);
+		excess_logo_floor_fx->setTexture("logo4_tex", excess_logo4_tex);
+		excess_logo_floor_fx->setTexture("logo5_tex", excess_logo5_tex);
 		excess_logo_floor_fx->setTexture("norm_tex", cube_room_norm_tex); // tekstur-tyveri! ring snuten!
 		excess_logo_floor_fx->setTexture("diff_tex", cube_room_diff_tex);
 		excess_logo_floor_fx->setTexture("spec_tex", cube_room_spec_tex);
@@ -392,6 +428,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		neuron_cluster_skybox_fx->setTexture("env_tex", neuron_cluster_env_tex);
 		CubeTexture neuron_cluster_env_details_tex = engine::loadCubeTexture(device, "data/neuron-cluster-skybox-details.dds");
 		neuron_cluster_skybox_fx->setTexture("env_details_tex", neuron_cluster_env_details_tex);
+
+		Effect *clouds_fx = engine::loadEffect(device, "data/clouds.fx");
+		Texture cloud1_tex = engine::loadTexture(device, "data/cloud1.jpg");
+		clouds_fx->setTexture("cloud1_tex", cloud1_tex);
 
 		Mesh *greeble_tunnel_x = engine::loadMesh(device, "data/greeble-tunnel.x");
 		Effect *greeble_tunnel_fx = engine::loadEffect(device, "data/greeble-tunnel.fx");
@@ -423,6 +463,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			sync_update(rocket, int(row), &bass_cb, (void *)stream);
 #endif
 			double beat = row / 4;
+			bool use_roll = false;
 
 			float camTime = float(beat / 4) + sync_get_val(cameraOffsetTrack, row);
 			Vector3 camPos, camTarget, camUp;
@@ -440,6 +481,22 @@ int main(int /*argc*/, char* /*argv*/ [])
 				camTarget = getCubePos(sync_get_val(cameraTimeTrack, row) / 16 + sync_get_val(cameraOffsetTrack, row));
 				camUp = camPos - camTarget;
 				camUp = Vector3(camUp.y, camUp.z, camUp.x);
+				break;
+
+			case 2: {
+				float angle = sync_get_val(cameraTimeTrack, row) * (M_PI / 180);
+				float angle2 = angle + sync_get_val(cameraOffsetTrack, row) * (M_PI / 180);
+				camPos = Vector3(sin(angle) * 30, 0, cos(angle) * 30);
+				camPos += normalize(camPos) * sync_get_val(cameraYTrack, row);
+				camTarget = Vector3(sin(angle2) * 30, 0, cos(angle2) * 30);
+				camTarget += normalize(camTarget) * sync_get_val(cameraYTrack, row);
+				use_roll = true;
+				} break;
+
+			case 3:
+				camPos = Vector3(sync_get_val(cameraXTrack, row), sync_get_val(cameraYTrack, row), sync_get_val(cameraZTrack, row));
+				camTarget = Vector3(sync_get_val(cameraAtXTrack, row), sync_get_val(cameraAtYTrack, row), sync_get_val(cameraAtZTrack, row));
+				use_roll = true;
 				break;
 
 			default:
@@ -485,9 +542,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 			camPos += camOffs * sync_get_val(cameraShakeAmtTrack, row);
 			camTarget += camOffs * sync_get_val(cameraShakeAmtTrack, row);
 
-			float camRoll = sync_get_val(cameraRollTrack, row) * float(2 * M_PI);
-			Matrix4x4 view  = Matrix4x4::lookAt(camPos, camTarget, camRoll);
-			D3DXMatrixLookAtLH(&view, &camPos, &camTarget, &camUp);
+			float camRoll = sync_get_val(cameraRollTrack, row) * float(M_PI / 180);
+			Matrix4x4 view;
+			if (use_roll)
+				view = Matrix4x4::lookAt(camPos, camTarget, camRoll);
+			else
+				D3DXMatrixLookAtLH(&view, &camPos, &camTarget, &camUp);
 
 			Matrix4x4 world = Matrix4x4::identity();
 			Matrix4x4 proj  = Matrix4x4::projection(80.0f, float(DEMO_ASPECT), 1.0f, 10000.f);
@@ -505,17 +565,34 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 			device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
 
-			float fog_density = sync_get_val(fogDensityTrack, row) / 100000;
+//			float fog_density = sync_get_val(fogDensityTrack, row) / 100000;
 
 //			Vector3 worldLightPosition = Vector3(0, sin(beat * 0.25) * 100, 0);
 			float ltime = sync_get_val(cameraTimeTrack, row) / 16 + sync_get_val(lightOffsetTrack, row) / 16;
 			Vector3 worldLightPosition = getCubePos(ltime);
 
 			if (logo) {
-				excess_logo_fx->setMatrices(world, view, proj);
-				excess_logo_fx->commitChanges();
-				excess_logo_fx->draw(excess_logo_x);
+				float lum[6] = {
+					sync_get_val(logoL0Track, row),
+					sync_get_val(logoL1Track, row),
+					sync_get_val(logoL2Track, row),
+					sync_get_val(logoL3Track, row),
+					sync_get_val(logoL4Track, row),
+					sync_get_val(logoL5Track, row)
+				};
 
+				for (int i = 0; i < 6; ++i)
+					if (lum[i] < 0)
+						lum[i] = math::randf() * 1.5f;
+
+				for (int i = 0; i < 6; ++i) {
+					excess_logo_fx->setMatrices(world, view, proj);
+					excess_logo_fx->setFloat("lum", lum[i]);
+					excess_logo_fx->commitChanges();
+					excess_logo_fx->draw(excess_logo_x[i]);
+				}
+
+				excess_logo_floor_fx->setFloatArray("lum", lum, 6);
 				excess_logo_floor_fx->setVector3("viewPos", camPos);
 				excess_logo_floor_fx->setMatrices(world, view, proj);
 				excess_logo_floor_fx->commitChanges();
@@ -557,6 +634,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 				greeble_tunnel_fx->commitChanges();
 				greeble_tunnel_fx->draw(greeble_tunnel_x);
 
+				greeble_tunnel_lights_fx->setFloat("lights1", sync_get_val(tunnelLights1Track, row));
+				greeble_tunnel_lights_fx->setFloat("lights2", sync_get_val(tunnelLights2Track, row));
+				greeble_tunnel_lights_fx->setFloat("lights3", sync_get_val(tunnelLights3Track, row));
+				greeble_tunnel_lights_fx->setFloat("lights4", sync_get_val(tunnelLights4Track, row));
 				greeble_tunnel_lights_fx->setMatrices(world, view, proj);
 				greeble_tunnel_lights_fx->commitChanges();
 				greeble_tunnel_lights_fx->draw(greeble_tunnel_lights_x);
@@ -710,6 +791,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 			}
 
+			float clouds_alpha = sync_get_val(cloudsAlphaTrack, row);
+			if (clouds_alpha > 0) {
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+				clouds_fx->setFloat("alpha", clouds_alpha);
+				clouds_fx->setFloat("zoom", pow(sync_get_val(cloudsZoomTrack, row), 2));
+				drawRect(device, clouds_fx, float(letterbox_viewport.X), float(letterbox_viewport.Y), float(letterbox_viewport.Width), float(letterbox_viewport.Height));
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+			}
+
 			/* letterbox */
 			device.setRenderTarget(backbuffer);
 			device.setRenderTarget(NULL, 1);
@@ -724,11 +816,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 			postprocess_fx->setVector3("noffs", Vector3(math::notRandf(int(beat * 100)), math::notRandf(int(beat * 100) + 1), 0));
 			postprocess_fx->setFloat("flash", flash < 0 ? math::randf() : pow(flash, 2.0f));
 			postprocess_fx->setFloat("fade", pow(fade, 2.2f));
-			postprocess_fx->setFloat("dist_amt", sync_get_val(distAmtTrack, row));
+			postprocess_fx->setFloat("dist_amt", sync_get_val(distAmtTrack, row) / 100);
 			postprocess_fx->setFloat("dist_freq", sync_get_val(distFreqTrack, row) * 2 * float(M_PI));
 			postprocess_fx->setFloat("dist_time", float(beat * 4) + sync_get_val(distOffsetTrack, row));
 			postprocess_fx->setTexture("color_tex", fxaa_target);
-			postprocess_fx->setTexture("overlay_tex", overlays.getTexture((int)sync_get_val(colorMapOverlayTrack, row) % overlays.getTextureCount()));
+			postprocess_fx->setFloat("overlay_alpha", sync_get_val(colorMapOverlayAlphaTrack, row));
+			postprocess_fx->setTexture("overlay_tex", overlays.getTexture(int(sync_get_val(colorMapOverlayTrack, row)) % overlays.getTextureCount()));
 			postprocess_fx->commitChanges();
 
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);

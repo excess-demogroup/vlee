@@ -3,6 +3,8 @@ float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
 
+const float lights1, lights2, lights3, lights4;
+
 texture ao_tex;
 sampler ao_samp = sampler_state {
 	Texture = (ao_tex);
@@ -46,7 +48,20 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 	PS_OUTPUT o;
 	float ao = tex2D(ao_samp, Input.uv).r;
 	o.col = float4(ao, ao, ao, 1) * 0.1;
-	o.col.rgb += Input.uv.xyx;
+	if (Input.uv.x > 0.6) {
+		if (Input.uv.y > 0.3) {
+			o.col.rgb += float3(0.3, 0.3, 0.6) * lights1;
+		} else {
+			o.col.rgb += float3(0.3, 0.6, 0.3) * lights2;
+		}
+	} else {
+		if (Input.uv.y > 0.5) {
+			o.col.rgb += float3(0.3, 0.5, 0.5) * lights3;
+		} else {
+			o.col.rgb += float3(0.5, 0.3, 0.3) * lights4;
+		}
+	}
+	
 	// cheap-ass fog
 	o.col.rgb = lerp(o.col.rgb, 0.1, saturate(length(Input.Pos2) / 50));
 	o.z = Input.Pos2.z;

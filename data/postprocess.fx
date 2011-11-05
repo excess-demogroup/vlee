@@ -1,4 +1,4 @@
-const float flash, fade;
+const float flash, fade, overlay_alpha;
 const float2 noffs, nscale;
 const float noise_amt;
 const float dist_amt, dist_freq, dist_time;
@@ -45,7 +45,7 @@ sampler overlay_samp = sampler_state {
 	MagFilter = LINEAR;
 	AddressU = CLAMP;
 	AddressV = CLAMP;
-	sRGBTexture = FALSE;
+	sRGBTexture = TRUE;
 };
 
 struct VS_OUTPUT {
@@ -66,8 +66,12 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	const float sep = 0.03;
 	float dist = pow(2 * distance(In.uv, float2(0.5, 0.5)), 2);
 	float2 pos = In.uv;
+	pos += float2(
+			(sin(pos.y * dist_freq + dist_time) * 2 - 1) * dist_amt,
+			(sin(pos.x * dist_freq + dist_time) * 2 - 1) * dist_amt);
 	float2 end = (pos - 0.5) * (1 - dist * sep * 2) + 0.5;
 	float3 sum = 0, filter_sum = 0;
+
 
 	int samples = max(3, int(length(viewport * (end - pos) / 2)));
 	float2 delta = (end - pos) / samples;
@@ -91,9 +95,10 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	float3 col = sum;
 #endif
 
-/*	float4 o = tex2D(overlay_samp, In.uv);
+	float4 o = tex2D(overlay_samp, In.uv);
+	o.a *= overlay_alpha;
 	col *= 1 - o.a;
-	col += o.rgb * o.a; */
+	col += o.rgb * o.a;
 
 	col = col * fade + flash;
 
