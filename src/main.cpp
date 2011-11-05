@@ -303,6 +303,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 		CubeTexture neuron_cluster_env_details_tex = engine::loadCubeTexture(device, "data/neuron-cluster-skybox-details.dds");
 		neuron_cluster_skybox_fx->setTexture("env_details_tex", neuron_cluster_env_details_tex);
 
+		Mesh *greeble_tunnel_x = engine::loadMesh(device, "data/greeble-tunnel.x");
+		Effect *greeble_tunnel_fx = engine::loadEffect(device, "data/greeble-tunnel.fx");
+		Texture greeble_tunnel_ao_tex = engine::loadTexture(device, "data/greeble-tunnel-ao.png");
+		greeble_tunnel_fx->setTexture("ao_tex", greeble_tunnel_ao_tex);
+		Mesh *greeble_tunnel_lights_x = engine::loadMesh(device, "data/greeble-tunnel-lights.x");
+		Effect *greeble_tunnel_lights_fx = engine::loadEffect(device, "data/greeble-tunnel-lights.fx");
+		greeble_tunnel_lights_fx->setTexture("ao_tex", greeble_tunnel_ao_tex);
+
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
 		BASS_Start();
@@ -352,9 +360,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 				camTarget = Vector3(0, 0, 0);
 			}
 
-			bool cluster = false;
-			bool rooms = true;
 			bool particles = true;
+
+			bool cluster = false;
+			bool rooms = false;
+			bool greeble = true;
 
 			double shake_phase = beat * 32 * sync_get_val(cameraShakeSpeedTrack, row);
 			Vector3 camOffs(sin(shake_phase), cos(shake_phase * 0.9), sin(shake_phase - 0.5));
@@ -409,6 +419,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 				neuron_cluster_skybox_fx->setMatrices(world, view, proj);
 				neuron_cluster_skybox_fx->commitChanges();
 				neuron_cluster_skybox_fx->draw(neuron_cluster_skybox_x);
+			}
+
+			if (greeble) {
+				// greeble tunnel
+				greeble_tunnel_fx->setMatrices(world, view, proj);
+				greeble_tunnel_fx->commitChanges();
+				greeble_tunnel_fx->draw(greeble_tunnel_x);
+
+				greeble_tunnel_lights_fx->setMatrices(world, view, proj);
+				greeble_tunnel_lights_fx->commitChanges();
+				greeble_tunnel_lights_fx->draw(greeble_tunnel_lights_x);
 			}
 
 			if (particles) {

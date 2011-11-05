@@ -657,6 +657,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\data\greeble-tunnel-lights.fx"
+			>
+		</File>
+		<File
+			RelativePath=".\data\greeble-tunnel.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\neuron-cluster-skybox.fx"
 			>
 		</File>
