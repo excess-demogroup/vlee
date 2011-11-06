@@ -336,6 +336,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *logoL4Track = sync_get_track(rocket, "logo.l4");
 		const sync_track *logoL5Track = sync_get_track(rocket, "logo.l5");
 
+		const sync_track *neuronsPulseTrack = sync_get_track(rocket, "neur.pulse");
+
 		Surface backbuffer   = device.getRenderTarget(0);
 
 		D3DCAPS9 caps;
@@ -506,6 +508,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			}
 
 			bool particles = false;
+			bool light_particles = false;
+			bool dark_particles = false;
+			bool tunnel_particles = false;
 
 			bool logo = false;
 			bool rooms = false;
@@ -521,6 +526,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			case 1:
 				rooms = true;
 				particles = true;
+				light_particles = true;
+				dark_particles = true;
 				break;
 
 			case 2:
@@ -529,6 +536,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			case 3:
 				greeble = true;
+				particles = true;
+				tunnel_particles = true;
 				break;
 			}
 
@@ -619,6 +628,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			if (cluster) {
 				// neuron cluster
 				neuron_cluster_fx->setFloat("time", float(beat / 4));
+				neuron_cluster_fx->setFloat("pulse", sync_get_val(neuronsPulseTrack, row));
 				neuron_cluster_fx->setMatrices(world, view, proj);
 				neuron_cluster_fx->commitChanges();
 				neuron_cluster_fx->draw(neuron_cluster_x);
@@ -706,7 +716,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				particle_fx->setFloat("alpha", pow(1.0f, 2.2f));
 				particle_fx->setMatrices(world, view, proj);
 
-				if (true) {
+				if (dark_particles) {
 					float dtime = sync_get_val(cameraTimeTrack, row) / 16 + sync_get_val(darkOffsetTrack, row) / 16;
 
 					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
@@ -740,7 +750,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				}
 
 				float light_alpha = sync_get_val(lightAlphaTrack, row);
-				if (light_alpha > 0.0f) {
+				if (light_particles && light_alpha > 0.0f) {
 					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
 					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
 					particle_fx->setTexture("tex", particle_tex);
@@ -784,6 +794,31 @@ int main(int /*argc*/, char* /*argv*/ [])
 						}
 					}
 
+					particleStreamer.end();
+					particle_fx->draw(&particleStreamer);
+				}
+
+				if (tunnel_particles) {
+					float dtime = sync_get_val(cameraTimeTrack, row) / 16 + sync_get_val(darkOffsetTrack, row) / 16;
+
+					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+					particle_fx->setTexture("tex", particle_tex);
+					particle_fx->setFloat("alpha", pow(1.0f, 2.2f));
+					particleStreamer.begin();
+					const int num_particles = 5000;
+					for (int i = 0; i < num_particles; ++i) {
+						Vector3 pos(math::notRandf(i) - 0.5, math::notRandf(i+1) - 0.5, math::notRandf(i+2) - 0.5);
+						pos *= 80;
+						float woom = math::notRandf(part);
+						float size = 0.4f / (1 + math::notRandf(i+3));
+						particleStreamer.add(pos, size);
+						if (!particleStreamer.getRoom()) {
+							particleStreamer.end();
+							particle_fx->draw(&particleStreamer);
+							particleStreamer.begin();
+						}
+					}
 					particleStreamer.end();
 					particle_fx->draw(&particleStreamer);
 				}

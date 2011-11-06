@@ -2,7 +2,7 @@ float4x4 matView : VIEW;
 float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
-float time;
+float pulse;
 
 texture3D noise_tex;
 sampler3D noise_samp = sampler_state {
@@ -44,10 +44,13 @@ VS_OUTPUT vs_main( VS_INPUT Input )
 	VS_OUTPUT Output;
 
 	float3 pos = Input.Position;
-	Output.dist = length(Input.Position / 100);
+//	Output.dist = pulse - length(Input.Position / 100) - 0.61;
+	Output.dist = (pulse - 0.5) - (length(Input.Position / 100) - 0.62);
 
-	float bulge = pow(abs(frac(Output.dist - time) - 0.5) * 2, 10);
-	pos += Input.Normal * bulge * 2;
+	if (Output.dist > -0.5) {
+		float bulge = pow(abs(frac(Output.dist) - 0.5) * 2, 10);
+		pos += Input.Normal * bulge * 2;
+	}
 
 	Output.Position = mul(float4(pos, 1), matWorldViewProjection);
 	Output.Normal = mul(matWorldViewInverse, float4(Input.Normal, 0));
@@ -91,7 +94,8 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 	o.col.rgb = lerp(o.col.rgb, float3(0.1, 0.1, 0.1) + o.col.rgb * float3(0.3, 1.7, 1.5), 0.5) * 2;
 
 	o.col.rgb *= 1.1 - pow(max(0, dot(-normalize(Input.Pos2), n)), 1);
-	o.col.rgb += pow(abs(frac(Input.dist - time) - 0.5) * 2, 10) * float3(1, 0.25, 0.1);
+	if (Input.dist > -0.5)
+		o.col.rgb += pow(abs(frac(Input.dist) - 0.5) * 2, 10) * float3(1, 0.25, 0.1);
 
 	o.z = Input.Pos2.z;
 	return o;
