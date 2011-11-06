@@ -4,6 +4,7 @@
 //
 #define IDD_CONFIG                      101
 #define IDB_BITMAP1                     102
+#define IDI_ICON1                       103
 #define IDC_DISPLAY                     1001
 #define IDC_DEVICE                      1002
 #define IDC_FORMAT                      1003
@@ -20,7 +21,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        103
+#define _APS_NEXT_RESOURCE_VALUE        104
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1012
 #define _APS_NEXT_SYMED_VALUE           101

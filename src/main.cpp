@@ -833,7 +833,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 				clouds_fx->setFloat("alpha", clouds_alpha);
 				clouds_fx->setFloat("zoom", pow(sync_get_val(cloudsZoomTrack, row), 2));
-				drawRect(device, clouds_fx, float(letterbox_viewport.X), float(letterbox_viewport.Y), float(letterbox_viewport.Width), float(letterbox_viewport.Height));
+				drawRect(device, clouds_fx, 0, 0, float(letterbox_viewport.Width), float(letterbox_viewport.Height));
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 			}
 

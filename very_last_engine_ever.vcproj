@@ -644,6 +644,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\icon.ico"
+				>
+			</File>
+			<File
 				RelativePath=".\src\very_last_engine_ever.rc"
 				>
 			</File>
