@@ -119,7 +119,7 @@ IDB_BITMAP1             BITMAP                  "..\\dialog.bmp"
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON1               ICON                    "C:\\Users\\kusma\\src\\vlee\\icon.ico"
+IDI_ICON1               ICON                    "..\\icon.ico"
 #endif    // Norwegian (Bokmal) resources
 /////////////////////////////////////////////////////////////////////////////
 
