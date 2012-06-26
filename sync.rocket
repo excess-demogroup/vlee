@@ -78,6 +78,24 @@
 		<track name="dof.fdist">
 			<key row="0" value="100" interpolation="0"/>
 		</track>
+		<track name="sphere.amt1">
+			<key row="0" value="1" interpolation="0"/>
+		</track>
+		<track name="sphere.amt2">
+			<key row="0" value="1" interpolation="0"/>
+		</track>
+		<track name="sphere.freq1">
+			<key row="0" value="10" interpolation="0"/>
+		</track>
+		<track name="sphere.freq2">
+			<key row="0" value="2" interpolation="0"/>
+		</track>
+		<track name="sphere.speed1">
+			<key row="0" value="20" interpolation="0"/>
+		</track>
+		<track name="sphere.speed2">
+			<key row="0" value="5" interpolation="0"/>
+		</track>
 	</tracks>
 	<bookmarks/>
 </sync>

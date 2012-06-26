@@ -316,6 +316,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
 		const sync_track *dofFocalDistTrack = sync_get_track(rocket, "dof.fdist");
 
+		const sync_track *sphereSpeed1Track = sync_get_track(rocket, "sphere.speed1");
+		const sync_track *sphereSpeed2Track = sync_get_track(rocket, "sphere.speed2");
+		const sync_track *sphereFreq1Track = sync_get_track(rocket, "sphere.freq1");
+		const sync_track *sphereFreq2Track = sync_get_track(rocket, "sphere.freq2");
+		const sync_track *sphereAmt1Track = sync_get_track(rocket, "sphere.amt1");
+		const sync_track *sphereAmt2Track = sync_get_track(rocket, "sphere.amt2");
+
 		Surface backbuffer   = device.getRenderTarget(0);
 
 		D3DCAPS9 caps;
@@ -487,12 +494,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			if (cluster) {
 				// neuron cluster
-				sphere_fx->setFloat("time1", float(beat / 8));
-				sphere_fx->setFloat("time2", float(beat / 8));
-				sphere_fx->setFloat("freq1", 1.0f / 10);
-				sphere_fx->setFloat("freq2", 1.0f / 2);
-				sphere_fx->setFloat("amt1", 0.2f);
-				sphere_fx->setFloat("amt2", 0.05f);
+				sphere_fx->setFloat("time1", float((beat / 8) * sync_get_val(sphereSpeed1Track, row)));
+				sphere_fx->setFloat("time2", float((beat / 8) * sync_get_val(sphereSpeed2Track, row)));
+				sphere_fx->setFloat("freq1", 1.0f / sync_get_val(sphereFreq1Track, row));
+				sphere_fx->setFloat("freq2", 1.0f / sync_get_val(sphereFreq2Track, row));
+				sphere_fx->setFloat("amt1", sync_get_val(sphereAmt1Track, row) / 100);
+				sphere_fx->setFloat("amt2", sync_get_val(sphereAmt2Track, row) / 100);
 				sphere_fx->setMatrices(world, view, proj);
 				sphere_fx->commitChanges();
 				sphere_fx->draw(sphere_x);
