@@ -653,43 +653,11 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\data\clouds.fx"
-			>
-		</File>
-		<File
-			RelativePath=".\data\cube-room.fx"
-			>
-		</File>
-		<File
 			RelativePath=".\data\dof.fx"
 			>
 		</File>
 		<File
-			RelativePath=".\data\excess-logo-floor.fx"
-			>
-		</File>
-		<File
-			RelativePath=".\data\excess-logo.fx"
-			>
-		</File>
-		<File
 			RelativePath=".\data\fxaa.fx"
-			>
-		</File>
-		<File
-			RelativePath=".\data\greeble-tunnel-lights.fx"
-			>
-		</File>
-		<File
-			RelativePath=".\data\greeble-tunnel.fx"
-			>
-		</File>
-		<File
-			RelativePath=".\data\neuron-cluster-skybox.fx"
-			>
-		</File>
-		<File
-			RelativePath=".\data\neuron-cluster.fx"
 			>
 		</File>
 		<File
@@ -698,6 +666,14 @@
 		</File>
 		<File
 			RelativePath=".\data\postprocess.fx"
+			>
+		</File>
+		<File
+			RelativePath=".\data\skybox.fx"
+			>
+		</File>
+		<File
+			RelativePath=".\data\sphere.fx"
 			>
 		</File>
 	</Files>

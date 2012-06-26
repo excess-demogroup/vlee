@@ -92,7 +92,7 @@ float4 pixel(VS_OUTPUT In) : COLOR
 #if 0
 	float3 col = tex3Dlod(grade_samp, float4(pow(sum, 1.0 / 2.2) * (15.0 / 16) + 0.5 / 16, 0));
 #else
-	float3 col = sum;
+	float3 col = sqrt(sum);
 #endif
 
 	float4 o = tex2D(overlay_samp, In.uv);

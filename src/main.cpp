@@ -301,25 +301,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *cameraShakeAmtTrack   = sync_get_track(rocket, "cam.shake.amt");
 		const sync_track *cameraShakeSpeedTrack = sync_get_track(rocket, "cam.shake.speed");
 
-		const sync_track *lightOffsetTrack = sync_get_track(rocket, "light.offset");
-		const sync_track *lightAlphaTrack  = sync_get_track(rocket, "light.alpha");
-		const sync_track *darkOffsetTrack  = sync_get_track(rocket, "dark.offset");
-
-		const sync_track *cloudsZoomTrack  = sync_get_track(rocket, "clouds.zoom");
-		const sync_track *cloudsAlphaTrack = sync_get_track(rocket, "clouds.alpha");
-
 		const sync_track *colorMapFadeTrack    = sync_get_track(rocket, "cm.fade");
 		const sync_track *colorMapFlashTrack   = sync_get_track(rocket, "cm.flash");
 		const sync_track *colorMapOverlayTrack = sync_get_track(rocket, "cm.overlay");
 		const sync_track *colorMapOverlayAlphaTrack = sync_get_track(rocket, "cm.overlay_alpha");
 		const sync_track *pulseAmt2Track       = sync_get_track(rocket, "cm.pulse.amt");
 		const sync_track *pulseSpeed2Track     = sync_get_track(rocket, "cm.pulse.speed");
-
-//		const sync_track *fogDensityTrack = sync_get_track(rocket, "fog.density");
-		const sync_track *tunnelLights1Track = sync_get_track(rocket, "tunnel.l1");
-		const sync_track *tunnelLights2Track = sync_get_track(rocket, "tunnel.l2");
-		const sync_track *tunnelLights3Track = sync_get_track(rocket, "tunnel.l3");
-		const sync_track *tunnelLights4Track = sync_get_track(rocket, "tunnel.l4");
 
 		const sync_track *distAmtTrack    = sync_get_track(rocket, "dist.amt");
 		const sync_track *distFreqTrack   = sync_get_track(rocket, "dist.freq");
@@ -328,15 +315,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *dofFStopTrack = sync_get_track(rocket, "dof.fstop");
 		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
 		const sync_track *dofFocalDistTrack = sync_get_track(rocket, "dof.fdist");
-
-		const sync_track *logoL0Track = sync_get_track(rocket, "logo.l0");
-		const sync_track *logoL1Track = sync_get_track(rocket, "logo.l1");
-		const sync_track *logoL2Track = sync_get_track(rocket, "logo.l2");
-		const sync_track *logoL3Track = sync_get_track(rocket, "logo.l3");
-		const sync_track *logoL4Track = sync_get_track(rocket, "logo.l4");
-		const sync_track *logoL5Track = sync_get_track(rocket, "logo.l5");
-
-		const sync_track *neuronsPulseTrack = sync_get_track(rocket, "neur.pulse");
 
 		Surface backbuffer   = device.getRenderTarget(0);
 
@@ -382,66 +360,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture darksmoke_tex = engine::loadTexture(device, "data/darksmoke.png");
 		particle_fx->setTexture("tex", particle_tex);
 
-		Mesh *excess_logo_x[6];
-		excess_logo_x[0] = engine::loadMesh(device, "data/excess-logo0.x");
-		excess_logo_x[1] = engine::loadMesh(device, "data/excess-logo1.x");
-		excess_logo_x[2] = engine::loadMesh(device, "data/excess-logo2.x");
-		excess_logo_x[3] = engine::loadMesh(device, "data/excess-logo3.x");
-		excess_logo_x[4] = engine::loadMesh(device, "data/excess-logo4.x");
-		excess_logo_x[5] = engine::loadMesh(device, "data/excess-logo5.x");
-		Effect *excess_logo_fx = engine::loadEffect(device, "data/excess-logo.fx");
-		Mesh *excess_logo_floor_x = engine::loadMesh(device, "data/excess-logo-floor.x");
-		Effect *excess_logo_floor_fx = engine::loadEffect(device, "data/excess-logo-floor.fx");
-		Texture excess_logo0_tex = engine::loadTexture(device, "data/excess-logo0.png");
-		Texture excess_logo1_tex = engine::loadTexture(device, "data/excess-logo1.png");
-		Texture excess_logo2_tex = engine::loadTexture(device, "data/excess-logo2.png");
-		Texture excess_logo3_tex = engine::loadTexture(device, "data/excess-logo3.png");
-		Texture excess_logo4_tex = engine::loadTexture(device, "data/excess-logo4.png");
-		Texture excess_logo5_tex = engine::loadTexture(device, "data/excess-logo5.png");
-		Texture cube_room_diff_tex = engine::loadTexture(device, "data/cube-room-diff.png");
-		Texture cube_room_norm_tex = engine::loadTexture(device, "data/cube-room-norm.png");
-		Texture cube_room_spec_tex = engine::loadTexture(device, "data/cube-room-spec.png");
-		excess_logo_floor_fx->setTexture("logo0_tex", excess_logo0_tex);
-		excess_logo_floor_fx->setTexture("logo1_tex", excess_logo1_tex);
-		excess_logo_floor_fx->setTexture("logo2_tex", excess_logo2_tex);
-		excess_logo_floor_fx->setTexture("logo3_tex", excess_logo3_tex);
-		excess_logo_floor_fx->setTexture("logo4_tex", excess_logo4_tex);
-		excess_logo_floor_fx->setTexture("logo5_tex", excess_logo5_tex);
-		excess_logo_floor_fx->setTexture("norm_tex", cube_room_norm_tex); // tekstur-tyveri! ring snuten!
-		excess_logo_floor_fx->setTexture("diff_tex", cube_room_diff_tex);
-		excess_logo_floor_fx->setTexture("spec_tex", cube_room_spec_tex);
-
-		Mesh *cube_room_x = engine::loadMesh(device, "data/cube-room.x");
-		Effect *cube_room_fx = engine::loadEffect(device, "data/cube-room.fx");
-		Texture cube_room_ao_tex = engine::loadTexture(device, "data/cube-room-ao.png");
-		cube_room_fx->setTexture("ao_tex", cube_room_ao_tex);
-		cube_room_fx->setTexture("diff_tex", cube_room_diff_tex);
-		cube_room_fx->setTexture("norm_tex", cube_room_norm_tex);
-		cube_room_fx->setTexture("spec_tex", cube_room_spec_tex);
-
-		Mesh *neuron_cluster_x = engine::loadMesh(device, "data/neuron-cluster.x");
-		Effect *neuron_cluster_fx = engine::loadEffect(device, "data/neuron-cluster.fx");
-		CubeTexture neuron_cluster_env_tex = engine::loadCubeTexture(device, "data/neuron-cluster-env.dds");
-		VolumeTexture volume_noise_tex = engine::loadVolumeTexture(device, "data/volume-noise.dds");
-		neuron_cluster_fx->setTexture("env_tex", neuron_cluster_env_tex);
-		neuron_cluster_fx->setTexture("noise_tex", volume_noise_tex);
-		Mesh *neuron_cluster_skybox_x = engine::loadMesh(device, "data/neuron-cluster-skybox.x");
-		Effect *neuron_cluster_skybox_fx = engine::loadEffect(device, "data/neuron-cluster-skybox.fx");
-		neuron_cluster_skybox_fx->setTexture("env_tex", neuron_cluster_env_tex);
-		CubeTexture neuron_cluster_env_details_tex = engine::loadCubeTexture(device, "data/neuron-cluster-skybox-details.dds");
-		neuron_cluster_skybox_fx->setTexture("env_details_tex", neuron_cluster_env_details_tex);
-
-		Effect *clouds_fx = engine::loadEffect(device, "data/clouds.fx");
-		Texture cloud1_tex = engine::loadTexture(device, "data/cloud1.jpg");
-		clouds_fx->setTexture("cloud1_tex", cloud1_tex);
-
-		Mesh *greeble_tunnel_x = engine::loadMesh(device, "data/greeble-tunnel.x");
-		Effect *greeble_tunnel_fx = engine::loadEffect(device, "data/greeble-tunnel.fx");
-		Texture greeble_tunnel_ao_tex = engine::loadTexture(device, "data/greeble-tunnel-ao.png");
-		greeble_tunnel_fx->setTexture("ao_tex", greeble_tunnel_ao_tex);
-		Mesh *greeble_tunnel_lights_x = engine::loadMesh(device, "data/greeble-tunnel-lights.x");
-		Effect *greeble_tunnel_lights_fx = engine::loadEffect(device, "data/greeble-tunnel-lights.fx");
-		greeble_tunnel_lights_fx->setTexture("ao_tex", greeble_tunnel_ao_tex);
+		Mesh *sphere_x = engine::loadMesh(device, "data/sphere.x");
+		Effect *sphere_fx = engine::loadEffect(device, "data/sphere.fx");
+		CubeTexture bling_tex = engine::loadCubeTexture(device, "data/bling.dds");
+		sphere_fx->setTexture("env_tex", bling_tex);
+		Mesh *skybox_x = engine::loadMesh(device, "data/skybox.x");
+		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
+		skybox_fx->setTexture("env_tex", bling_tex);
 
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
@@ -512,32 +437,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 			bool dark_particles = false;
 			bool tunnel_particles = false;
 
-			bool logo = false;
-			bool rooms = false;
-			bool cluster = false;
-			bool greeble = false;
+			bool cluster = true;
 
 			int part = int(sync_get_val(partTrack, row));
 			switch (part) {
 			case 0:
-				logo = true;
-				break;
-
-			case 1:
-				rooms = true;
-				particles = true;
-				light_particles = true;
-				dark_particles = true;
-				break;
-
-			case 2:
 				cluster = true;
-				break;
-
-			case 3:
-				greeble = true;
-				particles = true;
-				tunnel_particles = true;
 				break;
 			}
 
@@ -577,80 +482,19 @@ int main(int /*argc*/, char* /*argv*/ [])
 //			float fog_density = sync_get_val(fogDensityTrack, row) / 100000;
 
 //			Vector3 worldLightPosition = Vector3(0, sin(beat * 0.25) * 100, 0);
-			float ltime = sync_get_val(cameraTimeTrack, row) / 16 + sync_get_val(lightOffsetTrack, row) / 16;
+			float ltime = sync_get_val(cameraTimeTrack, row) / 16;
 			Vector3 worldLightPosition = getCubePos(ltime);
-
-			if (logo) {
-				float lum[6] = {
-					sync_get_val(logoL0Track, row),
-					sync_get_val(logoL1Track, row),
-					sync_get_val(logoL2Track, row),
-					sync_get_val(logoL3Track, row),
-					sync_get_val(logoL4Track, row),
-					sync_get_val(logoL5Track, row)
-				};
-
-				for (int i = 0; i < 6; ++i)
-					if (lum[i] < 0)
-						lum[i] = math::randf() * 1.5f;
-
-				for (int i = 0; i < 6; ++i) {
-					excess_logo_fx->setMatrices(world, view, proj);
-					excess_logo_fx->setFloat("lum", lum[i]);
-					excess_logo_fx->commitChanges();
-					excess_logo_fx->draw(excess_logo_x[i]);
-				}
-
-				excess_logo_floor_fx->setFloatArray("lum", lum, 6);
-				excess_logo_floor_fx->setVector3("viewPos", camPos);
-				excess_logo_floor_fx->setMatrices(world, view, proj);
-				excess_logo_floor_fx->commitChanges();
-				excess_logo_floor_fx->draw(excess_logo_floor_x);
-			}
-
-			if (rooms) {
-				// cube rooms
-
-				Vector3 viewLightPosition = mul(view, worldLightPosition);
-				cube_room_fx->setVector3("viewLightPosition", viewLightPosition);
-
-				for (int i = -1; i < 2; ++i)
-					for (int j = -1; j < 2; ++j)
-						for (int k = -1; k < 2; ++k) {
-							Matrix4x4 world = Matrix4x4::translation(Vector3(i * 120, j * 120, k * 120));
-
-							cube_room_fx->setMatrices(world, view, proj);
-							cube_room_fx->commitChanges();
-							cube_room_fx->draw(cube_room_x);
-						}
-			}
 
 			if (cluster) {
 				// neuron cluster
-				neuron_cluster_fx->setFloat("time", float(beat / 4));
-				neuron_cluster_fx->setFloat("pulse", sync_get_val(neuronsPulseTrack, row));
-				neuron_cluster_fx->setMatrices(world, view, proj);
-				neuron_cluster_fx->commitChanges();
-				neuron_cluster_fx->draw(neuron_cluster_x);
+				sphere_fx->setFloat("time", float(beat / 4));
+				sphere_fx->setMatrices(world, view, proj);
+				sphere_fx->commitChanges();
+				sphere_fx->draw(sphere_x);
 
-				neuron_cluster_skybox_fx->setMatrices(world, view, proj);
-				neuron_cluster_skybox_fx->commitChanges();
-				neuron_cluster_skybox_fx->draw(neuron_cluster_skybox_x);
-			}
-
-			if (greeble) {
-				// greeble tunnel
-				greeble_tunnel_fx->setMatrices(world, view, proj);
-				greeble_tunnel_fx->commitChanges();
-				greeble_tunnel_fx->draw(greeble_tunnel_x);
-
-				greeble_tunnel_lights_fx->setFloat("lights1", sync_get_val(tunnelLights1Track, row));
-				greeble_tunnel_lights_fx->setFloat("lights2", sync_get_val(tunnelLights2Track, row));
-				greeble_tunnel_lights_fx->setFloat("lights3", sync_get_val(tunnelLights3Track, row));
-				greeble_tunnel_lights_fx->setFloat("lights4", sync_get_val(tunnelLights4Track, row));
-				greeble_tunnel_lights_fx->setMatrices(world, view, proj);
-				greeble_tunnel_lights_fx->commitChanges();
-				greeble_tunnel_lights_fx->draw(greeble_tunnel_lights_x);
+				skybox_fx->setMatrices(world, view, proj);
+				skybox_fx->commitChanges();
+				skybox_fx->draw(skybox_x);
 			}
 
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
@@ -717,7 +561,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				particle_fx->setMatrices(world, view, proj);
 
 				if (dark_particles) {
-					float dtime = sync_get_val(cameraTimeTrack, row) / 16 + sync_get_val(darkOffsetTrack, row) / 16;
+					float dtime = sync_get_val(cameraTimeTrack, row) / 16;
 
 					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
@@ -749,7 +593,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					particle_fx->draw(&particleStreamer);
 				}
 
-				float light_alpha = sync_get_val(lightAlphaTrack, row);
+				float light_alpha = 1;
 				if (light_particles && light_alpha > 0.0f) {
 					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
 					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
@@ -799,7 +643,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				}
 
 				if (tunnel_particles) {
-					float dtime = sync_get_val(cameraTimeTrack, row) / 16 + sync_get_val(darkOffsetTrack, row) / 16;
+					float dtime = sync_get_val(cameraTimeTrack, row) / 16;
 
 					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
 					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
@@ -823,17 +667,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 					particle_fx->draw(&particleStreamer);
 				}
 
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-			}
-
-			float clouds_alpha = sync_get_val(cloudsAlphaTrack, row);
-			if (clouds_alpha > 0) {
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-				clouds_fx->setFloat("alpha", clouds_alpha);
-				clouds_fx->setFloat("zoom", pow(sync_get_val(cloudsZoomTrack, row), 2));
-				drawRect(device, clouds_fx, 0, 0, float(letterbox_viewport.Width), float(letterbox_viewport.Height));
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 			}
 
