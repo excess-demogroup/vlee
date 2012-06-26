@@ -487,7 +487,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			if (cluster) {
 				// neuron cluster
-				sphere_fx->setFloat("time", float(beat / 4));
+				sphere_fx->setFloat("time1", float(beat / 8));
+				sphere_fx->setFloat("time2", float(beat / 8));
+				sphere_fx->setFloat("freq1", 1.0f / 10);
+				sphere_fx->setFloat("freq2", 1.0f / 2);
+				sphere_fx->setFloat("amt1", 0.2f);
+				sphere_fx->setFloat("amt2", 0.05f);
 				sphere_fx->setMatrices(world, view, proj);
 				sphere_fx->commitChanges();
 				sphere_fx->draw(sphere_x);

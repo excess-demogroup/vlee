@@ -2,7 +2,9 @@ float4x4 matView : VIEW;
 float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
-float time;
+float time1, time2;
+float freq1, freq2;
+float amt1, amt2;
 
 textureCUBE env_tex;
 samplerCUBE env_samp = sampler_state {
@@ -30,8 +32,8 @@ VS_OUTPUT vs_main( VS_INPUT Input )
 
 	float3 pos = Input.Position;
 	float3 opos = pos;
-	pos += opos * pow(length(cos(opos / 10 + time * 0.5)), 3) * 0.2;
-	pos += opos * pow(length(cos(opos / 2 + time * 0.5)), 3) * 0.05;
+	pos += opos * pow(length(cos(opos * freq1 + time1)), 3) * amt1;
+	pos += opos * pow(length(cos(opos * freq2 + time2)), 3) * amt2;
 	pos *= 3;
 
 	Output.Position = mul( float4(pos, 1), matWorldViewProjection );
