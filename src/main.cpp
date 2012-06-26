@@ -411,8 +411,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 				break;
 
 			case 2: {
-				float angle = sync_get_val(cameraTimeTrack, row) * (M_PI / 180);
-				float angle2 = angle + sync_get_val(cameraOffsetTrack, row) * (M_PI / 180);
+				float angle = sync_get_val(cameraTimeTrack, row) * float(M_PI / 180);
+				float angle2 = angle + sync_get_val(cameraOffsetTrack, row) * float(M_PI / 180);
 				camPos = Vector3(sin(angle) * 30, 0, cos(angle) * 30);
 				camPos += normalize(camPos) * sync_get_val(cameraYTrack, row);
 				camTarget = Vector3(sin(angle2) * 30, 0, cos(angle2) * 30);
@@ -569,7 +569,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					particleStreamer.begin();
 					const int num_particles = 500;
 					for (int i = 2 * num_particles - 1; i != -1; --i) {
-						int part = floor(dtime * num_particles - i);
+						int part = int(floor(dtime * num_particles - i));
 						float ptime2 = float(part / float(num_particles));
 						float ptime = float(beat * 0.01 + part * 135);
 						Vector3 pos = getCubePos(part / float(num_particles));
@@ -607,7 +607,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 						Vector3 pos(cos(ptime + jalla * 24) - sin(ptime * 0.8 + jalla * 721), sin(ptime + jalla * 121), sin(ptime + 20 + jalla * 541));
 						pos = normalize(pos) * 0.5;
 	//					float woom = math::notRandf(i);
-						float woom = 0.5 + cos(math::notRandf(part) + ptime) * 0.5 + cos(beat + length(pos)) * 0.2;
+						float woom = float(0.5 + cos(math::notRandf(part) + ptime) * 0.5 + cos(beat + length(pos)) * 0.2);
 
 						pos = worldLightPosition + normalize(pos) * (1 + woom) * 3;
 						float size = 0.4f / (1 + woom);
@@ -622,7 +622,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 					const int num_particles = 200;
 					for (int i = 0; i < num_particles; ++i) {
-						int part = floor(ltime * num_particles - i);
+						int part = int(floor(ltime * num_particles - i));
 						float ptime2 = float(part / float(num_particles));
 						float ptime = float(beat * 0.25 + part * 135);
 						Vector3 pos = getCubePos(part / float(num_particles));
