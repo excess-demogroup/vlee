@@ -323,6 +323,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *sphereAmt1Track = sync_get_track(rocket, "sphere.amt1");
 		const sync_track *sphereAmt2Track = sync_get_track(rocket, "sphere.amt2");
 
+		const sync_track *skyboxFadeTrack = sync_get_track(rocket, "skybox.fade");
+
 		Surface backbuffer   = device.getRenderTarget(0);
 
 		D3DCAPS9 caps;
@@ -504,6 +506,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				sphere_fx->commitChanges();
 				sphere_fx->draw(sphere_x);
 
+				skybox_fx->setFloat("fade", sync_get_val(skyboxFadeTrack, row));
 				skybox_fx->setMatrices(world, view, proj);
 				skybox_fx->commitChanges();
 				skybox_fx->draw(skybox_x);

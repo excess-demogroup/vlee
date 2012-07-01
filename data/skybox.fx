@@ -3,6 +3,7 @@ float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
 
+float fade;
 texture env_tex;
 samplerCUBE env_samp = sampler_state {
 	Texture = (env_tex);
@@ -45,7 +46,7 @@ struct PS_OUTPUT {
 PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
 	PS_OUTPUT o;
-	o.col = float4(texCUBE(env_samp, -Input.Pos2.xyz).rgb, 1);
+	o.col = float4(texCUBE(env_samp, -Input.Pos2.xyz).rgb * fade, 1);
 	o.z = Input.Pos2.w;
 	return o;
 }
