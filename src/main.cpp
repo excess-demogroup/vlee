@@ -325,6 +325,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		const sync_track *skyboxFadeTrack = sync_get_track(rocket, "skybox.fade");
 
+		const sync_track *kockaMapTrack = sync_get_track(rocket, "kocka.map");
+		const sync_track *kockaFadeTrack = sync_get_track(rocket, "kocka.fade");
+
 		Surface backbuffer   = device.getRenderTarget(0);
 
 		D3DCAPS9 caps;
@@ -376,6 +379,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Mesh *skybox_x = engine::loadMesh(device, "data/skybox.x");
 		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
 		skybox_fx->setTexture("env_tex", bling_tex);
+
+		Mesh *kocka_x = engine::loadMesh(device, "data/kocka.x");
+		Effect *kocka_fx = engine::loadEffect(device, "data/kocka.fx");
+		Anim kockamaps = engine::loadAnim(device, "data/kockamaps");
 
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
@@ -510,6 +517,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 				skybox_fx->setMatrices(world, view, proj);
 				skybox_fx->commitChanges();
 				skybox_fx->draw(skybox_x);
+
+				kocka_fx->setFloat("fade", sync_get_val(kockaFadeTrack, row));
+				kocka_fx->setTexture("tex", kockamaps.getTexture(int(sync_get_val(kockaMapTrack, row)) % kockamaps.getTextureCount()));
+				kocka_fx->setMatrices(world, view, proj);
+				kocka_fx->commitChanges();
+				kocka_fx->draw(kocka_x);
 			}
 
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
