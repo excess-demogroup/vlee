@@ -42,21 +42,6 @@ VS_OUTPUT vs_main( VS_INPUT Input )
 	return Output;
 }
 
-float3 perturb_normal(float3 norm, float3 grad)
-{
-	float3 surf_grad = grad - norm * dot(norm, grad);
-	return normalize(norm - surf_grad);
-}
-
-float3 grad(sampler3D s, float3 uvw, float e)
-{
-	return float3(
-		tex3D(s, uvw + float3(e, 0, 0)).r - tex3D(s, uvw - float3(e, 0, 0)).r,
-		tex3D(s, uvw + float3(0, e, 0)).r - tex3D(s, uvw - float3(0, e, 0)).r,
-		tex3D(s, uvw + float3(0, 0, e)).r - tex3D(s, uvw - float3(0, 0, e)).r
-		) / e;
-}
-
 struct PS_OUTPUT {
 	float4 col : COLOR0;
 	float4 z : COLOR1;
