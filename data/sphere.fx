@@ -5,6 +5,7 @@ float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
 float time1, time2;
 float freq1, freq2;
 float amt1, amt2;
+float fade;
 
 textureCUBE env_tex;
 samplerCUBE env_samp = sampler_state {
@@ -13,6 +14,15 @@ samplerCUBE env_samp = sampler_state {
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
 	sRGBTexture = TRUE;
+};
+
+textureCUBE cube_noise_tex;
+samplerCUBE noise_samp = sampler_state {
+	Texture = (cube_noise_tex);
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	sRGBTexture = FALSE;
 };
 
 struct VS_INPUT {
@@ -24,6 +34,7 @@ struct VS_OUTPUT {
 	float4 Position : POSITION0;
 	float3 Normal : TEXCOORD0;
 	float3 Pos2 : TEXCOORD2;
+	float3 Pos3 : TEXCOORD3;
 };
 
 VS_OUTPUT vs_main( VS_INPUT Input )
@@ -39,6 +50,7 @@ VS_OUTPUT vs_main( VS_INPUT Input )
 	Output.Position = mul( float4(pos, 1), matWorldViewProjection );
 	Output.Normal = mul( matWorldViewInverse, Input.Normal );
 	Output.Pos2 = mul( float4(pos, 1), matWorldView );
+	Output.Pos3 = Input.Position;
 	return Output;
 }
 
@@ -54,6 +66,10 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 
 	PS_OUTPUT o;
 	o.col = float4(texCUBE(env_samp, reflect(n, float3(0,0,1))).rgb * 3, 1);
+
+	if (texCUBE(noise_samp, Input.Pos3).r >= fade * 1.0001)
+		discard;
+
 	o.col = pow(o.col, 1.25);
 	o.col.rgb = o.col.bgr;
 	// o.col.rgb = lerp(o.col.rgb, o.col.ggg, 0.8);

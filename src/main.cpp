@@ -322,6 +322,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *sphereFreq2Track = sync_get_track(rocket, "sphere.freq2");
 		const sync_track *sphereAmt1Track = sync_get_track(rocket, "sphere.amt1");
 		const sync_track *sphereAmt2Track = sync_get_track(rocket, "sphere.amt2");
+		const sync_track *sphereFadeTrack = sync_get_track(rocket, "sphere.fade");
 
 		const sync_track *skyboxFadeTrack = sync_get_track(rocket, "skybox.fade");
 
@@ -375,7 +376,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Mesh *sphere_x = engine::loadMesh(device, "data/sphere.x");
 		Effect *sphere_fx = engine::loadEffect(device, "data/sphere.fx");
 		CubeTexture bling_tex = engine::loadCubeTexture(device, "data/bling.dds");
+		CubeTexture cube_noise_tex = engine::loadCubeTexture(device, "data/cube-noise.dds");
 		sphere_fx->setTexture("env_tex", bling_tex);
+		sphere_fx->setTexture("cube_noise_tex", cube_noise_tex);
+
 		Mesh *skybox_x = engine::loadMesh(device, "data/skybox.x");
 		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
 		skybox_fx->setTexture("env_tex", bling_tex);
@@ -509,6 +513,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 				sphere_fx->setFloat("freq2", 1.0f / sync_get_val(sphereFreq2Track, row));
 				sphere_fx->setFloat("amt1", sync_get_val(sphereAmt1Track, row) / 100);
 				sphere_fx->setFloat("amt2", sync_get_val(sphereAmt2Track, row) / 100);
+
+				float fade = sync_get_val(sphereFadeTrack, row);
+				if (fade < 0.0f)
+					fade = math::randf() < 0.5f ? 0.0f : 1.0f;
+
+				sphere_fx->setFloat("fade", fade);
 				sphere_fx->setMatrices(world, view, proj);
 				sphere_fx->commitChanges();
 				sphere_fx->draw(sphere_x);
@@ -750,6 +760,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 				/* handle keys-events */
 				if (WM_QUIT == msg.message ||
+				    WM_CLOSE == msg.message ||
 				    (WM_KEYDOWN == msg.message && VK_ESCAPE == LOWORD(msg.wParam)))
 					done = true;
 			}
