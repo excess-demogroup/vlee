@@ -6,10 +6,21 @@ float time1, time2;
 float freq1, freq2;
 float amt1, amt2;
 float fade;
+float env_fade;
+float desaturate;
 
 textureCUBE env_tex;
 samplerCUBE env_samp = sampler_state {
 	Texture = (env_tex);
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	sRGBTexture = TRUE;
+};
+
+textureCUBE env2_tex;
+samplerCUBE env2_samp = sampler_state {
+	Texture = (env2_tex);
 	MipFilter = LINEAR;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
@@ -32,7 +43,6 @@ struct VS_INPUT {
 
 struct VS_OUTPUT {
 	float4 Position : POSITION0;
-	float3 Normal : TEXCOORD0;
 	float3 Pos2 : TEXCOORD2;
 	float3 Pos3 : TEXCOORD3;
 };
@@ -48,7 +58,6 @@ VS_OUTPUT vs_main( VS_INPUT Input )
 	pos *= 3;
 
 	Output.Position = mul( float4(pos, 1), matWorldViewProjection );
-	Output.Normal = mul( matWorldViewInverse, Input.Normal );
 	Output.Pos2 = mul( float4(pos, 1), matWorldView );
 	Output.Pos3 = Input.Position;
 	return Output;
@@ -62,17 +71,18 @@ struct PS_OUTPUT {
 PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
 	float3 n = normalize(cross(ddx(Input.Pos2), ddy(Input.Pos2)));
-//  n = Input.Normal;
 
 	PS_OUTPUT o;
-	o.col = float4(texCUBE(env_samp, reflect(n, float3(0,0,1))).rgb * 3, 1);
+	float3 uvw = reflect(n, -normalize(Input.Pos2));
+	uvw = mul(matView, float4(uvw, 0)).xyz;
+	o.col = float4(lerp(texCUBE(env_samp, uvw).bgr * 3, texCUBE(env2_samp, uvw).rgb, env_fade), 1);
 
 	if (texCUBE(noise_samp, Input.Pos3).r >= fade * 1.0001)
 		discard;
 
 	o.col = pow(o.col, 1.25);
-	o.col.rgb = o.col.bgr;
-	// o.col.rgb = lerp(o.col.rgb, o.col.ggg, 0.8);
+	o.col *= 1.2 + n.z;
+	o.col.rgb = lerp(o.col.rgb, o.col.ggg, desaturate);
 	o.z = Input.Pos2.z;
 	return o;
 }

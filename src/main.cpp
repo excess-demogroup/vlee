@@ -323,8 +323,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *sphereAmt1Track = sync_get_track(rocket, "sphere.amt1");
 		const sync_track *sphereAmt2Track = sync_get_track(rocket, "sphere.amt2");
 		const sync_track *sphereFadeTrack = sync_get_track(rocket, "sphere.fade");
+		const sync_track *sphereEnvFadeTrack = sync_get_track(rocket, "sphere.env-fade");
+		const sync_track *sphereDesaturateTrack = sync_get_track(rocket, "sphere.desaturate");
 
 		const sync_track *skyboxFadeTrack = sync_get_track(rocket, "skybox.fade");
+		const sync_track *skyboxDesaturateTrack = sync_get_track(rocket, "skybox.desaturate");
 
 		const sync_track *kockaMapTrack = sync_get_track(rocket, "kocka.map");
 		const sync_track *kockaFadeTrack = sync_get_track(rocket, "kocka.fade");
@@ -376,8 +379,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Mesh *sphere_x = engine::loadMesh(device, "data/sphere.x");
 		Effect *sphere_fx = engine::loadEffect(device, "data/sphere.fx");
 		CubeTexture bling_tex = engine::loadCubeTexture(device, "data/bling.dds");
+		CubeTexture bling2_tex = engine::loadCubeTexture(device, "data/bling2.dds");
 		CubeTexture cube_noise_tex = engine::loadCubeTexture(device, "data/cube-noise.dds");
 		sphere_fx->setTexture("env_tex", bling_tex);
+		sphere_fx->setTexture("env2_tex", bling2_tex);
 		sphere_fx->setTexture("cube_noise_tex", cube_noise_tex);
 
 		Mesh *skybox_x = engine::loadMesh(device, "data/skybox.x");
@@ -513,17 +518,20 @@ int main(int /*argc*/, char* /*argv*/ [])
 				sphere_fx->setFloat("freq2", 1.0f / sync_get_val(sphereFreq2Track, row));
 				sphere_fx->setFloat("amt1", sync_get_val(sphereAmt1Track, row) / 100);
 				sphere_fx->setFloat("amt2", sync_get_val(sphereAmt2Track, row) / 100);
+				sphere_fx->setFloat("desaturate", sync_get_val(sphereDesaturateTrack, row));
 
 				float fade = sync_get_val(sphereFadeTrack, row);
 				if (fade < 0.0f)
 					fade = math::randf() < 0.5f ? 0.0f : 1.0f;
 
 				sphere_fx->setFloat("fade", fade);
+				sphere_fx->setFloat("env_fade", sync_get_val(sphereEnvFadeTrack, row));
 				sphere_fx->setMatrices(world, view, proj);
 				sphere_fx->commitChanges();
 				sphere_fx->draw(sphere_x);
 
 				skybox_fx->setFloat("fade", sync_get_val(skyboxFadeTrack, row));
+				skybox_fx->setFloat("desaturate", sync_get_val(skyboxDesaturateTrack, row));
 				skybox_fx->setMatrices(world, view, proj);
 				skybox_fx->commitChanges();
 				skybox_fx->draw(skybox_x);

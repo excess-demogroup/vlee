@@ -26,6 +26,7 @@ namespace engine {
 			
 			world      = p->GetParameterBySemantic(0, "WORLD");
 			view       = p->GetParameterBySemantic(0, "VIEW");
+			view_inv   = p->GetParameterBySemantic(0, "VIEWINVERSE");
 			projection = p->GetParameterBySemantic(0, "PROJECTION");
 			worldview  = p->GetParameterBySemantic(0, "WORLDVIEW");
 			worldview_inv = p->GetParameterBySemantic(0, "WORLDVIEWINVERSE");
@@ -96,6 +97,8 @@ namespace engine {
 				setMatrix(this->world, world);
 			if (this->view  != NULL)
 				setMatrix(this->view, view);
+			if (this->view_inv != NULL)
+				setMatrix(this->view, view.inverse());
 			if (this->projection != NULL)
 				setMatrix(this->projection, proj);
 			if (this->worldview != NULL)
@@ -125,7 +128,7 @@ namespace engine {
 			p->End();
 		}
 
-		D3DXHANDLE world, view, projection, worldview, worldview_inv, worldviewprojection, matWVP_inv;
+		D3DXHANDLE world, view, view_inv, projection, worldview, worldview_inv, worldviewprojection, matWVP_inv;
 		D3DXHANDLE viewPos, viewDir;
 	};
 
