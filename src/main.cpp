@@ -307,6 +307,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *colorMapOverlayAlphaTrack = sync_get_track(rocket, "cm.overlay_alpha");
 		const sync_track *pulseAmt2Track       = sync_get_track(rocket, "cm.pulse.amt");
 		const sync_track *pulseSpeed2Track     = sync_get_track(rocket, "cm.pulse.speed");
+		const sync_track *colorMap1Track     = sync_get_track(rocket, "cm.map1");
+		const sync_track *colorMap2Track     = sync_get_track(rocket, "cm.map2");
+		const sync_track *colorMapLerpTrack  = sync_get_track(rocket, "cm.lerp");
 
 		const sync_track *distAmtTrack    = sync_get_track(rocket, "dist.amt");
 		const sync_track *distFreqTrack   = sync_get_track(rocket, "dist.freq");
@@ -351,6 +354,43 @@ int main(int /*argc*/, char* /*argv*/ [])
 		RenderTexture dof_temp2_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
 
 		RenderTexture fxaa_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
+
+#define MAP_SIZE 32
+		renderer::Texture temp_tex = device.createTexture(MAP_SIZE * MAP_SIZE, MAP_SIZE, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_MANAGED);
+		std::vector<renderer::VolumeTexture> color_maps;
+		for (int i = 0; true; ++i) {
+			char temp[256];
+			sprintf(temp, "data/color_maps/%04d.png", i);
+			D3DXIMAGE_INFO info;
+			if (FAILED(D3DXLoadSurfaceFromFile(temp_tex.getSurface(), NULL, NULL, temp, NULL, D3DX_FILTER_NONE, 0, &info)))
+				break;
+
+			D3DSURFACE_DESC desc = temp_tex.getSurface().getDesc();
+			assert(desc.Format == D3DFMT_X8R8G8B8);
+
+			if (info.Width != MAP_SIZE * MAP_SIZE || info.Height != MAP_SIZE)
+				throw core::FatalException("color-map is of wrong size!");
+
+			renderer::VolumeTexture cube_tex = device.createVolumeTexture(MAP_SIZE, MAP_SIZE, MAP_SIZE, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_MANAGED);
+
+			D3DLOCKED_RECT rect;
+			core::d3dErr(temp_tex.getSurface()->LockRect(&rect, NULL, 0));
+			D3DLOCKED_BOX box;
+			core::d3dErr(cube_tex->LockBox(0, &box, NULL, 0));
+			for (int z = 0; z < MAP_SIZE; ++z)
+				for (int y = 0; y < MAP_SIZE; ++y)
+					for (int x = 0; x < MAP_SIZE; ++x) {
+						((unsigned char*)box.pBits)[z * 4 + y * box.RowPitch + x * box.SlicePitch + 0] = ((unsigned char*)rect.pBits)[(x + z * MAP_SIZE) * 4 + y * rect.Pitch + 0];
+						((unsigned char*)box.pBits)[z * 4 + y * box.RowPitch + x * box.SlicePitch + 1] = ((unsigned char*)rect.pBits)[(x + z * MAP_SIZE) * 4 + y * rect.Pitch + 1];
+						((unsigned char*)box.pBits)[z * 4 + y * box.RowPitch + x * box.SlicePitch + 2] = ((unsigned char*)rect.pBits)[(x + z * MAP_SIZE) * 4 + y * rect.Pitch + 2];
+						((unsigned char*)box.pBits)[z * 4 + y * box.RowPitch + x * box.SlicePitch + 3] = ((unsigned char*)rect.pBits)[(x + z * MAP_SIZE) * 4 + y * rect.Pitch + 3];
+					}
+			cube_tex->UnlockBox(0);
+			temp_tex.getSurface()->UnlockRect();
+			color_maps.push_back(cube_tex);
+		}
+		if (0 == color_maps.size())
+			throw core::FatalException("no color maps!");
 
 		/** DEMO ***/
 
@@ -736,6 +776,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 			postprocess_fx->setTexture("color_tex", fxaa_target);
 			postprocess_fx->setFloat("overlay_alpha", sync_get_val(colorMapOverlayAlphaTrack, row));
 			postprocess_fx->setTexture("overlay_tex", overlays.getTexture(int(sync_get_val(colorMapOverlayTrack, row)) % overlays.getTextureCount()));
+
+			postprocess_fx->setTexture("color_map1_tex", color_maps[ int(sync_get_val(colorMap1Track, row)) % color_maps.size() ]);
+			postprocess_fx->setTexture("color_map2_tex", color_maps[ int(sync_get_val(colorMap2Track, row)) % color_maps.size() ]);
+			postprocess_fx->setFloat("color_map_lerp", sync_get_val(colorMapLerpTrack, row));
 			postprocess_fx->commitChanges();
 
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);

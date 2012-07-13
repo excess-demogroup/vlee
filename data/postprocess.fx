@@ -3,6 +3,7 @@ const float2 noffs, nscale;
 const float noise_amt;
 const float dist_amt, dist_freq, dist_time;
 const float2 viewport;
+const float color_map_lerp;
 
 texture color_tex;
 sampler color_samp = sampler_state {
@@ -48,6 +49,30 @@ sampler overlay_samp = sampler_state {
 	sRGBTexture = TRUE;
 };
 
+texture color_map1_tex;
+sampler3D color_map1_samp = sampler_state {
+	Texture = (color_map1_tex);
+	MipFilter = NONE;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	AddressW = CLAMP;
+	sRGBTexture = FALSE;
+};
+
+texture color_map2_tex;
+sampler3D color_map2_samp = sampler_state {
+	Texture = (color_map2_tex);
+	MipFilter = NONE;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	AddressW = CLAMP;
+	sRGBTexture = FALSE;
+};
+
 struct VS_OUTPUT {
 	float4 pos : POSITION;
 	float2 uv  : TEXCOORD0;
@@ -89,8 +114,12 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	}
 	sum /= filter_sum;
 
-#if 0
-	float3 col = tex3Dlod(grade_samp, float4(pow(sum, 1.0 / 2.2) * (15.0 / 16) + 0.5 / 16, 0));
+	float3 uvw = pow(sum, 1.0 / 2.2) * (31.0 / 32) + 0.5 / 32;
+#if 1
+	float3 col =
+		lerp(tex3Dlod(color_map1_samp, float4(uvw, 0)),
+		     tex3Dlod(color_map2_samp, float4(uvw, 0)),
+		     color_map_lerp);
 #else
 	float3 col = sqrt(sum);
 #endif
