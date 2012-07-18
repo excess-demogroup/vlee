@@ -285,6 +285,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			throw FatalException("failed to connect to host");
 #endif
 
+		/** DEMO ***/
+
 		const sync_track *partTrack = sync_get_track(rocket, "part");
 
 		const sync_track *cameraDistanceTrack   = sync_get_track(rocket, "cam.dist");
@@ -311,6 +313,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *colorMap2Track     = sync_get_track(rocket, "cm.map2");
 		const sync_track *colorMapLerpTrack  = sync_get_track(rocket, "cm.lerp");
 
+		const sync_track *bloomSizeTrack  = sync_get_track(rocket, "bloom.size");
+		const sync_track *bloomAmtTrack  = sync_get_track(rocket, "bloom.amt");
+
+
 		const sync_track *distAmtTrack    = sync_get_track(rocket, "dist.amt");
 		const sync_track *distFreqTrack   = sync_get_track(rocket, "dist.freq");
 		const sync_track *distOffsetTrack = sync_get_track(rocket, "dist.offset");
@@ -334,6 +340,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		const sync_track *kockaMapTrack = sync_get_track(rocket, "kocka.map");
 		const sync_track *kockaFadeTrack = sync_get_track(rocket, "kocka.fade");
+
+		const sync_track *particlesBFreqTrack = sync_get_track(rocket, "particles.b.freq");
+		const sync_track *particlesBAmtTrack = sync_get_track(rocket, "particles.b.amt");
+		const sync_track *particlesBLenTrack = sync_get_track(rocket, "particles.b.len");
+		const sync_track *particlesBFadeTrack = sync_get_track(rocket, "particles.b.fade");
+		const sync_track *particlesWFreqTrack = sync_get_track(rocket, "particles.w.freq");
+		const sync_track *particlesWAmtTrack = sync_get_track(rocket, "particles.w.amt");
+		const sync_track *particlesWLenTrack = sync_get_track(rocket, "particles.w.len");
+		const sync_track *particlesWFadeTrack = sync_get_track(rocket, "particles.w.fade");
 
 		Surface backbuffer   = device.getRenderTarget(0);
 
@@ -392,10 +407,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 		if (0 == color_maps.size())
 			throw core::FatalException("no color maps!");
 
-		/** DEMO ***/
+		std::vector<RenderTexture> color1_hdr, color2_hdr;
+		int w = letterbox_viewport.Width, h = letterbox_viewport.Height;
+		D3DFORMAT fmt = use_sm20_codepath ? D3DFMT_A2R10G10B10 : D3DFMT_A16B16G16R16F;
+		for (int i = 0; w > 0 || h > 0; ++i, w /= 2, h /= 2) {
+			color1_hdr.push_back(RenderTexture(device, std::max(w, 1), std::max(h, 1), 1, fmt));
+			color2_hdr.push_back(RenderTexture(device, std::max(w, 1), std::max(h, 1), 1, fmt));
+		}
 
 		Effect *dof_fx = engine::loadEffect(device, "data/dof.fx");
 		dof_fx->setVector3("viewport", Vector3(letterbox_viewport.Width, letterbox_viewport.Height, 0.0f));
+
+		Effect *blur_fx      = engine::loadEffect(device, "data/blur.fx");
 
 		Effect *fxaa_fx = engine::loadEffect(device, "data/fxaa.fx");
 		fxaa_fx->setVector3("viewportInv", Vector3(1.0f / letterbox_viewport.Width, 1.0f / letterbox_viewport.Height, 0.0f));
@@ -500,14 +523,26 @@ int main(int /*argc*/, char* /*argv*/ [])
 			bool particles = false;
 			bool light_particles = false;
 			bool dark_particles = false;
-			bool tunnel_particles = false;
-
-			bool cluster = true;
+			bool sphere = false;
+			bool skyboxen = false;
+			bool dof = false;
+			bool kocka = false;
 
 			int part = int(sync_get_val(partTrack, row));
 			switch (part) {
 			case 0:
-				cluster = true;
+				sphere = true;
+				dof = true;
+				skyboxen = true;
+				kocka = true;
+				break;
+
+			case 1:
+				sphere = true;
+				skyboxen = true;
+				particles = true;
+				light_particles = true;
+				dark_particles = true;
 				break;
 			}
 
@@ -550,8 +585,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float ltime = sync_get_val(cameraTimeTrack, row) / 16;
 			Vector3 worldLightPosition = getCubePos(ltime);
 
-			if (cluster) {
-				// neuron cluster
+			if (sphere) {
 				sphere_fx->setFloat("time1", float((beat / 8) * sync_get_val(sphereSpeed1Track, row)));
 				sphere_fx->setFloat("time2", float((beat / 8) * sync_get_val(sphereSpeed2Track, row)));
 				sphere_fx->setFloat("freq1", 1.0f / sync_get_val(sphereFreq1Track, row));
@@ -569,68 +603,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 				sphere_fx->setMatrices(world, view, proj);
 				sphere_fx->commitChanges();
 				sphere_fx->draw(sphere_x);
+			}
 
+			if (skyboxen) {
 				skybox_fx->setFloat("fade", sync_get_val(skyboxFadeTrack, row));
 				skybox_fx->setFloat("desaturate", sync_get_val(skyboxDesaturateTrack, row));
 				skybox_fx->setMatrices(world, view, proj);
 				skybox_fx->commitChanges();
 				skybox_fx->draw(skybox_x);
-
-				kocka_fx->setFloat("fade", sync_get_val(kockaFadeTrack, row));
-				kocka_fx->setTexture("tex", kockamaps.getTexture(int(sync_get_val(kockaMapTrack, row)) % kockamaps.getTextureCount()));
-				kocka_fx->setMatrices(world, view, proj);
-				kocka_fx->commitChanges();
-				kocka_fx->draw(kocka_x);
 			}
 
-			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-			device->SetRenderState(D3DRS_ZWRITEENABLE, false);
-			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-
-			const float verts[] = {
-				-0.5f,                                   -0.5f,                                    0.5f, 1.0f, 0.0f, 0.0f,
-				-0.5f + float(letterbox_viewport.Width), -0.5f,                                    0.5f, 1.0f, 1.0f, 0.0f,
-				-0.5f + float(letterbox_viewport.Width), -0.5f + float(letterbox_viewport.Height), 0.5f, 1.0f, 1.0f, 1.0f,
-				-0.5f,                                   -0.5f + float(letterbox_viewport.Height), 0.5f, 1.0f, 0.0f, 1.0f,
-			};
-			device->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
-
-			dof_fx->p->Begin(NULL, 0);
-
-			device.setRenderTarget(dof_target.getSurface(0), 0);
-			device.setRenderTarget(NULL, 1);
-			dof_fx->setTexture("color_tex", color_target);
-			dof_fx->setTexture("depth_tex", depth_target);
-			dof_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
-			dof_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
-			dof_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
-			dof_fx->p->BeginPass(0);
-			core::d3dErr(device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 6));
-			dof_fx->p->EndPass();
-
-			dof_fx->setTexture("premult_tex", dof_target);
-			device.setRenderTarget(dof_temp1_target.getSurface(0), 0);
-			device.setRenderTarget(dof_temp2_target.getSurface(0), 1);
-			dof_fx->p->BeginPass(1);
-			core::d3dErr(device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 6));
-			dof_fx->p->EndPass();
-
-			dof_fx->setTexture("temp1_tex", dof_temp1_target);
-			dof_fx->setTexture("temp2_tex", dof_temp2_target);
-			device.setRenderTarget(dof_target.getSurface(0), 0);
-			device.setRenderTarget(NULL, 1);
-			dof_fx->p->BeginPass(2);
-			core::d3dErr(device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 6));
-			dof_fx->p->EndPass();
-
-			dof_fx->p->End();
-
-			device.setRenderTarget(fxaa_target.getSurface(0), 0);
-			device.setRenderTarget(NULL, 1);
-			fxaa_fx->setTexture("color_tex", dof_target);
-			drawRect(device, fxaa_fx, 0, 0, float(letterbox_viewport.Width), float(letterbox_viewport.Height));
-
-			device.setDepthStencilSurface(depthstencil);
 			if (particles) {
 				// particles
 				Matrix4x4 modelview = world * view;
@@ -643,117 +625,201 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 				particle_fx->setVector3("up", up);
 				particle_fx->setVector3("left", left);
-				particle_fx->setFloat("alpha", pow(1.0f, 2.2f));
 				particle_fx->setMatrices(world, view, proj);
 
 				if (dark_particles) {
-					float dtime = sync_get_val(cameraTimeTrack, row) / 16;
+					double dtime = row; // sync_get_val(cameraTimeTrack, row) / 16;
 
-					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+					particle_fx->p->SetTechnique("black");
 					particle_fx->setTexture("tex", darksmoke_tex);
+					particle_fx->setFloat("alpha", pow(sync_get_val(particlesBFadeTrack, row), 2.2f));
 					particleStreamer.begin();
-					const int num_particles = 500;
-					for (int i = 2 * num_particles - 1; i != -1; --i) {
-						int part = int(floor(dtime * num_particles - i));
-						float ptime2 = float(part / float(num_particles));
-						float ptime = float(beat * 0.01 + part * 135);
-						Vector3 pos = getCubePos(part / float(num_particles));
-						float prand = math::notRandf(part);
-						Vector3 temp(cos(ptime + prand * 43) - sin(ptime * 0.8 + prand * 34), sin(ptime + prand * 12), sin(ptime + 20 + prand - 20));
-						float woom = math::notRandf(part);
-						pos += normalize(temp) * pow(woom, 1.5f) * 5;
-						float fade = 1.0f;
-						float dist = dtime - ptime2;
-						float size = 5.0f / (1 + dist); // 0.3f / (1 + woom);
-						if (dist < 0.1)
-							size *= dist * 10;
-						particleStreamer.add(pos, size);
-						if (!particleStreamer.getRoom()) {
-							particleStreamer.end();
-							particle_fx->draw(&particleStreamer);
-							particleStreamer.begin();
+					const int num_boogers = 100;
+					for (int i = 0; i < num_boogers; ++i) {
+						float btime = float(beat * 0.01 + i);
+						float boffset = i / 100.0f;
+						Vector3 target = Vector3(sin(btime), cos(btime * 1.0212), sin(btime * 1.013));
+						target = normalize(target) * 100;
+						target *= 1.0f + sin(row * sync_get_val(particlesBFreqTrack, row)) * sync_get_val(particlesBAmtTrack, row);
+						for (int j = 0; j < 50; ++j) {
+							int part = i;
+							Vector3 pos = target * (1 + j / (15.0 * sync_get_val(particlesBLenTrack, row)) + boffset);
+							float prand = math::notRandf(part);
+							float fade = 1.0f;
+							float size = sin((j / 50.0) * M_PI) * 15.0f;
+							particleStreamer.add(pos, size);
+							if (!particleStreamer.getRoom()) {
+								particleStreamer.end();
+								particle_fx->draw(&particleStreamer);
+								particleStreamer.begin();
+							}
 						}
 					}
 					particleStreamer.end();
 					particle_fx->draw(&particleStreamer);
 				}
+				if (light_particles) {
+					float dtime = row; // sync_get_val(cameraTimeTrack, row) / 16;
 
-				float light_alpha = 1;
-				if (light_particles && light_alpha > 0.0f) {
-					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+					particle_fx->p->SetTechnique("white");
 					particle_fx->setTexture("tex", particle_tex);
-					particle_fx->setFloat("alpha", pow(light_alpha, 2.2f));
+					particle_fx->setFloat("alpha", pow(sync_get_val(particlesWFadeTrack, row), 2.2f));
 					particleStreamer.begin();
-					particleStreamer.add(worldLightPosition, 6.0f);
-					for (int i = 0; i < 300; ++i) {
-						float ptime = float(beat * 0.25 + i * 1235);
-						float jalla = math::notRandf(i);
-						Vector3 pos(cos(ptime + jalla * 24) - sin(ptime * 0.8 + jalla * 721), sin(ptime + jalla * 121), sin(ptime + 20 + jalla * 541));
-						pos = normalize(pos) * 0.5;
-	//					float woom = math::notRandf(i);
-						float woom = float(0.5 + cos(math::notRandf(part) + ptime) * 0.5 + cos(beat + length(pos)) * 0.2);
-
-						pos = worldLightPosition + normalize(pos) * (1 + woom) * 3;
-						float size = 0.4f / (1 + woom);
-		//				if (distance(pos, camPos) < 200)
-						particleStreamer.add(pos, size);
-						if (!particleStreamer.getRoom()) {
-							particleStreamer.end();
-							particle_fx->draw(&particleStreamer);
-							particleStreamer.begin();
-						}
-					}
-
-					const int num_particles = 200;
-					for (int i = 0; i < num_particles; ++i) {
-						int part = int(floor(ltime * num_particles - i));
-						float ptime2 = float(part / float(num_particles));
-						float ptime = float(beat * 0.25 + part * 135);
-						Vector3 pos = getCubePos(part / float(num_particles));
-						Vector3 temp(cos(ptime) - sin(ptime * 0.8), sin(ptime), sin(ptime + 20));
-						float woom = math::notRandf(part);
-						pos += normalize(temp) * (1 + woom) * 2;
-						float size = 0.3f / (1 + abs(ptime2 - ltime));// 0.3f / (1 + woom);
-						particleStreamer.add(pos, size);
-						if (!particleStreamer.getRoom()) {
-							particleStreamer.end();
-							particle_fx->draw(&particleStreamer);
-							particleStreamer.begin();
-						}
-					}
-
-					particleStreamer.end();
-					particle_fx->draw(&particleStreamer);
-				}
-
-				if (tunnel_particles) {
-					float dtime = sync_get_val(cameraTimeTrack, row) / 16;
-
-					device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-					device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-					particle_fx->setTexture("tex", particle_tex);
-					particle_fx->setFloat("alpha", pow(1.0f, 2.2f));
-					particleStreamer.begin();
-					const int num_particles = 5000;
-					for (int i = 0; i < num_particles; ++i) {
-						Vector3 pos(math::notRandf(i) - 0.5, math::notRandf(i+1) - 0.5, math::notRandf(i+2) - 0.5);
-						pos *= 80;
-						float woom = math::notRandf(part);
-						float size = 0.4f / (1 + math::notRandf(i+3));
-						particleStreamer.add(pos, size);
-						if (!particleStreamer.getRoom()) {
-							particleStreamer.end();
-							particle_fx->draw(&particleStreamer);
-							particleStreamer.begin();
+					const int num_boogers = 100;
+					for (int i = 0; i < num_boogers; ++i) {
+						float btime = float(beat * 0.01 + (i + 500));
+						float boffset = i / 100.0;
+						Vector3 target = Vector3(sin(btime), cos(btime * 1.0212), sin(btime * 1.013));
+						target = normalize(target) * 100;
+						target *= 1.0f + sin(row * sync_get_val(particlesWFreqTrack, row)) * sync_get_val(particlesWAmtTrack, row);
+						for (int j = 0; j < 100; ++j) {
+							int part = i;
+							Vector3 pos = target * (1 + j / (100.0 * sync_get_val(particlesWLenTrack, row)) + boffset);
+							float prand = math::notRandf(part);
+							float fade = 1.0f;
+							float size = sin((j / 50.0) * M_PI) * 1.0f;
+							particleStreamer.add(pos, size);
+							if (!particleStreamer.getRoom()) {
+								particleStreamer.end();
+								particle_fx->draw(&particleStreamer);
+								particleStreamer.begin();
+							}
 						}
 					}
 					particleStreamer.end();
 					particle_fx->draw(&particleStreamer);
 				}
+			}
 
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+			if (kocka) {
+				kocka_fx->setFloat("fade", sync_get_val(kockaFadeTrack, row));
+				kocka_fx->setTexture("tex", kockamaps.getTexture(int(sync_get_val(kockaMapTrack, row)) % kockamaps.getTextureCount()));
+				kocka_fx->setMatrices(world, view, proj);
+				kocka_fx->commitChanges();
+				kocka_fx->draw(kocka_x);
+			}
+
+			if (dof) {
+				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+				device->SetRenderState(D3DRS_ZWRITEENABLE, false);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+
+				const float verts[] = {
+					-0.5f,                                   -0.5f,                                    0.5f, 1.0f, 0.0f, 0.0f,
+					-0.5f + float(letterbox_viewport.Width), -0.5f,                                    0.5f, 1.0f, 1.0f, 0.0f,
+					-0.5f + float(letterbox_viewport.Width), -0.5f + float(letterbox_viewport.Height), 0.5f, 1.0f, 1.0f, 1.0f,
+					-0.5f,                                   -0.5f + float(letterbox_viewport.Height), 0.5f, 1.0f, 0.0f, 1.0f,
+				};
+				device->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+
+				dof_fx->p->Begin(NULL, 0);
+
+				device.setRenderTarget(dof_target.getSurface(0), 0);
+				device.setRenderTarget(NULL, 1);
+				dof_fx->setTexture("color_tex", color_target);
+				dof_fx->setTexture("depth_tex", depth_target);
+				dof_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
+				dof_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
+				dof_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
+				dof_fx->p->BeginPass(0);
+				core::d3dErr(device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 6));
+				dof_fx->p->EndPass();
+
+				dof_fx->setTexture("premult_tex", dof_target);
+				device.setRenderTarget(dof_temp1_target.getSurface(0), 0);
+				device.setRenderTarget(dof_temp2_target.getSurface(0), 1);
+				dof_fx->p->BeginPass(1);
+				core::d3dErr(device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 6));
+				dof_fx->p->EndPass();
+
+				dof_fx->setTexture("temp1_tex", dof_temp1_target);
+				dof_fx->setTexture("temp2_tex", dof_temp2_target);
+				device.setRenderTarget(dof_target.getSurface(0), 0);
+				device.setRenderTarget(NULL, 1);
+				dof_fx->p->BeginPass(2);
+				core::d3dErr(device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 6));
+				dof_fx->p->EndPass();
+
+				dof_fx->p->End();
+			}
+
+			device.setDepthStencilSurface(depthstencil);
+
+			device.setRenderTarget(fxaa_target.getSurface(0), 0);
+			device.setRenderTarget(NULL, 1);
+			fxaa_fx->setTexture("color_tex", dof ? dof_target : color_target);
+			drawRect(device, fxaa_fx, 0, 0, float(letterbox_viewport.Width), float(letterbox_viewport.Height));
+
+			device->StretchRect(fxaa_target.getSurface(0), NULL, color1_hdr[0].getSurface(), NULL, D3DTEXF_LINEAR);
+
+			/* downsample until bloom fits */
+			float stdDev = std::max(sync_get_val(bloomSizeTrack, row), 0.0f) * (letterbox_viewport.Width / (1280.0f / 2));
+			float flevel = ::log(stdDev * 3 / 16) / ::log(2.0f);
+			flevel = std::max(flevel, 0.0f);
+			flevel = std::min(flevel, color1_hdr.size() - 1.0f);
+			int level = int(ceil(flevel));
+			for (int i = 0; i < level; ++i) {
+				d3dErr(device->StretchRect(color1_hdr[i].getSurface(0), NULL, color1_hdr[i + 1].getSurface(0), NULL, D3DTEXF_LINEAR));
+				stdDev /= 2;
+			}
+			assert(3 * stdDev <= 16.0f);
+
+			/* do the bloom */
+			RenderTexture render_textures[2] = { color1_hdr[level], color2_hdr[level] };
+			device->SetDepthStencilSurface(NULL);
+			device->SetRenderState(D3DRS_ZENABLE, false);
+
+			int rtIndex = 0;
+			for (int j = 0; j < 2; j++) {
+				D3DXVECTOR4 gauss[8];
+				float sigma_squared = stdDev * stdDev;
+				double tmp = 1.0 / std::max(sqrt(2.0f * M_PI * sigma_squared), 1.0);
+				float w1 = (float)tmp;
+				w1 = std::max(float(w1 * 1.004 - 0.004), 0.0f);
+
+				gauss[0].x = 0.0;
+				gauss[0].y = 0.0;
+				gauss[0].z = w1;
+				gauss[0].w = 0.0;
+
+				float total = w1;
+				int size = int(ceil(3 * stdDev / 2));
+				for (int k = 1; k < size; ++k) {
+					int o1 = k * 2 - 1;
+					int o2 = k * 2;
+
+					float w1 = float(tmp * exp(-o1 * o1 / (2.0f * sigma_squared)));
+					float w2 = float(tmp * exp(-o2 * o2 / (2.0f * sigma_squared)));
+
+					w1 = std::max(float(w1 * 1.004 - 0.004), 0.0f);
+					w2 = std::max(float(w2 * 1.004 - 0.004), 0.0f);
+
+					float w = w1 + w2;
+					float o = (o1 * w1 + o2 * w2) / w;
+					gauss[k].z = w;
+					if (!j) {
+						gauss[k].x = o / render_textures[rtIndex].getWidth();
+						gauss[k].y = 0.0f;
+					} else {
+						gauss[k].x = 0.0f;
+						gauss[k].y = o / render_textures[rtIndex].getHeight();
+					}
+					gauss[k].w = 0.0f;
+					total += 2 * w;
+				}
+
+				for (int k = 0; k < size; ++k)
+					gauss[k].z /= total;
+
+				blur_fx->p->SetVectorArray("gauss", gauss, size);
+				blur_fx->setTexture("blur_tex", render_textures[rtIndex]);
+				blur_fx->p->SetInt("size", size);
+
+				device.setRenderTarget(render_textures[!rtIndex].getSurface(0), 0);
+				int w = render_textures[rtIndex].getSurface(0).getWidth();
+				int h = render_textures[rtIndex].getSurface(0).getHeight();
+				drawRect(device, blur_fx, 0, 0, float(w), float(h));
+				rtIndex = !rtIndex;
 			}
 
 			/* letterbox */
@@ -776,6 +842,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			postprocess_fx->setTexture("color_tex", fxaa_target);
 			postprocess_fx->setFloat("overlay_alpha", sync_get_val(colorMapOverlayAlphaTrack, row));
 			postprocess_fx->setTexture("overlay_tex", overlays.getTexture(int(sync_get_val(colorMapOverlayTrack, row)) % overlays.getTextureCount()));
+			postprocess_fx->setTexture("bloom_tex", color1_hdr[level]);
+			postprocess_fx->setFloat("bloom_amt", sync_get_val(bloomAmtTrack, row));
 
 			postprocess_fx->setTexture("color_map1_tex", color_maps[ int(sync_get_val(colorMap1Track, row)) % color_maps.size() ]);
 			postprocess_fx->setTexture("color_map2_tex", color_maps[ int(sync_get_val(colorMap2Track, row)) % color_maps.size() ]);

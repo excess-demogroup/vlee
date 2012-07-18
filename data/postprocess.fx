@@ -4,10 +4,22 @@ const float noise_amt;
 const float dist_amt, dist_freq, dist_time;
 const float2 viewport;
 const float color_map_lerp;
+const float bloom_amt;
 
 texture color_tex;
 sampler color_samp = sampler_state {
 	Texture = (color_tex);
+	MipFilter = NONE;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	sRGBTexture = FALSE;
+};
+
+texture bloom_tex;
+sampler bloom_samp = sampler_state {
+	Texture = (bloom_tex);
 	MipFilter = NONE;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
@@ -123,6 +135,8 @@ float4 pixel(VS_OUTPUT In) : COLOR
 #else
 	float3 col = sqrt(sum);
 #endif
+
+	col += tex2D(bloom_samp, In.uv) * bloom_amt;
 
 	float4 o = tex2D(overlay_samp, In.uv);
 	o.a *= overlay_alpha;
