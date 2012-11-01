@@ -720,7 +720,8 @@ PS_OUT pixel(VS_OUTPUT In)
 {
 	PS_OUT o;
 	o.color = float4(FxaaPixelShader(In.uv, color_samp, viewportInv), 1);
-	o.bright = max(o.color - bloom_cutoff, 0);
+	float lum = max(0, dot(o.color, float3(0.299, 0.587, 0.114)) - bloom_cutoff);
+	o.bright = o.color * lum;
 	return o;
 }
 
