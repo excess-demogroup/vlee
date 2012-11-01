@@ -685,6 +685,7 @@ Position on span is used to compute sub-pixel filter offset using simple ramp,
 }
 
 const float2 viewportInv;
+const float bloom_cutoff;
 
 texture color_tex;
 sampler color_samp = sampler_state {
@@ -710,9 +711,17 @@ VS_OUTPUT vertex(float4 ipos : POSITION, float2 uv : TEXCOORD0)
 	return Out;
 }
 
-float4 pixel(VS_OUTPUT In) : COLOR
+struct PS_OUT {
+	float4 color : COLOR0;
+	float4 bright : COLOR1;
+};
+
+PS_OUT pixel(VS_OUTPUT In)
 {
-  return float4(FxaaPixelShader(In.uv, color_samp, viewportInv), 1);
+	PS_OUT o;
+	o.color = float4(FxaaPixelShader(In.uv, color_samp, viewportInv), 1);
+	o.bright = max(o.color - bloom_cutoff, 0);
+	return o;
 }
 
 technique postprocess {

@@ -653,6 +653,10 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath=".\data\blur.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\dof.fx"
 			>
 		</File>

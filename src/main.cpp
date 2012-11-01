@@ -313,9 +313,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *colorMap2Track     = sync_get_track(rocket, "cm.map2");
 		const sync_track *colorMapLerpTrack  = sync_get_track(rocket, "cm.lerp");
 
-		const sync_track *bloomSizeTrack  = sync_get_track(rocket, "bloom.size");
+		const sync_track *bloomCutoffTrack  = sync_get_track(rocket, "bloom.cutoff");
+		const sync_track *bloomShapeTrack  = sync_get_track(rocket, "bloom.shape");
 		const sync_track *bloomAmtTrack  = sync_get_track(rocket, "bloom.amt");
-
 
 		const sync_track *distAmtTrack    = sync_get_track(rocket, "dist.amt");
 		const sync_track *distFreqTrack   = sync_get_track(rocket, "dist.freq");
@@ -746,80 +746,72 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device.setDepthStencilSurface(depthstencil);
 
 			device.setRenderTarget(fxaa_target.getSurface(0), 0);
-			device.setRenderTarget(NULL, 1);
+			device.setRenderTarget(color1_hdr[0].getSurface(), 1);
 			fxaa_fx->setTexture("color_tex", dof ? dof_target : color_target);
+			fxaa_fx->setFloat("bloom_cutoff", sync_get_val(bloomCutoffTrack, row));
 			drawRect(device, fxaa_fx, 0, 0, float(letterbox_viewport.Width), float(letterbox_viewport.Height));
+			device.setRenderTarget(NULL, 1);
 
-			device->StretchRect(fxaa_target.getSurface(0), NULL, color1_hdr[0].getSurface(), NULL, D3DTEXF_LINEAR);
-
-			/* downsample until bloom fits */
-			float stdDev = std::max(sync_get_val(bloomSizeTrack, row), 0.0f) * (letterbox_viewport.Width / (1280.0f / 2));
-			float flevel = ::log(stdDev * 3 / 16) / ::log(2.0f);
-			flevel = std::max(flevel, 0.0f);
-			flevel = std::min(flevel, color1_hdr.size() - 1.0f);
-			int level = int(ceil(flevel));
-			for (int i = 0; i < level; ++i) {
+			/* downsample and blur */
+			float stdDev = 16.0f / 3;
+			for (int i = 0; i < 7; ++i) {
+				// copy to next level
 				d3dErr(device->StretchRect(color1_hdr[i].getSurface(0), NULL, color1_hdr[i + 1].getSurface(0), NULL, D3DTEXF_LINEAR));
-				stdDev /= 2;
-			}
-			assert(3 * stdDev <= 16.0f);
 
-			/* do the bloom */
-			RenderTexture render_textures[2] = { color1_hdr[level], color2_hdr[level] };
-			device->SetDepthStencilSurface(NULL);
-			device->SetRenderState(D3DRS_ZENABLE, false);
+				/* do the bloom */
+				RenderTexture render_textures[3] = { color1_hdr[i], color2_hdr[i] };
+				device->SetDepthStencilSurface(NULL);
+				device->SetRenderState(D3DRS_ZENABLE, false);
 
-			int rtIndex = 0;
-			for (int j = 0; j < 2; j++) {
-				D3DXVECTOR4 gauss[8];
-				float sigma_squared = stdDev * stdDev;
-				double tmp = 1.0 / std::max(sqrt(2.0f * M_PI * sigma_squared), 1.0);
-				float w1 = (float)tmp;
-				w1 = std::max(float(w1 * 1.004 - 0.004), 0.0f);
-
-				gauss[0].x = 0.0;
-				gauss[0].y = 0.0;
-				gauss[0].z = w1;
-				gauss[0].w = 0.0;
-
-				float total = w1;
-				int size = int(ceil(3 * stdDev / 2));
-				for (int k = 1; k < size; ++k) {
-					int o1 = k * 2 - 1;
-					int o2 = k * 2;
-
-					float w1 = float(tmp * exp(-o1 * o1 / (2.0f * sigma_squared)));
-					float w2 = float(tmp * exp(-o2 * o2 / (2.0f * sigma_squared)));
-
+				for (int j = 0; j < 2; j++) {
+					D3DXVECTOR4 gauss[8];
+					float sigma_squared = stdDev * stdDev;
+					double tmp = 1.0 / std::max(sqrt(2.0f * M_PI * sigma_squared), 1.0);
+					float w1 = (float)tmp;
 					w1 = std::max(float(w1 * 1.004 - 0.004), 0.0f);
-					w2 = std::max(float(w2 * 1.004 - 0.004), 0.0f);
 
-					float w = w1 + w2;
-					float o = (o1 * w1 + o2 * w2) / w;
-					gauss[k].z = w;
-					if (!j) {
-						gauss[k].x = o / render_textures[rtIndex].getWidth();
-						gauss[k].y = 0.0f;
-					} else {
-						gauss[k].x = 0.0f;
-						gauss[k].y = o / render_textures[rtIndex].getHeight();
+					gauss[0].x = 0.0;
+					gauss[0].y = 0.0;
+					gauss[0].z = w1;
+					gauss[0].w = 0.0;
+
+					float total = w1;
+					for (int k = 1; k < 8; ++k) {
+						int o1 = k * 2 - 1;
+						int o2 = k * 2;
+
+						float w1 = float(tmp * exp(-o1 * o1 / (2.0f * sigma_squared)));
+						float w2 = float(tmp * exp(-o2 * o2 / (2.0f * sigma_squared)));
+
+						w1 = std::max(float(w1 * 1.004 - 0.004), 0.0f);
+						w2 = std::max(float(w2 * 1.004 - 0.004), 0.0f);
+
+						float w = w1 + w2;
+						float o = (o1 * w1 + o2 * w2) / w;
+						gauss[k].z = w;
+						if (!j) {
+							gauss[k].x = o / render_textures[0].getWidth();
+							gauss[k].y = 0.0f;
+						} else {
+							gauss[k].x = 0.0f;
+							gauss[k].y = o / render_textures[0].getHeight();
+						}
+						gauss[k].w = 0.0f;
+						total += 2 * w;
 					}
-					gauss[k].w = 0.0f;
-					total += 2 * w;
+
+					for (int k = 0; k < 8; ++k)
+						gauss[k].z /= total;
+
+					blur_fx->p->SetVectorArray("gauss", gauss, 8);
+					blur_fx->setTexture("blur_tex", render_textures[j]);
+					blur_fx->p->SetInt("size", 8);
+
+					device.setRenderTarget(render_textures[(j + 1) & 1].getSurface(0), 0);
+					int w = render_textures[j].getSurface(0).getWidth();
+					int h = render_textures[j].getSurface(0).getHeight();
+					drawRect(device, blur_fx, 0, 0, float(w), float(h));
 				}
-
-				for (int k = 0; k < size; ++k)
-					gauss[k].z /= total;
-
-				blur_fx->p->SetVectorArray("gauss", gauss, size);
-				blur_fx->setTexture("blur_tex", render_textures[rtIndex]);
-				blur_fx->p->SetInt("size", size);
-
-				device.setRenderTarget(render_textures[!rtIndex].getSurface(0), 0);
-				int w = render_textures[rtIndex].getSurface(0).getWidth();
-				int h = render_textures[rtIndex].getSurface(0).getHeight();
-				drawRect(device, blur_fx, 0, 0, float(w), float(h));
-				rtIndex = !rtIndex;
 			}
 
 			/* letterbox */
@@ -842,8 +834,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 			postprocess_fx->setTexture("color_tex", fxaa_target);
 			postprocess_fx->setFloat("overlay_alpha", sync_get_val(colorMapOverlayAlphaTrack, row));
 			postprocess_fx->setTexture("overlay_tex", overlays.getTexture(int(sync_get_val(colorMapOverlayTrack, row)) % overlays.getTextureCount()));
-			postprocess_fx->setTexture("bloom_tex", color1_hdr[level]);
+			postprocess_fx->setTexture("bloom0_tex", color1_hdr[0]);
+			postprocess_fx->setTexture("bloom1_tex", color1_hdr[1]);
+			postprocess_fx->setTexture("bloom2_tex", color1_hdr[2]);
+			postprocess_fx->setTexture("bloom3_tex", color1_hdr[3]);
+			postprocess_fx->setTexture("bloom4_tex", color1_hdr[4]);
+			postprocess_fx->setTexture("bloom5_tex", color1_hdr[5]);
+			postprocess_fx->setTexture("bloom6_tex", color1_hdr[6]);
 			postprocess_fx->setFloat("bloom_amt", sync_get_val(bloomAmtTrack, row));
+			postprocess_fx->setFloat("bloom_shape", sync_get_val(bloomShapeTrack, row));
 
 			postprocess_fx->setTexture("color_map1_tex", color_maps[ int(sync_get_val(colorMap1Track, row)) % color_maps.size() ]);
 			postprocess_fx->setTexture("color_map2_tex", color_maps[ int(sync_get_val(colorMap2Track, row)) % color_maps.size() ]);
