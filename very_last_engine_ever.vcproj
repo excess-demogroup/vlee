@@ -657,15 +657,15 @@
 			>
 		</File>
 		<File
+			RelativePath=".\data\byste.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\dof.fx"
 			>
 		</File>
 		<File
 			RelativePath=".\data\fxaa.fx"
-			>
-		</File>
-		<File
-			RelativePath=".\data\kocka.fx"
 			>
 		</File>
 		<File
@@ -681,7 +681,7 @@
 			>
 		</File>
 		<File
-			RelativePath=".\data\sphere.fx"
+			RelativePath=".\data\tunnel.fx"
 			>
 		</File>
 	</Files>

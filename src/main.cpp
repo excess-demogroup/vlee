@@ -325,31 +325,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
 		const sync_track *dofFocalDistTrack = sync_get_track(rocket, "dof.fdist");
 
-		const sync_track *sphereSpeed1Track = sync_get_track(rocket, "sphere.speed1");
-		const sync_track *sphereSpeed2Track = sync_get_track(rocket, "sphere.speed2");
-		const sync_track *sphereFreq1Track = sync_get_track(rocket, "sphere.freq1");
-		const sync_track *sphereFreq2Track = sync_get_track(rocket, "sphere.freq2");
-		const sync_track *sphereAmt1Track = sync_get_track(rocket, "sphere.amt1");
-		const sync_track *sphereAmt2Track = sync_get_track(rocket, "sphere.amt2");
-		const sync_track *sphereFadeTrack = sync_get_track(rocket, "sphere.fade");
-		const sync_track *sphereEnvFadeTrack = sync_get_track(rocket, "sphere.env-fade");
-		const sync_track *sphereDesaturateTrack = sync_get_track(rocket, "sphere.desaturate");
-
-		const sync_track *skyboxFadeTrack = sync_get_track(rocket, "skybox.fade");
-		const sync_track *skyboxDesaturateTrack = sync_get_track(rocket, "skybox.desaturate");
-
-		const sync_track *kockaMapTrack = sync_get_track(rocket, "kocka.map");
-		const sync_track *kockaFadeTrack = sync_get_track(rocket, "kocka.fade");
-
-		const sync_track *particlesBFreqTrack = sync_get_track(rocket, "particles.b.freq");
-		const sync_track *particlesBAmtTrack = sync_get_track(rocket, "particles.b.amt");
-		const sync_track *particlesBLenTrack = sync_get_track(rocket, "particles.b.len");
-		const sync_track *particlesBFadeTrack = sync_get_track(rocket, "particles.b.fade");
-		const sync_track *particlesWFreqTrack = sync_get_track(rocket, "particles.w.freq");
-		const sync_track *particlesWAmtTrack = sync_get_track(rocket, "particles.w.amt");
-		const sync_track *particlesWLenTrack = sync_get_track(rocket, "particles.w.len");
-		const sync_track *particlesWFadeTrack = sync_get_track(rocket, "particles.w.fade");
-
 		Surface backbuffer   = device.getRenderTarget(0);
 
 		D3DCAPS9 caps;
@@ -439,22 +414,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture darksmoke_tex = engine::loadTexture(device, "data/darksmoke.png");
 		particle_fx->setTexture("tex", particle_tex);
 
-		Mesh *sphere_x = engine::loadMesh(device, "data/sphere.x");
-		Effect *sphere_fx = engine::loadEffect(device, "data/sphere.fx");
+		Mesh *byste_x = engine::loadMesh(device, "data/byste.x");
+		Effect *byste_fx = engine::loadEffect(device, "data/byste.fx");
 		CubeTexture bling_tex = engine::loadCubeTexture(device, "data/bling.dds");
 		CubeTexture bling2_tex = engine::loadCubeTexture(device, "data/bling2.dds");
 		CubeTexture cube_noise_tex = engine::loadCubeTexture(device, "data/cube-noise.dds");
-		sphere_fx->setTexture("env_tex", bling_tex);
-		sphere_fx->setTexture("env2_tex", bling2_tex);
-		sphere_fx->setTexture("cube_noise_tex", cube_noise_tex);
+		byste_fx->setTexture("env_tex", bling2_tex);
+		byste_fx->setTexture("cube_noise_tex", cube_noise_tex);
 
 		Mesh *skybox_x = engine::loadMesh(device, "data/skybox.x");
 		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
 		skybox_fx->setTexture("env_tex", bling_tex);
-
-		Mesh *kocka_x = engine::loadMesh(device, "data/kocka.x");
-		Effect *kocka_fx = engine::loadEffect(device, "data/kocka.fx");
-		Anim kockamaps = engine::loadAnim(device, "data/kockamaps");
 
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
@@ -521,28 +491,21 @@ int main(int /*argc*/, char* /*argv*/ [])
 			}
 
 			bool particles = false;
-			bool light_particles = false;
-			bool dark_particles = false;
-			bool sphere = false;
+			bool byste = false;
 			bool skyboxen = false;
 			bool dof = false;
-			bool kocka = false;
 
 			int part = int(sync_get_val(partTrack, row));
 			switch (part) {
 			case 0:
-				sphere = true;
+				byste = true;
 				dof = true;
 				skyboxen = true;
-				kocka = true;
 				break;
 
 			case 1:
-				sphere = true;
 				skyboxen = true;
 				particles = true;
-				light_particles = true;
-				dark_particles = true;
 				break;
 			}
 
@@ -585,29 +548,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float ltime = sync_get_val(cameraTimeTrack, row) / 16;
 			Vector3 worldLightPosition = getCubePos(ltime);
 
-			if (sphere) {
-				sphere_fx->setFloat("time1", float((beat / 8) * sync_get_val(sphereSpeed1Track, row)));
-				sphere_fx->setFloat("time2", float((beat / 8) * sync_get_val(sphereSpeed2Track, row)));
-				sphere_fx->setFloat("freq1", 1.0f / sync_get_val(sphereFreq1Track, row));
-				sphere_fx->setFloat("freq2", 1.0f / sync_get_val(sphereFreq2Track, row));
-				sphere_fx->setFloat("amt1", sync_get_val(sphereAmt1Track, row) / 100);
-				sphere_fx->setFloat("amt2", sync_get_val(sphereAmt2Track, row) / 100);
-				sphere_fx->setFloat("desaturate", sync_get_val(sphereDesaturateTrack, row));
-
-				float fade = sync_get_val(sphereFadeTrack, row);
-				if (fade < 0.0f)
-					fade = math::randf() < 0.5f ? 0.0f : 1.0f;
-
-				sphere_fx->setFloat("fade", fade);
-				sphere_fx->setFloat("env_fade", sync_get_val(sphereEnvFadeTrack, row));
-				sphere_fx->setMatrices(world, view, proj);
-				sphere_fx->commitChanges();
-				sphere_fx->draw(sphere_x);
+			if (byste) {
+				byste_fx->setMatrices(world, view, proj);
+				byste_fx->commitChanges();
+				byste_fx->draw(byste_x);
 			}
 
 			if (skyboxen) {
-				skybox_fx->setFloat("fade", sync_get_val(skyboxFadeTrack, row));
-				skybox_fx->setFloat("desaturate", sync_get_val(skyboxDesaturateTrack, row));
 				skybox_fx->setMatrices(world, view, proj);
 				skybox_fx->commitChanges();
 				skybox_fx->draw(skybox_x);
@@ -627,76 +574,34 @@ int main(int /*argc*/, char* /*argv*/ [])
 				particle_fx->setVector3("left", left);
 				particle_fx->setMatrices(world, view, proj);
 
-				if (dark_particles) {
-					double dtime = row; // sync_get_val(cameraTimeTrack, row) / 16;
+				double dtime = row; // sync_get_val(cameraTimeTrack, row) / 16;
 
-					particle_fx->p->SetTechnique("black");
-					particle_fx->setTexture("tex", darksmoke_tex);
-					particle_fx->setFloat("alpha", pow(sync_get_val(particlesBFadeTrack, row), 2.2f));
-					particleStreamer.begin();
-					const int num_boogers = 100;
-					for (int i = 0; i < num_boogers; ++i) {
-						float btime = float(beat * 0.01 + i);
-						float boffset = i / 100.0f;
-						Vector3 target = Vector3(sin(btime), cos(btime * 1.0212), sin(btime * 1.013));
-						target = normalize(target) * 100;
-						target *= 1.0f + sin(row * sync_get_val(particlesBFreqTrack, row)) * sync_get_val(particlesBAmtTrack, row);
-						for (int j = 0; j < 50; ++j) {
-							int part = i;
-							Vector3 pos = target * (1 + j / (15.0 * sync_get_val(particlesBLenTrack, row)) + boffset);
-							float prand = math::notRandf(part);
-							float fade = 1.0f;
-							float size = sin((j / 50.0) * M_PI) * 15.0f;
-							particleStreamer.add(pos, size);
-							if (!particleStreamer.getRoom()) {
-								particleStreamer.end();
-								particle_fx->draw(&particleStreamer);
-								particleStreamer.begin();
-							}
+				particle_fx->p->SetTechnique("black");
+				particle_fx->setTexture("tex", darksmoke_tex);
+				particle_fx->setFloat("alpha", 1.0f);
+				particleStreamer.begin();
+				const int num_boogers = 100;
+				for (int i = 0; i < num_boogers; ++i) {
+					float btime = float(beat * 0.01 + i);
+					float boffset = i / 100.0f;
+					Vector3 target = Vector3(sin(btime), cos(btime * 1.0212), sin(btime * 1.013));
+					target = normalize(target) * 100;
+					for (int j = 0; j < 50; ++j) {
+						int part = i;
+						Vector3 pos = target * (1 + j / 15.0 + boffset);
+						float prand = math::notRandf(part);
+						float fade = 1.0f;
+						float size = sin((j / 50.0) * M_PI) * 15.0f;
+						particleStreamer.add(pos, size);
+						if (!particleStreamer.getRoom()) {
+							particleStreamer.end();
+							particle_fx->draw(&particleStreamer);
+							particleStreamer.begin();
 						}
 					}
-					particleStreamer.end();
-					particle_fx->draw(&particleStreamer);
 				}
-				if (light_particles) {
-					float dtime = row; // sync_get_val(cameraTimeTrack, row) / 16;
-
-					particle_fx->p->SetTechnique("white");
-					particle_fx->setTexture("tex", particle_tex);
-					particle_fx->setFloat("alpha", pow(sync_get_val(particlesWFadeTrack, row), 2.2f));
-					particleStreamer.begin();
-					const int num_boogers = 100;
-					for (int i = 0; i < num_boogers; ++i) {
-						float btime = float(beat * 0.01 + (i + 500));
-						float boffset = i / 100.0;
-						Vector3 target = Vector3(sin(btime), cos(btime * 1.0212), sin(btime * 1.013));
-						target = normalize(target) * 100;
-						target *= 1.0f + sin(row * sync_get_val(particlesWFreqTrack, row)) * sync_get_val(particlesWAmtTrack, row);
-						for (int j = 0; j < 100; ++j) {
-							int part = i;
-							Vector3 pos = target * (1 + j / (100.0 * sync_get_val(particlesWLenTrack, row)) + boffset);
-							float prand = math::notRandf(part);
-							float fade = 1.0f;
-							float size = sin((j / 50.0) * M_PI) * 1.0f;
-							particleStreamer.add(pos, size);
-							if (!particleStreamer.getRoom()) {
-								particleStreamer.end();
-								particle_fx->draw(&particleStreamer);
-								particleStreamer.begin();
-							}
-						}
-					}
-					particleStreamer.end();
-					particle_fx->draw(&particleStreamer);
-				}
-			}
-
-			if (kocka) {
-				kocka_fx->setFloat("fade", sync_get_val(kockaFadeTrack, row));
-				kocka_fx->setTexture("tex", kockamaps.getTexture(int(sync_get_val(kockaMapTrack, row)) % kockamaps.getTextureCount()));
-				kocka_fx->setMatrices(world, view, proj);
-				kocka_fx->commitChanges();
-				kocka_fx->draw(kocka_x);
+				particleStreamer.end();
+				particle_fx->draw(&particleStreamer);
 			}
 
 			if (dof) {
