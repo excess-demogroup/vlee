@@ -4,23 +4,7 @@ float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
 
-textureCUBE env_tex;
-samplerCUBE env_samp = sampler_state {
-	Texture = (env_tex);
-	MipFilter = LINEAR;
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
-	sRGBTexture = TRUE;
-};
-
-textureCUBE cube_noise_tex;
-samplerCUBE cube_noise_samp = sampler_state {
-	Texture = (cube_noise_tex);
-	MipFilter = LINEAR;
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
-	sRGBTexture = FALSE;
-};
+float3 worldLightPosition;
 
 texture3D volume_noise_tex;
 sampler3D volume_noise_samp = sampler_state {
@@ -35,11 +19,9 @@ sampler3D volume_noise_samp = sampler_state {
 };
 
 struct VS_INPUT {
-	float3 Normal : TEXCOORD0;
-	float3 Pos2 : TEXCOORD1;
-	float3 UVW : TEXCOORD2;
-	float2 UV : TEXCOORD3;
-	float3 Pos3 : TEXCOORD4;
+	float4 Position : POSITION;
+	float3 Normal : NORMAL;
+	float2 UV : TEXCOORD0;
 };
 
 struct VS_OUTPUT {
@@ -78,6 +60,7 @@ VS_OUTPUT vs_main( VS_INPUT Input )
 	float3 p2 = tpos(phi, th + eps, R, r);
 	float3 n = -normalize(cross(p1 - pos, p2 - pos));
 
+//	pos = Input.Position.xyz;
 	Output.Position = mul( float4(pos, 1), matWorldViewProjection );
 	Output.Normal = mul(matWorldViewInverse, float4(n, 0)).xyz;
 	//Output.Normal = n;
@@ -118,11 +101,9 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 	float3 g = s * grad(volume_noise_samp, Input.UVW, 1.0 / 128);
 	float3 n = perturb_normal(normalize(Input.Normal), g);
 
-	o.z = Input.Pos2.z;
 	float3 d = normalize(-Input.Pos2);
-	
-	float3 lpos = float3(-cos(time * 2), sin(time * 2), 0) * 70;
-	lpos = mul(float4(lpos, 1), matView).xyz;
+
+	float3 lpos = mul(float4(worldLightPosition, 1), matView).xyz;
 	
 	o.col = float4(0, 0, 0, 1);
 
@@ -135,13 +116,14 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 	if (n_dot_l > 0) {
 		float3 h = normalize(l + normalize(-Input.Pos2));
 		float3 lcol = n_dot_l * 2.5;
-		lcol += pow(max(0, dot(n, h)), 256.0) * 5.0;
+		lcol += pow(max(0, dot(n, h)), 300.0) * 25.0 * tex3D(volume_noise_samp, Input.UVW).r;
 		lcol *= max(0, 1.005 / (distance(Input.Pos2, lpos) * 2.0) - 0.005);
 		o.col.rgb += lcol;
 	}
 
 	o.col.rgb = lerp(float3(0.15, 0.2, 0.3), o.col.rgb, exp(-Input.Pos2.z * 0.0005));
 //	o.col.rgb = pow(0.5 + 0.5 * n, 2.2);
+	o.z = Input.Pos2.z;
 	return o;
 }
 

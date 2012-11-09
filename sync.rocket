@@ -2,12 +2,13 @@
 	<tracks>
 		<track name="part">
 			<key row="0" value="0" interpolation="0"/>
+			<key row="8" value="1" interpolation="0"/>
 		</track>
 		<track name="cam.index">
 			<key row="0" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.dist">
-			<key row="0" value="100" interpolation="0"/>
+			<key row="0" value="80" interpolation="0"/>
 		</track>
 		<track name="cam.time">
 			<key row="0" value="1" interpolation="0"/>
@@ -53,7 +54,7 @@
 			<key row="0" value="1" interpolation="0"/>
 		</track>
 		<track name="cm.pulse.amt">
-			<key row="0" value="0.05" interpolation="0"/>
+			<key row="0" value="0" interpolation="0"/>
 		</track>
 		<track name="cm.pulse.speed">
 			<key row="0" value="1" interpolation="0"/>

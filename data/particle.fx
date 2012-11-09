@@ -38,25 +38,11 @@ VS_OUTPUT vertex(VS_INPUT In)
 	return Out;
 }
 
-float4 black_pixel(VS_OUTPUT In)  : COLOR
-{
-	return float4(0, 0, 0, tex2D(tex_samp, In.uv).a) * In.alpha * alpha;
-}
-
 float4 white_pixel(VS_OUTPUT In)  : COLOR
 {
-	return float4(1, 1, 1, tex2D(tex_samp, In.uv).a) * In.alpha * alpha;
-}
-
-technique black {
-	pass P0 {
-		VertexShader = compile vs_3_0 vertex();
-		PixelShader  = compile ps_3_0 black_pixel();
-		AlphaBlendEnable = True;
-		ZWriteEnable = False;
-		SrcBlend = SrcAlpha;
-		DestBlend = InvSrcAlpha;
-	}
+	float d = min(distance(0.5, In.uv) * 2, 1);
+	return pow(1 - d, 3) * 2.0;
+//	return tex2D(tex_samp, In.uv) * In.alpha * alpha;
 }
 
 technique white {
