@@ -83,7 +83,7 @@ sampler bloom5_samp = sampler_state {
 	AddressV = CLAMP;
 	sRGBTexture = FALSE;
 };
-
+/*
 texture bloom6_tex;
 sampler bloom6_samp = sampler_state {
 	Texture = (bloom6_tex);
@@ -94,7 +94,7 @@ sampler bloom6_samp = sampler_state {
 	AddressV = CLAMP;
 	sRGBTexture = FALSE;
 };
-
+*/
 texture spectrum_tex;
 sampler spectrum_samp = sampler_state {
 	Texture = (spectrum_tex);
@@ -202,6 +202,20 @@ float lady_gun_alpha;
 float lady_gun_offs_x;
 float lady_gun_offs_y;
 
+
+float boobs_alpha;
+texture boobs_tex;
+sampler boobs_samp = sampler_state {
+	Texture = (boobs_tex);
+	MipFilter = NONE;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	sRGBTexture = FALSE;
+};
+
+
 float4 pixel(VS_OUTPUT In) : COLOR
 {
 	const float sep = 0.03;
@@ -246,7 +260,7 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	bloom += tex2D(bloom3_samp, In.uv) * pow(bloom_shape, 3);
 	bloom += tex2D(bloom4_samp, In.uv) * pow(bloom_shape, 4);
 	bloom += tex2D(bloom5_samp, In.uv) * pow(bloom_shape, 5);
-	bloom += tex2D(bloom6_samp, In.uv) * pow(bloom_shape, 6);
+//	bloom += tex2D(bloom6_samp, In.uv) * pow(bloom_shape, 6);
 	col += bloom * bloom_amt;
 
 	float4 o = tex2D(overlay_samp, In.uv);
@@ -268,6 +282,13 @@ float4 pixel(VS_OUTPUT In) : COLOR
 
 		o = tex2D(lady_gun_samp, In.uv + gun_offset);
 		o.a *= lady_gun_alpha;
+		col *= 1 - o.a;
+		col += o.rgb * o.a;
+	}
+
+	if (boobs_alpha > 0) {
+		float4 o = tex2D(boobs_samp, In.uv);
+		o.a *= boobs_alpha;
 		col *= 1 - o.a;
 		col += o.rgb * o.a;
 	}

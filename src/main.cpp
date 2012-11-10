@@ -262,6 +262,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
 		const sync_track *dofFocalDistTrack = sync_get_track(rocket, "dof.fdist");
 
+		const sync_track *boobsTrack = sync_get_track(rocket, "boobs");
+
 		Surface backbuffer   = device.getRenderTarget(0);
 
 		D3DCAPS9 caps;
@@ -348,8 +350,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 		engine::ParticleStreamer particleStreamer(device);
 		Effect *particle_fx = engine::loadEffect(device, "data/particle.fx");
 		Texture particle_tex = engine::loadTexture(device, "data/particle.png");
-		Texture darksmoke_tex = engine::loadTexture(device, "data/darksmoke.png");
 		particle_fx->setTexture("tex", particle_tex);
+
+		Effect *bartikkel_fx = engine::loadEffect(device, "data/bartikkel.fx");
+		Texture bartikkel_tex = engine::loadTexture(device, "data/bartikkel.png");
+		bartikkel_fx->setTexture("tex", bartikkel_tex);
 
 		Mesh *byste_x = engine::loadMesh(device, "data/byste.x");
 		Effect *byste_fx = engine::loadEffect(device, "data/byste.fx");
@@ -357,7 +362,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		CubeTexture bling2_tex = engine::loadCubeTexture(device, "data/bling2.dds");
 		CubeTexture cube_noise_tex = engine::loadCubeTexture(device, "data/cube-noise.dds");
 		byste_fx->setTexture("env_tex", bling2_tex);
-		byste_fx->setTexture("cube_noise_tex", cube_noise_tex);
+
+		Mesh *carlb_x = engine::loadMesh(device, "data/carlb.x");
+		Effect *carlb_fx = engine::loadEffect(device, "data/carlb.fx");
+		carlb_fx->setTexture("env_tex", bling2_tex);
 
 		Mesh *tunnel_x = engine::loadMesh(device, "data/tunnel.x");
 		Effect *tunnel_fx = engine::loadEffect(device, "data/tunnel.fx");
@@ -376,6 +384,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 		postprocess_fx->setTexture("lady_gun_outline_tex", lady_gun_outline_tex);
 
 		Anim overlays = engine::loadAnim(device, "data/overlays");
+		Anim boobs_anim = engine::loadAnim(device, "data/boobs");
+
+		engine::ParticleCloud<float> cloud;
+		const int num_boogers = 30000;
+		for (int i = 0; i < num_boogers; ++i) {
+			Vector3 pos = Vector3(
+				math::notRandf(i * 4 + 0) * 2 - 1,
+				math::notRandf(i * 4 + 1) * 2 - 1,
+				math::notRandf(i * 4 + 2) * 2 - 1) * 300.0f;
+			float size = (0.5f * math::notRandf(i * 4 + 3) * 0.5f) * 20.0f;
+			cloud.addParticle(engine::Particle<float>(pos, size));
+		}
 
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -411,8 +431,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 				break;
 
 			case 1:
-				camPos = Vector3(sin(camTime * float(M_PI / 180)), cos(camTime * float(M_PI / 180)), 0) * 70.0f;
-				camTarget = Vector3(sin((camTime + camOffset) * float(M_PI / 180)), cos((camTime + camOffset) * float(M_PI / 180)), 0) * 70.0f;
+				camPos = Vector3(sin(camTime * float(M_PI / 180)), cos(camTime * float(M_PI / 180)), 0) * sync_get_val(cameraDistanceTrack, row);
+				camTarget = Vector3(sin((camTime + camOffset) * float(M_PI / 180)), cos((camTime + camOffset) * float(M_PI / 180)), 0) * sync_get_val(cameraDistanceTrack, row);
 				camUp = camPos - camTarget;
 				camUp = Vector3(camUp.y, camUp.z, camUp.x);
 				break;
@@ -440,9 +460,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 			bool particles = false;
 			bool byste = false;
 			bool tunnel = false;
-			bool skyboxen = false;
 			bool dof = false;
 			bool lady_gun = false;
+			bool carlb = false;
+			bool bartikkel = false;
 
 			int part = int(sync_get_val(partTrack, row));
 			switch (part) {
@@ -458,6 +479,15 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			case 2:
 				lady_gun = true;
+				break;
+
+			case 3:
+				carlb = true;
+				dof = true;
+				break;
+
+			case 4:
+				bartikkel = true;
 				break;
 			}
 
@@ -491,7 +521,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			device->SetRenderState(D3DRS_ZWRITEENABLE, true);
-			device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
+
+			if (bartikkel) {
+//				device.setRenderTarget(dof_target.getRenderTarget(), 0);
+//				device.setRenderTarget(NULL, 1);
+				device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF7F7F7F, 1.f, 0);
+			} else
+				device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
 
 //			float fog_density = sync_get_val(fogDensityTrack, row) / 100000;
 
@@ -505,6 +541,12 @@ int main(int /*argc*/, char* /*argv*/ [])
 				byste_fx->draw(byste_x);
 			}
 
+			if (carlb) {
+				carlb_fx->setMatrices(world, view, proj);
+				carlb_fx->commitChanges();
+				carlb_fx->draw(carlb_x);
+			}
+
 			if (tunnel) {
 				tunnel_fx->setFloat("time", float(beat * 0.1));
 				tunnel_fx->setVector3("worldLightPosition", worldLightPosition);
@@ -513,53 +555,37 @@ int main(int /*argc*/, char* /*argv*/ [])
 				tunnel_fx->draw(tunnel_x);
 			}
 
-			if (skyboxen) {
-				skybox_fx->setMatrices(world, view, proj);
-				skybox_fx->commitChanges();
-				skybox_fx->draw(skybox_x);
-			}
-
-			if (particles) {
-				// particles
+			if (bartikkel) {
 				Matrix4x4 modelview = world * view;
 				Vector3 up(modelview._12, modelview._22, modelview._32);
 				Vector3 left(modelview._11, modelview._21, modelview._31);
+				Vector3 forward(modelview._13, modelview._23, modelview._33);
 				math::normalize(up);
 				math::normalize(left);
 				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
 				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 
-				particle_fx->setVector3("up", up);
-				particle_fx->setVector3("left", left);
-				particle_fx->setMatrices(world, view, proj);
+				bartikkel_fx->setVector3("up", up);
+				bartikkel_fx->setVector3("left", left);
+				bartikkel_fx->setMatrices(world, view, proj);
+				bartikkel_fx->setFloat("alpha", 1.0f);
 
-				double dtime = row; // sync_get_val(cameraTimeTrack, row) / 16;
-
-				particle_fx->p->SetTechnique("black");
-				particle_fx->setTexture("tex", darksmoke_tex);
-				particle_fx->setFloat("alpha", 1.0f);
+				cloud.sort(forward);
 				particleStreamer.begin();
-				const int num_boogers = 100;
-				for (int i = 0; i < num_boogers; ++i) {
-					float btime = float(beat * 0.01 + i);
-					float boffset = i / 100.0f;
-					Vector3 target = Vector3(sin(btime), cos(btime * 1.0212), sin(btime * 1.013));
-					target = normalize(target) * 100;
-					for (int j = 0; j < 50; ++j) {
-						int part = i;
-						Vector3 pos = target * (1 + j / 15.0f + boffset);
-						float prand = math::notRandf(part);
-						float size = float(sin((j / 50.0f) * M_PI) * 15.0f);
-						particleStreamer.add(pos, size);
-						if (!particleStreamer.getRoom()) {
-							particleStreamer.end();
-							particle_fx->draw(&particleStreamer);
-							particleStreamer.begin();
-						}
+			
+				std::vector<engine::Particle<float> >::const_iterator iter;
+				for (iter = cloud.particles.begin(); iter != cloud.particles.end(); ++iter) {
+					if (!particleStreamer.getRoom()) {
+						particleStreamer.end();
+						bartikkel_fx->draw(&particleStreamer);
+						particleStreamer.begin();
 					}
+					particleStreamer.add(iter->pos, iter->data);
 				}
 				particleStreamer.end();
-				particle_fx->draw(&particleStreamer);
+				bartikkel_fx->draw(&particleStreamer);
 			}
 
 			if (dof) {
@@ -633,7 +659,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 						cos(i * 45.0 + beat * 0.1),
 						cos(i * 23.0 - beat * 0.23)
 						));
-					pos += offset * i * 0.1f;
+					pos += offset * float(i) * 0.1f;
 					float prand = math::notRandf(part);
 					float fade = 1.0f;
 					float size = 20.0f / (3 + i);
@@ -753,6 +779,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			postprocess_fx->setTexture("color_map2_tex", color_maps[ int(sync_get_val(colorMap2Track, row)) % color_maps.size() ]);
 			postprocess_fx->setFloat("color_map_lerp", sync_get_val(colorMapLerpTrack, row));
 			postprocess_fx->setFloat("lady_gun_alpha", lady_gun ? 1.0f : 0.0f);
+
 			if (lady_gun) {
 				double shake_phase = beat * 32 * sync_get_val(cameraShakeSpeedTrack, row);
 				Vector3 camOffs(sin(shake_phase + 0.35), cos(shake_phase * 0.9), 0);
@@ -762,6 +789,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 				postprocess_fx->setFloat("lady_gun_offs_x", camOffs.x);
 				postprocess_fx->setFloat("lady_gun_offs_y", camOffs.y);
 			}
+
+			float boobs_frame = sync_get_val(boobsTrack, row);
+			postprocess_fx->setFloat("boobs_alpha", boobs_frame >= 0 ? 1.0f : 0.0f);
+			postprocess_fx->setTexture("boobs_tex", boobs_anim.getFramePingPong(boobs_frame));
 
 			postprocess_fx->commitChanges();
 

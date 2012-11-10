@@ -653,11 +653,19 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath=".\data\bartikkel.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\blur.fx"
 			>
 		</File>
 		<File
 			RelativePath=".\data\byste.fx"
+			>
+		</File>
+		<File
+			RelativePath=".\data\carlb.fx"
 			>
 		</File>
 		<File
