@@ -8,12 +8,15 @@ engine::Anim engine::loadAnim(renderer::Device &device, std::string folder)
 	for (int i = 0; true; ++i)
 	{
 		char temp[256];
-		sprintf(temp, "%s/%04d.png", folder.c_str(), i);
+		sprintf(temp, "%s/%04d.dds", folder.c_str(), i);
 		renderer::Texture tex;
 		if (FAILED(D3DXCreateTextureFromFile(device, temp, &tex.tex))) {
-			sprintf(temp, "%s/%04d.jpg", folder.c_str(), i);
-			if (FAILED(D3DXCreateTextureFromFile(device, temp, &tex.tex)))
-				break;
+			sprintf(temp, "%s/%04d.png", folder.c_str(), i);
+			if (FAILED(D3DXCreateTextureFromFile(device, temp, &tex.tex))) {
+				sprintf(temp, "%s/%04d.jpg", folder.c_str(), i);
+				if (FAILED(D3DXCreateTextureFromFile(device, temp, &tex.tex)))
+					break;
+			}
 		}
 		anim.addTexture(tex);
 	}

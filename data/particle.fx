@@ -41,7 +41,7 @@ VS_OUTPUT vertex(VS_INPUT In)
 float4 white_pixel(VS_OUTPUT In)  : COLOR
 {
 	float d = min(distance(0.5, In.uv) * 2, 1);
-	return pow(1 - d, 3) * 2.0;
+	return pow(1 - d, 3) * 1.5;
 //	return tex2D(tex_samp, In.uv) * In.alpha * alpha;
 }
 

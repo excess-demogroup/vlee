@@ -390,7 +390,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			sync_update(rocket, int(row), &bass_cb, (void *)stream);
 #endif
 			double beat = row / 4;
-			bool use_roll = false;
 
 			float camTime = sync_get_val(cameraTimeTrack, row);
 			float camOffset = sync_get_val(cameraOffsetTrack, row);
@@ -418,13 +417,11 @@ int main(int /*argc*/, char* /*argv*/ [])
 				camPos += normalize(camPos) * sync_get_val(cameraYTrack, row);
 				camTarget = Vector3(sin(angle2) * 30, 0, cos(angle2) * 30);
 				camTarget += normalize(camTarget) * sync_get_val(cameraYTrack, row);
-				use_roll = true;
 				} break;
 
 			case 3:
 				camPos = Vector3(sync_get_val(cameraXTrack, row), sync_get_val(cameraYTrack, row), sync_get_val(cameraZTrack, row));
 				camTarget = Vector3(sync_get_val(cameraAtXTrack, row), sync_get_val(cameraAtYTrack, row), sync_get_val(cameraAtZTrack, row));
-				use_roll = true;
 				break;
 
 			default:
@@ -464,10 +461,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			float camRoll = sync_get_val(cameraRollTrack, row) * float(M_PI / 180);
 			Matrix4x4 view;
-			if (use_roll)
-				view = Matrix4x4::lookAt(camPos, camTarget, camRoll);
-			else
-				D3DXMatrixLookAtLH(&view, &camPos, &camTarget, &camUp);
+			D3DXMatrixLookAtLH(&view, &camPos, &camTarget, &camUp);
+			view *= Matrix4x4::rotation(Vector3(0, 0, camRoll));
+
 
 			Matrix4x4 world = Matrix4x4::identity();
 			Matrix4x4 proj  = Matrix4x4::projection(80.0f, float(DEMO_ASPECT), 1.0f, 10000.f);
@@ -628,7 +624,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 					pos += offset * i * 0.1;
 					float prand = math::notRandf(part);
 					float fade = 1.0f;
-					float size = 30.0f / (3 + i);
+					float size = 20.0f / (3 + i);
 					particleStreamer.add(pos, size);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
