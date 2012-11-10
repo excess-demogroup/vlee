@@ -368,6 +368,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
 		skybox_fx->setTexture("env_tex", bling_tex);
 
+		Texture lady_tex = engine::loadTexture(device, "data/lady.png");
+		Texture lady_gun_tex = engine::loadTexture(device, "data/lady-gun.png");
+		Texture lady_gun_outline_tex = engine::loadTexture(device, "data/lady-gun-outline.png");
+		postprocess_fx->setTexture("lady_tex", lady_tex);
+		postprocess_fx->setTexture("lady_gun_tex", lady_gun_tex);
+		postprocess_fx->setTexture("lady_gun_outline_tex", lady_gun_outline_tex);
+
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
 		BASS_Start();
@@ -435,6 +442,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			bool tunnel = false;
 			bool skyboxen = false;
 			bool dof = false;
+			bool lady_gun = false;
 
 			int part = int(sync_get_val(partTrack, row));
 			switch (part) {
@@ -446,6 +454,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 			case 1:
 				tunnel = true;
 				dof = true;
+				break;
+
+			case 2:
+				lady_gun = true;
 				break;
 			}
 
@@ -621,7 +633,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 						cos(i * 45.0 + beat * 0.1),
 						cos(i * 23.0 - beat * 0.23)
 						));
-					pos += offset * i * 0.1;
+					pos += offset * i * 0.1f;
 					float prand = math::notRandf(part);
 					float fade = 1.0f;
 					float size = 20.0f / (3 + i);
@@ -740,6 +752,17 @@ int main(int /*argc*/, char* /*argv*/ [])
 			postprocess_fx->setTexture("color_map1_tex", color_maps[ int(sync_get_val(colorMap1Track, row)) % color_maps.size() ]);
 			postprocess_fx->setTexture("color_map2_tex", color_maps[ int(sync_get_val(colorMap2Track, row)) % color_maps.size() ]);
 			postprocess_fx->setFloat("color_map_lerp", sync_get_val(colorMapLerpTrack, row));
+			postprocess_fx->setFloat("lady_gun_alpha", lady_gun ? 1.0f : 0.0f);
+			if (lady_gun) {
+				double shake_phase = beat * 32 * sync_get_val(cameraShakeSpeedTrack, row);
+				Vector3 camOffs(sin(shake_phase + 0.35), cos(shake_phase * 0.9), 0);
+				camOffs += Vector3(cos(-shake_phase * 0.45) * 0.5, sin(shake_phase * 0.36) * 0.5, 0);
+				camOffs *= sync_get_val(cameraShakeAmtTrack, row);
+
+				postprocess_fx->setFloat("lady_gun_offs_x", camOffs.x);
+				postprocess_fx->setFloat("lady_gun_offs_y", camOffs.y);
+			}
+
 			postprocess_fx->commitChanges();
 
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);

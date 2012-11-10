@@ -165,6 +165,43 @@ VS_OUTPUT vertex(float4 ipos : POSITION, float2 uv : TEXCOORD0)
 	return Out;
 }
 
+texture lady_tex;
+sampler lady_samp = sampler_state {
+	Texture = (lady_tex);
+	MipFilter = NONE;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	sRGBTexture = FALSE;
+};
+
+texture lady_gun_tex;
+sampler lady_gun_samp = sampler_state {
+	Texture = (lady_gun_tex);
+	MipFilter = NONE;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	sRGBTexture = FALSE;
+};
+
+texture lady_gun_outline_tex;
+sampler lady_gun_outline_samp = sampler_state {
+	Texture = (lady_gun_outline_tex);
+	MipFilter = NONE;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	sRGBTexture = FALSE;
+};
+
+float lady_gun_alpha;
+float lady_gun_offs_x;
+float lady_gun_offs_y;
+
 float4 pixel(VS_OUTPUT In) : COLOR
 {
 	const float sep = 0.03;
@@ -216,6 +253,24 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	o.a *= overlay_alpha;
 	col *= 1 - o.a;
 	col += o.rgb * o.a;
+
+	if (lady_gun_alpha > 0) {
+		float2 gun_offset = float2(lady_gun_offs_x, lady_gun_offs_y);
+		float4 o = tex2D(lady_gun_outline_samp, In.uv + gun_offset);
+		o.a *= lady_gun_alpha;
+		col *= 1 - o.a;
+		col += o.rgb * o.a;
+
+		o = tex2D(lady_samp, In.uv);
+		o.a *= lady_gun_alpha;
+		col *= 1 - o.a;
+		col += o.rgb * o.a;
+
+		o = tex2D(lady_gun_samp, In.uv + gun_offset);
+		o.a *= lady_gun_alpha;
+		col *= 1 - o.a;
+		col += o.rgb * o.a;
+	}
 
 	col = col * fade + flash;
 
