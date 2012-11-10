@@ -1,12 +1,15 @@
 <sync rows="4000">
 	<tracks>
 		<track name="part">
-			<key row="0" value="0" interpolation="0"/>
+			<key row="0" value="3" interpolation="0"/>
 			<key row="128" value="1" interpolation="0"/>
 			<key row="416" value="0" interpolation="0"/>
+			<key row="992" value="2" interpolation="0"/>
+			<key row="1048" value="3" interpolation="0"/>
 		</track>
 		<track name="cm.overlay">
-			<key row="0" value="0" interpolation="0"/>
+			<key row="0" value="21" interpolation="0"/>
+			<key row="128" value="0" interpolation="0"/>
 			<key row="256" value="2" interpolation="0"/>
 			<key row="260" value="1" interpolation="0"/>
 			<key row="262" value="3" interpolation="0"/>
@@ -104,8 +107,7 @@
 			<key row="915" value="14" interpolation="0"/>
 			<key row="920" value="13" interpolation="0"/>
 			<key row="924" value="14" interpolation="0"/>
-			<key row="928" value="12" interpolation="0"/>
-			<key row="936" value="0" interpolation="0"/>
+			<key row="928" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.index">
 			<key row="0" value="0" interpolation="0"/>
@@ -154,27 +156,40 @@
 		</track>
 		<track name="cam.shake.amt">
 			<key row="0" value="0" interpolation="0"/>
+			<key row="992" value="0.01" interpolation="1"/>
+			<key row="1048" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.shake.speed">
 			<key row="0" value="0" interpolation="0"/>
+			<key row="992" value="0.025" interpolation="0"/>
 		</track>
 		<track name="cm.fade">
-			<key row="0" value="1" interpolation="0"/>
+			<key row="0" value="0" interpolation="1"/>
+			<key row="88" value="1" interpolation="0"/>
+			<key row="120" value="1" interpolation="1"/>
 			<key row="128" value="0" interpolation="1"/>
 			<key row="136" value="1" interpolation="0"/>
+			<key row="992" value="0" interpolation="1"/>
+			<key row="1000" value="1" interpolation="0"/>
 		</track>
 		<track name="cm.flash">
 			<key row="0" value="0" interpolation="0"/>
+			<key row="1038" value="0" interpolation="0"/>
+			<key row="1039" value="0.3" interpolation="1"/>
+			<key row="1044" value="0" interpolation="0"/>
 			<key row="1047" value="0" interpolation="0"/>
-			<key row="1048" value="0.4" interpolation="1"/>
+			<key row="1048" value="1" interpolation="1"/>
 			<key row="1056" value="0" interpolation="0"/>
 		</track>
 		<track name="cm.overlay_alpha">
 			<key row="0" value="1" interpolation="0"/>
 		</track>
 		<track name="cm.pulse.amt">
-			<key row="0" value="0" interpolation="0"/>
+			<key row="0" value="0" interpolation="1"/>
+			<key row="88" value="0.05" interpolation="0"/>
+			<key row="128" value="0" interpolation="0"/>
 			<key row="256" value="0.075" interpolation="0"/>
+			<key row="928" value="0" interpolation="0"/>
 		</track>
 		<track name="cm.pulse.speed">
 			<key row="0" value="1" interpolation="0"/>
