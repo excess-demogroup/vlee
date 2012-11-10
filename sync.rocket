@@ -6,35 +6,41 @@
 		</track>
 		<track name="cam.index">
 			<key row="0" value="0" interpolation="0"/>
+			<key row="8" value="1" interpolation="0"/>
 		</track>
 		<track name="cam.dist">
 			<key row="0" value="80" interpolation="0"/>
 		</track>
 		<track name="cam.time">
-			<key row="0" value="1" interpolation="0"/>
+			<key row="0" value="1" interpolation="1"/>
+			<key row="7" value="5" interpolation="0"/>
+			<key row="8" value="0" interpolation="1"/>
+			<key row="256" value="180" interpolation="0"/>
+		</track>
+		<track name="cam.offset">
+			<key row="8" value="90" interpolation="0"/>
 		</track>
 		<track name="cam.x">
-			<key row="0" value="40" interpolation="0"/>
+			<key row="0" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.y">
 			<key row="0" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.z">
-			<key row="0" value="58.09978" interpolation="0"/>
+			<key row="0" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.at.x">
-			<key row="0" value="-700" interpolation="0"/>
+			<key row="0" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.at.y">
-			<key row="0" value="580.2001" interpolation="0"/>
+			<key row="0" value="50" interpolation="0"/>
 		</track>
 		<track name="cam.at.z">
-			<key row="0" value="250" interpolation="0"/>
+			<key row="0" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.roll">
 			<key row="0" value="-200" interpolation="0"/>
 		</track>
-		<track name="cam.offset"/>
 		<track name="cam.shake.amt">
 			<key row="0" value="0" interpolation="0"/>
 		</track>
@@ -70,6 +76,7 @@
 		</track>
 		<track name="dof.fstop">
 			<key row="0" value="10000" interpolation="0"/>
+			<key row="8" value="2" interpolation="0"/>
 		</track>
 		<track name="dof.flen">
 			<key row="0" value="1" interpolation="0"/>

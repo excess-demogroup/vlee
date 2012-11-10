@@ -116,7 +116,7 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 	if (n_dot_l > 0) {
 		float3 h = normalize(l + normalize(-Input.Pos2));
 		float3 lcol = n_dot_l * 2.5;
-		lcol += pow(max(0, dot(n, h)), 300.0) * 25.0 * tex3D(volume_noise_samp, Input.UVW).r;
+		lcol += pow(max(0, dot(n, h)), 300.0) * 25.0 * pow(tex3D(volume_noise_samp, Input.UVW).r, 2);
 		lcol *= max(0, 1.005 / (distance(Input.Pos2, lpos) * 2.0) - 0.005);
 		o.col.rgb += lcol;
 	}

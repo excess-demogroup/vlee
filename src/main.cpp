@@ -397,10 +397,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 			Vector3 camPos, camTarget, camUp;
 			switch ((int)sync_get_val(cameraIndexTrack, row)) {
 			case 0:
-				camPos = Vector3(sin(camTime / 2) * sync_get_val(cameraDistanceTrack, row),
+				camTarget = Vector3(sync_get_val(cameraAtXTrack, row), sync_get_val(cameraAtYTrack, row), sync_get_val(cameraAtZTrack, row));
+				camPos = camTarget + Vector3(sin(camTime / 2) * sync_get_val(cameraDistanceTrack, row),
 					sync_get_val(cameraYTrack, row),
 					cos(camTime / 2) * sync_get_val(cameraDistanceTrack, row));
-				camTarget = Vector3(0, 0, 0);
 				camUp = Vector3(0, 1, 0);
 				break;
 
@@ -444,7 +444,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			case 0:
 				byste = true;
 				dof = true;
-				skyboxen = true;
 				break;
 
 			case 1:

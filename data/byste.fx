@@ -53,7 +53,7 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 	PS_OUTPUT o;
 	float3 uvw = reflect(normalize(Input.WorldNormal), -normalize(Input.ViewPos));
 	uvw = mul(matWorldView, float4(uvw, 0)).xyz;
-	o.col = float4(texCUBE(env_samp, uvw).rgb * float3(1, 0.5, 0.75), 1);
+	o.col = float4(texCUBE(env_samp, uvw).rgb * float3(1, 0.6, 0.25), 1);
 	o.col.rgb *= pow(1 - abs(n.z), 2);
 
 	o.z = Input.ViewPos.z;
