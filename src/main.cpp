@@ -710,6 +710,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 						total += 2 * w;
 					}
 
+					// normalize weights
 					for (int k = 0; k < 8; ++k)
 						gauss[k].z /= total;
 
