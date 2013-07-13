@@ -262,8 +262,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
 		const sync_track *dofFocalDistTrack = sync_get_track(rocket, "dof.fdist");
 
-		const sync_track *boobsTrack = sync_get_track(rocket, "boobs");
-
 		Surface backbuffer   = device.getRenderTarget(0);
 
 		D3DCAPS9 caps;
@@ -371,15 +369,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
 		skybox_fx->setTexture("env_tex", bling_tex);
 
-		Texture lady_tex = engine::loadTexture(device, "data/lady.png");
-		Texture lady_gun_tex = engine::loadTexture(device, "data/lady-gun.png");
-		Texture lady_gun_outline_tex = engine::loadTexture(device, "data/lady-gun-outline.png");
-		postprocess_fx->setTexture("lady_tex", lady_tex);
-		postprocess_fx->setTexture("lady_gun_tex", lady_gun_tex);
-		postprocess_fx->setTexture("lady_gun_outline_tex", lady_gun_outline_tex);
-
 		Anim overlays = engine::loadAnim(device, "data/overlays");
-		Anim boobs_anim = engine::loadAnim(device, "data/boobs");
 
 		engine::ParticleCloud<float> cloud;
 		const int num_boogers = 30000;
@@ -456,7 +446,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			bool byste = false;
 			bool tunnel = false;
 			bool dof = false;
-			bool lady_gun = false;
 			bool carlb = false;
 			bool bartikkel = false;
 
@@ -470,10 +459,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			case 1:
 				tunnel = true;
 				dof = true;
-				break;
-
-			case 2:
-				lady_gun = true;
 				break;
 
 			case 3:
@@ -767,21 +752,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			postprocess_fx->setTexture("color_map1_tex", color_maps[ int(sync_get_val(colorMap1Track, row)) % color_maps.size() ]);
 			postprocess_fx->setTexture("color_map2_tex", color_maps[ int(sync_get_val(colorMap2Track, row)) % color_maps.size() ]);
 			postprocess_fx->setFloat("color_map_lerp", sync_get_val(colorMapLerpTrack, row));
-			postprocess_fx->setFloat("lady_gun_alpha", lady_gun ? 1.0f : 0.0f);
-
-			if (lady_gun) {
-				double shake_phase = beat * 32 * sync_get_val(cameraShakeSpeedTrack, row);
-				Vector3 camOffs(sin(shake_phase + 0.35), cos(shake_phase * 0.9), 0);
-				camOffs += Vector3(cos(-shake_phase * 0.45) * 0.5, sin(shake_phase * 0.36) * 0.5, 0);
-				camOffs *= sync_get_val(cameraShakeAmtTrack, row);
-
-				postprocess_fx->setFloat("lady_gun_offs_x", camOffs.x);
-				postprocess_fx->setFloat("lady_gun_offs_y", camOffs.y);
-			}
-
-			float boobs_frame = sync_get_val(boobsTrack, row);
-			postprocess_fx->setFloat("boobs_alpha", boobs_frame >= 0 ? 1.0f : 0.0f);
-			postprocess_fx->setTexture("boobs_tex", boobs_anim.getFramePingPong(boobs_frame));
 
 			postprocess_fx->commitChanges();
 
