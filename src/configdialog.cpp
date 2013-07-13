@@ -9,7 +9,7 @@
 
 using namespace config;
 
-IDirect3D9 *config::direct3d = NULL;
+static IDirect3D9 *direct3d = NULL;
 
 UINT config::adapter = D3DADAPTER_DEFAULT;
 D3DDISPLAYMODE config::mode =
@@ -197,10 +197,10 @@ static void addAspectRatios(HWND hDlg)
 
 static LRESULT CALLBACK configDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
-INT_PTR config::showDialog(HINSTANCE hInstance, IDirect3D9 *direct3d)
+INT_PTR config::showDialog(HINSTANCE hInstance, IDirect3D9 *direct3d_)
 {
-	assert(NULL != direct3d);
-	config::direct3d = direct3d;
+	assert(NULL != direct3d_);
+	direct3d = direct3d_;
 	return DialogBox(hInstance, MAKEINTRESOURCE(IDD_CONFIG), NULL,
 	    (DLGPROC)configDialogProc);
 }
