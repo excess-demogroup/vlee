@@ -18,10 +18,10 @@ sampler color_samp = sampler_state {
 	sRGBTexture = FALSE;
 };
 
-texture bloom0_tex;
-sampler bloom0_samp = sampler_state {
-	Texture = (bloom0_tex);
-	MipFilter = NONE;
+texture bloom_tex;
+sampler bloom_samp = sampler_state {
+	Texture = (bloom_tex);
+	MipFilter = POINT;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
 	AddressU = CLAMP;
@@ -29,72 +29,6 @@ sampler bloom0_samp = sampler_state {
 	sRGBTexture = FALSE;
 };
 
-texture bloom1_tex;
-sampler bloom1_samp = sampler_state {
-	Texture = (bloom1_tex);
-	MipFilter = NONE;
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
-	AddressU = CLAMP;
-	AddressV = CLAMP;
-	sRGBTexture = FALSE;
-};
-
-texture bloom2_tex;
-sampler bloom2_samp = sampler_state {
-	Texture = (bloom2_tex);
-	MipFilter = NONE;
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
-	AddressU = CLAMP;
-	AddressV = CLAMP;
-	sRGBTexture = FALSE;
-};
-
-texture bloom3_tex;
-sampler bloom3_samp = sampler_state {
-	Texture = (bloom3_tex);
-	MipFilter = NONE;
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
-	AddressU = CLAMP;
-	AddressV = CLAMP;
-	sRGBTexture = FALSE;
-};
-
-texture bloom4_tex;
-sampler bloom4_samp = sampler_state {
-	Texture = (bloom4_tex);
-	MipFilter = NONE;
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
-	AddressU = CLAMP;
-	AddressV = CLAMP;
-	sRGBTexture = FALSE;
-};
-
-texture bloom5_tex;
-sampler bloom5_samp = sampler_state {
-	Texture = (bloom5_tex);
-	MipFilter = NONE;
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
-	AddressU = CLAMP;
-	AddressV = CLAMP;
-	sRGBTexture = FALSE;
-};
-/*
-texture bloom6_tex;
-sampler bloom6_samp = sampler_state {
-	Texture = (bloom6_tex);
-	MipFilter = NONE;
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
-	AddressU = CLAMP;
-	AddressV = CLAMP;
-	sRGBTexture = FALSE;
-};
-*/
 texture spectrum_tex;
 sampler spectrum_samp = sampler_state {
 	Texture = (spectrum_tex);
@@ -254,13 +188,14 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	float3 col = sqrt(sum);
 #endif
 
-	float3 bloom = tex2D(bloom0_samp, In.uv) * pow(bloom_shape, 0);
-	bloom += tex2D(bloom1_samp, In.uv) * pow(bloom_shape, 1);
-	bloom += tex2D(bloom2_samp, In.uv) * pow(bloom_shape, 2);
-	bloom += tex2D(bloom3_samp, In.uv) * pow(bloom_shape, 3);
-	bloom += tex2D(bloom4_samp, In.uv) * pow(bloom_shape, 4);
-	bloom += tex2D(bloom5_samp, In.uv) * pow(bloom_shape, 5);
-//	bloom += tex2D(bloom6_samp, In.uv) * pow(bloom_shape, 6);
+	float3 bloom = tex2Dlod(bloom_samp, float4(In.uv, 0.0, 0.0)) * pow(bloom_shape, 0);
+	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 1.0)) * pow(bloom_shape, 1);
+	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 2.0)) * pow(bloom_shape, 2);
+	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 3.0)) * pow(bloom_shape, 3);
+	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 4.0)) * pow(bloom_shape, 4);
+	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 5.0)) * pow(bloom_shape, 5);
+	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 6.0)) * pow(bloom_shape, 6);
+
 	col += bloom * bloom_amt;
 
 	float4 o = tex2D(overlay_samp, In.uv);
