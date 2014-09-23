@@ -715,7 +715,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 						gauss[k].z /= total;
 
 					blur_fx->p->SetVectorArray("gauss", gauss, 8);
-					blur_fx->setFloat("lod", i);
+					blur_fx->setFloat("lod", float(i));
 					blur_fx->setTexture("blur_tex", j ? color2_hdr : color1_hdr);
 					blur_fx->p->SetInt("size", 8);
 
