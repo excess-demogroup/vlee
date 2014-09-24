@@ -33,6 +33,7 @@
 
 #include "engine/voxelgrid.h"
 #include "engine/voxelmesh.h"
+#include "engine/cubestreamer.h"
 
 #include "engine/textureproxy.h"
 #include "engine/spectrumdata.h"
@@ -351,10 +352,13 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Mesh *byste_x = engine::loadMesh(device, "data/byste.x");
 		Effect *byste_fx = engine::loadEffect(device, "data/byste.fx");
-		CubeTexture bling_tex = engine::loadCubeTexture(device, "data/bling.dds");
 		CubeTexture bling2_tex = engine::loadCubeTexture(device, "data/bling2.dds");
-		CubeTexture cube_noise_tex = engine::loadCubeTexture(device, "data/cube-noise.dds");
 		byste_fx->setTexture("env_tex", bling2_tex);
+
+		Effect *cube_fx = engine::loadEffect(device, "data/cube.fx");
+		cube_fx->setTexture("env_tex", bling2_tex);
+
+		engine::MeshInstancer cube_instancer(device, byste_fx, 1024);
 
 		Mesh *carlb_x = engine::loadMesh(device, "data/carlb.x");
 		Effect *carlb_fx = engine::loadEffect(device, "data/carlb.fx");
@@ -367,6 +371,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Mesh *skybox_x = engine::loadMesh(device, "data/skybox.x");
 		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
+		CubeTexture bling_tex = engine::loadCubeTexture(device, "data/bling.dds");
 		skybox_fx->setTexture("env_tex", bling_tex);
 
 		Anim overlays = engine::loadAnim(device, "data/overlays");
@@ -514,6 +519,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 //			Vector3 worldLightPosition = Vector3(0, sin(beat * 0.25) * 100, 0);
 			float ltime = sync_get_val(cameraTimeTrack, row) / 16;
 			Vector3 worldLightPosition = Vector3(sin(beat * 0.1), cos(beat * 0.1), 0) * 70.0f;
+
+			cube_fx->setMatrices(world, view, proj);
+			cube_fx->commitChanges();
+			for (int i = 0; i < 1024; ++i) {
+//				Matrix4x4 translation = Matrix4x4::translation(Vector3(sin(i / 100.0f), cos(i / 100.0f), 0) * sync_get_val(cameraDistanceTrack, row));
+				Matrix4x4 translation = Matrix4x4::translation(worldLightPosition);
+				cube_instancer.setInstanceTransform(i, translation);
+			}
+			cube_instancer.updateInstanceVertexBuffer();
+			cube_instancer.draw(device, 1024);
 
 			if (byste) {
 				byste_fx->setMatrices(world, view, proj);

@@ -319,6 +319,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\engine\cubestreamer.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\engine\effect.cpp"
 					>
 				</File>
@@ -430,6 +434,10 @@
 				</File>
 				<File
 					RelativePath=".\src\engine\ccbsplines.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\engine\cubestreamer.h"
 					>
 				</File>
 				<File
@@ -670,6 +678,10 @@
 		</File>
 		<File
 			RelativePath=".\data\cube.fx"
+			>
+		</File>
+		<File
+			RelativePath=".\data\cubes.fx"
 			>
 		</File>
 		<File
