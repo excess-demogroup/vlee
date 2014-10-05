@@ -127,7 +127,7 @@ float3 sample_spectrum(sampler2D tex, float2 start, float2 stop, int samples, fl
 	for (int i = 0; i < samples; ++i) {
 		float3 sample = tex2Dlod(tex, float4(pos, 0, lod)).rgb;
 		float t = (i + 0.5) / samples;
-		float3 filter = tex2Dlod(spectrum_samp, float4(t, 0, 0, 0));
+		float3 filter = tex2Dlod(spectrum_samp, float4(t, 0, 0, 0)).rgb;
 		sum += sample * filter;
 		filter_sum += filter;
 		pos += delta;
@@ -149,13 +149,13 @@ float3 color_correct(float3 color)
 
 float3 sample_bloom(float2 pos)
 {
-	float3 bloom = tex2Dlod(bloom_samp, float4(pos, 0, 0)) * bloom_weight[0];
-	bloom += tex2Dlod(bloom_samp, float4(pos, 0, 1)) * bloom_weight[1];
-	bloom += tex2Dlod(bloom_samp, float4(pos, 0, 2)) * bloom_weight[1];
-	bloom += tex2Dlod(bloom_samp, float4(pos, 0, 3)) * bloom_weight[3];
-	bloom += tex2Dlod(bloom_samp, float4(pos, 0, 4)) * bloom_weight[4];
-	bloom += tex2Dlod(bloom_samp, float4(pos, 0, 5)) * bloom_weight[5];
-	bloom += tex2Dlod(bloom_samp, float4(pos, 0, 6)) * bloom_weight[6];
+	float3 bloom = tex2Dlod(bloom_samp, float4(pos, 0, 0)).rgb * bloom_weight[0];
+	bloom += tex2Dlod(bloom_samp, float4(pos, 0, 1)).rgb * bloom_weight[1];
+	bloom += tex2Dlod(bloom_samp, float4(pos, 0, 2)).rgb * bloom_weight[1];
+	bloom += tex2Dlod(bloom_samp, float4(pos, 0, 3)).rgb * bloom_weight[3];
+	bloom += tex2Dlod(bloom_samp, float4(pos, 0, 4)).rgb * bloom_weight[4];
+	bloom += tex2Dlod(bloom_samp, float4(pos, 0, 5)).rgb * bloom_weight[5];
+	bloom += tex2Dlod(bloom_samp, float4(pos, 0, 6)).rgb * bloom_weight[6];
 	return bloom;
 }
 
