@@ -346,10 +346,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture particle_tex = engine::loadTexture(device, "data/particle.png");
 		particle_fx->setTexture("tex", particle_tex); */
 
-/*		Effect *bartikkel_fx = engine::loadEffect(device, "data/bartikkel.fx");
-		Texture bartikkel_tex = engine::loadTexture(device, "data/bartikkel.png");
-		bartikkel_fx->setTexture("tex", bartikkel_tex); */
-
 /*		Mesh *byste_x = engine::loadMesh(device, "data/byste.x");
 		Effect *byste_fx = engine::loadEffect(device, "data/byste.fx");
 		CubeTexture bling2_tex = engine::loadCubeTexture(device, "data/bling2.dds");
@@ -552,40 +548,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 				tunnel_fx->setMatrices(world, view, proj);
 				tunnel_fx->commitChanges();
 				tunnel_fx->draw(tunnel_x);
-			}
-*/
-/*
-			if (bartikkel) {
-				Matrix4x4 modelview = world * view;
-				Vector3 up(modelview._12, modelview._22, modelview._32);
-				Vector3 left(modelview._11, modelview._21, modelview._31);
-				Vector3 forward(modelview._13, modelview._23, modelview._33);
-				math::normalize(up);
-				math::normalize(left);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-
-				bartikkel_fx->setVector3("up", up);
-				bartikkel_fx->setVector3("left", left);
-				bartikkel_fx->setMatrices(world, view, proj);
-				bartikkel_fx->setFloat("alpha", 1.0f);
-
-				cloud.sort(forward);
-				particleStreamer.begin();
-			
-				std::vector<engine::Particle<float> >::const_iterator iter;
-				for (iter = cloud.particles.begin(); iter != cloud.particles.end(); ++iter) {
-					if (!particleStreamer.getRoom()) {
-						particleStreamer.end();
-						bartikkel_fx->draw(&particleStreamer);
-						particleStreamer.begin();
-					}
-					particleStreamer.add(iter->pos, iter->data);
-				}
-				particleStreamer.end();
-				bartikkel_fx->draw(&particleStreamer);
 			}
 */
 
