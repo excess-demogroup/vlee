@@ -38,6 +38,15 @@ sampler spectrum_samp = sampler_state {
 	AddressV = CLAMP;
 	sRGBTexture = FALSE;
 };
+sampler spectrum_samp2 = sampler_state {
+	Texture = (spectrum_tex);
+	MipFilter = NONE;
+	MinFilter = POINT;
+	MagFilter = POINT;
+	AddressU = WRAP;
+	AddressV = WRAP;
+	sRGBTexture = FALSE;
+};
 
 texture noise_tex;
 sampler noise_samp = sampler_state {
@@ -182,16 +191,31 @@ float3 sample_lensflare(float2 pos)
 	return flare;
 }
 
-float4 pixel(VS_OUTPUT In) : COLOR
+float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 {
-	const float sep = 0.03;
+	float2 block = floor(vpos / 16);
+	float2 uv_noise = block / 64;
+	uv_noise += floor(dist_time * float2(1234.0, 3543.0)) / 64;
+
+	float block_thresh = pow(frac(dist_time * 1236.0453), 2.0) * 0.2;
+	float line_thresh = pow(frac(dist_time * 2236.0453), 3.0) * 0.7;
+
 	float2 pos = In.uv;
 	pos += float2(
 			(sin(pos.y * dist_freq + dist_time) * 2 - 1) * dist_amt,
 			(sin(pos.x * dist_freq + dist_time) * 2 - 1) * dist_amt);
 
 	float dist = pow(2 * distance(In.uv, float2(0.5, 0.5)), 2);
+	const float sep = 0.03;
 	float2 end = (pos - 0.5) * (1 - dist * sep * 2) + 0.5;
+
+	// glitch some blocks and lines
+	if (tex2D(noise_samp, uv_noise).r < block_thresh ||
+	    tex2D(noise_samp, float2(uv_noise.y, 0)).r < line_thresh) {
+	    float2 dist = (frac(uv_noise) - 0.5) * 0.3;
+		pos += dist * 0.1;
+		end += dist * 0.12;
+	}
 
 	int samples = max(3, int(length(viewport * (end - pos) / 2)));
 	float3 col = sample_spectrum(color_samp, pos, end, samples, 0);
@@ -203,6 +227,21 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	// blend overlay
 	float4 o = tex2D(overlay_samp, In.uv);
 	col = lerp(col, o.rgb, o.a * overlay_alpha);
+
+	// loose luma for some blocks
+	if (tex2D(noise_samp, -uv_noise).r < block_thresh)
+		col.rgb = col.ggg;
+
+	// discolor block lines
+	if (tex2D(noise_samp, float2(uv_noise.y, 0.0)).r * 2.5 < line_thresh)
+		col.rgb = float3(0, dot(col.rgb, float3(1, 1, 1)), 0);
+
+	// interleave lines in some blocks
+	if (tex2D(noise_samp, float2(0.5 - uv_noise.x, uv_noise.y)).r * 1.5 < block_thresh ||
+	    tex2D(noise_samp, float2(0, uv_noise.y)).r * 2.5 < line_thresh)
+	{
+		col.rgb *= tex2Dlod(spectrum_samp2, float4(vpos.y / 3, 0, 0, 0)).rgb * 1.25;
+	}
 
 	// apply flashes
 	col = col * fade + flash;
