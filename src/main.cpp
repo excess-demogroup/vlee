@@ -346,17 +346,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture particle_tex = engine::loadTexture(device, "data/particle.png");
 		particle_fx->setTexture("tex", particle_tex); */
 
-/*		Mesh *byste_x = engine::loadMesh(device, "data/byste.x");
-		Effect *byste_fx = engine::loadEffect(device, "data/byste.fx");
-		CubeTexture bling2_tex = engine::loadCubeTexture(device, "data/bling2.dds");
-		byste_fx->setTexture("env_tex", bling2_tex); */
-
 		Effect *cubes_fx = engine::loadEffect(device, "data/cubes.fx");
 		engine::MeshInstancer cube_instancer(device, cubes_fx, 4096);
-
-/*		Mesh *carlb_x = engine::loadMesh(device, "data/carlb.x");
-		Effect *carlb_fx = engine::loadEffect(device, "data/carlb.fx");
-		carlb_fx->setTexture("env_tex", bling2_tex); */
 
 /*		Mesh *tunnel_x = engine::loadMesh(device, "data/tunnel.x");
 		Effect *tunnel_fx = engine::loadEffect(device, "data/tunnel.fx");
