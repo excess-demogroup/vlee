@@ -1,7 +1,7 @@
 <sync rows="4000">
 	<tracks>
 		<track name="part">
-			<key row="0" value="3" interpolation="0"/>
+			<key row="0" value="0" interpolation="0"/>
 		</track>
 		<track name="cm.overlay">
 			<key row="0" value="0" interpolation="0"/>

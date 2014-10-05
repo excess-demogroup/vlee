@@ -341,18 +341,18 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture spectrum_tex = engine::loadTexture(device, "data/spectrum.png");
 		postprocess_fx->setTexture("spectrum_tex", spectrum_tex);
 
-/*		engine::ParticleStreamer particleStreamer(device);
+		engine::ParticleStreamer particleStreamer(device);
 		Effect *particle_fx = engine::loadEffect(device, "data/particle.fx");
 		Texture particle_tex = engine::loadTexture(device, "data/particle.png");
-		particle_fx->setTexture("tex", particle_tex); */
+		particle_fx->setTexture("tex", particle_tex);
 
 		Effect *cubes_fx = engine::loadEffect(device, "data/cubes.fx");
 		engine::MeshInstancer cube_instancer(device, cubes_fx, 4096);
 
-/*		Mesh *tunnel_x = engine::loadMesh(device, "data/tunnel.x");
+		Mesh *tunnel_x = engine::loadMesh(device, "data/tunnel.x");
 		Effect *tunnel_fx = engine::loadEffect(device, "data/tunnel.fx");
 		VolumeTexture volume_noise_tex = engine::loadVolumeTexture(device, "data/volume-noise.dds");
-		tunnel_fx->setTexture("volume_noise_tex", volume_noise_tex); */
+		tunnel_fx->setTexture("volume_noise_tex", volume_noise_tex);
 
 		Mesh *skybox_x = engine::loadMesh(device, "data/skybox.x");
 		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
@@ -424,24 +424,21 @@ int main(int /*argc*/, char* /*argv*/ [])
 			bool particles = false;
 //			bool byste = false;
 			bool tunnel = false;
+			bool skybox = false;
+			bool blackCubes = false;
+			bool blueCubes = false;
 			bool dof = true;
-			bool carlb = false;
 
 			int part = int(sync_get_val(partTrack, row));
 			switch (part) {
 			case 0:
-//				byste = true;
-//				dof = true;
+				skybox = true;
+				blackCubes = true;
+				blueCubes = true;
 				break;
 
 			case 1:
-				// tunnel = true;
-//				dof = true;
-				break;
-
-			case 3:
-				// carlb = true;
-				//dof = true;
+				tunnel = true;
 				break;
 			}
 
@@ -484,55 +481,51 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float ltime = sync_get_val(cameraTimeTrack, row) / 16;
 			Vector3 worldLightPosition = Vector3(sin(beat * 0.1), cos(beat * 0.1), 0) * 70.0f;
 
-			skybox_fx->setMatrices(world, view, proj);
-			skybox_fx->commitChanges();
-			skybox_fx->draw(skybox_x);
-
-			cubes_fx->setMatrices(world, view, proj);
-			cubes_fx->commitChanges();
-
-			// bunch of stuff
-			for (int i = 0; i < 512; ++i) {
-				Matrix4x4 translation = Matrix4x4::translation(Vector3(sin(i / 5.220f), cos(i / 5.10f), 0) * 80.0f);
-				Matrix4x4 scaling = Matrix4x4::scaling(Vector3(2,1,1) * 2.0 * (1.5 + sin(i / 5.120)));
-				Matrix4x4 rotation = Matrix4x4::rotation(Vector3(sin(i * 1.0) * 10.0, sin(i * 1.12311231) * 10.0, 0) * beat * 0.01);
-				cube_instancer.setInstanceTransform(i, scaling * translation * rotation);
-				cube_instancer.setInstanceColor(i, math::Vector3(0, 0, 0));
+			if (skybox) {
+				skybox_fx->setMatrices(world, view, proj);
+				skybox_fx->commitChanges();
+				skybox_fx->draw(skybox_x);
 			}
-			cube_instancer.updateInstanceVertexBuffer();
-			cube_instancer.draw(device, 512);
 
+			if (blackCubes) {
+				cubes_fx->setMatrices(world, view, proj);
+				cubes_fx->commitChanges();
 
-			// flower-ish
-			int num_cubes = 0;
-			for (int i = 0; i < 8; ++i) {
-				double th = i * ((2 * M_PI) / 8);
-				Matrix4x4 curr = Matrix4x4::scaling(Vector3(2,1,4)) * Matrix4x4::rotation(Vector3(0, th, 0));
-				for (int j = 0; j < 30; ++j) {
-					Matrix4x4 rotation = Matrix4x4::rotation(Vector3(0, 0, 0.05));
-					Matrix4x4 translation = Matrix4x4::translation(Vector3(1, 0, 0));
-					Matrix4x4 scale = Matrix4x4::scaling(Vector3(1,1,1) * 0.9);
-					curr = translation * rotation * scale * curr;
-					cube_instancer.setInstanceTransform(num_cubes, curr);
-					cube_instancer.setInstanceColor(num_cubes, math::Vector3(0.2,0.2,1) * pow(pow(float(cos(j / 10.0f - beat)), 2.0f), 10.0f) * 15.0);
-					num_cubes++;
+				// bunch of stuff
+				for (int i = 0; i < 512; ++i) {
+					Matrix4x4 translation = Matrix4x4::translation(Vector3(sin(i / 5.220f), cos(i / 5.10f), 0) * 80.0f);
+					Matrix4x4 scaling = Matrix4x4::scaling(Vector3(2,1,1) * 2.0 * (1.5 + sin(i / 5.120)));
+					Matrix4x4 rotation = Matrix4x4::rotation(Vector3(sin(i * 1.0) * 10.0, sin(i * 1.12311231) * 10.0, 0) * beat * 0.01);
+					cube_instancer.setInstanceTransform(i, scaling * translation * rotation);
+					cube_instancer.setInstanceColor(i, math::Vector3(0, 0, 0));
 				}
+				cube_instancer.updateInstanceVertexBuffer();
+				cube_instancer.draw(device, 512);
 			}
-			cube_instancer.updateInstanceVertexBuffer();
-			cube_instancer.draw(device, num_cubes);
 
-/*			if (byste) {
-				byste_fx->setMatrices(world, view, proj);
-				byste_fx->commitChanges();
-				byste_fx->draw(byste_x);
-			} */
+			if (blueCubes) {
+				cubes_fx->setMatrices(world, view, proj);
+				cubes_fx->commitChanges();
 
-			if (carlb) {
-/*				carlb_fx->setMatrices(world, view, proj);
-				carlb_fx->commitChanges();
-				carlb_fx->draw(carlb_x); */
+				// flower-ish
+				int num_cubes = 0;
+				for (int i = 0; i < 8; ++i) {
+					double th = i * ((2 * M_PI) / 8);
+					Matrix4x4 curr = Matrix4x4::scaling(Vector3(2,1,4)) * Matrix4x4::rotation(Vector3(0, th, 0));
+					for (int j = 0; j < 30; ++j) {
+						Matrix4x4 rotation = Matrix4x4::rotation(Vector3(0, 0, 0.05));
+						Matrix4x4 translation = Matrix4x4::translation(Vector3(1, 0, 0));
+						Matrix4x4 scale = Matrix4x4::scaling(Vector3(1,1,1) * 0.9);
+						curr = translation * rotation * scale * curr;
+						cube_instancer.setInstanceTransform(num_cubes, curr);
+						cube_instancer.setInstanceColor(num_cubes, math::Vector3(0.2,0.2,1) * pow(pow(float(cos(j / 10.0f - beat)), 2.0f), 10.0f) * 15.0);
+						num_cubes++;
+					}
+				}
+				cube_instancer.updateInstanceVertexBuffer();
+				cube_instancer.draw(device, num_cubes);
 			}
-/*
+
 			if (tunnel) {
 				tunnel_fx->setFloat("time", float(beat * 0.1));
 				tunnel_fx->setVector3("worldLightPosition", worldLightPosition);
@@ -540,7 +533,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 				tunnel_fx->commitChanges();
 				tunnel_fx->draw(tunnel_x);
 			}
-*/
 
 			if (dof) {
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
@@ -585,7 +577,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 				dof_fx->p->End();
 			}
-/*
+
 			if (tunnel) {
 				device.setRenderTarget(dof_target.getSurface(0), 0);
 
@@ -627,7 +619,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				particleStreamer.end();
 				particle_fx->draw(&particleStreamer);
 			}
-*/
+
 			device.setDepthStencilSurface(depthstencil);
 
 			device.setRenderTarget(fxaa_target.getSurface(0), 0);
