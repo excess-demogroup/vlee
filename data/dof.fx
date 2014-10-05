@@ -74,7 +74,7 @@ float4 ps_premult(float2 texCoord : TEXCOORD0) : COLOR
 {
 	float z = tex2D(depth_samp, texCoord).r;
 	float a = abs(coc(z) * viewport.y);
-	a += distance(texCoord, 0.5) * 20;
+	a += distance(texCoord, 0.5) * 25;
 	a = clamp(a, 1, 20);
 	float3 col = tex2D(color_samp, texCoord).rgb;
 	return float4(col * a, a);

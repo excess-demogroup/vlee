@@ -121,7 +121,7 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 		o.col.rgb += lcol;
 	}
 
-	o.col.rgb = lerp(float3(0.15, 0.2, 0.3), o.col.rgb, exp(-Input.Pos2.z * 0.0005));
+	o.col.rgb = lerp(float3(0.15, 0.2, 0.3) * 2.0, o.col.rgb * 2.0, exp(-Input.Pos2.z * 0.0005));
 //	o.col.rgb = pow(0.5 + 0.5 * n, 2.2);
 	o.z = Input.Pos2.z;
 	return o;

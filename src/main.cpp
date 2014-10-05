@@ -198,7 +198,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			DispatchMessage(&msg);
 		}
 
-		device->Clear(0, 0, D3DCLEAR_TARGET, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
+//		device->Clear(0, 0, D3DCLEAR_TARGET, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
 		HRESULT res = device->Present(0, 0, 0, 0);
 		if (FAILED(res))
 			throw FatalException(std::string(DXGetErrorString(res)) + std::string(" : ") + std::string(DXGetErrorDescription(res)));
@@ -210,7 +210,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		/* setup sound-playback */
 		if (!BASS_Init(config::soundcard, 44100, 0, 0, 0))
 			throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/lug00ber-carl_breaks.mp3", 0, 0, BASS_MP3_SETPOS | BASS_STREAM_PRESCAN | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
+		stream = BASS_StreamCreateFile(false, "data/kick_me3.mp3", 0, 0, BASS_MP3_SETPOS | BASS_STREAM_PRESCAN | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
 		if (!stream)
 			throw FatalException("failed to open tune");
 
@@ -341,51 +341,38 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture spectrum_tex = engine::loadTexture(device, "data/spectrum.png");
 		postprocess_fx->setTexture("spectrum_tex", spectrum_tex);
 
-		engine::ParticleStreamer particleStreamer(device);
+/*		engine::ParticleStreamer particleStreamer(device);
 		Effect *particle_fx = engine::loadEffect(device, "data/particle.fx");
 		Texture particle_tex = engine::loadTexture(device, "data/particle.png");
-		particle_fx->setTexture("tex", particle_tex);
+		particle_fx->setTexture("tex", particle_tex); */
 
-		Effect *bartikkel_fx = engine::loadEffect(device, "data/bartikkel.fx");
+/*		Effect *bartikkel_fx = engine::loadEffect(device, "data/bartikkel.fx");
 		Texture bartikkel_tex = engine::loadTexture(device, "data/bartikkel.png");
-		bartikkel_fx->setTexture("tex", bartikkel_tex);
+		bartikkel_fx->setTexture("tex", bartikkel_tex); */
 
-		Mesh *byste_x = engine::loadMesh(device, "data/byste.x");
+/*		Mesh *byste_x = engine::loadMesh(device, "data/byste.x");
 		Effect *byste_fx = engine::loadEffect(device, "data/byste.fx");
 		CubeTexture bling2_tex = engine::loadCubeTexture(device, "data/bling2.dds");
-		byste_fx->setTexture("env_tex", bling2_tex);
+		byste_fx->setTexture("env_tex", bling2_tex); */
 
-		Effect *cube_fx = engine::loadEffect(device, "data/cube.fx");
-		cube_fx->setTexture("env_tex", bling2_tex);
+		Effect *cubes_fx = engine::loadEffect(device, "data/cubes.fx");
+		engine::MeshInstancer cube_instancer(device, cubes_fx, 4096);
 
-		engine::MeshInstancer cube_instancer(device, byste_fx, 1024);
-
-		Mesh *carlb_x = engine::loadMesh(device, "data/carlb.x");
+/*		Mesh *carlb_x = engine::loadMesh(device, "data/carlb.x");
 		Effect *carlb_fx = engine::loadEffect(device, "data/carlb.fx");
-		carlb_fx->setTexture("env_tex", bling2_tex);
+		carlb_fx->setTexture("env_tex", bling2_tex); */
 
-		Mesh *tunnel_x = engine::loadMesh(device, "data/tunnel.x");
+/*		Mesh *tunnel_x = engine::loadMesh(device, "data/tunnel.x");
 		Effect *tunnel_fx = engine::loadEffect(device, "data/tunnel.fx");
 		VolumeTexture volume_noise_tex = engine::loadVolumeTexture(device, "data/volume-noise.dds");
-		tunnel_fx->setTexture("volume_noise_tex", volume_noise_tex);
+		tunnel_fx->setTexture("volume_noise_tex", volume_noise_tex); */
 
 		Mesh *skybox_x = engine::loadMesh(device, "data/skybox.x");
 		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
-		CubeTexture bling_tex = engine::loadCubeTexture(device, "data/bling.dds");
-		skybox_fx->setTexture("env_tex", bling_tex);
+		CubeTexture skybox_tex = engine::loadCubeTexture(device, "data/skybox.dds");
+		skybox_fx->setTexture("env_tex", skybox_tex);
 
 		Anim overlays = engine::loadAnim(device, "data/overlays");
-
-		engine::ParticleCloud<float> cloud;
-		const int num_boogers = 30000;
-		for (int i = 0; i < num_boogers; ++i) {
-			Vector3 pos = Vector3(
-				math::notRandf(i * 4 + 0) * 2 - 1,
-				math::notRandf(i * 4 + 1) * 2 - 1,
-				math::notRandf(i * 4 + 2) * 2 - 1) * 300.0f;
-			float size = (0.5f * math::notRandf(i * 4 + 3) * 0.5f) * 20.0f;
-			cloud.addParticle(engine::Particle<float>(pos, size));
-		}
 
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
@@ -448,31 +435,26 @@ int main(int /*argc*/, char* /*argv*/ [])
 			}
 
 			bool particles = false;
-			bool byste = false;
+//			bool byste = false;
 			bool tunnel = false;
-			bool dof = false;
+			bool dof = true;
 			bool carlb = false;
-			bool bartikkel = false;
 
 			int part = int(sync_get_val(partTrack, row));
 			switch (part) {
 			case 0:
-				byste = true;
-				dof = true;
+//				byste = true;
+//				dof = true;
 				break;
 
 			case 1:
-				tunnel = true;
-				dof = true;
+				// tunnel = true;
+//				dof = true;
 				break;
 
 			case 3:
-				carlb = true;
-				dof = true;
-				break;
-
-			case 4:
-				bartikkel = true;
+				// carlb = true;
+				//dof = true;
 				break;
 			}
 
@@ -507,12 +489,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 
-			if (bartikkel) {
-//				device.setRenderTarget(dof_target.getRenderTarget(), 0);
-//				device.setRenderTarget(NULL, 1);
-				device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF7F7F7F, 1.f, 0);
-			} else
-				device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
+			device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
 
 //			float fog_density = sync_get_val(fogDensityTrack, row) / 100000;
 
@@ -520,28 +497,55 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float ltime = sync_get_val(cameraTimeTrack, row) / 16;
 			Vector3 worldLightPosition = Vector3(sin(beat * 0.1), cos(beat * 0.1), 0) * 70.0f;
 
-			cube_fx->setMatrices(world, view, proj);
-			cube_fx->commitChanges();
-			for (int i = 0; i < 1024; ++i) {
-//				Matrix4x4 translation = Matrix4x4::translation(Vector3(sin(i / 100.0f), cos(i / 100.0f), 0) * sync_get_val(cameraDistanceTrack, row));
-				Matrix4x4 translation = Matrix4x4::translation(worldLightPosition);
-				cube_instancer.setInstanceTransform(i, translation);
+			skybox_fx->setMatrices(world, view, proj);
+			skybox_fx->commitChanges();
+			skybox_fx->draw(skybox_x);
+
+			cubes_fx->setMatrices(world, view, proj);
+			cubes_fx->commitChanges();
+
+			// bunch of stuff
+			for (int i = 0; i < 512; ++i) {
+				Matrix4x4 translation = Matrix4x4::translation(Vector3(sin(i / 5.220f), cos(i / 5.10f), 0) * 80.0f);
+				Matrix4x4 scaling = Matrix4x4::scaling(Vector3(2,1,1) * 2.0 * (1.5 + sin(i / 5.120)));
+				Matrix4x4 rotation = Matrix4x4::rotation(Vector3(sin(i * 1.0) * 10.0, sin(i * 1.12311231) * 10.0, 0) * beat * 0.01);
+				cube_instancer.setInstanceTransform(i, scaling * translation * rotation);
+				cube_instancer.setInstanceColor(i, math::Vector3(0, 0, 0));
 			}
 			cube_instancer.updateInstanceVertexBuffer();
-			cube_instancer.draw(device, 1024);
+			cube_instancer.draw(device, 512);
 
-			if (byste) {
+
+			// flower-ish
+			int num_cubes = 0;
+			for (int i = 0; i < 8; ++i) {
+				double th = i * ((2 * M_PI) / 8);
+				Matrix4x4 curr = Matrix4x4::scaling(Vector3(2,1,4)) * Matrix4x4::rotation(Vector3(0, th, 0));
+				for (int j = 0; j < 30; ++j) {
+					Matrix4x4 rotation = Matrix4x4::rotation(Vector3(0, 0, 0.05));
+					Matrix4x4 translation = Matrix4x4::translation(Vector3(1, 0, 0));
+					Matrix4x4 scale = Matrix4x4::scaling(Vector3(1,1,1) * 0.9);
+					curr = translation * rotation * scale * curr;
+					cube_instancer.setInstanceTransform(num_cubes, curr);
+					cube_instancer.setInstanceColor(num_cubes, math::Vector3(0.2,0.2,1) * pow(pow(float(cos(j / 10.0f - beat)), 2.0f), 10.0f) * 15.0);
+					num_cubes++;
+				}
+			}
+			cube_instancer.updateInstanceVertexBuffer();
+			cube_instancer.draw(device, num_cubes);
+
+/*			if (byste) {
 				byste_fx->setMatrices(world, view, proj);
 				byste_fx->commitChanges();
 				byste_fx->draw(byste_x);
-			}
+			} */
 
 			if (carlb) {
-				carlb_fx->setMatrices(world, view, proj);
+/*				carlb_fx->setMatrices(world, view, proj);
 				carlb_fx->commitChanges();
-				carlb_fx->draw(carlb_x);
+				carlb_fx->draw(carlb_x); */
 			}
-
+/*
 			if (tunnel) {
 				tunnel_fx->setFloat("time", float(beat * 0.1));
 				tunnel_fx->setVector3("worldLightPosition", worldLightPosition);
@@ -549,7 +553,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 				tunnel_fx->commitChanges();
 				tunnel_fx->draw(tunnel_x);
 			}
-
+*/
+/*
 			if (bartikkel) {
 				Matrix4x4 modelview = world * view;
 				Vector3 up(modelview._12, modelview._22, modelview._32);
@@ -582,6 +587,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				particleStreamer.end();
 				bartikkel_fx->draw(&particleStreamer);
 			}
+*/
 
 			if (dof) {
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
@@ -626,7 +632,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 				dof_fx->p->End();
 			}
-
+/*
 			if (tunnel) {
 				device.setRenderTarget(dof_target.getSurface(0), 0);
 
@@ -668,7 +674,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 				particleStreamer.end();
 				particle_fx->draw(&particleStreamer);
 			}
-
+*/
 			device.setDepthStencilSurface(depthstencil);
 
 			device.setRenderTarget(fxaa_target.getSurface(0), 0);
@@ -763,7 +769,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 			postprocess_fx->setTexture("overlay_tex", overlays.getTexture(int(sync_get_val(colorMapOverlayTrack, row)) % overlays.getTextureCount()));
 			postprocess_fx->setTexture("bloom_tex", color1_hdr);
 			postprocess_fx->setFloat("bloom_amt", sync_get_val(bloomAmtTrack, row));
-			postprocess_fx->setFloat("bloom_shape", sync_get_val(bloomShapeTrack, row));
+			float bloom_shape = sync_get_val(bloomShapeTrack, row);
+			float bloom_weight[7];
+			float bloom_total = 0;
+			for (int i = 0; i < 7; ++i) {
+				bloom_weight[i] = powf(float(i), bloom_shape);
+				bloom_total += bloom_weight[i];
+			}
+			for (int i = 0; i < 7; ++i)
+				bloom_weight[i] /= bloom_total;
+			postprocess_fx->setFloatArray("bloom_weight", bloom_weight, ARRAY_SIZE(bloom_weight));
 
 			postprocess_fx->setTexture("color_map1_tex", color_maps[ int(sync_get_val(colorMap1Track, row)) % color_maps.size() ]);
 			postprocess_fx->setTexture("color_map2_tex", color_maps[ int(sync_get_val(colorMap2Track, row)) % color_maps.size() ]);

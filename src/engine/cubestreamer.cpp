@@ -9,8 +9,9 @@ MeshInstancer::MeshInstancer(renderer::Device &device, engine::Effect *effect, i
   maxInstanceCount(maxInstanceCount)
 {
 	prepareMeshVertexBuffer(device);
-	instance_vb = device.createVertexBuffer(maxInstanceCount * sizeof(float) * 16, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
+	instance_vb = device.createVertexBuffer(maxInstanceCount * sizeof(float) * (16 + 3), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT);
 	instanceTransforms = new math::Matrix4x4[maxInstanceCount];
+	instanceColors = new math::Vector3[maxInstanceCount];
 }
 
 MeshInstancer::~MeshInstancer()
@@ -28,7 +29,7 @@ void MeshInstancer::draw(renderer::Device &device, int instanceCount) const
 	device->SetVertexDeclaration(vertex_decl);
 	device->SetStreamSource(0, mesh_vb, 0, 4 * 2);
 	device->SetStreamSourceFreq(0, D3DSTREAMSOURCE_INDEXEDDATA | std::min(instanceCount, maxInstanceCount));
-	device->SetStreamSource(1, instance_vb, 0, 4 * 3);
+	device->SetStreamSource(1, instance_vb, 0, sizeof(float) * (16 + 3));
 	device->SetStreamSourceFreq(1, D3DSTREAMSOURCE_INSTANCEDATA | 1UL);
 	device->SetIndices(mesh_ib);
 	
@@ -37,8 +38,8 @@ void MeshInstancer::draw(renderer::Device &device, int instanceCount) const
 	effect->p->Begin(&passes, 0);
 	for (UINT pass = 0; pass < passes; ++pass)
 	{
-		effect->p->BeginPass( pass );
-		device->DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6 * 4, 0, 6 * 2);
+		effect->p->BeginPass(pass);
+		device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 6 * 4, 0, 6 * 2);
 		effect->p->EndPass();
 	}
 	effect->p->End();
@@ -50,9 +51,14 @@ void MeshInstancer::draw(renderer::Device &device, int instanceCount) const
 
 void MeshInstancer::updateInstanceVertexBuffer()
 {
-	float *dst = (float *)instance_vb.lock(0, sizeof(float) * 16 * maxInstanceCount, 0);
+	float *dst = (float *)instance_vb.lock(0, sizeof(float) * (16 + 3) * maxInstanceCount, 0);
 	if (dst) {
-		memcpy(dst, instanceTransforms, sizeof(float) * 16 * maxInstanceCount);
+		for (int i = 0; i < maxInstanceCount; ++i) {
+			memcpy(dst, instanceTransforms + i, sizeof(math::Matrix4x4));
+			dst += 16;
+			memcpy(dst, instanceColors + i, sizeof(math::Vector3));
+			dst += 3;
+		}
 		instance_vb.unlock();
 	}
 }
@@ -63,12 +69,13 @@ void MeshInstancer::prepareMeshVertexBuffer(renderer::Device &device)
 	{
 		/* static data */
 		{ 0, 0, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 }, // pos
-		{ 0, 4, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 }, // normal + front index
+		{ 0, 4, D3DDECLTYPE_UBYTE4N, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_NORMAL,   0 }, // normal + face index
 		/* instance data */
-		{ 1, 0, D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 1 }, // pos2
-		{ 1, 4, D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 2 }, // instance array
-		{ 1, 8, D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 3 }, // instance array
-		{ 1,12, D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 4 }, // instance array
+		{ 1, 0 * sizeof(float), D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 }, // instance transform
+		{ 1, 4 * sizeof(float), D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 1 },
+		{ 1, 8 * sizeof(float), D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 2 },
+		{ 1,12 * sizeof(float), D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 3 },
+		{ 1,16 * sizeof(float), D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_COLOR,    0 },
 		D3DDECL_END()
 	};
 	vertex_decl = device.createVertexDeclaration(vertex_elements);
@@ -78,6 +85,7 @@ void MeshInstancer::prepareMeshVertexBuffer(renderer::Device &device)
 	mesh_vb = device.createVertexBuffer(faces * 4 * (4 * 2), D3DUSAGE_WRITEONLY, 0, D3DPOOL_MANAGED);
 	{
 		BYTE *dst = (BYTE*)mesh_vb.lock(0, faces * 4 * (4 * 2), 0);
+		assert(dst != NULL);
 
 		/* front face (positive z) */
 		*dst++ = 0;   *dst++ = 0;   *dst++ = 255; *dst++ = 255;
@@ -162,8 +170,9 @@ void MeshInstancer::prepareMeshVertexBuffer(renderer::Device &device)
 
 	// setup index buffer
 	mesh_ib = device.createIndexBuffer(2 * 6 * 6, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED);
-	unsigned short *dst = (unsigned short*)mesh_ib.lock(0, 2 * 6 * faces, 0);
-	if (dst) {
+	{
+		unsigned short *dst = (unsigned short*)mesh_ib.lock(0, 2 * 6 * faces, 0);
+		assert(dst != NULL);
 		for (int i = 0; i < faces; ++i) {
 			*dst++ = (i * 4) + 0;
 			*dst++ = (i * 4) + 1;

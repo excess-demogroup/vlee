@@ -13,12 +13,12 @@ samplerCUBE env_samp = sampler_state {
 };
 
 struct VS_INPUT {
-	float4 Position : POSITION0;
+	float4 Position : POSITION;
 	float3 Normal : NORMAL;
 };
 
 struct VS_OUTPUT {
-	float4 ClipPos : POSITION0;
+	float4 ClipPos : POSITION;
 	float3 ViewPos : TEXCOORD2;
 	float3 WorldPos : TEXCOORD3;
 	float3 ViewNormal : TEXCOORD4;

@@ -46,6 +46,7 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
 	PS_OUTPUT o;
 	o.col = float4(texCUBE(env_samp, Input.Pos2.xyz).rgb, 1);
+	o.col.rgb = lerp(o.col.rgb, o.col.ggg, 0.8);
 	o.z = Input.Pos2.w;
 	return o;
 }

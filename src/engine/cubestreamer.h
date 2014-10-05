@@ -3,6 +3,7 @@
 
 #include "voxelgrid.h"
 #include "../math/matrix4x4.h"
+#include "../math/vector3.h"
 #include "../renderer/device.h"
 #include "../renderer/vertexdeclaration.h"
 #include "../renderer/vertexbuffer.h"
@@ -24,12 +25,18 @@ namespace engine
 			if (instance < maxInstanceCount)
 				instanceTransforms[instance] = transform;
 		}
+		void setInstanceColor(int instance, const math::Vector3 &color)
+		{
+			if (instance < maxInstanceCount)
+				instanceColors[instance] = color;
+		}
 		void updateInstanceVertexBuffer();
 		
 	private:
 		void prepareMeshVertexBuffer(renderer::Device &device);
 
 		math::Matrix4x4 *instanceTransforms;
+		math::Vector3 *instanceColors;
 		renderer::VertexDeclaration vertex_decl;
 		renderer::VertexBuffer instance_vb;
 		renderer::VertexBuffer mesh_vb;

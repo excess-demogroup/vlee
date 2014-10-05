@@ -73,7 +73,7 @@ namespace math
 		
 		void makeRotation(const Vector3 &rotation)
 		{
-			D3DXMatrixRotationYawPitchRoll(this, rotation.x, rotation.y, rotation.z);
+			D3DXMatrixRotationYawPitchRoll(this, rotation.y, rotation.x, rotation.z);
 		}
 		
 		void makeScaling(const Vector3 &scale)
@@ -99,7 +99,14 @@ namespace math
 			D3DXMatrixInverse(&res, NULL, this);
 			return res;
 		}
-		
+
+		Matrix4x4 transpose() const
+		{
+			Matrix4x4 res;
+			D3DXMatrixTranspose(&res, this);
+			return res;
+		}
+
 		Vector3 getTranslation() const
 		{
 			return Vector3(_41, _42, _43);

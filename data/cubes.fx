@@ -14,29 +14,26 @@ samplerCUBE env_samp = sampler_state {
 
 struct VS_INPUT {
 	float4 Position : POSITION0;
-	float3 Normal : NORMAL;
-	float4x4 InstanceTransform : TEXCOORD1;
+	float4x4 InstanceTransform : TEXCOORD0;
+	float3 Color : COLOR;
 };
 
 struct VS_OUTPUT {
 	float4 ClipPos : POSITION0;
-	float3 ViewPos : TEXCOORD2;
-	float3 WorldPos : TEXCOORD3;
-	float3 ViewNormal : TEXCOORD4;
-	float3 WorldNormal : TEXCOORD5;
+	float3 ViewPos : TEXCOORD1;
+	float3 Color : TEXCOORD2;
 };
 
 VS_OUTPUT vs_main( VS_INPUT Input )
 {
 	VS_OUTPUT Output;
 
-	float3 pos = mul(Input.Position, Input.InstanceTransform).xyz;
+	// perform instance-to-model-space (yeahyeah, double model-space - sue me)
+	float3 Position = mul(Input.InstanceTransform, float4(Input.Position.xyz - 0.5, 1)).xyz;
 
-	Output.ClipPos = mul( float4(pos, 1), matWorldViewProjection );
-	Output.ViewPos = mul(float4(pos, 1), matWorldView).xyz;
-	Output.WorldPos = Input.Position.xyz;
-	Output.ViewNormal = mul(matWorldViewInverse, float4(Input.Normal, 0)).xyz;
-	Output.WorldNormal = mul(matWorldInverse, float4(Input.Normal, 0)).xyz;
+	Output.ClipPos = mul(float4(Position, 1), matWorldViewProjection);
+	Output.ViewPos = mul(float4(Position, 1), matWorldView).xyz;
+	Output.Color = Input.Color;
 	return Output;
 }
 
@@ -47,15 +44,8 @@ struct PS_OUTPUT {
 
 PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
-//	float3 n = normalize(cross(ddx(Input.ViewPos), ddy(Input.ViewPos)));
-	float3 n = normalize(Input.ViewNormal);
-
 	PS_OUTPUT o;
-	float3 uvw = reflect(normalize(Input.WorldNormal), -normalize(Input.ViewPos));
-	uvw = mul(matWorldView, float4(uvw, 0)).xyz;
-	o.col = float4(texCUBE(env_samp, uvw).rgb * float3(1, 0.6, 0.25), 1);
-	o.col.rgb *= pow(1 - abs(n.z), 2);
-
+	o.col = float4(Input.Color, 1);
 	o.z = Input.ViewPos.z;
 	return o;
 }
@@ -64,5 +54,8 @@ technique cube_room {
 	pass P0 {
 		VertexShader = compile vs_3_0 vs_main();
 		PixelShader  = compile ps_3_0 ps_main();
+		AlphaBlendEnable = False;
+		ZWriteEnable = True;
+		CullMode = None;
 	}
 }

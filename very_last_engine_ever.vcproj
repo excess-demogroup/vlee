@@ -677,10 +677,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\data\cube.fx"
-			>
-		</File>
-		<File
 			RelativePath=".\data\cubes.fx"
 			>
 		</File>
