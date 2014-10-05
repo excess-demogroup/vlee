@@ -195,10 +195,10 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 {
 	float2 block = floor(vpos / 16);
 	float2 uv_noise = block / 64;
-	uv_noise += floor(dist_time * float2(1234.0, 3543.0)) / 64;
+	uv_noise += floor(dist_time * float2(1234.0, 3543.0) * uv_noise) / 64;
 
-	float block_thresh = pow(frac(dist_time * 1236.0453), 2.0) * 0.2;
-	float line_thresh = pow(frac(dist_time * 2236.0453), 3.0) * 0.7;
+	float block_thresh = pow(frac(dist_time * 1236.0453), 2.0) * 0.3;
+	float line_thresh = pow(frac(dist_time * 2236.0453), 3.0) * 0.6;
 
 	float2 pos = In.uv;
 	pos += float2(
@@ -233,7 +233,7 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 		col.rgb = col.ggg;
 
 	// discolor block lines
-	if (tex2D(noise_samp, float2(uv_noise.y, 0.0)).r * 2.5 < line_thresh)
+	if (tex2D(noise_samp, float2(uv_noise.y, 0.0)).r * 2.75 < line_thresh)
 		col.rgb = float3(0, dot(col.rgb, float3(1, 1, 1)), 0);
 
 	// interleave lines in some blocks
