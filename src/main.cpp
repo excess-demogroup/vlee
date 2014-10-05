@@ -713,7 +713,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			postprocess_fx->setFloat("overlay_alpha", sync_get_val(colorMapOverlayAlphaTrack, row));
 			postprocess_fx->setTexture("overlay_tex", overlays.getTexture(int(sync_get_val(colorMapOverlayTrack, row)) % overlays.getTextureCount()));
 			postprocess_fx->setTexture("bloom_tex", color1_hdr);
-			postprocess_fx->setFloat("bloom_amt", sync_get_val(bloomAmtTrack, row));
 			float bloom_shape = sync_get_val(bloomShapeTrack, row);
 			float bloom_weight[7];
 			float bloom_total = 0;
@@ -721,8 +720,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 				bloom_weight[i] = powf(float(i), bloom_shape);
 				bloom_total += bloom_weight[i];
 			}
+			float bloom_scale = sync_get_val(bloomAmtTrack, row) / bloom_total;
 			for (int i = 0; i < 7; ++i)
-				bloom_weight[i] /= bloom_total;
+				bloom_weight[i] *= bloom_scale;
 			postprocess_fx->setFloatArray("bloom_weight", bloom_weight, ARRAY_SIZE(bloom_weight));
 
 			postprocess_fx->setTexture("color_map1_tex", color_maps[ int(sync_get_val(colorMap1Track, row)) % color_maps.size() ]);

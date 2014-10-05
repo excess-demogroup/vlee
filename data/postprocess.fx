@@ -4,7 +4,6 @@ const float noise_amt;
 const float dist_amt, dist_freq, dist_time;
 const float2 viewport;
 const float color_map_lerp;
-const float bloom_amt;
 const float bloom_weight[7];
 
 texture color_tex;
@@ -127,6 +126,18 @@ float3 color_correct(float3 color)
 #endif
 }
 
+float3 sample_bloom(float2 pos)
+{
+	float3 bloom = tex2Dlod(bloom_samp, float4(pos, 0.0, 0.0)) * bloom_weight[0];
+	bloom += tex2Dlod(bloom_samp, float4(pos, 0.0, 1.0)) * bloom_weight[1];
+	bloom += tex2Dlod(bloom_samp, float4(pos, 0.0, 2.0)) * bloom_weight[1];
+	bloom += tex2Dlod(bloom_samp, float4(pos, 0.0, 3.0)) * bloom_weight[3];
+	bloom += tex2Dlod(bloom_samp, float4(pos, 0.0, 4.0)) * bloom_weight[4];
+	bloom += tex2Dlod(bloom_samp, float4(pos, 0.0, 5.0)) * bloom_weight[5];
+	bloom += tex2Dlod(bloom_samp, float4(pos, 0.0, 6.0)) * bloom_weight[6];
+	return bloom;
+}
+
 float4 pixel(VS_OUTPUT In) : COLOR
 {
 	const float sep = 0.03;
@@ -141,15 +152,7 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	int samples = max(3, int(length(viewport * (end - pos) / 2)));
 	float3 col = sample_spectrum(pos, end, samples);
 
-	float3 bloom = tex2Dlod(bloom_samp, float4(In.uv, 0.0, 0.0)) * bloom_weight[0];
-	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 1.0)) * bloom_weight[1];
-	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 2.0)) * bloom_weight[1];
-	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 3.0)) * bloom_weight[3];
-	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 4.0)) * bloom_weight[4];
-	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 5.0)) * bloom_weight[5];
-	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 6.0)) * bloom_weight[6];
-
-	col += bloom * bloom_amt;
+	col += sample_bloom(In.uv);
 	col = color_correct(col);
 
 	float4 o = tex2D(overlay_samp, In.uv);
