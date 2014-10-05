@@ -333,6 +333,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Effect *postprocess_fx = engine::loadEffect(device, "data/postprocess.fx");
 		postprocess_fx->setVector3("viewport", Vector3(letterbox_viewport.Width, letterbox_viewport.Height, 0.0f));
+		Texture lensdirt_tex = engine::loadTexture(device, "data/lensdirt.png");
+		postprocess_fx->setTexture("lensdirt_tex", lensdirt_tex);
 
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
 		postprocess_fx->setTexture("noise_tex", noise_tex);
