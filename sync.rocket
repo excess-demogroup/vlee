@@ -104,6 +104,9 @@
 		<track name="flare.amount">
 			<key row="0" value="2" interpolation="0"/>
 		</track>
+		<track name="skybox.desat">
+			<key row="0" value="0.7" interpolation="0"/>
+		</track>
 	</tracks>
 	<bookmarks/>
 </sync>

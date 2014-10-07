@@ -2,6 +2,7 @@ float4x4 matView : VIEW;
 float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
+float desaturate;
 
 texture env_tex;
 samplerCUBE env_samp = sampler_state {
@@ -46,7 +47,7 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
 	PS_OUTPUT o;
 	o.col = float4(texCUBE(env_samp, Input.Pos2.xyz).rgb, 1);
-	o.col.rgb = lerp(o.col.rgb, o.col.ggg, 0.8);
+	o.col.rgb = lerp(o.col.rgb, dot(o.col.rgb, float3(0.299, 0.587, 0.114)), desaturate);
 	o.z = Input.Pos2.w;
 	return o;
 }

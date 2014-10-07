@@ -261,6 +261,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		const sync_track *flareAmountTrack = sync_get_track(rocket, "flare.amount");
 
+		const sync_track *skyboxDesaturateTrack = sync_get_track(rocket, "skybox.desat");
+
 		const sync_track *dofFStopTrack = sync_get_track(rocket, "dof.fstop");
 		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
 		const sync_track *dofFocalDistTrack = sync_get_track(rocket, "dof.fdist");
@@ -487,6 +489,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 			if (skybox) {
 				skybox_fx->setMatrices(world, view, proj);
+				skybox_fx->setFloat("desaturate", sync_get_val(skyboxDesaturateTrack, row));
 				skybox_fx->commitChanges();
 				skybox_fx->draw(skybox_x);
 			}
