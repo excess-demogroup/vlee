@@ -6,6 +6,7 @@ const float2 viewport;
 const float color_map_lerp;
 const float bloom_weight[7];
 const float block_thresh, line_thresh;
+const float flare_amount;
 
 texture color_tex;
 sampler color_samp = sampler_state {
@@ -189,7 +190,7 @@ float3 sample_lensflare(float2 pos)
 
 	flare += sample_spectrum(bloom_samp, halo_start, halo_stop, halo_samples, 2) * flare_fade;
 
-	return flare;
+	return flare * flare_amount;
 }
 
 float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR

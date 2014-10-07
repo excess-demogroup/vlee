@@ -106,6 +106,9 @@
 			<key row="308" value="1.2" interpolation="1"/>
 			<key row="320" value="0" interpolation="0"/>
 		</track>
+		<track name="flare.amount">
+			<key row="0" value="2" interpolation="0"/>
+		</track>
 	</tracks>
 	<bookmarks/>
 </sync>
