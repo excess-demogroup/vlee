@@ -82,15 +82,6 @@
 		<track name="dof.fdist">
 			<key row="0" value="50" interpolation="0"/>
 		</track>
-		<track name="cm.map1">
-			<key row="0" value="0" interpolation="0"/>
-		</track>
-		<track name="cm.map2">
-			<key row="0" value="0" interpolation="0"/>
-		</track>
-		<track name="cm.lerp">
-			<key row="0" value="0" interpolation="0"/>
-		</track>
 		<track name="bloom.amt">
 			<key row="0" value="2" interpolation="0"/>
 			<key row="336" value="0" interpolation="0"/>

@@ -232,9 +232,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *cameraXTrack          = sync_get_track(rocket, "cam.x");
 		const sync_track *cameraYTrack          = sync_get_track(rocket, "cam.y");
 		const sync_track *cameraZTrack          = sync_get_track(rocket, "cam.z");
-		const sync_track *cameraAtXTrack          = sync_get_track(rocket, "cam.at.x");
-		const sync_track *cameraAtYTrack          = sync_get_track(rocket, "cam.at.y");
-		const sync_track *cameraAtZTrack          = sync_get_track(rocket, "cam.at.z");
+		const sync_track *cameraAtXTrack        = sync_get_track(rocket, "cam.at.x");
+		const sync_track *cameraAtYTrack        = sync_get_track(rocket, "cam.at.y");
+		const sync_track *cameraAtZTrack        = sync_get_track(rocket, "cam.at.z");
 		const sync_track *cameraRollTrack       = sync_get_track(rocket, "cam.roll");
 		const sync_track *cameraOffsetTrack     = sync_get_track(rocket, "cam.offset");
 		const sync_track *cameraIndexTrack      = sync_get_track(rocket, "cam.index");
@@ -247,17 +247,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *colorMapOverlayAlphaTrack = sync_get_track(rocket, "cm.overlay_alpha");
 		const sync_track *pulseAmt2Track       = sync_get_track(rocket, "cm.pulse.amt");
 		const sync_track *pulseSpeed2Track     = sync_get_track(rocket, "cm.pulse.speed");
-		const sync_track *colorMap1Track     = sync_get_track(rocket, "cm.map1");
-		const sync_track *colorMap2Track     = sync_get_track(rocket, "cm.map2");
-		const sync_track *colorMapLerpTrack  = sync_get_track(rocket, "cm.lerp");
 
-		const sync_track *bloomCutoffTrack  = sync_get_track(rocket, "bloom.cutoff");
+		const sync_track *bloomCutoffTrack = sync_get_track(rocket, "bloom.cutoff");
 		const sync_track *bloomShapeTrack  = sync_get_track(rocket, "bloom.shape");
-		const sync_track *bloomAmtTrack  = sync_get_track(rocket, "bloom.amt");
+		const sync_track *bloomAmtTrack    = sync_get_track(rocket, "bloom.amt");
 
-		const sync_track *distAmtTrack    = sync_get_track(rocket, "dist.amt");
-		const sync_track *distFreqTrack   = sync_get_track(rocket, "dist.freq");
-		const sync_track *distOffsetTrack = sync_get_track(rocket, "dist.offset");
+		const sync_track *distAmtTrack     = sync_get_track(rocket, "dist.amt");
+		const sync_track *distFreqTrack    = sync_get_track(rocket, "dist.freq");
+		const sync_track *distOffsetTrack  = sync_get_track(rocket, "dist.offset");
 
 		const sync_track *dofFStopTrack = sync_get_track(rocket, "dof.fstop");
 		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
@@ -726,11 +723,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 			for (int i = 0; i < 7; ++i)
 				bloom_weight[i] *= bloom_scale;
 			postprocess_fx->setFloatArray("bloom_weight", bloom_weight, ARRAY_SIZE(bloom_weight));
-
-			postprocess_fx->setTexture("color_map1_tex", color_maps[ int(sync_get_val(colorMap1Track, row)) % color_maps.size() ]);
-			postprocess_fx->setTexture("color_map2_tex", color_maps[ int(sync_get_val(colorMap2Track, row)) % color_maps.size() ]);
-			postprocess_fx->setFloat("color_map_lerp", sync_get_val(colorMapLerpTrack, row));
-
 			postprocess_fx->commitChanges();
 
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
