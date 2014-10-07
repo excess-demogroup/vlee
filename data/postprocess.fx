@@ -5,6 +5,7 @@ const float dist_amt, dist_freq, dist_time;
 const float2 viewport;
 const float color_map_lerp;
 const float bloom_weight[7];
+const float block_thresh, line_thresh;
 
 texture color_tex;
 sampler color_samp = sampler_state {
@@ -196,9 +197,6 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 	float2 block = floor(vpos / 16);
 	float2 uv_noise = block / 64;
 	uv_noise += floor(dist_time * float2(1234.0, 3543.0) * uv_noise) / 64;
-
-	float block_thresh = pow(frac(dist_time * 1236.0453), 2.0) * 0.3;
-	float line_thresh = pow(frac(dist_time * 2236.0453), 3.0) * 0.6;
 
 	float2 pos = In.uv;
 	pos += float2(

@@ -256,6 +256,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 		const sync_track *distFreqTrack    = sync_get_track(rocket, "dist.freq");
 		const sync_track *distOffsetTrack  = sync_get_track(rocket, "dist.offset");
 
+		const sync_track *glitchBlockThreshTrack = sync_get_track(rocket, "glitch.blocks");
+		const sync_track *glitchLineThreshTrack = sync_get_track(rocket, "glitch.lines");
+
 		const sync_track *dofFStopTrack = sync_get_track(rocket, "dof.fstop");
 		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
 		const sync_track *dofFocalDistTrack = sync_get_track(rocket, "dof.fdist");
@@ -712,6 +715,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 			postprocess_fx->setFloat("overlay_alpha", sync_get_val(colorMapOverlayAlphaTrack, row));
 			postprocess_fx->setTexture("overlay_tex", overlays.getTexture(int(sync_get_val(colorMapOverlayTrack, row)) % overlays.getTextureCount()));
 			postprocess_fx->setTexture("bloom_tex", color1_hdr);
+			postprocess_fx->setFloat("block_thresh", sync_get_val(glitchBlockThreshTrack, row));
+			postprocess_fx->setFloat("line_thresh", sync_get_val(glitchLineThreshTrack, row));
 			float bloom_shape = sync_get_val(bloomShapeTrack, row);
 			float bloom_weight[7];
 			float bloom_total = 0;

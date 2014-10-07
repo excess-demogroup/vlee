@@ -96,6 +96,16 @@
 		<track name="bloom.shape">
 			<key row="0" value="1" interpolation="0"/>
 		</track>
+		<track name="glitch.blocks">
+			<key row="296" value="0" interpolation="1"/>
+			<key row="308" value="1" interpolation="1"/>
+			<key row="320" value="0" interpolation="0"/>
+		</track>
+		<track name="glitch.lines">
+			<key row="296" value="0" interpolation="1"/>
+			<key row="308" value="1.2" interpolation="1"/>
+			<key row="320" value="0" interpolation="0"/>
+		</track>
 	</tracks>
 	<bookmarks/>
 </sync>
