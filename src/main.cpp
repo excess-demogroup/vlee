@@ -496,8 +496,8 @@ int main(int /*argc*/, char* /*argv*/ [])
 				// bunch of stuff
 				for (int i = 0; i < 512; ++i) {
 					Matrix4x4 translation = Matrix4x4::translation(Vector3(sin(i / 5.220f), cos(i / 5.10f), 0) * 80.0f);
-					Matrix4x4 scaling = Matrix4x4::scaling(Vector3(2,1,1) * 2.0 * (1.5 + sin(i / 5.120)));
-					Matrix4x4 rotation = Matrix4x4::rotation(Vector3(sin(i * 1.0) * 10.0, sin(i * 1.12311231) * 10.0, 0) * beat * 0.01);
+					Matrix4x4 scaling = Matrix4x4::scaling(Vector3(2,1,1) * 2.0f * (1.5f + sin(i / 5.120f)));
+					Matrix4x4 rotation = Matrix4x4::rotation(Vector3(sin(i * 1.0f) * 10.0f, sin(i * 1.12311231f) * 10.0f, 0) * float(beat * 0.01f));
 					cube_instancer.setInstanceTransform(i, scaling * translation * rotation);
 					cube_instancer.setInstanceColor(i, math::Vector3(0, 0, 0));
 				}
