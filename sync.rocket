@@ -26,7 +26,7 @@
 			<key row="0" value="0" interpolation="1"/>
 			<key row="306" value="300" interpolation="0"/>
 			<key row="307" value="20" interpolation="1"/>
-			<key row="383" value="-360" interpolation="0"/>
+			<key row="772" value="-1000" interpolation="0"/>
 		</track>
 		<track name="cam.offset">
 			<key row="0" value="100" interpolation="0"/>
@@ -83,12 +83,7 @@
 			<key row="0" value="50" interpolation="0"/>
 		</track>
 		<track name="bloom.amt">
-			<key row="0" value="2" interpolation="0"/>
-			<key row="336" value="0" interpolation="0"/>
-			<key row="337" value="1" interpolation="0"/>
-			<key row="338" value="0" interpolation="0"/>
-			<key row="339" value="1" interpolation="0"/>
-			<key row="340" value="0" interpolation="0"/>
+			<key row="0" value="200" interpolation="0"/>
 		</track>
 		<track name="bloom.cutoff">
 			<key row="0" value="0" interpolation="0"/>

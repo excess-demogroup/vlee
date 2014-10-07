@@ -170,17 +170,17 @@ float3 sample_lensflare(float2 pos)
 
 	float3 flare = 0;
 	for (int i = 0; i < ghosts; ++i) {
-		float2 ghost_start = ipos + delta * 0.95 * i;
-		float2 ghost_stop = ipos + delta * 1.05 * i;
-		int ghost_samples = max(3, int(length(viewport * (ghost_stop - ghost_start) / 4)));
-		flare += sample_spectrum(bloom_samp, ghost_start, ghost_stop, ghost_samples, 2);
+		float2 ghost_start = ipos + delta * 0.8 * i;
+		float2 ghost_stop = ipos + delta * 1.2 * i;
+		int ghost_samples = max(3, int(length(viewport * (ghost_stop - ghost_start) / 16)));
+		flare += sample_spectrum(bloom_samp, ghost_start, ghost_stop, ghost_samples, 1);
 	}
 
 	// fake anamorphic
 	float2 nnpos = pos - 0.5;
 	float2 nipos = -pos + 0.5;
-	flare += tex2Dlod(bloom_samp, float4(nnpos * float2(0.5, 1) + 0.5, 0, 2)).rgb * float3(0.25, 0.25, 2.0);
-	flare += tex2Dlod(bloom_samp, float4(nipos * float2(0.3,-1) + 0.5, 0, 2)).rgb * float3(0.25, 0.25, 2.0);
+	flare += tex2Dlod(bloom_samp, float4(nnpos * float2(0.5, 1) + 0.5, 0, 1)).rgb * float3(0.25, 0.25, 2.0);
+	flare += tex2Dlod(bloom_samp, float4(nipos * float2(0.3,-1) + 0.5, 0, 1)).rgb * float3(0.25, 0.25, 2.0);
 
 	// sample halo
 	float flare_fade = pow(1 - abs(2 * distance(pos, 0.5) - 1), 5);
