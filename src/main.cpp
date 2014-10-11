@@ -363,7 +363,13 @@ int main(int argc, char *argv[])
 		Mesh *skybox_x = engine::loadMesh(device, "data/skybox.x");
 		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
 		CubeTexture skybox_tex = engine::loadCubeTexture(device, "data/skybox.dds");
-		skybox_fx->setTexture("env_tex", skybox_tex);
+		CubeTexture skybox2_tex = engine::loadCubeTexture(device, "data/skybox2.dds");
+
+		Mesh *plane_128x128_x = engine::loadMesh(device, "data/plane-128x128.x");
+		Effect *sphere_lights_fx = engine::loadEffect(device, "data/sphere-lights.fx");
+		Anim sphere_lights = engine::loadAnim(device, "data/sphere-lights");
+		Texture sphere_lights_mask_tex = engine::loadTexture(device, "data/sphere-lights-mask.png");
+		sphere_lights_fx->setTexture("mask_tex", sphere_lights_mask_tex);
 
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
@@ -433,6 +439,7 @@ int main(int argc, char *argv[])
 			bool particles = false;
 //			bool byste = false;
 			bool tunnel = false;
+			bool sphereLights = false;
 			bool skybox = false;
 			bool blackCubes = false;
 			bool blueCubes = false;
@@ -442,11 +449,16 @@ int main(int argc, char *argv[])
 			switch (part) {
 			case 0:
 				skybox = true;
+				sphereLights = true;
+				break;
+
+			case 1:
+				skybox = true;
 				blackCubes = true;
 				blueCubes = true;
 				break;
 
-			case 1:
+			case 2:
 				tunnel = true;
 				break;
 			}
@@ -493,8 +505,18 @@ int main(int argc, char *argv[])
 			if (skybox) {
 				skybox_fx->setMatrices(world, view, proj);
 				skybox_fx->setFloat("desaturate", sync_get_val(skyboxDesaturateTrack, row));
+				skybox_fx->setTexture("env_tex", part != 0 ? skybox_tex : skybox2_tex);
 				skybox_fx->commitChanges();
 				skybox_fx->draw(skybox_x);
+			}
+
+			if (sphereLights) {
+				sphere_lights_fx->setMatrices(world, view, proj);
+				sphere_lights_fx->setTexture("intensity_tex", sphere_lights.getFrame(0));
+				int scroll = int(row * 4.0) % 256 - 128;
+				sphere_lights_fx->setFloat("scroll", scroll / 128.0f);
+				sphere_lights_fx->commitChanges();
+				sphere_lights_fx->draw(plane_128x128_x);
 			}
 
 			if (blackCubes) {

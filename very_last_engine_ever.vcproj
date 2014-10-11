@@ -689,6 +689,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\data\sphere-lights.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\tunnel.fx"
 			>
 		</File>
