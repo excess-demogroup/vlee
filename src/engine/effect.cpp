@@ -21,9 +21,12 @@ namespace engine {
 		HRESULT hr = D3DXCreateEffectFromFile(device, filename.c_str(), NULL, NULL, 0, NULL, &eff, &err_buf);
 
 		if (FAILED(hr)) {
-			if (NULL == err_buf)
-				throw core::FatalException(std::string("failed to load effect \"") + filename + std::string("\"\n\n") + core::d3dGetError(hr));
-			throw core::FatalException(std::string("failed to load effect \"") + filename + std::string("\"\n\n") + std::string((const char*)err_buf->GetBufferPointer()));
+			if (NULL != err_buf) {
+				const char *err = (const char*)err_buf->GetBufferPointer();
+				if (NULL != err)
+					throw core::FatalException(std::string("failed to load effect \"") + filename + std::string("\"\n\n") + std::string(err));
+			}
+			throw core::FatalException(std::string("failed to load effect \"") + filename + std::string("\"\n\n") + core::d3dGetError(hr));
 		}
 
 		Effect *eff_wrapper = new Effect;
