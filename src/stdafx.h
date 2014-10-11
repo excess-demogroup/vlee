@@ -53,6 +53,7 @@
 #pragma warning (default : 4702)
 
 #include <assert.h>
+#include <direct.h>
 // TODO: reference additional headers your program requires here
 
 // #include <omp.h>

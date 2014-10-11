@@ -119,7 +119,7 @@ struct sync_cb bass_cb = {
 
 #endif /* !defined(SYNC_PLAYER) */
 
-int main(int /*argc*/, char* /*argv*/ [])
+int main(int argc, char *argv[])
 {
 #ifdef _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -367,11 +367,16 @@ int main(int /*argc*/, char* /*argv*/ [])
 
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
+		bool dump_video = false;
+		for (int i = 1; i < argc; ++i)
+			if (!strcmp(argv[i], "--dump-video"))
+				dump_video = true;
+
+		if (dump_video)
+			_mkdir("dump");
+
 		BASS_Start();
 		BASS_ChannelPlay(stream, false);
-
-		// todo: config this
-		bool dump_video = false;
 
 		bool done = false;
 		int frame = 0;
