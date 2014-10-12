@@ -625,20 +625,21 @@ int main(int argc, char *argv[])
 				particle_fx->setVector3("up", up);
 				particle_fx->setVector3("left", left);
 				particle_fx->setMatrices(world, view, proj);
+				particle_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
+				particle_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
+				particle_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
+				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
 
-				particle_fx->setTexture("tex", particle_tex);
-				particle_fx->setFloat("alpha", 0.5f);
 				particleStreamer.begin();
-				for (int i = 0; i < 50; ++i) {
-
-					Vector3 pos = worldLightPosition;
+				for (int i = 0; i < 20 * 360; ++i) {
+					float th = i / float(M_PI / 180);
+					Vector3 pos = Vector3(sin(th), cos(th), 0) * 65;
 					Vector3 offset = normalize(Vector3(
-						sin(i * 32.0 + beat * 0.32),
-						cos(i * 45.0 + beat * 0.1),
-						cos(i * 23.0 - beat * 0.23)
-						));
-					pos += offset * float(i) * 0.1f;
-					float prand = math::notRandf(part);
+							sin(i * 32.0 + beat * 0.32),
+							cos(i * 45.0 + beat * 0.1),
+							cos(i * 23.0 - beat * 0.23)
+							));
+					pos += offset * 5;
 					float fade = 1.0f;
 					float size = 20.0f / (3 + i);
 					particleStreamer.add(pos, size);

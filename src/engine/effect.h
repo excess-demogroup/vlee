@@ -8,6 +8,7 @@
 #include "../renderer/volumetexture.h"
 #include "../math/matrix4x4.h"
 #include "../math/vector3.h"
+#include "../math/vector2.h"
 
 namespace engine {
 	class Effect : public ComRef<ID3DXEffect> {
@@ -59,6 +60,13 @@ namespace engine {
 		{
 			assert( NULL != p );
 			p->SetFloatArray(param, f, UINT(count));
+		}
+
+		void setVector2(D3DXHANDLE param, const math::Vector2 &v)
+		{
+			assert( NULL != p );
+			D3DXVECTOR4 v4(v.x, v.y, 0.0, 1.0);
+			p->SetVector(param, &v4);
 		}
 
 		void setVector3(D3DXHANDLE param, const math::Vector3 &v)
