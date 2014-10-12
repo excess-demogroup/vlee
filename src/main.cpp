@@ -395,14 +395,13 @@ int main(int argc, char *argv[])
 
 			float camTime = sync_get_val(cameraTimeTrack, row);
 			float camOffset = sync_get_val(cameraOffsetTrack, row);
-			Vector3 camPos, camTarget, camUp;
+			Vector3 camPos, camTarget, camUp = Vector3(0, 1, 0);
 			switch ((int)sync_get_val(cameraIndexTrack, row)) {
 			case 0:
 				camTarget = Vector3(sync_get_val(cameraAtXTrack, row), sync_get_val(cameraAtYTrack, row), sync_get_val(cameraAtZTrack, row));
 				camPos = camTarget + Vector3(sin(camTime / 2) * sync_get_val(cameraDistanceTrack, row),
 					sync_get_val(cameraYTrack, row),
 					cos(camTime / 2) * sync_get_val(cameraDistanceTrack, row));
-				camUp = Vector3(0, 1, 0);
 				break;
 
 			case 1:
@@ -429,7 +428,6 @@ int main(int argc, char *argv[])
 			default:
 				camPos = Vector3(0, 1, 0) * sync_get_val(cameraDistanceTrack, row);
 				camTarget = Vector3(0, 0, 0);
-				camUp = Vector3(0, 1, 0);
 			}
 
 			bool particles = false;
