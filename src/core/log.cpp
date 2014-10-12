@@ -19,6 +19,8 @@ void log::printf(const char *format, ...) {
 	vsprintf_s(buffer, 1024, format, arguments);
 	va_end(arguments);
 
+	OutputDebugStringA(buffer);
+
 	logstream << buffer;
 }
 
