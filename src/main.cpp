@@ -446,6 +446,7 @@ int main(int argc, char *argv[])
 			bool blackCubes = false;
 			bool blueCubes = false;
 			bool dof = true;
+			bool space = false;
 			int dustParticleCount = 0;
 			float dustParticleAlpha = 1.0f;
 
@@ -471,8 +472,7 @@ int main(int argc, char *argv[])
 				break;
 
 			case 3:
-				dustParticleCount = 100000;
-				dustParticleAlpha = 1.5f;
+				space = true;
 				dof = true; // false; <- does not work, wtf?
 				break;
 			}
@@ -657,7 +657,7 @@ int main(int argc, char *argv[])
 							cos(i * 23.0 - beat * 0.123)
 							));
 					pos += offset * 5;
-					float size = 20.0f / (3 + math::notRandf(i) * 10.5f);
+					float size = 20.0f / (1 + math::notRandf(i) * 300.0f);
 					particleStreamer.add(pos, size);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
@@ -698,8 +698,53 @@ int main(int argc, char *argv[])
 							cos(i * 0.31 - beat * 0.0512)
 							));
 					pos += offset * 10;
-					double size = 20.0 / (1.0 + math::length(pos) * 10.0);
-					size += 5.0 / (3 + i * 0.001);
+					double size = 5.0 / (3 + i * 0.001);
+					particleStreamer.add(pos, float(size * dustParticleAlpha));
+					if (!particleStreamer.getRoom()) {
+						particleStreamer.end();
+						particle_fx->draw(&particleStreamer);
+						particleStreamer.begin();
+					}
+				}
+				particleStreamer.end();
+				particle_fx->draw(&particleStreamer);
+			}
+
+			if (space) {
+				device.setRenderTarget(dof_target.getSurface(0), 0);
+
+				// particles
+				Matrix4x4 modelview = world * view;
+				Vector3 up(modelview._12, modelview._22, modelview._32);
+				Vector3 left(modelview._11, modelview._21, modelview._31);
+				math::normalize(up);
+				math::normalize(left);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+
+				particle_fx->setVector3("up", up);
+				particle_fx->setVector3("left", left);
+				particle_fx->setMatrices(world, view, proj);
+				particle_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
+				particle_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
+				particle_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
+				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
+
+				particleStreamer.begin();
+				particleStreamer.add(Vector3(0, 0, 0), 50.0); // fake sun (make more better)
+				for (int i = 0; i < 100000; ++i) {
+					Vector3 pos = Vector3(math::notRandf(i) * 2 - 1, math::notRandf(i + 1) * 2 - 1, math::notRandf(i + 2) * 2 - 1) * 100;
+					Vector3 offset = normalize(Vector3(
+							sin(i * 0.23 + beat * 0.0532),
+							cos(i * 0.27 + beat * 0.0521),
+							cos(i * 0.31 - beat * 0.0512)
+							));
+					pos += offset * 10;
+
+					double size = 10.0 / (1.5 + i * 0.0025);
+					size *= 10.0 / (1.0 + math::length(pos) * 0.5);
+					size *= std::max(0.0, sin(i * 0.22 + beat * 0.7532));
+
 					particleStreamer.add(pos, float(size * dustParticleAlpha));
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();

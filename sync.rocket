@@ -71,7 +71,8 @@
 		</track>
 		<track name="cam.at.z">
 			<key row="0" value="0" interpolation="0"/>
-			<key row="544" value="0" interpolation="0"/>
+			<key row="544" value="8" interpolation="1"/>
+			<key row="600" value="30" interpolation="0"/>
 		</track>
 		<track name="cam.roll">
 			<key row="0" value="0" interpolation="0"/>
@@ -111,6 +112,7 @@
 			<key row="0" value="50" interpolation="0"/>
 			<key row="306" value="50" interpolation="0"/>
 			<key row="496" value="40" interpolation="0"/>
+			<key row="544" value="50" interpolation="0"/>
 		</track>
 		<track name="bloom.amt">
 			<key row="0" value="30" interpolation="0"/>
