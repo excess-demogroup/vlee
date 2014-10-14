@@ -34,7 +34,7 @@ VS_OUTPUT vertex(VS_INPUT In)
 
 	float c = abs(coc(eyeDepth) * viewport.y);
 	float pixelSize = c; // + distance(screenPos * 0.5, 0.0);
-	pixelSize = max(pixelSize, 3);
+	pixelSize = clamp(pixelSize, 3, 75);
 	float size = pixelSize / viewport.y;
 	
 	pos += size * screenPos.w * (In.uv.x * left + In.uv.y * up);
@@ -42,7 +42,7 @@ VS_OUTPUT vertex(VS_INPUT In)
 	VS_OUTPUT Out;
 	Out.pos = mul(float4(pos,  1), matWorldViewProjection);
 	Out.uv = In.uv;
-	Out.color = (float4(1,1,1,1) * 10) / (pixelSize * pixelSize);
+	Out.color = (float4(1,1,1,1) * 20 * In.size) / (pixelSize * pixelSize);
 
 	if (screenPos.z < 0.5)
 		Out.pos.w = -1;

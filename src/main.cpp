@@ -640,13 +640,13 @@ int main(int argc, char *argv[])
 					float th = i / float(M_PI / 180);
 					Vector3 pos = Vector3(sin(th), cos(th), 0) * 65;
 					Vector3 offset = normalize(Vector3(
-							sin(i * 32.0 + beat * 0.32),
-							cos(i * 45.0 + beat * 0.1),
-							cos(i * 23.0 - beat * 0.23)
+							sin(i * 32.0 + beat * 0.132),
+							cos(i * 45.0 + beat * 0.21),
+							cos(i * 23.0 - beat * 0.123)
 							));
 					pos += offset * 5;
 					float fade = 1.0f;
-					float size = 20.0f / (3 + i);
+					float size = 20.0f / (3 + i * 0.1);
 					particleStreamer.add(pos, size);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();

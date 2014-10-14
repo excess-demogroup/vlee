@@ -107,6 +107,7 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 	
 	o.col = float4(0, 0, 0, 1);
 
+#if 0
 	float diff = 1 - pow(max(0, dot(d, n)), 0.1);
 //	o.col = float4(float3(diff, diff, diff) * float3(0.5, 0.5, 1), 1);
 //	o.col.rgb *= 1 + pow(frac(Input.UV.y + time), 10.0) * float3(2, 2, 1) * 10;
@@ -120,6 +121,7 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 		lcol *= max(0, 1.005 / (distance(Input.Pos2, lpos) * 2.0) - 0.005);
 		o.col.rgb += lcol;
 	}
+#endif
 
 	o.col.rgb = lerp(float3(0.15, 0.2, 0.3) * 2.0, o.col.rgb * 2.0, exp(-Input.Pos2.z * 0.0005));
 //	o.col.rgb = pow(0.5 + 0.5 * n, 2.2);
