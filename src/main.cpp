@@ -370,6 +370,8 @@ int main(int argc, char *argv[])
 		Anim sphere_lights = engine::loadAnim(device, "data/sphere-lights");
 		Texture sphere_lights_mask_tex = engine::loadTexture(device, "data/sphere-lights-mask.png");
 		sphere_lights_fx->setTexture("mask_tex", sphere_lights_mask_tex);
+		sphere_lights_fx->setTexture("noise_tex", noise_tex);
+		sphere_lights_fx->setVector2("nscale", Vector2(128.0f / noise_tex.getWidth(), 128.0f / noise_tex.getHeight()));
 
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
@@ -515,6 +517,9 @@ int main(int argc, char *argv[])
 				sphere_lights_fx->setTexture("intensity_tex", sphere_lights.getFrame(0));
 				int scroll = int(row * 4.0) % 256 - 128;
 				sphere_lights_fx->setFloat("scroll", scroll / 128.0f);
+				sphere_lights_fx->setVector2("noffs", Vector2(
+						floor(math::notRandf(int(beat * 100) + 0) * 128) / 128,
+						floor(math::notRandf(int(beat * 100) + 1) * 128) / 128));
 				sphere_lights_fx->commitChanges();
 				sphere_lights_fx->draw(plane_128x128_x);
 			}

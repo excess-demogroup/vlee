@@ -2,6 +2,7 @@ float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
 float scroll;
+float2 nscale, noffs;
 
 texture mask_tex;
 sampler mask_samp = sampler_state {
@@ -22,6 +23,17 @@ sampler intensity_samp = sampler_state {
 	MagFilter = POINT;
 	AddressU = CLAMP;
 	AddressV = CLAMP;
+	sRGBTexture = TRUE;
+};
+
+texture noise_tex;
+sampler noise_samp = sampler_state {
+	Texture = (noise_tex);
+	MipFilter = NONE;
+	MinFilter = POINT;
+	MagFilter = POINT;
+	AddressU = WRAP;
+	AddressV = WRAP;
 	sRGBTexture = TRUE;
 };
 
@@ -69,15 +81,17 @@ struct PS_OUTPUT {
 PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
    PS_OUTPUT o;
-   float light_intensity = 0.0025 + tex2D(intensity_samp, Input.Uv).r * 4;
+   float light_intensity = tex2D(intensity_samp, Input.Uv).r * 4;
+   float light_noise = 0.0025 + tex2D(noise_samp, Input.Uv / 2 + noffs) * 0.01;
    float light_mask = tex2D(mask_samp, Input.Uv * 128.0).r;
+
    // float3 light_color = float3(0.5,1,1); // tex2D(Texture2, Input.Uv2);
    float3 light_color = float3(1,0.5,1); // tex2D(Texture2, Input.Uv2);
 //   light_color = normalize(desaturate(light_color, 0.75)) * 2;
       
 //   light_color = pow(light_color, 5) * 3.5;
    
-   o.col = float4((light_intensity * light_mask) * light_color, 1);
+   o.col = float4(((light_noise + light_intensity) * light_mask) * light_color, 1);
    o.z = Input.Pos2.z;
 
    return o;
