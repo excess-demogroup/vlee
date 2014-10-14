@@ -446,19 +446,24 @@ int main(int argc, char *argv[])
 			bool blackCubes = false;
 			bool blueCubes = false;
 			bool dof = true;
-			bool dustParticles = false;
+			int dustParticleCount = 0;
+			float dustParticleAlpha = 1.0f;
 
 			int part = int(sync_get_val(partTrack, row));
 			switch (part) {
 			case 0:
 				skybox = true;
 				sphereLights = true;
+				dustParticleCount = 30000;
+				dustParticleAlpha = 0.1f;
 				break;
 
 			case 1:
 				skybox = true;
 				blackCubes = true;
 				blueCubes = true;
+				dustParticleCount = 10000;
+				dustParticleAlpha = 0.3f;
 				break;
 
 			case 2:
@@ -466,7 +471,8 @@ int main(int argc, char *argv[])
 				break;
 
 			case 3:
-				dustParticles = true;
+				dustParticleCount = 100000;
+				dustParticleAlpha = 1.5f;
 				dof = true; // false; <- does not work, wtf?
 				break;
 			}
@@ -651,8 +657,7 @@ int main(int argc, char *argv[])
 							cos(i * 23.0 - beat * 0.123)
 							));
 					pos += offset * 5;
-					float fade = 1.0f;
-					float size = 20.0f / (3 + i * 0.1);
+					float size = 20.0f / (3 + math::notRandf(i) * 10.5f);
 					particleStreamer.add(pos, size);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
@@ -664,7 +669,7 @@ int main(int argc, char *argv[])
 				particle_fx->draw(&particleStreamer);
 			}
 
-			if (dustParticles) {
+			if (dustParticleCount > 0) {
 				device.setRenderTarget(dof_target.getSurface(0), 0);
 
 				// particles
@@ -685,7 +690,7 @@ int main(int argc, char *argv[])
 				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
 
 				particleStreamer.begin();
-				for (int i = 0; i < 100 * 1000; ++i) {
+				for (int i = 0; i < dustParticleCount; ++i) {
 					Vector3 pos = Vector3(math::notRandf(i) * 2 - 1, math::notRandf(i + 1) * 2 - 1, math::notRandf(i + 2) * 2 - 1) * 100;
 					Vector3 offset = normalize(Vector3(
 							sin(i * 0.23 + beat * 0.0532),
@@ -695,7 +700,7 @@ int main(int argc, char *argv[])
 					pos += offset * 10;
 					double size = 20.0 / (1.0 + math::length(pos) * 10.0);
 					size += 5.0 / (3 + i * 0.001);
-					particleStreamer.add(pos, float(size));
+					particleStreamer.add(pos, float(size * dustParticleAlpha));
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
 						particle_fx->draw(&particleStreamer);

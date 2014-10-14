@@ -44,6 +44,8 @@
 		<track name="cam.offset">
 			<key row="0" value="0" interpolation="0"/>
 			<key row="307" value="100" interpolation="0"/>
+			<key row="496" value="100" interpolation="1"/>
+			<key row="543" value="1" interpolation="0"/>
 		</track>
 		<track name="cam.x">
 			<key row="0" value="0" interpolation="0"/>

@@ -33,7 +33,7 @@ VS_OUTPUT vertex(VS_INPUT In)
 	float4 screenPos = mul(float4(pos,  1), matWorldViewProjection);
 
 	float c = abs(coc(eyeDepth) * viewport.y);
-	float pixelSize = c; // + distance(screenPos * 0.5, 0.0);
+	float pixelSize = c + distance(screenPos.xy / screenPos.w, 0.0) * 0.5 * 25;
 	pixelSize = clamp(pixelSize, 3, 75);
 	float size = pixelSize / viewport.y;
 	
