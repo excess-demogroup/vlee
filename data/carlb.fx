@@ -30,7 +30,6 @@ VS_OUTPUT vs_main( VS_INPUT Input )
 	VS_OUTPUT Output;
 
 	float3 pos = Input.Position.xyz;
-	pos *= 50;
 
 	Output.ClipPos = mul( float4(pos, 1), matWorldViewProjection );
 	Output.ViewPos = mul(float4(pos, 1), matWorldView).xyz;
@@ -52,8 +51,8 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 
 	PS_OUTPUT o;
 	float3 uvw = reflect(normalize(Input.WorldNormal), -normalize(Input.ViewPos));
-	uvw = mul(matWorldView, float4(uvw, 0)).xyz;
-	o.col = float4(texCUBE(env_samp, uvw).rgb * float3(1, 0.6, 0.25), 1);
+	uvw = n; // mul(matWorldView, float4(uvw, 0)).xyz;
+	o.col = float4(texCUBE(env_samp, uvw).rgb * float3(0.5, 0.7, 0.55), 1);
 	o.col.rgb *= pow(1 - abs(n.z), 2);
 
 	o.z = Input.ViewPos.z;

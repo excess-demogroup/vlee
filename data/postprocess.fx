@@ -103,10 +103,11 @@ float4 pixel(VS_OUTPUT In) : COLOR
 {
 	const float sep = 0.03;
 	float dist = pow(2 * distance(In.uv, float2(0.5, 0.5)), 2);
-	float2 pos = In.uv;
-	pos += float2(
-			(sin(pos.y * dist_freq + dist_time) * 2 - 1) * dist_amt,
-			(sin(pos.x * dist_freq + dist_time) * 2 - 1) * dist_amt);
+	float2 possy = In.uv;
+	possy += float2(
+			(sin(possy.y * dist_freq + dist_time) * 2 - 1) * dist_amt,
+			(sin(possy.x * dist_freq + dist_time) * 2 - 1) * dist_amt);
+	float2 pos = possy;
 	float2 end = (pos - 0.5) * (1 - dist * sep * 2) + 0.5;
 	float3 sum = 0, filter_sum = 0;
 
@@ -137,20 +138,20 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	float3 col = sqrt(sum);
 #endif
 
-	float3 bloom = tex2Dlod(bloom_samp, float4(In.uv, 0.0, 0.0)) * pow(bloom_shape, 0);
-	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 1.0)) * pow(bloom_shape, 1);
-	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 2.0)) * pow(bloom_shape, 2);
-	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 3.0)) * pow(bloom_shape, 3);
-	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 4.0)) * pow(bloom_shape, 4);
-	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 5.0)) * pow(bloom_shape, 5);
-	bloom += tex2Dlod(bloom_samp, float4(In.uv, 0.0, 6.0)) * pow(bloom_shape, 6);
+	float3 bloom = tex2Dlod(bloom_samp, float4(possy, 0.0, 0.0)) * pow(bloom_shape, 0);
+	bloom += tex2Dlod(bloom_samp, float4(possy, 0.0, 1.0)) * pow(bloom_shape, 1);
+	bloom += tex2Dlod(bloom_samp, float4(possy, 0.0, 2.0)) * pow(bloom_shape, 2);
+	bloom += tex2Dlod(bloom_samp, float4(possy, 0.0, 3.0)) * pow(bloom_shape, 3);
+	bloom += tex2Dlod(bloom_samp, float4(possy, 0.0, 4.0)) * pow(bloom_shape, 4);
+	bloom += tex2Dlod(bloom_samp, float4(possy, 0.0, 5.0)) * pow(bloom_shape, 5);
+	bloom += tex2Dlod(bloom_samp, float4(possy, 0.0, 6.0)) * pow(bloom_shape, 6);
 
 	col += bloom * bloom_amt;
 
-	float4 o = tex2D(overlay_samp, In.uv);
-	col.rgb = lerp(col.rgb, o.rgb, o.a * overlay_alpha);
-
 	col = col * fade + flash;
+
+	float4 o = tex2D(overlay_samp, possy);
+	col.rgb = lerp(col.rgb, o.rgb, o.a * overlay_alpha);
 
 	col += (tex2D(noise_samp, In.uv * nscale + noffs) - 0.5) * (1.0 / 8);
 

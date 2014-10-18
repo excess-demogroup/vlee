@@ -209,7 +209,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		/* setup sound-playback */
 		if (!BASS_Init(config::soundcard, 44100, 0, 0, 0))
 			throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/lug00ber-carl_breaks.mp3", 0, 0, BASS_MP3_SETPOS | BASS_STREAM_PRESCAN | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
+		stream = BASS_StreamCreateFile(false, "data/potatoes_and_oil.mp3", 0, 0, BASS_MP3_SETPOS | BASS_STREAM_PRESCAN | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
 		if (!stream)
 			throw FatalException("failed to open tune");
 
@@ -356,7 +356,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 		CubeTexture cube_noise_tex = engine::loadCubeTexture(device, "data/cube-noise.dds");
 		byste_fx->setTexture("env_tex", bling2_tex);
 
-		Mesh *carlb_x = engine::loadMesh(device, "data/carlb.x");
+		Mesh *carlb_x = engine::loadMesh(device, "data/cube2.x");
 		Effect *carlb_fx = engine::loadEffect(device, "data/carlb.fx");
 		carlb_fx->setTexture("env_tex", bling2_tex);
 
@@ -744,7 +744,9 @@ int main(int /*argc*/, char* /*argv*/ [])
 			postprocess_fx->setFloat("dist_freq", sync_get_val(distFreqTrack, row) * 2 * float(M_PI));
 			postprocess_fx->setFloat("dist_time", float(beat * 4) + sync_get_val(distOffsetTrack, row));
 			postprocess_fx->setTexture("color_tex", fxaa_target);
-			postprocess_fx->setFloat("overlay_alpha", sync_get_val(colorMapOverlayAlphaTrack, row));
+			float fade2 = sync_get_val(colorMapOverlayAlphaTrack, row);
+			fade2 = std::max(0.0f, fade2 - pulse + float(cos(beat * sync_get_val(pulseSpeed2Track, row) * M_PI)) * pulse);
+			postprocess_fx->setFloat("overlay_alpha", fade2);
 			postprocess_fx->setTexture("overlay_tex", overlays.getTexture(int(sync_get_val(colorMapOverlayTrack, row)) % overlays.getTextureCount()));
 			postprocess_fx->setTexture("bloom_tex", color1_hdr);
 			postprocess_fx->setFloat("bloom_amt", sync_get_val(bloomAmtTrack, row));
