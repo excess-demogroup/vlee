@@ -340,34 +340,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 		Texture spectrum_tex = engine::loadTexture(device, "data/spectrum.png");
 		postprocess_fx->setTexture("spectrum_tex", spectrum_tex);
 
-		engine::ParticleStreamer particleStreamer(device);
-		Effect *particle_fx = engine::loadEffect(device, "data/particle.fx");
-		Texture particle_tex = engine::loadTexture(device, "data/particle.png");
-		particle_fx->setTexture("tex", particle_tex);
-
-		Effect *bartikkel_fx = engine::loadEffect(device, "data/bartikkel.fx");
-		Texture bartikkel_tex = engine::loadTexture(device, "data/bartikkel.png");
-		bartikkel_fx->setTexture("tex", bartikkel_tex);
-
-		Mesh *byste_x = engine::loadMesh(device, "data/byste.x");
-		Effect *byste_fx = engine::loadEffect(device, "data/byste.fx");
-		CubeTexture bling_tex = engine::loadCubeTexture(device, "data/bling.dds");
-		CubeTexture bling2_tex = engine::loadCubeTexture(device, "data/bling2.dds");
-		CubeTexture cube_noise_tex = engine::loadCubeTexture(device, "data/cube-noise.dds");
-		byste_fx->setTexture("env_tex", bling2_tex);
-
 		Mesh *carlb_x = engine::loadMesh(device, "data/cube2.x");
 		Effect *carlb_fx = engine::loadEffect(device, "data/carlb.fx");
+		CubeTexture bling2_tex = engine::loadCubeTexture(device, "data/bling2.dds");
 		carlb_fx->setTexture("env_tex", bling2_tex);
-
-		Mesh *tunnel_x = engine::loadMesh(device, "data/tunnel.x");
-		Effect *tunnel_fx = engine::loadEffect(device, "data/tunnel.fx");
-		VolumeTexture volume_noise_tex = engine::loadVolumeTexture(device, "data/volume-noise.dds");
-		tunnel_fx->setTexture("volume_noise_tex", volume_noise_tex);
-
-		Mesh *skybox_x = engine::loadMesh(device, "data/skybox.x");
-		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
-		skybox_fx->setTexture("env_tex", bling_tex);
 
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
@@ -442,32 +418,14 @@ int main(int /*argc*/, char* /*argv*/ [])
 				camUp = Vector3(0, 1, 0);
 			}
 
-			bool particles = false;
-			bool byste = false;
-			bool tunnel = false;
 			bool dof = false;
 			bool carlb = false;
-			bool bartikkel = false;
 
 			int part = int(sync_get_val(partTrack, row));
 			switch (part) {
-			case 0:
-				byste = true;
-				dof = true;
-				break;
-
-			case 1:
-				tunnel = true;
-				dof = true;
-				break;
-
 			case 3:
 				carlb = true;
 				dof = true;
-				break;
-
-			case 4:
-				bartikkel = true;
 				break;
 			}
 
@@ -502,12 +460,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 			device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 			device->SetRenderState(D3DRS_ZWRITEENABLE, true);
 
-			if (bartikkel) {
-//				device.setRenderTarget(dof_target.getRenderTarget(), 0);
-//				device.setRenderTarget(NULL, 1);
-				device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF7F7F7F, 1.f, 0);
-			} else
-				device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
+			device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
 
 //			float fog_density = sync_get_val(fogDensityTrack, row) / 100000;
 
@@ -515,57 +468,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 			float ltime = sync_get_val(cameraTimeTrack, row) / 16;
 			Vector3 worldLightPosition = Vector3(sin(beat * 0.1), cos(beat * 0.1), 0) * 70.0f;
 
-			if (byste) {
-				byste_fx->setMatrices(world, view, proj);
-				byste_fx->commitChanges();
-				byste_fx->draw(byste_x);
-			}
-
 			if (carlb) {
 				carlb_fx->setMatrices(world, view, proj);
 				carlb_fx->commitChanges();
 				carlb_fx->draw(carlb_x);
-			}
-
-			if (tunnel) {
-				tunnel_fx->setFloat("time", float(beat * 0.1));
-				tunnel_fx->setVector3("worldLightPosition", worldLightPosition);
-				tunnel_fx->setMatrices(world, view, proj);
-				tunnel_fx->commitChanges();
-				tunnel_fx->draw(tunnel_x);
-			}
-
-			if (bartikkel) {
-				Matrix4x4 modelview = world * view;
-				Vector3 up(modelview._12, modelview._22, modelview._32);
-				Vector3 left(modelview._11, modelview._21, modelview._31);
-				Vector3 forward(modelview._13, modelview._23, modelview._33);
-				math::normalize(up);
-				math::normalize(left);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-				device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-				device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-
-				bartikkel_fx->setVector3("up", up);
-				bartikkel_fx->setVector3("left", left);
-				bartikkel_fx->setMatrices(world, view, proj);
-				bartikkel_fx->setFloat("alpha", 1.0f);
-
-				cloud.sort(forward);
-				particleStreamer.begin();
-			
-				std::vector<engine::Particle<float> >::const_iterator iter;
-				for (iter = cloud.particles.begin(); iter != cloud.particles.end(); ++iter) {
-					if (!particleStreamer.getRoom()) {
-						particleStreamer.end();
-						bartikkel_fx->draw(&particleStreamer);
-						particleStreamer.begin();
-					}
-					particleStreamer.add(iter->pos, iter->data);
-				}
-				particleStreamer.end();
-				bartikkel_fx->draw(&particleStreamer);
 			}
 
 			if (dof) {
@@ -610,48 +516,6 @@ int main(int /*argc*/, char* /*argv*/ [])
 				dof_fx->p->EndPass();
 
 				dof_fx->p->End();
-			}
-
-			if (tunnel) {
-				device.setRenderTarget(dof_target.getSurface(0), 0);
-
-				// particles
-				Matrix4x4 modelview = world * view;
-				Vector3 up(modelview._12, modelview._22, modelview._32);
-				Vector3 left(modelview._11, modelview._21, modelview._31);
-				math::normalize(up);
-				math::normalize(left);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-
-				particle_fx->setVector3("up", up);
-				particle_fx->setVector3("left", left);
-				particle_fx->setMatrices(world, view, proj);
-
-				particle_fx->setTexture("tex", particle_tex);
-				particle_fx->setFloat("alpha", 0.5f);
-				particleStreamer.begin();
-				for (int i = 0; i < 50; ++i) {
-
-					Vector3 pos = worldLightPosition;
-					Vector3 offset = normalize(Vector3(
-						sin(i * 32.0 + beat * 0.32),
-						cos(i * 45.0 + beat * 0.1),
-						cos(i * 23.0 - beat * 0.23)
-						));
-					pos += offset * float(i) * 0.1f;
-					float prand = math::notRandf(part);
-					float fade = 1.0f;
-					float size = 20.0f / (3 + i);
-					particleStreamer.add(pos, size);
-					if (!particleStreamer.getRoom()) {
-						particleStreamer.end();
-						particle_fx->draw(&particleStreamer);
-						particleStreamer.begin();
-					}
-				}
-				particleStreamer.end();
-				particle_fx->draw(&particleStreamer);
 			}
 
 			device.setDepthStencilSurface(depthstencil);
