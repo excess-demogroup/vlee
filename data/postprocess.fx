@@ -234,6 +234,8 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 	// discolor block lines
 	if (tex2D(noise_samp, float2(uv_noise.y, 0.0)).r * 2.75 < line_thresh)
 		col.rgb = float3(0, dot(col.rgb, float3(1, 1, 1)), 0);
+	if (tex2D(noise_samp, float2(0.5 - uv_noise.y, 0.0)).r * 3 < line_thresh)
+		col.rgb = float2(0, dot(col.rgb, float3(1, 1, 1))).yxy;
 
 	// interleave lines in some blocks
 	if (tex2D(noise_samp, float2(0.5 - uv_noise.x, uv_noise.y)).r * 1.5 < block_thresh ||
