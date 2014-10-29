@@ -25,6 +25,33 @@ namespace engine
 			p->DrawSubset(subset);
 		}
 
+		int getVertexCount() const
+		{
+			return p->GetNumVertices();
+		}
+
+		D3DVERTEXELEMENT9 getVertexElementFromUsage(D3DDECLUSAGE usage, const int index = 0) const
+		{
+			D3DVERTEXELEMENT9 vertex_decl[MAX_FVF_DECL_SIZE];
+			p->GetDeclaration(vertex_decl);
+			for (int i = 0; i < MAX_FVF_DECL_SIZE; ++i)
+				if (vertex_decl[i].Usage == usage && vertex_decl[i].UsageIndex == index)
+					return vertex_decl[i];
+			throw core::FatalException("vertex element not found!");
+		}
+
+		void getVertexPositions(math::Vector3 *dst, int start, int end)
+		{
+			D3DVERTEXELEMENT9 element = getVertexElementFromUsage(D3DDECLUSAGE_POSITION);
+			assert(element.Type == D3DDECLTYPE_FLOAT3);
+			void *data;
+			core::d3dErr(p->LockVertexBuffer(D3DLOCK_READONLY, &data));
+			int stride = p->GetNumBytesPerVertex();
+			for (int i = start; i < end; ++i)
+				memcpy(dst + i, (unsigned char *)data + element.Offset + i * stride, sizeof(float) * 3);
+			p->UnlockVertexBuffer();
+		}
+
 		renderer::IndexBuffer getIndexBuffer()
 		{
 			LPDIRECT3DINDEXBUFFER9 indexBuffer;

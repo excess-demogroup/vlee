@@ -373,6 +373,11 @@ int main(int argc, char *argv[])
 		sphere_lights_fx->setTexture("noise_tex", noise_tex);
 		sphere_lights_fx->setVector2("nscale", Vector2(128.0f / noise_tex.getWidth(), 128.0f / noise_tex.getHeight()));
 
+		Mesh *knot_x = engine::loadMesh(device, "data/knot.x");
+		int numVertices = knot_x->getVertexCount();
+		Vector3 *vertices = new Vector3[numVertices];
+		knot_x->getVertexPositions(vertices, 0, numVertices);
+
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
 		bool dump_video = false;
@@ -439,7 +444,6 @@ int main(int argc, char *argv[])
 			}
 
 			bool particles = false;
-//			bool byste = false;
 			bool tunnel = false;
 			bool sphereLights = false;
 			bool skybox = false;
@@ -447,6 +451,7 @@ int main(int argc, char *argv[])
 			bool blueCubes = false;
 			bool dof = true;
 			bool space = false;
+			bool particleObject = false;
 			int dustParticleCount = 0;
 			float dustParticleAlpha = 1.0f;
 
@@ -474,6 +479,11 @@ int main(int argc, char *argv[])
 			case 3:
 				space = true;
 				dof = true; // false; <- does not work, wtf?
+				break;
+
+			case 4:
+				skybox = true;
+				particleObject = true;
 				break;
 			}
 
@@ -700,6 +710,41 @@ int main(int argc, char *argv[])
 					pos += offset * 10;
 					double size = 5.0 / (3 + i * 0.001);
 					particleStreamer.add(pos, float(size * dustParticleAlpha));
+					if (!particleStreamer.getRoom()) {
+						particleStreamer.end();
+						particle_fx->draw(&particleStreamer);
+						particleStreamer.begin();
+					}
+				}
+				particleStreamer.end();
+				particle_fx->draw(&particleStreamer);
+			}
+
+			if (particleObject) {
+				device.setRenderTarget(dof_target.getSurface(0), 0);
+
+				// particles
+				Matrix4x4 modelview = world * view;
+				Vector3 up(modelview._12, modelview._22, modelview._32);
+				Vector3 left(modelview._11, modelview._21, modelview._31);
+				math::normalize(up);
+				math::normalize(left);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+
+				particle_fx->setVector3("up", up);
+				particle_fx->setVector3("left", left);
+				particle_fx->setMatrices(world, view, proj);
+				particle_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
+				particle_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
+				particle_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
+				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
+
+				particleStreamer.begin();
+				for (int i = 0; i < numVertices; ++i) {
+					Vector3 pos = vertices[i] * 30;
+					double size = 1.0 / 10;
+					particleStreamer.add(pos, float(size));
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
 						particle_fx->draw(&particleStreamer);
