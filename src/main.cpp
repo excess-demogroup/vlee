@@ -520,12 +520,6 @@ int main(int argc, char *argv[])
 
 			device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
 
-//			float fog_density = sync_get_val(fogDensityTrack, row) / 100000;
-
-//			Vector3 worldLightPosition = Vector3(0, sin(beat * 0.25) * 100, 0);
-			float ltime = sync_get_val(cameraTimeTrack, row) / 16;
-			Vector3 worldLightPosition = Vector3(sin(beat * 0.1), cos(beat * 0.1), 0) * 70.0f;
-
 			if (skybox) {
 				skybox_fx->setMatrices(world, view, proj);
 				skybox_fx->setFloat("desaturate", sync_get_val(skyboxDesaturateTrack, row));
@@ -586,11 +580,43 @@ int main(int argc, char *argv[])
 			}
 
 			if (tunnel) {
+				Vector3 fogColor(0.3, 0.4, 0.6);
+				tunnel_fx->setFloat("fogDensity", 0.0005);
+				tunnel_fx->setVector3("fogColor", fogColor);
 				tunnel_fx->setFloat("time", float(beat * 0.1));
-				tunnel_fx->setVector3("worldLightPosition", worldLightPosition);
 				tunnel_fx->setMatrices(world, view, proj);
 				tunnel_fx->commitChanges();
 				tunnel_fx->draw(tunnel_x);
+
+				cubes_fx->setMatrices(world, view, proj);
+				cubes_fx->setFloat("fogDensity", 0.0005);
+				cubes_fx->setVector3("fogColor", fogColor);
+				cubes_fx->commitChanges();
+
+				// bunch of stuff
+				int a = 36, b = 16;
+				for (int i = 0; i < a; ++i) {
+					float th = i * float((2 * M_PI) / a);
+					Matrix4x4 translation = Matrix4x4::translation(Vector3(65, 0, 0));
+					Matrix4x4 rotation = Matrix4x4::rotation(Vector3(0, 0, th));
+					Matrix4x4 base = translation * rotation;
+					for (int j = 0; j < b; ++j) {
+						float th = j * float((2 * M_PI) / b);
+						Matrix4x4 translation = Matrix4x4::translation(Vector3(10, 0, 0));
+						Matrix4x4 scale = Matrix4x4::scaling(Vector3(1, 10, 1));
+						Matrix4x4 rotation = Matrix4x4::rotation(Vector3(0, th, 0));
+
+						Matrix4x4 rotation2 = Matrix4x4::rotation(Vector3(cos(beat * 0.1) * 0.5, 0, 0));
+
+						cube_instancer.setInstanceTransform(i * b + j, translation * scale * rotation2 * rotation * base);
+						cube_instancer.setInstanceColor(i * b + j, math::Vector3(0, 0, 0));
+					}
+				}
+				cube_instancer.updateInstanceVertexBuffer();
+				cube_instancer.draw(device, a * b);
+
+				cubes_fx->setFloat("fogDensity", 0.0);
+				cubes_fx->setVector3("fogColor", Vector3(0, 0, 0));
 			}
 
 			if (dof) {
@@ -659,7 +685,7 @@ int main(int argc, char *argv[])
 
 				particleStreamer.begin();
 				for (int i = 0; i < 20 * 360; ++i) {
-					float th = i / float(M_PI / 180);
+					float th = i * float((2 * M_PI) / 360);
 					Vector3 pos = Vector3(sin(th), cos(th), 0) * 65;
 					Vector3 offset = normalize(Vector3(
 							sin(i * 32.0 + beat * 0.132),

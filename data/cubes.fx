@@ -3,6 +3,9 @@ float4x4 matWorldInverse : WORLDINVERSE;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
 
+float3 fogColor;
+float fogDensity;
+
 textureCUBE env_tex;
 samplerCUBE env_samp = sampler_state {
 	Texture = (env_tex);
@@ -46,6 +49,7 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
 	PS_OUTPUT o;
 	o.col = float4(Input.Color, 1);
+	o.col.rgb = lerp(fogColor, o.col.rgb, exp(-Input.ViewPos.z * fogDensity));
 	o.z = Input.ViewPos.z;
 	return o;
 }

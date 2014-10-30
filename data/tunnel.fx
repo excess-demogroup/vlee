@@ -4,7 +4,8 @@ float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
 
-float3 worldLightPosition;
+float3 fogColor;
+float fogDensity;
 
 texture3D volume_noise_tex;
 sampler3D volume_noise_samp = sampler_state {
@@ -101,30 +102,9 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 	float3 g = s * grad(volume_noise_samp, Input.UVW, 1.0 / 128);
 	float3 n = perturb_normal(normalize(Input.Normal), g);
 
-	float3 d = normalize(-Input.Pos2);
-
-	float3 lpos = mul(float4(worldLightPosition, 1), matView).xyz;
-	
 	o.col = float4(0, 0, 0, 1);
+	o.col.rgb = lerp(fogColor, o.col.rgb, exp(-Input.Pos2.z * fogDensity));
 
-#if 0
-	float diff = 1 - pow(max(0, dot(d, n)), 0.1);
-//	o.col = float4(float3(diff, diff, diff) * float3(0.5, 0.5, 1), 1);
-//	o.col.rgb *= 1 + pow(frac(Input.UV.y + time), 10.0) * float3(2, 2, 1) * 10;
-
-	float3 l = normalize(lpos - Input.Pos2);
-	float n_dot_l = dot(l, n);
-	if (n_dot_l > 0) {
-		float3 h = normalize(l + normalize(-Input.Pos2));
-		float3 lcol = n_dot_l * 3;
-		lcol += pow(max(0, dot(n, h)), 300.0) * 25.0 * pow(tex3D(volume_noise_samp, Input.UVW).r, 2);
-		lcol *= max(0, 1.005 / (distance(Input.Pos2, lpos) * 2.0) - 0.005);
-		o.col.rgb += lcol;
-	}
-#endif
-
-	o.col.rgb = lerp(float3(0.15, 0.2, 0.3) * 2.0, o.col.rgb * 2.0, exp(-Input.Pos2.z * 0.0005));
-//	o.col.rgb = pow(0.5 + 0.5 * n, 2.2);
 	o.z = Input.Pos2.z;
 	return o;
 }
