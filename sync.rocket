@@ -145,6 +145,36 @@
 			<key row="0" value="0" interpolation="0"/>
 			<key row="307" value="0.7" interpolation="0"/>
 		</track>
+		<track name="cluster.l1.idx">
+			<key row="0" value="-1" interpolation="0"/>
+			<key row="344" value="2" interpolation="0"/>
+			<key row="360" value="2" interpolation="0"/>
+			<key row="384" value="2" interpolation="0"/>
+		</track>
+		<track name="cluster.l1.amt">
+			<key row="0" value="0" interpolation="0"/>
+			<key row="344" value="3" interpolation="1"/>
+			<key row="352" value="0" interpolation="0"/>
+			<key row="360" value="3" interpolation="1"/>
+			<key row="368" value="0" interpolation="0"/>
+			<key row="384" value="3" interpolation="1"/>
+			<key row="392" value="0" interpolation="0"/>
+		</track>
+		<track name="cluster.l2.idx">
+			<key row="0" value="-1" interpolation="0"/>
+			<key row="348" value="3" interpolation="0"/>
+			<key row="364" value="3" interpolation="0"/>
+			<key row="388" value="3" interpolation="0"/>
+		</track>
+		<track name="cluster.l2.amt">
+			<key row="0" value="0" interpolation="0"/>
+			<key row="348" value="3" interpolation="1"/>
+			<key row="356" value="0" interpolation="0"/>
+			<key row="364" value="3" interpolation="1"/>
+			<key row="372" value="0" interpolation="0"/>
+			<key row="388" value="3" interpolation="1"/>
+			<key row="396" value="0" interpolation="0"/>
+		</track>
 	</tracks>
 	<bookmarks/>
 </sync>

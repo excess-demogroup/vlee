@@ -263,6 +263,11 @@ int main(int argc, char *argv[])
 
 		const sync_track *skyboxDesaturateTrack = sync_get_track(rocket, "skybox.desat");
 
+		const sync_track *clusterL1Idx = sync_get_track(rocket, "cluster.l1.idx");
+		const sync_track *clusterL1Amt = sync_get_track(rocket, "cluster.l1.amt");
+		const sync_track *clusterL2Idx = sync_get_track(rocket, "cluster.l2.idx");
+		const sync_track *clusterL2Amt = sync_get_track(rocket, "cluster.l2.amt");
+
 		const sync_track *dofFStopTrack = sync_get_track(rocket, "dof.fstop");
 		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
 		const sync_track *dofFocalDistTrack = sync_get_track(rocket, "dof.fdist");
@@ -544,16 +549,53 @@ int main(int argc, char *argv[])
 				cubes_fx->setMatrices(world, view, proj);
 				cubes_fx->commitChanges();
 
+				const int clusters = 8;
+				int clusterBombs = 64;
+
+				float clusterLightAmts[clusters] = { 0 };
+				int l1 = int(sync_get_val(clusterL1Idx, row));
+				int l2 = int(sync_get_val(clusterL2Idx, row));
+				if (l1 >= 0 && l1 < ARRAY_SIZE(clusterLightAmts))
+					clusterLightAmts[l1] = pow(sync_get_val(clusterL1Amt, row), 2.0f);
+				if (l2 >= 0 && l2 < ARRAY_SIZE(clusterLightAmts))
+					clusterLightAmts[l2] = pow(sync_get_val(clusterL2Amt, row), 2.0f);
+
 				// bunch of stuff
-				for (int i = 0; i < 512; ++i) {
-					Matrix4x4 translation = Matrix4x4::translation(Vector3(sin(i / 5.220f), cos(i / 5.10f), 0) * 80.0f);
-					Matrix4x4 scaling = Matrix4x4::scaling(Vector3(2,1,1) * 2.0f * (1.5f + sin(i / 5.120f)));
-					Matrix4x4 rotation = Matrix4x4::rotation(Vector3(sin(i * 1.0f) * 10.0f, sin(i * 1.12311231f) * 10.0f, 0) * float(beat * 0.01f));
-					cube_instancer.setInstanceTransform(i, scaling * translation * rotation);
-					cube_instancer.setInstanceColor(i, math::Vector3(0, 0, 0));
+				for (int i = 0; i < clusters; ++i) {
+					Vector3 clusterPos(cos(i / 5.210f) * 30.0f, sin(i / 5.12f) * 40.0f, 0);
+					Vector3 colors[] = {
+						Vector3(1, 1, 2),
+						Vector3(1.5, 1, 1.5)
+					};
+					Vector3 clusterColor = colors[i % ARRAY_SIZE(colors)] * clusterLightAmts[i];
+					float clustert = math::clamp(float((beat / 16) - floor(beat / 16)), 0.0f, 1.0f);
+
+
+					Matrix4x4 translation = Matrix4x4::translation(clusterPos);
+					Matrix4x4 rotation = Matrix4x4::rotation(Vector3(sin(i * 1.0f) * 10.0f, sin(i * 1.412331f) * 10.0f, 0) * float(beat * 0.01f));
+					Matrix4x4 scaling = Matrix4x4::scaling(Vector3(10, 10, 10));
+					Matrix4x4 base = translation * rotation;
+
+					cube_instancer.setInstanceTransform(i * clusterBombs, scaling * base);
+					cube_instancer.setInstanceColor(i * clusterBombs, clusterColor);
+
+					for (int j = 1; j < clusterBombs; ++j) {
+						int idx = i * clusterBombs + j;
+						float t = math::clamp(clustert * 2 - (j - 1), 0.0f, 1.0f);
+
+						Vector3 pos = math::lerp(Vector3(sin(idx / 5.220f) * 80.0f, cos(idx / 5.10f) * 80.0f, 0), Vector3(0, 0, 0), t);
+						Vector3 color = math::lerp(Vector3(0, 0, 0), clusterColor, pow(t, 20));
+
+						Matrix4x4 translation = Matrix4x4::translation(pos);
+						Matrix4x4 scaling = Matrix4x4::scaling(Vector3(1.5,1,1) * 2.0f * (1.5f + sin(idx / 5.120f)));
+						Matrix4x4 rotation = Matrix4x4::rotation(Vector3(sin(idx * 1.0f) * 10.0f, sin(idx * 1.12311231f) * 10.0f, 0) * float(beat * 0.01f));
+
+						cube_instancer.setInstanceTransform(idx, scaling * translation * rotation * base);
+						cube_instancer.setInstanceColor(idx, color);
+					}
 				}
 				cube_instancer.updateInstanceVertexBuffer();
-				cube_instancer.draw(device, 512);
+				cube_instancer.draw(device, clusters * clusterBombs);
 			}
 
 			if (blueCubes) {
