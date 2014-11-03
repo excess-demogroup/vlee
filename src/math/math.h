@@ -5,6 +5,18 @@
 namespace math
 {
 	template <typename T>
+	inline float min(T a, T b)
+	{
+		return std::min(a, b);
+	}
+
+	template <typename T>
+	inline float max(T a, T b)
+	{
+		return std::max(a, b);
+	}
+
+	template <typename T>
 	inline float clamp(T x, T minval, T maxval)
 	{
 		return std::max(std::min(x, maxval), minval);

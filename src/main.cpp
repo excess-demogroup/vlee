@@ -383,6 +383,9 @@ int main(int argc, char *argv[])
 		Vector3 *vertices = new Vector3[numVertices];
 		knot_x->getVertexPositions(vertices, 0, numVertices);
 
+		Mesh *tree_x = engine::loadMesh(device, "data/tree.x");
+		Effect *tree_fx = engine::loadEffect(device, "data/tree.fx");
+
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
 		bool dump_video = false;
@@ -457,6 +460,7 @@ int main(int argc, char *argv[])
 			bool dof = true;
 			bool space = false;
 			bool particleObject = false;
+			bool tree = false;
 			int dustParticleCount = 0;
 			float dustParticleAlpha = 1.0f;
 
@@ -489,6 +493,10 @@ int main(int argc, char *argv[])
 			case 4:
 				skybox = true;
 				particleObject = true;
+				break;
+
+			case 5:
+				tree = true;
 				break;
 			}
 
@@ -659,6 +667,12 @@ int main(int argc, char *argv[])
 
 				cubes_fx->setFloat("fogDensity", 0.0);
 				cubes_fx->setVector3("fogColor", Vector3(0, 0, 0));
+			}
+
+			if (tree) {
+				tree_fx->setMatrices(world, view, proj);
+				tree_fx->commitChanges();
+				tree_fx->draw(tree_x);
 			}
 
 			if (dof) {

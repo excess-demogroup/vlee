@@ -3,7 +3,9 @@
 		<track name="part">
 			<key row="0" value="0" interpolation="0"/>
 			<key row="307" value="1" interpolation="0"/>
+			<key row="406" value="1" interpolation="0"/>
 			<key row="496" value="2" interpolation="0"/>
+			<key row="664" value="5" interpolation="0"/>
 			<key row="696" value="3" interpolation="0"/>
 		</track>
 		<track name="cm.overlay">
@@ -17,11 +19,13 @@
 		</track>
 		<track name="cm.flash">
 			<key row="0" value="0" interpolation="0"/>
+			<key row="664" value="0" interpolation="0"/>
 			<key row="696" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.index">
 			<key row="0" value="3" interpolation="0"/>
 			<key row="307" value="1" interpolation="0"/>
+			<key row="664" value="0" interpolation="0"/>
 			<key row="696" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.dist">
@@ -30,6 +34,7 @@
 			<key row="64" value="30" interpolation="0"/>
 			<key row="306" value="1000" interpolation="0"/>
 			<key row="307" value="65" interpolation="0"/>
+			<key row="664" value="3" interpolation="0"/>
 			<key row="696" value="1" interpolation="1"/>
 			<key row="924" value="100" interpolation="0"/>
 		</track>
@@ -39,7 +44,8 @@
 			<key row="307" value="20" interpolation="1"/>
 			<key row="495" value="300" interpolation="0"/>
 			<key row="496" value="0" interpolation="1"/>
-			<key row="695" value="500" interpolation="0"/>
+			<key row="663" value="400" interpolation="0"/>
+			<key row="664" value="0" interpolation="0"/>
 			<key row="696" value="0" interpolation="1"/>
 			<key row="924" value="10" interpolation="0"/>
 		</track>
@@ -47,37 +53,46 @@
 			<key row="0" value="0" interpolation="0"/>
 			<key row="307" value="100" interpolation="0"/>
 			<key row="496" value="30" interpolation="1"/>
+			<key row="663" value="0" interpolation="0"/>
+			<key row="664" value="0" interpolation="0"/>
 			<key row="695" value="1" interpolation="0"/>
 		</track>
 		<track name="cam.x">
 			<key row="0" value="0" interpolation="0"/>
+			<key row="664" value="3" interpolation="0"/>
 		</track>
 		<track name="cam.y">
 			<key row="0" value="0" interpolation="0"/>
 			<key row="64" value="59" interpolation="0"/>
+			<key row="664" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.z">
 			<key row="0" value="-1" interpolation="1"/>
 			<key row="63" value="-150" interpolation="0"/>
 			<key row="64" value="-100" interpolation="0"/>
+			<key row="664" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.at.x">
 			<key row="0" value="0" interpolation="0"/>
 			<key row="64" value="12" interpolation="0"/>
+			<key row="664" value="0" interpolation="0"/>
 			<key row="696" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.at.y">
 			<key row="0" value="0" interpolation="0"/>
 			<key row="64" value="16" interpolation="0"/>
+			<key row="664" value="4" interpolation="0"/>
 			<key row="696" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.at.z">
 			<key row="0" value="0" interpolation="0"/>
+			<key row="664" value="8" interpolation="1"/>
 			<key row="696" value="8" interpolation="1"/>
 			<key row="752" value="30" interpolation="0"/>
 		</track>
 		<track name="cam.roll">
 			<key row="0" value="0" interpolation="0"/>
+			<key row="664" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.shake.amt">
 			<key row="0" value="0" interpolation="0"/>
@@ -104,27 +119,34 @@
 			<key row="0" value="5" interpolation="0"/>
 			<key row="306" value="2" interpolation="0"/>
 			<key row="496" value="2" interpolation="0"/>
+			<key row="664" value="2" interpolation="0"/>
 		</track>
 		<track name="dof.flen">
 			<key row="0" value="1" interpolation="0"/>
 			<key row="306" value="1" interpolation="0"/>
 			<key row="496" value="2" interpolation="0"/>
+			<key row="664" value="0.2" interpolation="0"/>
+			<key row="696" value="2" interpolation="0"/>
 		</track>
 		<track name="dof.fdist">
 			<key row="0" value="50" interpolation="0"/>
 			<key row="306" value="50" interpolation="0"/>
 			<key row="496" value="40" interpolation="0"/>
+			<key row="664" value="1.6" interpolation="0"/>
 			<key row="696" value="50" interpolation="0"/>
 		</track>
 		<track name="bloom.amt">
 			<key row="0" value="30" interpolation="0"/>
 			<key row="306" value="200" interpolation="0"/>
+			<key row="664" value="200" interpolation="0"/>
 		</track>
 		<track name="bloom.cutoff">
 			<key row="0" value="0" interpolation="0"/>
+			<key row="664" value="0" interpolation="0"/>
 		</track>
 		<track name="bloom.shape">
 			<key row="0" value="1" interpolation="0"/>
+			<key row="664" value="1" interpolation="0"/>
 		</track>
 		<track name="glitch.blocks">
 			<key row="0" value="0" interpolation="0"/>
