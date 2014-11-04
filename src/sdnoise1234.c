@@ -135,7 +135,7 @@ static unsigned char simplex[64][4] = {
  * and gradients-dot-residualvectors in 2D to 4D.
  */
 
-float grad1( int hash, float *gx ) {
+void grad1( int hash, float *gx ) {
     int h = hash & 15;
     *gx = 1.0f + (h & 7);   // Gradient value is one of 1.0, 2.0, ..., 8.0
     if (h&8) *gx = - *gx;   // Make half of the gradients negative

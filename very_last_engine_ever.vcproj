@@ -280,6 +280,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\sdnoise1234.c"
+				>
+				<FileConfiguration
+					Name="SyncRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						CompileAs="2"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\src\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -419,6 +432,10 @@
 			</File>
 			<File
 				RelativePath=".\src\resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\sdnoise1234.h"
 				>
 			</File>
 			<File

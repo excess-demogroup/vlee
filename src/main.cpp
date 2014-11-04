@@ -39,6 +39,8 @@
 #include "engine/spectrumdata.h"
 #include "engine/video.h"
 
+#include "sdnoise1234.h"
+
 #include <sync.h>
 
 using math::Vector2;
@@ -385,6 +387,11 @@ int main(int argc, char *argv[])
 
 		Mesh *tree_x = engine::loadMesh(device, "data/tree.x");
 		Effect *tree_fx = engine::loadEffect(device, "data/tree.fx");
+		Mesh *tree_emitters_x = engine::loadMesh(device, "data/tree-emitters.x");
+		int numEmitters = tree_emitters_x->getVertexCount();
+		Vector3 *emitters = new Vector3[numEmitters];
+		tree_emitters_x->getVertexPositions(emitters, 0, numEmitters);
+		std::vector<Vector3> treeParticles;
 
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
@@ -401,6 +408,7 @@ int main(int argc, char *argv[])
 
 		bool done = false;
 		int frame = 0;
+		double prevTime;
 		while (!done) {
 			if (dump_video) {
 				QWORD pos = BASS_ChannelSeconds2Bytes(stream, float(frame) / config::mode.RefreshRate);
@@ -408,6 +416,10 @@ int main(int argc, char *argv[])
 			}
 
 			double row = bass_get_row(stream);
+			QWORD pos = BASS_ChannelGetPosition(stream, BASS_POS_BYTE);
+			double time = BASS_ChannelBytes2Seconds(stream, pos);
+			double deltaTime = time - prevTime;
+			prevTime = time;
 
 #ifndef SYNC_PLAYER
 			sync_update(rocket, int(row), &bass_cb, (void *)stream);
@@ -800,6 +812,72 @@ int main(int argc, char *argv[])
 				}
 				particleStreamer.end();
 				particle_fx->draw(&particleStreamer);
+			}
+
+			if (tree) {
+				// add new particle
+				if (treeParticles.size() < 50000) {
+					int emitter = rand() % numEmitters;
+					treeParticles.push_back(emitters[emitter]);
+				}
+
+				device.setRenderTarget(dof_target.getSurface(0), 0);
+
+				// particles
+				Matrix4x4 modelview = world * view;
+				Vector3 up(modelview._12, modelview._22, modelview._32);
+				Vector3 left(modelview._11, modelview._21, modelview._31);
+				math::normalize(up);
+				math::normalize(left);
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+
+				particle_fx->setVector3("up", up);
+				particle_fx->setVector3("left", left);
+				particle_fx->setMatrices(world, view, proj);
+				particle_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
+				particle_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
+				particle_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
+				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
+
+				particleStreamer.begin();
+				for (int i = 0; i < treeParticles.size(); ++i) {
+					Vector3 pos = treeParticles[i];
+					pos.y = std::max(pos.y, 0.0f);
+					double size = 5.0 / (3 + i * 0.001);
+					particleStreamer.add(pos, float(size * dustParticleAlpha));
+					if (!particleStreamer.getRoom()) {
+						particleStreamer.end();
+						particle_fx->draw(&particleStreamer);
+						particleStreamer.begin();
+					}
+				}
+				particleStreamer.end();
+				particle_fx->draw(&particleStreamer);
+
+				// simulate
+				float timeStep = fabs(deltaTime);
+				for (int i = 0; i < treeParticles.size(); ++i) {
+					Vector3 pos = treeParticles[i];
+
+					if (pos.y > 0) {
+						Vector3 noisePos = pos / 5;
+						Vector3 grad0, grad1, grad2;
+						float noisePosW = beat / 3;
+						float dummy;
+						sdnoise4(100 - noisePos.x, noisePos.y, noisePos.z, noisePosW, &grad0.x, &grad0.y, &grad0.z, &dummy);
+						sdnoise4(noisePos.x, 100 - noisePos.y, noisePos.z, noisePosW, &grad1.x, &grad1.y, &grad1.z, &dummy);
+						sdnoise4(noisePos.x, noisePos.y, 100 - noisePos.z, noisePosW, &grad2.x, &grad2.y, &grad2.z, &dummy);
+						Vector3 velocity = Vector3(grad2.y - grad1.z, grad0.z - grad2.x, grad1.x - grad0.y) + Vector3(0, -9.8, 0);
+						treeParticles[i] = pos + velocity * timeStep;
+					}
+
+					if (pos.y < 0) {
+						// respawn
+						int emitter = rand() % numEmitters;
+						treeParticles[i] = emitters[emitter];
+					}
+				}
 			}
 
 			if (particleObject) {
