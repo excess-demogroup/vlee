@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
 		/* setup sound-playback */
 		if (!BASS_Init(config::soundcard, 44100, 0, 0, 0))
 			throw FatalException("failed to init bass");
-		stream = BASS_StreamCreateFile(false, "data/kick_me3.mp3", 0, 0, BASS_MP3_SETPOS | BASS_STREAM_PRESCAN | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
+		stream = BASS_StreamCreateFile(false, "data/tune.mp3", 0, 0, BASS_MP3_SETPOS | BASS_STREAM_PRESCAN | ((0 == config::soundcard) ? BASS_STREAM_DECODE : 0));
 		if (!stream)
 			throw FatalException("failed to open tune");
 
@@ -466,7 +466,6 @@ int main(int argc, char *argv[])
 			bool particles = false;
 			bool tunnel = false;
 			bool sphereLights = false;
-			bool skybox = false;
 			bool blackCubes = false;
 			bool blueCubes = false;
 			bool dof = true;
@@ -474,19 +473,20 @@ int main(int argc, char *argv[])
 			bool particleObject = false;
 			bool tree = false;
 			int dustParticleCount = 0;
+			int skybox = -1;
 			float dustParticleAlpha = 1.0f;
 
 			int part = int(sync_get_val(partTrack, row));
 			switch (part) {
 			case 0:
-				skybox = true;
+				skybox = 1;
 				sphereLights = true;
 				dustParticleCount = 30000;
 				dustParticleAlpha = 0.1f;
 				break;
 
 			case 1:
-				skybox = true;
+				skybox = 0;
 				blackCubes = true;
 				blueCubes = true;
 				dustParticleCount = 10000;
@@ -503,7 +503,7 @@ int main(int argc, char *argv[])
 				break;
 
 			case 4:
-				skybox = true;
+				skybox = 1;
 				particleObject = true;
 				break;
 
@@ -545,10 +545,10 @@ int main(int argc, char *argv[])
 
 			device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
 
-			if (skybox) {
+			if (skybox >= 0) {
 				skybox_fx->setMatrices(world, view, proj);
 				skybox_fx->setFloat("desaturate", sync_get_val(skyboxDesaturateTrack, row));
-				skybox_fx->setTexture("env_tex", part != 0 ? skybox_tex : skybox2_tex);
+				skybox_fx->setTexture("env_tex", skybox == 0 ? skybox_tex : skybox2_tex);
 				skybox_fx->commitChanges();
 				skybox_fx->draw(skybox_x);
 			}

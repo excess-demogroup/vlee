@@ -2,6 +2,8 @@
 	<tracks>
 		<track name="part">
 			<key row="0" value="0" interpolation="0"/>
+			<key row="128" value="4" interpolation="0"/>
+			<key row="176" value="0" interpolation="0"/>
 			<key row="307" value="1" interpolation="0"/>
 			<key row="406" value="1" interpolation="0"/>
 			<key row="496" value="2" interpolation="0"/>
@@ -34,7 +36,8 @@
 			<key row="64" value="30" interpolation="0"/>
 			<key row="306" value="1000" interpolation="0"/>
 			<key row="307" value="65" interpolation="0"/>
-			<key row="664" value="3" interpolation="0"/>
+			<key row="664" value="3" interpolation="1"/>
+			<key row="695" value="2" interpolation="0"/>
 			<key row="696" value="1" interpolation="1"/>
 			<key row="924" value="100" interpolation="0"/>
 		</track>
@@ -70,6 +73,9 @@
 			<key row="0" value="-1" interpolation="1"/>
 			<key row="63" value="-150" interpolation="0"/>
 			<key row="64" value="-100" interpolation="0"/>
+			<key row="128" value="-50" interpolation="1"/>
+			<key row="175" value="-20" interpolation="0"/>
+			<key row="176" value="-80" interpolation="0"/>
 			<key row="664" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.at.x">
