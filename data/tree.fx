@@ -45,7 +45,7 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
 	PS_OUTPUT o;
 	o.col = 1.0 + Input.Normal.z;
-	o.z = Input.Pos2.w;
+	o.z = Input.Pos2.z;
 	return o;
 }
 
