@@ -393,6 +393,9 @@ int main(int argc, char *argv[])
 		tree_emitters_x->getVertexPositions(emitters, 0, numEmitters);
 		std::vector<Vector3> treeParticles;
 
+		Mesh *x_x = engine::loadMesh(device, "data/x.x");
+		Effect *x_fx = engine::loadEffect(device, "data/x.fx");
+
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
 		bool dump_video = false;
@@ -463,6 +466,13 @@ int main(int argc, char *argv[])
 				camTarget = Vector3(0, 0, 0);
 			}
 
+			dof_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
+			dof_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
+			dof_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
+			particle_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
+			particle_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
+			particle_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
+
 			bool particles = false;
 			bool tunnel = false;
 			bool sphereLights = false;
@@ -472,6 +482,7 @@ int main(int argc, char *argv[])
 			bool space = false;
 			bool particleObject = false;
 			bool tree = false;
+			bool logo = false;
 			int dustParticleCount = 0;
 			int skybox = -1;
 			float dustParticleAlpha = 1.0f;
@@ -509,6 +520,10 @@ int main(int argc, char *argv[])
 
 			case 5:
 				tree = true;
+				break;
+
+			case 6:
+				logo = true;
 				break;
 			}
 
@@ -687,6 +702,12 @@ int main(int argc, char *argv[])
 				tree_fx->draw(tree_x);
 			}
 
+			if (logo) {
+				x_fx->setMatrices(world, view, proj);
+				x_fx->commitChanges();
+				x_fx->draw(x_x);
+			}
+
 			if (dof) {
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 				device->SetRenderState(D3DRS_ZWRITEENABLE, false);
@@ -706,9 +727,6 @@ int main(int argc, char *argv[])
 				device.setRenderTarget(NULL, 1);
 				dof_fx->setTexture("color_tex", color_target);
 				dof_fx->setTexture("depth_tex", depth_target);
-				dof_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
-				dof_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
-				dof_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
 				dof_fx->p->BeginPass(0);
 				core::d3dErr(device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(float) * 6));
 				dof_fx->p->EndPass();
@@ -746,9 +764,6 @@ int main(int argc, char *argv[])
 				particle_fx->setVector3("up", up);
 				particle_fx->setVector3("left", left);
 				particle_fx->setMatrices(world, view, proj);
-				particle_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
-				particle_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
-				particle_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
 				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
 
 				particleStreamer.begin();
@@ -788,9 +803,6 @@ int main(int argc, char *argv[])
 				particle_fx->setVector3("up", up);
 				particle_fx->setVector3("left", left);
 				particle_fx->setMatrices(world, view, proj);
-				particle_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
-				particle_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
-				particle_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
 				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
 
 				particleStreamer.begin();
@@ -835,9 +847,6 @@ int main(int argc, char *argv[])
 				particle_fx->setVector3("up", up);
 				particle_fx->setVector3("left", left);
 				particle_fx->setMatrices(world, view, proj);
-				particle_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
-				particle_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
-				particle_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
 				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
 
 				particleStreamer.begin();
@@ -895,9 +904,6 @@ int main(int argc, char *argv[])
 				particle_fx->setVector3("up", up);
 				particle_fx->setVector3("left", left);
 				particle_fx->setMatrices(world, view, proj);
-				particle_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
-				particle_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
-				particle_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
 				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
 
 				particleStreamer.begin();
@@ -930,9 +936,6 @@ int main(int argc, char *argv[])
 				particle_fx->setVector3("up", up);
 				particle_fx->setVector3("left", left);
 				particle_fx->setMatrices(world, view, proj);
-				particle_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
-				particle_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
-				particle_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
 				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
 
 				particleStreamer.begin();
