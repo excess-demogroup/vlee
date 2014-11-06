@@ -732,8 +732,9 @@ int main(int argc, char *argv[])
 			}
 
 			if (logo) {
-				float a = pow(sync_get_val(logoFadeTrack, row), 2);
+				float a = sync_get_val(logoFadeTrack, row);
 				if (a >= 0) {
+					a = pow(a, 2);
 					x_fx->setMatrices(world, view, proj);
 					x_fx->setVector3("color", Vector3(a, a, a));
 					x_fx->commitChanges();
