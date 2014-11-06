@@ -274,6 +274,8 @@ int main(int argc, char *argv[])
 		const sync_track *treeParticleCountTrack = sync_get_track(rocket, "tree.particles");
 		const sync_track *treeParticleAnimTrack = sync_get_track(rocket, "tree.anim");
 
+		const sync_track *logoFadeTrack = sync_get_track(rocket, "logo.fade");
+
 		const sync_track *dofFStopTrack = sync_get_track(rocket, "dof.fstop");
 		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
 		const sync_track *dofFocalDistTrack = sync_get_track(rocket, "dof.fdist");
@@ -419,6 +421,10 @@ int main(int argc, char *argv[])
 		Mesh *x_x = engine::loadMesh(device, "data/x.x");
 		Effect *x_fx = engine::loadEffect(device, "data/x.fx");
 
+		Mesh *kjennerruhu_x = engine::loadMesh(device, "data/kjennerruhu.x");
+		Effect *kjennerruhu_fx = engine::loadEffect(device, "data/kjennerruhu.fx");
+		kjennerruhu_fx->setTexture("spectrum_tex", spectrum_tex);	
+
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
 		bool dump_video = false;
@@ -506,6 +512,7 @@ int main(int argc, char *argv[])
 			bool particleObject = false;
 			bool tree = false;
 			bool logo = false;
+			bool kjennerruhu = false;
 			int dustParticleCount = 0;
 
 			float dustParticleAlpha = 1.0f;
@@ -530,8 +537,7 @@ int main(int argc, char *argv[])
 				break;
 
 			case 3:
-				space = true;
-				dof = true; // false; <- does not work, wtf?
+				kjennerruhu = true;
 				break;
 
 			case 4:
@@ -544,6 +550,7 @@ int main(int argc, char *argv[])
 
 			case 6:
 				logo = true;
+				space = true;
 				break;
 			}
 
@@ -725,9 +732,26 @@ int main(int argc, char *argv[])
 			}
 
 			if (logo) {
-				x_fx->setMatrices(world, view, proj);
-				x_fx->commitChanges();
-				x_fx->draw(x_x);
+				float a = pow(sync_get_val(logoFadeTrack, row), 2);
+				if (a >= 0) {
+					x_fx->setMatrices(world, view, proj);
+					x_fx->setVector3("color", Vector3(a, a, a));
+					x_fx->commitChanges();
+					x_fx->draw(x_x);
+				}
+			}
+
+			if (kjennerruhu) {
+				if (skybox >= 0 && skybox < (int)skyboxes.size())
+					kjennerruhu_fx->setTexture("env_tex", skyboxes[skybox]);
+				else
+					kjennerruhu_fx->setTexture("env_tex", NULL);
+
+
+				kjennerruhu_fx->setMatrices(world, view, proj);
+				kjennerruhu_fx->setVector3("color", Vector3(1, 1, 1));
+				kjennerruhu_fx->commitChanges();
+				kjennerruhu_fx->draw(kjennerruhu_x);
 			}
 
 			if (dof) {
@@ -810,22 +834,22 @@ int main(int argc, char *argv[])
 				particle_fx->draw(&particleStreamer);
 			}
 
+			Matrix4x4 modelview = world * view;
+			Vector3 up(modelview._12, modelview._22, modelview._32);
+			Vector3 left(modelview._11, modelview._21, modelview._31);
+			math::normalize(up);
+			math::normalize(left);
+			particle_fx->setVector3("up", up);
+			particle_fx->setVector3("left", left);
+			particle_fx->setMatrices(world, view, proj);
+			particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
+			device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+			device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+
 			if (dustParticleCount > 0) {
 				device.setRenderTarget(dof_target.getSurface(0), 0);
 
 				// particles
-				Matrix4x4 modelview = world * view;
-				Vector3 up(modelview._12, modelview._22, modelview._32);
-				Vector3 left(modelview._11, modelview._21, modelview._31);
-				math::normalize(up);
-				math::normalize(left);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-
-				particle_fx->setVector3("up", up);
-				particle_fx->setVector3("left", left);
-				particle_fx->setMatrices(world, view, proj);
-				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
 
 				particleStreamer.begin();
 				for (int i = 0; i < dustParticleCount; ++i) {
@@ -893,20 +917,6 @@ int main(int argc, char *argv[])
 
 				device.setRenderTarget(dof_target.getSurface(0), 0);
 
-				// particles
-				Matrix4x4 modelview = world * view;
-				Vector3 up(modelview._12, modelview._22, modelview._32);
-				Vector3 left(modelview._11, modelview._21, modelview._31);
-				math::normalize(up);
-				math::normalize(left);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-
-				particle_fx->setVector3("up", up);
-				particle_fx->setVector3("left", left);
-				particle_fx->setMatrices(world, view, proj);
-				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
-
 				particleStreamer.begin();
 				for (int i = 0; i < (int)treeParticles[index].size(); ++i) {
 					Vector3 pos = treeParticles[index][i];
@@ -929,20 +939,6 @@ int main(int argc, char *argv[])
 			if (particleObject) {
 				device.setRenderTarget(dof_target.getSurface(0), 0);
 
-				// particles
-				Matrix4x4 modelview = world * view;
-				Vector3 up(modelview._12, modelview._22, modelview._32);
-				Vector3 left(modelview._11, modelview._21, modelview._31);
-				math::normalize(up);
-				math::normalize(left);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-
-				particle_fx->setVector3("up", up);
-				particle_fx->setVector3("left", left);
-				particle_fx->setMatrices(world, view, proj);
-				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
-
 				particleStreamer.begin();
 				for (int i = 0; i < numVertices; ++i) {
 					Vector3 pos = vertices[i] * 30;
@@ -961,20 +957,6 @@ int main(int argc, char *argv[])
 			if (space) {
 				device.setRenderTarget(dof_target.getSurface(0), 0);
 
-				// particles
-				Matrix4x4 modelview = world * view;
-				Vector3 up(modelview._12, modelview._22, modelview._32);
-				Vector3 left(modelview._11, modelview._21, modelview._31);
-				math::normalize(up);
-				math::normalize(left);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-
-				particle_fx->setVector3("up", up);
-				particle_fx->setVector3("left", left);
-				particle_fx->setMatrices(world, view, proj);
-				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
-
 				particleStreamer.begin();
 				particleStreamer.add(Vector3(0, 0, 0), 50.0); // fake sun (make more better)
 				for (int i = 0; i < 100000; ++i) {
@@ -990,7 +972,7 @@ int main(int argc, char *argv[])
 					size *= 10.0 / (1.0 + math::length(pos) * 0.5);
 					size *= std::max(0.0, sin(i * 0.22 + beat * 0.7532));
 
-					particleStreamer.add(pos, float(size * dustParticleAlpha));
+					particleStreamer.add(pos * 3, float(size * dustParticleAlpha));
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
 						particle_fx->draw(&particleStreamer);

@@ -712,6 +712,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\data\kjennerruhu.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\particle.fx"
 			>
 		</File>

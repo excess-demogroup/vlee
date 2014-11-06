@@ -3,17 +3,7 @@ float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
 
-texture env_tex;
-samplerCUBE env_samp = sampler_state {
-	Texture = (env_tex);
-	MipFilter = NONE;
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
-	AddressU = CLAMP;
-	AddressV = CLAMP;
-	AddressW = CLAMP;
-	sRGBTexture = TRUE;
-};
+float3 color;
 
 struct VS_INPUT {
 	float4 Position : POSITION0;
@@ -44,7 +34,7 @@ struct PS_OUTPUT {
 PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
 	PS_OUTPUT o;
-	o.col = 1.0 + Input.Normal.z;
+	o.col = (1.0 + Input.Normal.z) * float4(color, 1);
 	o.z = Input.Pos2.z;
 	return o;
 }
