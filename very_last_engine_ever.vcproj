@@ -288,6 +288,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="0"
+						CompileAs="2"
 					/>
 				</FileConfiguration>
 				<FileConfiguration

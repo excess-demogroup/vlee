@@ -264,11 +264,15 @@ int main(int argc, char *argv[])
 		const sync_track *flareAmountTrack = sync_get_track(rocket, "flare.amount");
 
 		const sync_track *skyboxDesaturateTrack = sync_get_track(rocket, "skybox.desat");
+		const sync_track *skyboxTextureTrack = sync_get_track(rocket, "skybox.tex");
 
 		const sync_track *clusterL1Idx = sync_get_track(rocket, "cluster.l1.idx");
 		const sync_track *clusterL1Amt = sync_get_track(rocket, "cluster.l1.amt");
 		const sync_track *clusterL2Idx = sync_get_track(rocket, "cluster.l2.idx");
 		const sync_track *clusterL2Amt = sync_get_track(rocket, "cluster.l2.amt");
+
+		const sync_track *treeParticleCountTrack = sync_get_track(rocket, "tree.particles");
+		const sync_track *treeParticleAnimTrack = sync_get_track(rocket, "tree.anim");
 
 		const sync_track *dofFStopTrack = sync_get_track(rocket, "dof.fstop");
 		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
@@ -331,6 +335,26 @@ int main(int argc, char *argv[])
 		if (0 == color_maps.size())
 			throw core::FatalException("no color maps!");
 
+		std::vector<renderer::CubeTexture> skyboxes;
+		for (int i = 0; true; ++i) {
+			char temp[256];
+			sprintf(temp, "data/skyboxes/%04d.dds", i);
+			renderer::CubeTexture tex;
+			if (FAILED(D3DXCreateCubeTextureFromFileEx(
+				device,
+				temp,
+				D3DX_DEFAULT, // size
+				D3DX_DEFAULT, // miplevels
+				0, D3DFMT_UNKNOWN, // usage and format
+				D3DPOOL_MANAGED, // pool
+				D3DX_DEFAULT, D3DX_DEFAULT, // filtering
+				0, NULL, NULL,
+				&tex.p)))
+				break;
+
+			skyboxes.push_back(tex);
+		}
+
 		RenderTexture color1_hdr = RenderTexture(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F);
 		RenderTexture color2_hdr = RenderTexture(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F);
 
@@ -369,8 +393,6 @@ int main(int argc, char *argv[])
 
 		Mesh *skybox_x = engine::loadMesh(device, "data/skybox.x");
 		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
-		CubeTexture skybox_tex = engine::loadCubeTexture(device, "data/skybox.dds");
-		CubeTexture skybox2_tex = engine::loadCubeTexture(device, "data/skybox2.dds");
 
 		Mesh *plane_128x128_x = engine::loadMesh(device, "data/plane-128x128.x");
 		Effect *sphere_lights_fx = engine::loadEffect(device, "data/sphere-lights.fx");
@@ -386,12 +408,13 @@ int main(int argc, char *argv[])
 		knot_x->getVertexPositions(vertices, 0, numVertices);
 
 		Mesh *tree_x = engine::loadMesh(device, "data/tree.x");
+		Mesh *tree_floor_x = engine::loadMesh(device, "data/tree-floor.x");
 		Effect *tree_fx = engine::loadEffect(device, "data/tree.fx");
 		Mesh *tree_emitters_x = engine::loadMesh(device, "data/tree-emitters.x");
 		int numEmitters = tree_emitters_x->getVertexCount();
 		Vector3 *emitters = new Vector3[numEmitters];
 		tree_emitters_x->getVertexPositions(emitters, 0, numEmitters);
-		std::vector<Vector3> treeParticles;
+		std::vector<Vector3> treeParticles[2];
 
 		Mesh *x_x = engine::loadMesh(device, "data/x.x");
 		Effect *x_fx = engine::loadEffect(device, "data/x.fx");
@@ -411,7 +434,8 @@ int main(int argc, char *argv[])
 
 		bool done = false;
 		int frame = 0;
-		double prevTime;
+		DWORD startTick = GetTickCount();
+		double prevTime = startTick / 1000.0;
 		while (!done) {
 			if (dump_video) {
 				QWORD pos = BASS_ChannelSeconds2Bytes(stream, float(frame) / config::mode.RefreshRate);
@@ -419,8 +443,7 @@ int main(int argc, char *argv[])
 			}
 
 			double row = bass_get_row(stream);
-			QWORD pos = BASS_ChannelGetPosition(stream, BASS_POS_BYTE);
-			double time = BASS_ChannelBytes2Seconds(stream, pos);
+			double time = (GetTickCount() - startTick) / 1000.0;
 			double deltaTime = time - prevTime;
 			prevTime = time;
 
@@ -484,20 +507,18 @@ int main(int argc, char *argv[])
 			bool tree = false;
 			bool logo = false;
 			int dustParticleCount = 0;
-			int skybox = -1;
+
 			float dustParticleAlpha = 1.0f;
 
 			int part = int(sync_get_val(partTrack, row));
 			switch (part) {
 			case 0:
-				skybox = 1;
 				sphereLights = true;
 				dustParticleCount = 30000;
 				dustParticleAlpha = 0.1f;
 				break;
 
 			case 1:
-				skybox = 0;
 				blackCubes = true;
 				blueCubes = true;
 				dustParticleCount = 10000;
@@ -514,7 +535,6 @@ int main(int argc, char *argv[])
 				break;
 
 			case 4:
-				skybox = 1;
 				particleObject = true;
 				break;
 
@@ -560,10 +580,11 @@ int main(int argc, char *argv[])
 
 			device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
 
-			if (skybox >= 0) {
+			int skybox = (int)sync_get_val(skyboxTextureTrack, row);
+			if (skybox >= 0 && skybox < (int)skyboxes.size()) {
 				skybox_fx->setMatrices(world, view, proj);
 				skybox_fx->setFloat("desaturate", sync_get_val(skyboxDesaturateTrack, row));
-				skybox_fx->setTexture("env_tex", skybox == 0 ? skybox_tex : skybox2_tex);
+				skybox_fx->setTexture("env_tex", skyboxes[skybox]);
 				skybox_fx->commitChanges();
 				skybox_fx->draw(skybox_x);
 			}
@@ -645,7 +666,7 @@ int main(int argc, char *argv[])
 					for (int j = 0; j < 30; ++j) {
 						Matrix4x4 rotation = Matrix4x4::rotation(Vector3(0, 0, 0.05));
 						Matrix4x4 translation = Matrix4x4::translation(Vector3(1, 0, 0));
-						Matrix4x4 scale = Matrix4x4::scaling(Vector3(1,1,1) * 0.9);
+						Matrix4x4 scale = Matrix4x4::scaling(Vector3(1,1,1) * 0.9f);
 						curr = translation * rotation * scale * curr;
 						cube_instancer.setInstanceTransform(num_cubes, curr);
 						cube_instancer.setInstanceColor(num_cubes, math::Vector3(0.2,0.2,1) * pow(pow(float(cos(j / 10.0f - beat)), 2.0f), 10.0f) * 15.0);
@@ -658,7 +679,7 @@ int main(int argc, char *argv[])
 
 			if (tunnel) {
 				Vector3 fogColor(0.3, 0.4, 0.6);
-				tunnel_fx->setFloat("fogDensity", 0.0005);
+				tunnel_fx->setFloat("fogDensity", 0.0005f);
 				tunnel_fx->setVector3("fogColor", fogColor);
 				tunnel_fx->setFloat("time", float(beat * 0.1));
 				tunnel_fx->setMatrices(world, view, proj);
@@ -666,7 +687,7 @@ int main(int argc, char *argv[])
 				tunnel_fx->draw(tunnel_x);
 
 				cubes_fx->setMatrices(world, view, proj);
-				cubes_fx->setFloat("fogDensity", 0.0005);
+				cubes_fx->setFloat("fogDensity", 0.0005f);
 				cubes_fx->setVector3("fogColor", fogColor);
 				cubes_fx->commitChanges();
 
@@ -700,6 +721,7 @@ int main(int argc, char *argv[])
 				tree_fx->setMatrices(world, view, proj);
 				tree_fx->commitChanges();
 				tree_fx->draw(tree_x);
+				tree_fx->draw(tree_floor_x);
 			}
 
 			if (logo) {
@@ -827,11 +849,47 @@ int main(int argc, char *argv[])
 			}
 
 			if (tree) {
-				// add new particle
-				if (treeParticles.size() < 50000) {
-					int emitter = rand() % numEmitters;
-					treeParticles.push_back(emitters[emitter]);
+				float freq = math::max(sync_get_val(treeParticleCountTrack, row), 0.000001f);
+				float period = 1.0 / freq;
+
+				// emit particles
+				static int index = 0;
+				static float lastEmit;
+				if (fabs(lastEmit - time) > 0.5) {
+					// less than two frames per second, I think not! first frame!
+					lastEmit = time;
 				}
+				int seed = 0;
+				while (treeParticles[index].size() < 100000 && time - lastEmit > period) {
+					int emitter = rand() % numEmitters;
+					Vector3 pos = emitters[emitter];
+					pos.x += (math::notRandf(seed++) * 2 - 1) * 0.1;
+					pos.y += (math::notRandf(seed++) * 2 - 1) * 0.1;
+					pos.z += (math::notRandf(seed++) * 2 - 1) * 0.1;
+					treeParticles[index].push_back(emitters[emitter]);
+					lastEmit += period;
+				}
+				treeParticles[1 - index].resize(treeParticles[index].size());
+
+				// simulate
+				float noisePosW = sync_get_val(treeParticleAnimTrack, row);
+				int dstIndex = 0;
+				for (int i = 0; i < (int)treeParticles[index].size(); ++i) {
+					Vector3 pos = treeParticles[index][i];
+
+					if (pos.y > 0) {
+						Vector3 noisePos = pos / 5;
+						Vector3 grad0, grad1, grad2;
+						float dummy;
+						sdnoise4(100 - noisePos.x, noisePos.y, noisePos.z, noisePosW, &grad0.x, &grad0.y, &grad0.z, &dummy);
+						sdnoise4(noisePos.x, 100 - noisePos.y, noisePos.z, noisePosW, &grad1.x, &grad1.y, &grad1.z, &dummy);
+						sdnoise4(noisePos.x, noisePos.y, 100 - noisePos.z, noisePosW, &grad2.x, &grad2.y, &grad2.z, &dummy);
+						Vector3 velocity = Vector3(grad2.y - grad1.z, grad0.z - grad2.x, grad1.x - grad0.y) + Vector3(0, -9.8, 0);
+						treeParticles[1 - index][dstIndex++] = pos + velocity * deltaTime;
+					}
+				}
+				treeParticles[1 - index].resize(dstIndex);
+				index = 1 - index;
 
 				device.setRenderTarget(dof_target.getSurface(0), 0);
 
@@ -850,10 +908,13 @@ int main(int argc, char *argv[])
 				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
 
 				particleStreamer.begin();
-				for (int i = 0; i < treeParticles.size(); ++i) {
-					Vector3 pos = treeParticles[i];
+				for (int i = 0; i < (int)treeParticles[index].size(); ++i) {
+					Vector3 pos = treeParticles[index][i];
 					pos.y = std::max(pos.y, 0.0f);
-					double size = 5.0 / (3 + i * 0.001);
+
+					double size = 3.0;
+					size *= std::max(0.0, sin(i * 0.22 + beat * 0.7532));
+
 					particleStreamer.add(pos, float(size * dustParticleAlpha));
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
@@ -863,30 +924,6 @@ int main(int argc, char *argv[])
 				}
 				particleStreamer.end();
 				particle_fx->draw(&particleStreamer);
-
-				// simulate
-				float timeStep = fabs(deltaTime);
-				for (int i = 0; i < treeParticles.size(); ++i) {
-					Vector3 pos = treeParticles[i];
-
-					if (pos.y > 0) {
-						Vector3 noisePos = pos / 5;
-						Vector3 grad0, grad1, grad2;
-						float noisePosW = beat / 3;
-						float dummy;
-						sdnoise4(100 - noisePos.x, noisePos.y, noisePos.z, noisePosW, &grad0.x, &grad0.y, &grad0.z, &dummy);
-						sdnoise4(noisePos.x, 100 - noisePos.y, noisePos.z, noisePosW, &grad1.x, &grad1.y, &grad1.z, &dummy);
-						sdnoise4(noisePos.x, noisePos.y, 100 - noisePos.z, noisePosW, &grad2.x, &grad2.y, &grad2.z, &dummy);
-						Vector3 velocity = Vector3(grad2.y - grad1.z, grad0.z - grad2.x, grad1.x - grad0.y) + Vector3(0, -9.8, 0);
-						treeParticles[i] = pos + velocity * timeStep;
-					}
-
-					if (pos.y < 0) {
-						// respawn
-						int emitter = rand() % numEmitters;
-						treeParticles[i] = emitters[emitter];
-					}
-				}
 			}
 
 			if (particleObject) {
