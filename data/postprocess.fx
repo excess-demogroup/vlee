@@ -9,6 +9,7 @@ const float block_thresh, line_thresh;
 const float flare_amount;
 const float distCoeff;
 const float cubeDistort;
+const float overlayGlitch;
 
 texture color_tex;
 sampler color_samp = sampler_state {
@@ -231,7 +232,7 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 	col = color_correct(col);
 
 	// blend overlay
-	float4 o = tex2D(overlay_samp, pos);
+	float4 o = tex2D(overlay_samp, lerp(In.uv, pos, overlayGlitch));
 	col = lerp(col, o.rgb, o.a * overlay_alpha);
 
 	// loose luma for some blocks

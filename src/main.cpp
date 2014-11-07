@@ -260,6 +260,7 @@ int main(int argc, char *argv[])
 
 		const sync_track *glitchBlockThreshTrack = sync_get_track(rocket, "glitch.blocks");
 		const sync_track *glitchLineThreshTrack = sync_get_track(rocket, "glitch.lines");
+		const sync_track *glitchOverlayTrack = sync_get_track(rocket, "glitch.overlay");
 
 		const sync_track *flareAmountTrack = sync_get_track(rocket, "flare.amount");
 
@@ -270,6 +271,7 @@ int main(int argc, char *argv[])
 		const sync_track *clusterL1Amt = sync_get_track(rocket, "cluster.l1.amt");
 		const sync_track *clusterL2Idx = sync_get_track(rocket, "cluster.l2.idx");
 		const sync_track *clusterL2Amt = sync_get_track(rocket, "cluster.l2.amt");
+		const sync_track *clusterBlomstTrack = sync_get_track(rocket, "cluster.blomst");
 
 		const sync_track *treeParticleCountTrack = sync_get_track(rocket, "tree.particles");
 		const sync_track *treeParticleAnimTrack = sync_get_track(rocket, "tree.anim");
@@ -693,7 +695,7 @@ int main(int argc, char *argv[])
 						Matrix4x4 scale = Matrix4x4::scaling(Vector3(1,1,1) * 0.9f);
 						curr = translation * rotation * scale * curr;
 						cube_instancer.setInstanceTransform(num_cubes, curr);
-						cube_instancer.setInstanceColor(num_cubes, math::Vector3(0.2,0.2,1) * pow(pow(float(cos(j / 10.0f - beat)), 2.0f), 10.0f) * 15.0);
+						cube_instancer.setInstanceColor(num_cubes, math::Vector3(0.2,0.2,1) * pow(pow(float(cos(j / 10.0f - beat)), 2.0f), 10.0f) * 15.0 * sync_get_val(clusterBlomstTrack, row));
 						num_cubes++;
 					}
 				}
@@ -1123,6 +1125,8 @@ int main(int argc, char *argv[])
 			postprocess_fx->setTexture("bloom_tex", color1_hdr);
 			postprocess_fx->setFloat("block_thresh", sync_get_val(glitchBlockThreshTrack, row));
 			postprocess_fx->setFloat("line_thresh", sync_get_val(glitchLineThreshTrack, row));
+			postprocess_fx->setFloat("overlayGlitch", sync_get_val(glitchOverlayTrack, row));
+
 			postprocess_fx->setFloat("flare_amount", sync_get_val(flareAmountTrack, row));
 /*			postprocess_fx->setFloat("distCoeff", sync_get_val(distCoeffTrack, row));
 			postprocess_fx->setFloat("cubeDistort", sync_get_val(cubeDistortTrack, row)); */
