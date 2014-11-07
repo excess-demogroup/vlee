@@ -732,6 +732,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\data\tree-floor.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\tree.fx"
 			>
 		</File>

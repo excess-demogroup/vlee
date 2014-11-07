@@ -3,26 +3,29 @@ float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
 
-texture env_tex;
-samplerCUBE env_samp = sampler_state {
-	Texture = (env_tex);
+float3 color;
+
+texture ao_tex;
+sampler ao_samp = sampler_state {
+	Texture = (ao_tex);
 	MipFilter = NONE;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
 	AddressU = CLAMP;
 	AddressV = CLAMP;
-	AddressW = CLAMP;
 	sRGBTexture = TRUE;
 };
 
 struct VS_INPUT {
 	float4 Position : POSITION0;
 	float3 Normal : NORMAL;
+	float2 TexCoord : TEXCOORD0;
 };
 
 struct VS_OUTPUT {
 	float4 Position : POSITION0;
 	float3 Normal : TEXCOORD0;
+	float2 TexCoord : TEXCOORD1;
 	float4 Pos2 : TEXCOORD2;
 };
 
@@ -32,6 +35,7 @@ VS_OUTPUT vs_main(VS_INPUT Input)
 	float3 pos = Input.Position;
 	Output.Position = mul(float4(pos, 1), matWorldViewProjection);
 	Output.Normal = mul(matWorldViewInverse, Input.Normal);
+	Output.TexCoord = Input.TexCoord;
 	Output.Pos2 = mul(float4(pos, 1), matWorldView);
 	return Output;
 }
@@ -44,7 +48,10 @@ struct PS_OUTPUT {
 PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
 	PS_OUTPUT o;
-	o.col = 1.0 + Input.Normal.z;
+	
+//	o.col = 1.0 + Input.Normal.z;
+//	o.col.rgb += + color;
+	o.col = tex2D(ao_samp, Input.TexCoord);
 	o.z = Input.Pos2.z;
 	return o;
 }

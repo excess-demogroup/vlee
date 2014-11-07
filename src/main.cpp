@@ -410,8 +410,25 @@ int main(int argc, char *argv[])
 		knot_x->getVertexPositions(vertices, 0, numVertices);
 
 		Mesh *tree_x = engine::loadMesh(device, "data/tree.x");
-		Mesh *tree_floor_x = engine::loadMesh(device, "data/tree-floor.x");
 		Effect *tree_fx = engine::loadEffect(device, "data/tree.fx");
+		Texture tree_ao_tex = engine::loadTexture(device, "data/tree-ao.png");
+		tree_fx->setTexture("ao_tex", tree_ao_tex);
+
+		Mesh *tree_floor1_x = engine::loadMesh(device, "data/tree-floor1.x");
+		Mesh *tree_floor2_x = engine::loadMesh(device, "data/tree-floor2.x");
+		Mesh *tree_floor3_x = engine::loadMesh(device, "data/tree-floor3.x");
+		Mesh *tree_floor4_x = engine::loadMesh(device, "data/tree-floor4.x");
+		Mesh *tree_floor5_x = engine::loadMesh(device, "data/tree-floor5.x");
+		Mesh *tree_floor6_x = engine::loadMesh(device, "data/tree-floor6.x");
+
+		Texture tree_floor1_ao_tex = engine::loadTexture(device, "data/tree-floor1-ao.png");
+		Texture tree_floor2_ao_tex = engine::loadTexture(device, "data/tree-floor2-ao.png");
+		Texture tree_floor3_ao_tex = engine::loadTexture(device, "data/tree-floor3-ao.png");
+		Texture tree_floor4_ao_tex = engine::loadTexture(device, "data/tree-floor4-ao.png");
+		Texture tree_floor5_ao_tex = engine::loadTexture(device, "data/tree-floor5-ao.png");
+		Texture tree_floor6_ao_tex = engine::loadTexture(device, "data/tree-floor6-ao.png");
+
+		Effect *tree_floor_fx = engine::loadEffect(device, "data/tree-floor.fx");
 		Mesh *tree_emitters_x = engine::loadMesh(device, "data/tree-emitters.x");
 		int numEmitters = tree_emitters_x->getVertexCount();
 		Vector3 *emitters = new Vector3[numEmitters];
@@ -728,7 +745,34 @@ int main(int argc, char *argv[])
 				tree_fx->setMatrices(world, view, proj);
 				tree_fx->commitChanges();
 				tree_fx->draw(tree_x);
-				tree_fx->draw(tree_floor_x);
+
+				tree_floor_fx->setMatrices(world, view, proj);
+
+//				tree_floor_fx->setVector3("color", Vector3(1, 1, 2));
+
+				tree_floor_fx->setTexture("ao_tex", tree_floor1_ao_tex);
+				tree_floor_fx->commitChanges();
+				tree_floor_fx->draw(tree_floor1_x);
+
+				tree_floor_fx->setTexture("ao_tex", tree_floor2_ao_tex);
+				tree_floor_fx->commitChanges();
+				tree_floor_fx->draw(tree_floor2_x);
+
+				tree_floor_fx->setTexture("ao_tex", tree_floor3_ao_tex);
+				tree_floor_fx->commitChanges();
+				tree_floor_fx->draw(tree_floor3_x);
+
+				tree_floor_fx->setTexture("ao_tex", tree_floor4_ao_tex);
+				tree_floor_fx->commitChanges();
+				tree_floor_fx->draw(tree_floor4_x);
+
+				tree_floor_fx->setTexture("ao_tex", tree_floor5_ao_tex);
+				tree_floor_fx->commitChanges();
+				tree_floor_fx->draw(tree_floor5_x);
+
+				tree_floor_fx->setTexture("ao_tex", tree_floor6_ao_tex);
+				tree_floor_fx->commitChanges();
+				tree_floor_fx->draw(tree_floor6_x);
 			}
 
 			if (logo) {
