@@ -224,7 +224,7 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 	col = color_correct(col);
 
 	// blend overlay
-	float4 o = tex2D(overlay_samp, In.uv);
+	float4 o = tex2D(overlay_samp, pos);
 	col = lerp(col, o.rgb, o.a * overlay_alpha);
 
 	// loose luma for some blocks
