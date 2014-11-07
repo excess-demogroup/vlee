@@ -7,6 +7,8 @@ const float color_map_lerp;
 const float bloom_weight[7];
 const float block_thresh, line_thresh;
 const float flare_amount;
+const float distCoeff;
+const float cubeDistort;
 
 texture color_tex;
 sampler color_samp = sampler_state {
@@ -14,8 +16,8 @@ sampler color_samp = sampler_state {
 	MipFilter = NONE;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
-	AddressU = CLAMP;
-	AddressV = CLAMP;
+	AddressU = BORDER;
+	AddressV = BORDER;
 	sRGBTexture = FALSE;
 };
 
@@ -25,8 +27,8 @@ sampler bloom_samp = sampler_state {
 	MipFilter = POINT;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
-	AddressU = CLAMP;
-	AddressV = CLAMP;
+	AddressU = BORDER;
+	AddressV = BORDER;
 	sRGBTexture = FALSE;
 };
 
@@ -200,6 +202,11 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 	uv_noise += floor(dist_time * float2(1234.0, 3543.0) * uv_noise) / 64;
 
 	float2 pos = In.uv;
+
+	float r2 = (pos.x - 0.5) * (pos.x - 0.5) + (pos.y - 0.5) * (pos.y - 0.5);
+	float f = 1 + r2 * (distCoeff + cubeDistort * sqrt(r2));
+	pos = f * (pos - 0.5) + 0.5;
+
 	pos += float2(
 			(sin(pos.y * dist_freq + dist_time) * 2 - 1) * dist_amt,
 			(sin(pos.x * dist_freq + dist_time) * 2 - 1) * dist_amt);
