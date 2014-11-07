@@ -343,7 +343,7 @@ int main(int argc, char *argv[])
 
 		std::vector<renderer::CubeTexture> skyboxes;
 		for (int i = 0; true; ++i) {
-			char temp[256];
+			char temp[256];  
 			sprintf(temp, "data/skyboxes/%04d.dds", i);
 			renderer::CubeTexture tex;
 			if (FAILED(D3DXCreateCubeTextureFromFileEx(
@@ -437,7 +437,11 @@ int main(int argc, char *argv[])
 		int numEmitters = tree_emitters_x->getVertexCount();
 		Vector3 *emitters = new Vector3[numEmitters];
 		tree_emitters_x->getVertexPositions(emitters, 0, numEmitters);
-		std::vector<Vector3> treeParticles[2];
+		struct Particle {
+			Vector3 pos;
+			float time;
+		};
+		std::vector<Particle> treeParticles[2];
 
 		Mesh *x_x = engine::loadMesh(device, "data/x.x");
 		Effect *x_fx = engine::loadEffect(device, "data/x.fx");
@@ -939,7 +943,10 @@ int main(int argc, char *argv[])
 					pos.x += (math::notRandf(seed++) * 2 - 1) * 0.1;
 					pos.y += (math::notRandf(seed++) * 2 - 1) * 0.1;
 					pos.z += (math::notRandf(seed++) * 2 - 1) * 0.1;
-					treeParticles[index].push_back(emitters[emitter]);
+					Particle p;
+					p.pos = pos;
+					p.time = index;
+					treeParticles[index].push_back(p);
 					lastEmit += period;
 				}
 				treeParticles[1 - index].resize(treeParticles[index].size());
@@ -949,17 +956,19 @@ int main(int argc, char *argv[])
 				float gravity = -sync_get_val(treeParticleSpeedTrack, row);
 				int dstIndex = 0;
 				for (int i = 0; i < (int)treeParticles[index].size(); ++i) {
-					Vector3 pos = treeParticles[index][i];
+					Particle p = treeParticles[index][i];
 
-					if (pos.y > 0) {
-						Vector3 noisePos = pos / 5;
+					if (p.time < 10) {
+						Vector3 noisePos = p.pos / 5;
 						Vector3 grad0, grad1, grad2;
 						float dummy;
 						sdnoise4(100 - noisePos.x, noisePos.y, noisePos.z, noisePosW, &grad0.x, &grad0.y, &grad0.z, &dummy);
 						sdnoise4(noisePos.x, 100 - noisePos.y, noisePos.z, noisePosW, &grad1.x, &grad1.y, &grad1.z, &dummy);
 						sdnoise4(noisePos.x, noisePos.y, 100 - noisePos.z, noisePosW, &grad2.x, &grad2.y, &grad2.z, &dummy);
 						Vector3 velocity = Vector3(grad2.y - grad1.z, grad0.z - grad2.x, grad1.x - grad0.y) + Vector3(0, gravity, 0);
-						treeParticles[1 - index][dstIndex++] = pos + velocity * deltaTime;
+						p.pos += velocity * deltaTime;
+						p.time += deltaTime;
+						treeParticles[1 - index][dstIndex++] = p;
 					}
 				}
 				treeParticles[1 - index].resize(dstIndex);
@@ -969,13 +978,12 @@ int main(int argc, char *argv[])
 
 				particleStreamer.begin();
 				for (int i = 0; i < (int)treeParticles[index].size(); ++i) {
-					Vector3 pos = treeParticles[index][i];
-					pos.y = std::max(pos.y, 0.0f);
+					Particle p = treeParticles[index][i];
 
 					double size = 3.0;
-					size *= std::max(0.0, sin(i * 0.22 + beat * 0.7532));
+					size *= std::max(0.0, sin(p.time * 0.22)) * 1 - p.time / 10;
 
-					particleStreamer.add(pos, float(size * dustParticleAlpha));
+					particleStreamer.add(p.pos, float(size * dustParticleAlpha));
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
 						particle_fx->draw(&particleStreamer);
