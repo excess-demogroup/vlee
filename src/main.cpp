@@ -279,6 +279,10 @@ int main(int argc, char *argv[])
 		const sync_track *treeParticleSpeedTrack = sync_get_track(rocket, "tree.speed");
 
 		const sync_track *logoFadeTrack = sync_get_track(rocket, "logo.fade");
+		const sync_track *logoDispTrack = sync_get_track(rocket, "logo.disp");
+
+		const sync_track *tunnelRadius1Track = sync_get_track(rocket, "tunnel.rad1");
+		const sync_track *tunnelRadius2Track = sync_get_track(rocket, "tunnel.rad2");
 
 		const sync_track *dofFStopTrack = sync_get_track(rocket, "dof.fstop");
 		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
@@ -559,6 +563,7 @@ int main(int argc, char *argv[])
 
 			case 2:
 				tunnel = true;
+				logo = true;
 				break;
 
 			case 3:
@@ -596,7 +601,7 @@ int main(int argc, char *argv[])
 
 
 			Matrix4x4 world = Matrix4x4::identity();
-			Matrix4x4 proj  = Matrix4x4::projection(80.0f, float(DEMO_ASPECT), 1.0f, 10000.f);
+			Matrix4x4 proj  = Matrix4x4::projection(80.0f, float(DEMO_ASPECT), 0.1f, 5000.f);
 
 			// render
 			device->BeginScene();
@@ -714,6 +719,16 @@ int main(int argc, char *argv[])
 				tunnel_fx->setFloat("fogDensity", 0.0005f);
 				tunnel_fx->setVector3("fogColor", fogColor);
 				tunnel_fx->setFloat("time", float(beat * 0.1));
+
+//				float radius1 = math::lerp(70.0f, 20.0f, math::clamp(sync_get_val(logoDispTrack, row), 0.0f, 1.0f));
+//				float radius2 = math::lerp(60.0f, 10.0f, math::clamp(sync_get_val(logoDispTrack, row), 0.0f, 1.0f));
+				float radius1 = sync_get_val(tunnelRadius1Track, row);
+				float radius2 = sync_get_val(tunnelRadius2Track, row);
+
+				float scale   = math::lerp(2.0f, 1.0f, math::clamp(sync_get_val(logoDispTrack, row), 0.0f, 1.0f));
+				tunnel_fx->setFloat("radius", radius1);
+
+				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
 				tunnel_fx->setMatrices(world, view, proj);
 				tunnel_fx->commitChanges();
 				tunnel_fx->draw(tunnel_x);
@@ -732,7 +747,7 @@ int main(int argc, char *argv[])
 					Matrix4x4 base = translation * rotation;
 					for (int j = 0; j < b; ++j) {
 						float th = j * float((2 * M_PI) / b);
-						Matrix4x4 translation = Matrix4x4::translation(Vector3(10, 0, 0));
+						Matrix4x4 translation = Matrix4x4::translation(Vector3(radius2, 0, 0));
 						Matrix4x4 scale = Matrix4x4::scaling(Vector3(1, 10, 1));
 						Matrix4x4 rotation = Matrix4x4::rotation(Vector3(0, th, 0));
 
@@ -786,8 +801,25 @@ int main(int argc, char *argv[])
 			if (logo) {
 				float a = sync_get_val(logoFadeTrack, row);
 				if (a >= 0) {
+					if (tunnel) {
+						Vector3 fogColor(0.3, 0.4, 0.6);
+						x_fx->setFloat("fogDensity", 0.0005f);
+						x_fx->setVector3("fogColor", fogColor);
+
+						float s = 1.0f / math::lerp(20.0f, 5.0f, math::clamp(sync_get_val(logoDispTrack, row), 0.0f, 1.0f));
+//						float offset = sync_get_val(logoDispTrack, row);
+						float offset = math::lerp(10.0f, -10.0f, math::clamp(sync_get_val(logoDispTrack, row), 0.0f, 1.0f));
+						Vector3 pos = Vector3(sin((camTime + offset) * float(M_PI / 180)), cos((camTime + offset) * float(M_PI / 180)), 0) * sync_get_val(cameraDistanceTrack, row);
+//						camTarget = Vector3(sin((camTime + camOffset) * float(M_PI / 180)), cos((camTime + camOffset) * float(M_PI / 180)), 0) * sync_get_val(cameraDistanceTrack, row);
+						Matrix4x4 world = Matrix4x4::scaling(Vector3(s, s, s)) * Matrix4x4::translation(pos);
+
+						x_fx->setMatrices(world, view, proj);
+					} else {
+						x_fx->setFloat("fogDensity", 0.0f);
+						x_fx->setMatrices(world, view, proj);
+					}
+
 					a = pow(a, 2);
-					x_fx->setMatrices(world, view, proj);
 					x_fx->setVector3("color", Vector3(a, a, a));
 					x_fx->commitChanges();
 					x_fx->draw(x_x);

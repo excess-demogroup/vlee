@@ -47,6 +47,8 @@ float3 tpos(float phi, float th, float R, float r)
 		r * sin(phi));
 }
 
+const float radius = 20;
+
 VS_OUTPUT vs_main( VS_INPUT Input )
 {
 	VS_OUTPUT Output;
@@ -54,7 +56,7 @@ VS_OUTPUT vs_main( VS_INPUT Input )
 	float th = Input.UV.y * 3.1415926 * 2;
 	float phi = Input.UV.x * 3.1415926 * 2;
 	float R = -70;
-	float r = 20;
+	float r = radius;
 	float eps = 0.01;
 	float3 pos = tpos(phi, th, R, r);
 	float3 p1 = tpos(phi + eps, th, R, r);

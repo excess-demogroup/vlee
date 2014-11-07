@@ -3,6 +3,8 @@ float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
 
+float3 fogColor;
+float fogDensity;
 float3 color;
 
 struct VS_INPUT {
@@ -34,8 +36,9 @@ struct PS_OUTPUT {
 PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
 	PS_OUTPUT o;
-	o.col = (1.0 + Input.Normal.z) * float4(color, 1);
+	o.col = (1.0 + normalize(Input.Normal).z) * float4(color, 1);
 	o.z = Input.Pos2.z;
+	o.col.rgb = lerp(fogColor, o.col.rgb, exp(-Input.Pos2.z * fogDensity));
 	return o;
 }
 
