@@ -276,6 +276,7 @@ int main(int argc, char *argv[])
 
 		const sync_track *treeParticleCountTrack = sync_get_track(rocket, "tree.particles");
 		const sync_track *treeParticleAnimTrack = sync_get_track(rocket, "tree.anim");
+		const sync_track *treeParticleSpeedTrack = sync_get_track(rocket, "tree.speed");
 
 		const sync_track *logoFadeTrack = sync_get_track(rocket, "logo.fade");
 
@@ -945,6 +946,7 @@ int main(int argc, char *argv[])
 
 				// simulate
 				float noisePosW = sync_get_val(treeParticleAnimTrack, row);
+				float gravity = -sync_get_val(treeParticleSpeedTrack, row);
 				int dstIndex = 0;
 				for (int i = 0; i < (int)treeParticles[index].size(); ++i) {
 					Vector3 pos = treeParticles[index][i];
@@ -956,7 +958,7 @@ int main(int argc, char *argv[])
 						sdnoise4(100 - noisePos.x, noisePos.y, noisePos.z, noisePosW, &grad0.x, &grad0.y, &grad0.z, &dummy);
 						sdnoise4(noisePos.x, 100 - noisePos.y, noisePos.z, noisePosW, &grad1.x, &grad1.y, &grad1.z, &dummy);
 						sdnoise4(noisePos.x, noisePos.y, 100 - noisePos.z, noisePosW, &grad2.x, &grad2.y, &grad2.z, &dummy);
-						Vector3 velocity = Vector3(grad2.y - grad1.z, grad0.z - grad2.x, grad1.x - grad0.y) + Vector3(0, -9.8, 0);
+						Vector3 velocity = Vector3(grad2.y - grad1.z, grad0.z - grad2.x, grad1.x - grad0.y) + Vector3(0, gravity, 0);
 						treeParticles[1 - index][dstIndex++] = pos + velocity * deltaTime;
 					}
 				}
