@@ -210,7 +210,7 @@ static LRESULT onInitDialog(HWND hDlg)
 	direct3d->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode);
 
 #if defined(_DEBUG) || !defined(SYNC_PLAYER)
-	if (direct3d->GetAdapterCount() == 1) {
+	if (true || direct3d->GetAdapterCount() == 1) {
 		mode.Width = 1280;
 		mode.Height = 720;
 	}
