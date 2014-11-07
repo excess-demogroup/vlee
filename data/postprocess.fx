@@ -203,10 +203,15 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 	uv_noise += floor(dist_time * float2(1234.0, 3543.0) * uv_noise) / 64;
 
 	float2 pos = In.uv;
+	float2 pos2 = In.uv;
 
-	float r2 = (pos.x - 0.5) * (pos.x - 0.5) + (pos.y - 0.5) * (pos.y - 0.5);
-	float f = 1 + r2 * (distCoeff + cubeDistort * sqrt(r2));
+	float haspect = viewport.x / viewport.y;
+	float vaspect = viewport.y / viewport.x;
+	float r2 = haspect * haspect * (pos.x * 2 - 1) * (pos.x * 2 - 1) + (pos.y * 2 - 1) * (pos.y * 2 - 1);
+//	float r2 = (pos.x - 0.5) * (pos.x - 0.5) + vaspect * vaspect * (pos.y - 0.5) * (pos.y - 0.5);
+	float f = (1 + r2 * (distCoeff + cubeDistort * sqrt(r2))) / (1 + (distCoeff + cubeDistort) * 2);
 	pos = f * (pos - 0.5) + 0.5;
+	pos2 = f * (pos2 - 0.5) + 0.5;
 
 	pos += float2(
 			(sin(pos.y * dist_freq + dist_time) * 2 - 1) * dist_amt,
@@ -232,7 +237,7 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 	col = color_correct(col);
 
 	// blend overlay
-	float4 o = tex2D(overlay_samp, lerp(In.uv, pos, overlayGlitch));
+	float4 o = tex2D(overlay_samp, lerp(pos2, pos, overlayGlitch));
 	col = lerp(col, o.rgb, o.a * overlay_alpha);
 
 	// loose luma for some blocks

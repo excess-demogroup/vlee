@@ -249,6 +249,7 @@ int main(int argc, char *argv[])
 		const sync_track *colorMapOverlayAlphaTrack = sync_get_track(rocket, "cm.overlay_alpha");
 		const sync_track *pulseAmt2Track       = sync_get_track(rocket, "cm.pulse.amt");
 		const sync_track *pulseSpeed2Track     = sync_get_track(rocket, "cm.pulse.speed");
+		const sync_track *lensDistTrack     = sync_get_track(rocket, "cm.lensdist");
 
 		const sync_track *bloomCutoffTrack = sync_get_track(rocket, "bloom.cutoff");
 		const sync_track *bloomShapeTrack  = sync_get_track(rocket, "bloom.shape");
@@ -1128,8 +1129,8 @@ int main(int argc, char *argv[])
 			postprocess_fx->setFloat("overlayGlitch", sync_get_val(glitchOverlayTrack, row));
 
 			postprocess_fx->setFloat("flare_amount", sync_get_val(flareAmountTrack, row));
-/*			postprocess_fx->setFloat("distCoeff", sync_get_val(distCoeffTrack, row));
-			postprocess_fx->setFloat("cubeDistort", sync_get_val(cubeDistortTrack, row)); */
+			postprocess_fx->setFloat("distCoeff", sync_get_val(lensDistTrack, row));
+			postprocess_fx->setFloat("cubeDistort", sync_get_val(lensDistTrack, row));
 
 			float bloom_shape = sync_get_val(bloomShapeTrack, row);
 			float bloom_weight[7];
