@@ -730,7 +730,7 @@ int main(int argc, char *argv[])
 				float scale   = math::lerp(2.0f, 1.0f, math::clamp(sync_get_val(logoDispTrack, row), 0.0f, 1.0f));
 				tunnel_fx->setFloat("radius", radius1);
 
-				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
+//				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
 				tunnel_fx->setMatrices(world, view, proj);
 				tunnel_fx->commitChanges();
 				tunnel_fx->draw(tunnel_x);
