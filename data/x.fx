@@ -15,7 +15,7 @@ struct VS_INPUT {
 struct VS_OUTPUT {
 	float4 Position : POSITION0;
 	float3 Normal : TEXCOORD0;
-	float4 Pos2 : TEXCOORD2;
+	float3 ViewPos : TEXCOORD1;
 };
 
 VS_OUTPUT vs_main(VS_INPUT Input)
@@ -24,7 +24,7 @@ VS_OUTPUT vs_main(VS_INPUT Input)
 	float3 pos = Input.Position;
 	Output.Position = mul(float4(pos, 1), matWorldViewProjection);
 	Output.Normal = mul(matWorldViewInverse, Input.Normal);
-	Output.Pos2 = mul(float4(pos, 1), matWorldView);
+	Output.ViewPos = mul(float4(pos, 1), matWorldView).xyz;
 	return Output;
 }
 
@@ -37,8 +37,8 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
 	PS_OUTPUT o;
 	o.col = (1.0 + normalize(Input.Normal).z) * float4(color, 1);
-	o.z = Input.Pos2.z;
-	o.col.rgb = lerp(fogColor, o.col.rgb, exp(-Input.Pos2.z * fogDensity));
+	o.z = Input.ViewPos.z;
+	o.col.rgb = lerp(fogColor, o.col.rgb, exp(-Input.ViewPos.z * fogDensity));
 	return o;
 }
 

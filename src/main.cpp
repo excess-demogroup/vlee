@@ -283,6 +283,7 @@ int main(int argc, char *argv[])
 
 		const sync_track *tunnelRadius1Track = sync_get_track(rocket, "tunnel.rad1");
 		const sync_track *tunnelRadius2Track = sync_get_track(rocket, "tunnel.rad2");
+		const sync_track *tunnelFogTrack = sync_get_track(rocket, "tunnel.fog");
 
 		const sync_track *dofFStopTrack = sync_get_track(rocket, "dof.fstop");
 		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
@@ -714,9 +715,10 @@ int main(int argc, char *argv[])
 				cube_instancer.draw(device, num_cubes);
 			}
 
+			float fogDensity = sync_get_val(tunnelFogTrack, row) * 0.0005f;
 			if (tunnel) {
 				Vector3 fogColor(0.3, 0.4, 0.6);
-				tunnel_fx->setFloat("fogDensity", 0.0005f);
+				tunnel_fx->setFloat("fogDensity", fogDensity);
 				tunnel_fx->setVector3("fogColor", fogColor);
 				tunnel_fx->setFloat("time", float(beat * 0.1));
 
@@ -734,7 +736,7 @@ int main(int argc, char *argv[])
 				tunnel_fx->draw(tunnel_x);
 
 				cubes_fx->setMatrices(world, view, proj);
-				cubes_fx->setFloat("fogDensity", 0.0005f);
+				cubes_fx->setFloat("fogDensity", fogDensity);
 				cubes_fx->setVector3("fogColor", fogColor);
 				cubes_fx->commitChanges();
 
