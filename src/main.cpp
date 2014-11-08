@@ -321,7 +321,6 @@ int main(int argc, char *argv[])
 		const sync_track *clusterBlomstTrack = sync_get_track(rocket, "cluster.blomst");
 
 		const sync_track *treeParticleCountTrack = sync_get_track(rocket, "tree.particles");
-		const sync_track *treeParticleAnimTrack = sync_get_track(rocket, "tree.anim");
 		const sync_track *treeParticleSpeedTrack = sync_get_track(rocket, "tree.speed");
 
 		const sync_track *planeBendTrack = sync_get_track(rocket, "plane.bend");
@@ -1098,7 +1097,6 @@ int main(int argc, char *argv[])
 				treeParticles[1 - index].resize(treeParticles[index].size());
 
 				// simulate
-				float noisePosW = sync_get_val(treeParticleAnimTrack, row);
 				float gravity = -sync_get_val(treeParticleSpeedTrack, row);
 				int dstIndex = 0;
 				for (int i = 0; i < (int)treeParticles[index].size(); ++i) {
@@ -1107,10 +1105,9 @@ int main(int argc, char *argv[])
 					if (p.time < 10) {
 						Vector3 noisePos = p.pos / 5;
 						Vector3 grad0, grad1, grad2;
-						float dummy;
-						sdnoise4(100 - noisePos.x, noisePos.y, noisePos.z, noisePosW, &grad0.x, &grad0.y, &grad0.z, &dummy);
-						sdnoise4(noisePos.x, 100 - noisePos.y, noisePos.z, noisePosW, &grad1.x, &grad1.y, &grad1.z, &dummy);
-						sdnoise4(noisePos.x, noisePos.y, 100 - noisePos.z, noisePosW, &grad2.x, &grad2.y, &grad2.z, &dummy);
+						sdnoise3(100 - noisePos.x, noisePos.y, noisePos.z, &grad0.x, &grad0.y, &grad0.z);
+						sdnoise3(noisePos.x, 100 - noisePos.y, noisePos.z, &grad1.x, &grad1.y, &grad1.z);
+						sdnoise3(noisePos.x, noisePos.y, 100 - noisePos.z, &grad2.x, &grad2.y, &grad2.z);
 						Vector3 velocity = Vector3(grad2.y - grad1.z, grad0.z - grad2.x, grad1.x - grad0.y) + Vector3(0, gravity, 0);
 						p.pos += velocity * deltaTime;
 						p.time += deltaTime;
