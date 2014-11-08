@@ -708,10 +708,18 @@ int main(int argc, char *argv[])
 				float clusterLightAmts[clusters] = { 0 };
 				int l1 = int(sync_get_val(clusterL1Idx, row));
 				int l2 = int(sync_get_val(clusterL2Idx, row));
-				if (l1 >= 0 && l1 < ARRAY_SIZE(clusterLightAmts))
-					clusterLightAmts[l1] = pow(sync_get_val(clusterL1Amt, row), 2.0f);
-				if (l2 >= 0 && l2 < ARRAY_SIZE(clusterLightAmts))
-					clusterLightAmts[l2] = pow(sync_get_val(clusterL2Amt, row), 2.0f);
+				if (l1 >= 0 && l1 < ARRAY_SIZE(clusterLightAmts)) {
+					clusterLightAmts[l1] = sync_get_val(clusterL1Amt, row);
+					if (clusterLightAmts[l1] < 0)
+						clusterLightAmts[l1] = rand() > RAND_MAX / 2 ? clusterLightAmts[l1] : 0;
+					clusterLightAmts[l1] = pow(clusterLightAmts[l1], 2.0f);
+				}
+				if (l2 >= 0 && l2 < ARRAY_SIZE(clusterLightAmts)) {
+					clusterLightAmts[l2] = sync_get_val(clusterL2Amt, row);
+					if (clusterLightAmts[l2] < 0)
+						clusterLightAmts[l2] = rand() > RAND_MAX / 2 ? clusterLightAmts[l2] : 0;
+					clusterLightAmts[l2] = pow(clusterLightAmts[l2], 2.0f);
+				}
 
 				// bunch of stuff
 				for (int i = 0; i < clusters; ++i) {
