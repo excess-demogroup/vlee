@@ -52,7 +52,7 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
 	PS_OUTPUT o;
 	
-	o.col = tex2D(ao_samp, Input.TexCoord);
+	o.col = float4(tex2D(ao_samp, Input.TexCoord).rgb + color, 1);
 	o.col.rgb = lerp(fogColor, o.col.rgb, exp(-Input.Pos2.z * fogDensity));
 	o.z = Input.Pos2.z;
 	return o;

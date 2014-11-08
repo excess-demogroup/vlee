@@ -841,29 +841,36 @@ int main(int argc, char *argv[])
 
 				tree_floor_fx->setMatrices(world, view, proj);
 
-//				tree_floor_fx->setVector3("color", Vector3(1, 1, 2));
+				Vector3 light0 = Vector3(1, 0.25, 1) * pow(sync_get_val(clusterL1Amt, row), 2.0f);;
+				Vector3 light1 = Vector3(0.25, 0.25, 1) * pow(sync_get_val(clusterL2Amt, row), 2.0f);;
 
 				tree_floor_fx->setTexture("ao_tex", tree_floor1_ao_tex);
+				tree_floor_fx->setVector3("color", Vector3(0, 0, 0));
 				tree_floor_fx->commitChanges();
 				tree_floor_fx->draw(tree_floor1_x);
 
 				tree_floor_fx->setTexture("ao_tex", tree_floor2_ao_tex);
+				tree_floor_fx->setVector3("color", light0);
 				tree_floor_fx->commitChanges();
 				tree_floor_fx->draw(tree_floor2_x);
 
 				tree_floor_fx->setTexture("ao_tex", tree_floor3_ao_tex);
+				tree_floor_fx->setVector3("color", light1);
 				tree_floor_fx->commitChanges();
 				tree_floor_fx->draw(tree_floor3_x);
 
 				tree_floor_fx->setTexture("ao_tex", tree_floor4_ao_tex);
+				tree_floor_fx->setVector3("color", Vector3(0, 0, 0));
 				tree_floor_fx->commitChanges();
 				tree_floor_fx->draw(tree_floor4_x);
 
 				tree_floor_fx->setTexture("ao_tex", tree_floor5_ao_tex);
+				tree_floor_fx->setVector3("color", Vector3(0, 0, 0));
 				tree_floor_fx->commitChanges();
 				tree_floor_fx->draw(tree_floor5_x);
 
 				tree_floor_fx->setTexture("ao_tex", tree_floor6_ao_tex);
+				tree_floor_fx->setVector3("color", Vector3(0, 0, 0));
 				tree_floor_fx->commitChanges();
 				tree_floor_fx->draw(tree_floor6_x);
 
