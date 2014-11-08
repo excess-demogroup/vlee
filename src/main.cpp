@@ -1049,7 +1049,7 @@ int main(int argc, char *argv[])
 					pos.z += (math::notRandf(seed++) * 2 - 1) * 0.1;
 					Particle p;
 					p.pos = pos;
-					p.time = index;
+					p.time = 0.0f;
 					treeParticles[index].push_back(p);
 					lastEmit += period;
 				}
@@ -1085,7 +1085,7 @@ int main(int argc, char *argv[])
 					Particle p = treeParticles[index][i];
 
 					double size = 3.0;
-					size *= std::max(0.0, sin(p.time * 0.22)) * 1 - p.time / 10;
+					size *= std::max(0.0, sin(p.time * 0.22)) * 1 - (p.time / 10);
 
 					particleStreamer.add(p.pos, float(size * dustParticleAlpha));
 					if (!particleStreamer.getRoom()) {
