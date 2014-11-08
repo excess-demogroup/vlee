@@ -689,7 +689,7 @@ int main(int argc, char *argv[])
 			if (sphereLights) {
 				sphere_lights_fx->setMatrices(world, view, proj);
 				sphere_lights_fx->setTexture("intensity_tex", sphere_lights.getFrame(0));
-				int scroll = int(row * 4.0) % 256 - 128;
+				int scroll = int(row) % 256 - 128;
 				sphere_lights_fx->setFloat("scroll", scroll / 128.0f);
 				sphere_lights_fx->setVector2("noffs", Vector2(
 						floor(math::notRandf(int(beat * 100) + 0) * 128) / 128,
