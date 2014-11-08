@@ -19,7 +19,6 @@ namespace renderer {
 		{
 		}
 
-#if 1
 		Texture(IDirect3DDevice9 *device, UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool = D3DPOOL_DEFAULT, HANDLE* handle = 0)
 		{
 			assert(NULL != device);
@@ -40,7 +39,6 @@ namespace renderer {
 
 			tex.attachRef(texture);
 		}
-#endif
 
 		const Surface getSurface(int level = 0) const
 		{
