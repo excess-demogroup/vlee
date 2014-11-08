@@ -45,7 +45,7 @@ struct VS_OUTPUT {
 VS_OUTPUT vs_main(VS_INPUT Input)
 {
 	VS_OUTPUT Output;
-	float3 pos = Input.Position;
+	float3 pos = Input.Position.xyz;
 
 	Output.WorldPosition = mul(float4(pos, 1), matWorld);
 	Output.WorldNormal = mul(matWorldInverse, Input.Normal);

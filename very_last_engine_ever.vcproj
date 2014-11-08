@@ -700,6 +700,10 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath=".\data\bend-plane.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\blur.fx"
 			>
 		</File>

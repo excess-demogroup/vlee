@@ -324,6 +324,9 @@ int main(int argc, char *argv[])
 		const sync_track *treeParticleAnimTrack = sync_get_track(rocket, "tree.anim");
 		const sync_track *treeParticleSpeedTrack = sync_get_track(rocket, "tree.speed");
 
+		const sync_track *planeBendTrack = sync_get_track(rocket, "plane.bend");
+		const sync_track *planeAnimTrack = sync_get_track(rocket, "plane.anim");
+
 		const sync_track *logoFadeTrack = sync_get_track(rocket, "logo.fade");
 		const sync_track *logoDispTrack = sync_get_track(rocket, "logo.disp");
 
@@ -461,6 +464,12 @@ int main(int argc, char *argv[])
 		sphere_lights_fx->setTexture("mask_tex", sphere_lights_mask_tex);
 		sphere_lights_fx->setTexture("noise_tex", noise_tex);
 		sphere_lights_fx->setVector2("nscale", Vector2(128.0f / noise_tex.getWidth(), 128.0f / noise_tex.getHeight()));
+
+		Effect *bend_plane_fx = engine::loadEffect(device, "data/bend-plane.fx");
+		Texture plane_pattern1_tex = engine::loadTexture(device, "data/plane_pattern1.png");
+		Texture plane_pattern2_tex = engine::loadTexture(device, "data/plane_pattern2.png");
+		bend_plane_fx->setTexture("pattern1_tex", plane_pattern1_tex);
+		bend_plane_fx->setTexture("pattern2_tex", plane_pattern2_tex);
 
 		Mesh *knot_x = engine::loadMesh(device, "data/knot.x");
 		int numVertices = knot_x->getVertexCount();
@@ -878,9 +887,16 @@ int main(int argc, char *argv[])
 			}
 
 			if (kjennerruhu) {
+				float s = 10.0f;
+				Matrix4x4 bendWorld = Matrix4x4::scaling(Vector3(s, s, s * 3)) * Matrix4x4::translation(Vector3(0, -300, 200));
 				Matrix4x4 cubeProj  = Matrix4x4::projection(45.0f, 1.0f, 0.1f, 5000.f);
 				device.setRenderTarget(NULL, 1);
 				device.setDepthStencilSurface(reflection_depthstencil);
+
+				bend_plane_fx->setMatrices(bendWorld, view, proj);
+				bend_plane_fx->setFloat("bend", sync_get_val(planeBendTrack, row) / 100);
+				bend_plane_fx->setFloat("anim", sync_get_val(planeAnimTrack, row));
+				bend_plane_fx->commitChanges();
 
 				for (int i = 0; i < 6; i++) {
 					D3DCUBEMAP_FACES face = (D3DCUBEMAP_FACES)i;
@@ -897,7 +913,7 @@ int main(int argc, char *argv[])
 						skybox_fx->draw(skybox_x);
 					}
 
-					// TODO: draw the fuck.
+					bend_plane_fx->draw(plane_128x128_x);
 				}
 
 				device.setRenderTarget(color_target.getRenderTarget(), 0);
@@ -909,6 +925,8 @@ int main(int argc, char *argv[])
 				kjennerruhu_fx->setVector3("color", Vector3(1, 1, 1));
 				kjennerruhu_fx->commitChanges();
 				kjennerruhu_fx->draw(kjennerruhu_x);
+
+				bend_plane_fx->draw(plane_128x128_x);
 			}
 
 			if (dof) {

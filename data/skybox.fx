@@ -30,7 +30,7 @@ struct VS_OUTPUT {
 VS_OUTPUT vs_main(VS_INPUT Input)
 {
 	VS_OUTPUT Output;
-	float3 pos = Input.Position * 10;
+	float3 pos = Input.Position * 50;
 	pos.y = -pos.y;
 	Output.Position = mul(float4(pos, 1), matWorldViewProjection);
 	Output.Normal = mul(matWorldViewInverse, Input.Normal);
