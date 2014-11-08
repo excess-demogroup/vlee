@@ -16,6 +16,8 @@
 #include "renderer/surface.h"
 #include "renderer/texture.h"
 #include "renderer/rendertexture.h"
+#include "renderer/cubetexture.h"
+#include "renderer/rendercubetexture.h"
 #include "renderer/vertexbuffer.h"
 #include "renderer/indexbuffer.h"
 #include "renderer/vertexdeclaration.h"
@@ -53,6 +55,7 @@ using renderer::Texture;
 using renderer::CubeTexture;
 using renderer::VolumeTexture;
 using renderer::RenderTexture;
+using renderer::RenderCubeTexture;
 
 using engine::Mesh;
 using engine::Effect;
@@ -120,6 +123,49 @@ struct sync_cb bass_cb = {
 };
 
 #endif /* !defined(SYNC_PLAYER) */
+
+Matrix4x4 getCubemapViewMatrix(D3DCUBEMAP_FACES face)
+{
+	// Standard view that will be overridden below
+	Vector3 vEnvEyePt = Vector3(0.0f, 0.0f, 0.0f);
+	Vector3 vLookatPt, vUpVec;
+
+	switch(face) {
+	case D3DCUBEMAP_FACE_POSITIVE_X:
+		vLookatPt = Vector3(1.0f, 0.0f, 0.0f);
+		vUpVec    = Vector3(0.0f, 1.0f, 0.0f);
+		break;
+
+	case D3DCUBEMAP_FACE_NEGATIVE_X:
+		vLookatPt = Vector3(-1.0f, 0.0f, 0.0f);
+		vUpVec    = Vector3( 0.0f, 1.0f, 0.0f);
+		break;
+
+	case D3DCUBEMAP_FACE_POSITIVE_Y:
+		vLookatPt = Vector3(0.0f, 1.0f, 0.0f);
+		vUpVec    = Vector3(0.0f, 0.0f,-1.0f);
+		break;
+
+	case D3DCUBEMAP_FACE_NEGATIVE_Y:
+		vLookatPt = Vector3(0.0f,-1.0f, 0.0f);
+		vUpVec    = Vector3(0.0f, 0.0f, 1.0f);
+		break;
+
+	case D3DCUBEMAP_FACE_POSITIVE_Z:
+		vLookatPt = Vector3( 0.0f, 0.0f, 1.0f);
+		vUpVec    = Vector3( 0.0f, 1.0f, 0.0f);
+		break;
+
+	case D3DCUBEMAP_FACE_NEGATIVE_Z:
+		vLookatPt = Vector3(0.0f, 0.0f,-1.0f);
+		vUpVec    = Vector3(0.0f, 1.0f, 0.0f);
+		break;
+	}
+
+	Matrix4x4 view;
+	D3DXMatrixLookAtLH(&view, &vEnvEyePt, &vLookatPt, &vUpVec);
+	return view;
+}
 
 int main(int argc, char *argv[])
 {
@@ -309,6 +355,9 @@ int main(int argc, char *argv[])
 
 		RenderTexture fxaa_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
 
+		RenderCubeTexture reflection_target(device, 512, 1, D3DFMT_A16B16G16R16F);
+		Surface reflection_depthstencil = device.createDepthStencilSurface(512, 512, D3DFMT_D24S8);
+
 #define MAP_SIZE 32
 		renderer::Texture temp_tex = device.createTexture(MAP_SIZE * MAP_SIZE, MAP_SIZE, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_MANAGED);
 		std::vector<renderer::VolumeTexture> color_maps;
@@ -360,7 +409,7 @@ int main(int argc, char *argv[])
 				D3DPOOL_MANAGED, // pool
 				D3DX_DEFAULT, D3DX_DEFAULT, // filtering
 				0, NULL, NULL,
-				&tex.p)))
+				&tex.tex)))
 				break;
 
 			skyboxes.push_back(tex);
@@ -829,12 +878,33 @@ int main(int argc, char *argv[])
 			}
 
 			if (kjennerruhu) {
-				if (skybox >= 0 && skybox < (int)skyboxes.size())
-					kjennerruhu_fx->setTexture("env_tex", skyboxes[skybox]);
-				else
-					kjennerruhu_fx->setTexture("env_tex", NULL);
+				Matrix4x4 cubeProj  = Matrix4x4::projection(45.0f, 1.0f, 0.1f, 5000.f);
+				device.setRenderTarget(NULL, 1);
+				device.setDepthStencilSurface(reflection_depthstencil);
 
+				for (int i = 0; i < 6; i++) {
+					D3DCUBEMAP_FACES face = (D3DCUBEMAP_FACES)i;
+					Matrix4x4 cubeView = getCubemapViewMatrix(face);
+					device.setRenderTarget(reflection_target.getSurface(face), 0);
+					device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
 
+					int skybox = (int)sync_get_val(skyboxTextureTrack, row);
+					if (skybox >= 0 && skybox < (int)skyboxes.size()) {
+						skybox_fx->setMatrices(world, cubeView, cubeProj);
+						skybox_fx->setFloat("desaturate", sync_get_val(skyboxDesaturateTrack, row));
+						skybox_fx->setTexture("env_tex", skyboxes[skybox]);
+						skybox_fx->commitChanges();
+						skybox_fx->draw(skybox_x);
+					}
+
+					// TODO: draw the fuck.
+				}
+
+				device.setRenderTarget(color_target.getRenderTarget(), 0);
+				device.setRenderTarget(depth_target.getRenderTarget(), 1);
+				device.setDepthStencilSurface(depthstencil);
+
+				kjennerruhu_fx->setTexture("env_tex", reflection_target);
 				kjennerruhu_fx->setMatrices(world, view, proj);
 				kjennerruhu_fx->setVector3("color", Vector3(1, 1, 1));
 				kjennerruhu_fx->commitChanges();

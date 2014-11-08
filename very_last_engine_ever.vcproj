@@ -624,6 +624,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\renderer\rendercubetexture.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\renderer\rendertexture.h"
 					>
 				</File>

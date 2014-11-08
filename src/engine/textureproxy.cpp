@@ -48,7 +48,7 @@ CubeTexture engine::loadCubeTexture(renderer::Device &device, ::std::string file
 	if (FAILED(hr)) throw core::FatalException(::std::string("failed to load cube texture \"") + filename + ::std::string("\"\n\n") + core::d3dGetError(hr));
 	
 	CubeTexture texture_wrapper;
-	texture_wrapper.attachRef(texture);
+	texture_wrapper.tex.attachRef(texture);
 	return texture_wrapper;
 }
 

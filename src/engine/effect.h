@@ -83,7 +83,7 @@ namespace engine {
 		
 		void setTexture(D3DXHANDLE param, const renderer::CubeTexture &texture)
 		{
-			p->SetTexture(param, texture);
+			p->SetTexture(param, texture.tex);
 		}
 		
 		void setTexture(D3DXHANDLE param, const renderer::VolumeTexture &texture)
