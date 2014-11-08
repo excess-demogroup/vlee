@@ -3,6 +3,9 @@ float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
 
+float3 fogColor;
+float fogDensity;
+
 float3 color;
 
 texture ao_tex;
@@ -52,6 +55,7 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 //	o.col = 1.0 + Input.Normal.z;
 //	o.col.rgb += + color;
 	o.col = tex2D(ao_samp, Input.TexCoord);
+	o.col.rgb = lerp(fogColor, o.col.rgb, exp(-Input.Pos2.z * fogDensity));
 	o.z = Input.Pos2.z;
 	return o;
 }

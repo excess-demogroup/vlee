@@ -85,7 +85,7 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 
 	float3 view = normalize(Input.WorldPosition - matWorldViewInverse[3].xyz);
 	float3 reflection = reflect(view, Input.WorldNormal);
-	float spread = 0.1;
+	float spread = 0.05;
 	float3 refraction0 = reflect(view, Input.WorldNormal * 0.4f + spread * 0.5);
 	float3 refraction1 = reflect(view, Input.WorldNormal * 0.4f - spread * 0.5);
 

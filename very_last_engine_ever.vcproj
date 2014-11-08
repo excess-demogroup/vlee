@@ -744,6 +744,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\data\tree-floor7.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\tree.fx"
 			>
 		</File>

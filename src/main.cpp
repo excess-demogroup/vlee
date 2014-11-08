@@ -487,6 +487,7 @@ int main(int argc, char *argv[])
 		Mesh *tree_floor4_x = engine::loadMesh(device, "data/tree-floor4.x");
 		Mesh *tree_floor5_x = engine::loadMesh(device, "data/tree-floor5.x");
 		Mesh *tree_floor6_x = engine::loadMesh(device, "data/tree-floor6.x");
+		Mesh *tree_floor7_x = engine::loadMesh(device, "data/tree-floor7.x");
 
 		Texture tree_floor1_ao_tex = engine::loadTexture(device, "data/tree-floor1-ao.png");
 		Texture tree_floor2_ao_tex = engine::loadTexture(device, "data/tree-floor2-ao.png");
@@ -496,6 +497,7 @@ int main(int argc, char *argv[])
 		Texture tree_floor6_ao_tex = engine::loadTexture(device, "data/tree-floor6-ao.png");
 
 		Effect *tree_floor_fx = engine::loadEffect(device, "data/tree-floor.fx");
+		Effect *tree_floor7_fx = engine::loadEffect(device, "data/tree-floor7.fx");
 		Mesh *tree_emitters_x = engine::loadMesh(device, "data/tree-emitters.x");
 		int numEmitters = tree_emitters_x->getVertexCount();
 		Vector3 *emitters = new Vector3[numEmitters];
@@ -825,6 +827,14 @@ int main(int argc, char *argv[])
 			}
 
 			if (tree) {
+				Vector3 fogColor(0.0, 0.0, 0.0);
+				tree_fx->setFloat("fogDensity", fogDensity);
+				tree_fx->setVector3("fogColor", fogColor);
+				tree_floor_fx->setFloat("fogDensity", fogDensity);
+				tree_floor_fx->setVector3("fogColor", fogColor);
+				tree_floor7_fx->setFloat("fogDensity", fogDensity);
+				tree_floor7_fx->setVector3("fogColor", fogColor);
+
 				tree_fx->setMatrices(world, view, proj);
 				tree_fx->commitChanges();
 				tree_fx->draw(tree_x);
@@ -856,6 +866,10 @@ int main(int argc, char *argv[])
 				tree_floor_fx->setTexture("ao_tex", tree_floor6_ao_tex);
 				tree_floor_fx->commitChanges();
 				tree_floor_fx->draw(tree_floor6_x);
+
+				tree_floor7_fx->setMatrices(world, view, proj);
+				tree_floor7_fx->commitChanges();
+				tree_floor7_fx->draw(tree_floor7_x);
 			}
 
 			if (logo) {
@@ -888,13 +902,14 @@ int main(int argc, char *argv[])
 
 			if (kjennerruhu) {
 				float s = 10.0f;
+				float bend = sync_get_val(planeBendTrack, row) / 100;
 				Matrix4x4 bendWorld = Matrix4x4::scaling(Vector3(s, s, s * 3)) * Matrix4x4::translation(Vector3(0, -300, 200));
 				Matrix4x4 cubeProj  = Matrix4x4::projection(45.0f, 1.0f, 0.1f, 5000.f);
 				device.setRenderTarget(NULL, 1);
 				device.setDepthStencilSurface(reflection_depthstencil);
 
 				bend_plane_fx->setMatrices(bendWorld, view, proj);
-				bend_plane_fx->setFloat("bend", sync_get_val(planeBendTrack, row) / 100);
+				bend_plane_fx->setFloat("bend", bend);
 				bend_plane_fx->setFloat("anim", sync_get_val(planeAnimTrack, row));
 				bend_plane_fx->commitChanges();
 
@@ -913,7 +928,8 @@ int main(int argc, char *argv[])
 						skybox_fx->draw(skybox_x);
 					}
 
-					bend_plane_fx->draw(plane_128x128_x);
+					if (bend >= 0)
+						bend_plane_fx->draw(plane_128x128_x);
 				}
 
 				device.setRenderTarget(color_target.getRenderTarget(), 0);
@@ -926,7 +942,8 @@ int main(int argc, char *argv[])
 				kjennerruhu_fx->commitChanges();
 				kjennerruhu_fx->draw(kjennerruhu_x);
 
-				bend_plane_fx->draw(plane_128x128_x);
+				if (bend >= 0)
+					bend_plane_fx->draw(plane_128x128_x);
 			}
 
 			if (dof) {
@@ -1090,7 +1107,8 @@ int main(int argc, char *argv[])
 						Vector3 velocity = Vector3(grad2.y - grad1.z, grad0.z - grad2.x, grad1.x - grad0.y) + Vector3(0, gravity, 0);
 						p.pos += velocity * deltaTime;
 						p.time += deltaTime;
-						treeParticles[1 - index][dstIndex++] = p;
+						if (p.time < 10)
+							treeParticles[1 - index][dstIndex++] = p;
 					}
 				}
 				treeParticles[1 - index].resize(dstIndex);
@@ -1103,7 +1121,7 @@ int main(int argc, char *argv[])
 					Particle p = treeParticles[index][i];
 
 					double size = 3.0;
-					size *= std::max(0.0, sin(p.time * 0.22)) * 1 - (p.time / 10);
+					size *= std::max(0.0, sin(p.time * 0.22)) * (1 - (p.time / 10));
 
 					particleStreamer.add(p.pos, float(size * dustParticleAlpha));
 					if (!particleStreamer.getRoom()) {

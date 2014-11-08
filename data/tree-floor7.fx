@@ -3,21 +3,8 @@ float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
 
-float3 color;
-
 float3 fogColor;
 float fogDensity;
-
-texture ao_tex;
-sampler ao_samp = sampler_state {
-	Texture = (ao_tex);
-	MipFilter = NONE;
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
-	AddressU = CLAMP;
-	AddressV = CLAMP;
-	sRGBTexture = TRUE;
-};
 
 struct VS_INPUT {
 	float4 Position : POSITION0;
@@ -51,8 +38,8 @@ struct PS_OUTPUT {
 PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
 	PS_OUTPUT o;
-	
-	o.col = tex2D(ao_samp, Input.TexCoord);
+	float l = 0.75;
+	o.col = float4(l, l, l, 1);
 	o.col.rgb = lerp(fogColor, o.col.rgb, exp(-Input.Pos2.z * fogDensity));
 	o.z = Input.Pos2.z;
 	return o;
