@@ -71,7 +71,7 @@ float3 sample_spectrum(samplerCUBE tex, float3 start, float3 stop, int samples)
 	for (int i = 0; i < samples; ++i) {
 		float3 sample = texCUBE(tex, pos).rgb;
 		float t = (i + 0.5) / samples;
-		float3 filter = tex2Dlod(spectrum_samp, float4(t, 0, 0, 0)).rgb;
+		float3 filter = lerp(tex2Dlod(spectrum_samp, float4(t, 0, 0, 0)).rgb, 0.5, 0.5);
 		sum += sample * filter;
 		filter_sum += filter;
 		pos += delta;

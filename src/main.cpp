@@ -479,6 +479,7 @@ int main(int argc, char *argv[])
 		Effect *tree_fx = engine::loadEffect(device, "data/tree.fx");
 		Texture tree_ao_tex = engine::loadTexture(device, "data/tree-ao.png");
 		tree_fx->setTexture("ao_tex", tree_ao_tex);
+		tree_fx->setTexture("volume_noise_tex", volume_noise_tex);
 
 		Mesh *tree_floor1_x = engine::loadMesh(device, "data/tree-floor1.x");
 		Mesh *tree_floor2_x = engine::loadMesh(device, "data/tree-floor2.x");

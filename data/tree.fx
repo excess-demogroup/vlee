@@ -6,8 +6,6 @@ float4x4 matWorldViewInverse : WORLDVIEWINVERSE;
 float3 fogColor;
 float fogDensity;
 
-float3 color;
-
 texture ao_tex;
 sampler ao_samp = sampler_state {
 	Texture = (ao_tex);
@@ -17,6 +15,18 @@ sampler ao_samp = sampler_state {
 	AddressU = CLAMP;
 	AddressV = CLAMP;
 	sRGBTexture = TRUE;
+};
+
+texture3D volume_noise_tex;
+sampler3D volume_noise_samp = sampler_state {
+	Texture = (volume_noise_tex);
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = WRAP;
+	AddressV = WRAP;
+	AddressW = WRAP;
+	sRGBTexture = FALSE;
 };
 
 struct VS_INPUT {
@@ -30,6 +40,7 @@ struct VS_OUTPUT {
 	float3 Normal : TEXCOORD0;
 	float2 TexCoord : TEXCOORD1;
 	float4 Pos2 : TEXCOORD2;
+	float3 Uvw : TEXCOORD3;
 };
 
 VS_OUTPUT vs_main(VS_INPUT Input)
@@ -40,6 +51,7 @@ VS_OUTPUT vs_main(VS_INPUT Input)
 	Output.Normal = mul(matWorldViewInverse, Input.Normal);
 	Output.TexCoord = Input.TexCoord;
 	Output.Pos2 = mul(float4(pos, 1), matWorldView);
+	Output.Uvw = pos;
 	return Output;
 }
 
@@ -51,10 +63,9 @@ struct PS_OUTPUT {
 PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
 	PS_OUTPUT o;
-	
-//	o.col = 1.0 + Input.Normal.z;
-//	o.col.rgb += + color;
 	o.col = tex2D(ao_samp, Input.TexCoord);
+	float noise = tex3D(volume_noise_samp, Input.Uvw).r;
+	o.col.rgb *= noise;
 	o.col.rgb = lerp(fogColor, o.col.rgb, exp(-Input.Pos2.z * fogDensity));
 	o.z = Input.Pos2.z;
 	return o;
