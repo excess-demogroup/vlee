@@ -14,28 +14,37 @@ namespace engine {
 	class Effect : public ComRef<ID3DXEffect> {
 	public:
 		Effect() :
-			ComRef<ID3DXEffect>(), world(NULL), view(NULL),
-			projection(NULL), worldview(NULL),
-			worldview_inv(NULL), worldviewprojection(NULL)
+			ComRef<ID3DXEffect>(),
+			world(NULL), world_inv(NULL),
+			view(NULL), view_inv(NULL),
+			projection(NULL), projection_inv(NULL),
+			worldview(NULL), worldview_inv(NULL),
+			worldviewprojection(NULL), worldviewprojection_inv(NULL)
 		{
 			// nothing
 		}
 		
 		void update()
 		{
-			assert( NULL != p );
+			assert(p != NULL);
 			
 			world      = p->GetParameterBySemantic(0, "WORLD");
 			world_inv  = p->GetParameterBySemantic(0, "WORLDINVERSE");
+
 			view       = p->GetParameterBySemantic(0, "VIEW");
 			view_inv   = p->GetParameterBySemantic(0, "VIEWINVERSE");
+
 			projection = p->GetParameterBySemantic(0, "PROJECTION");
+			projection_inv = p->GetParameterBySemantic(0, "PROJECTIONINVERSE");
+
 			worldview  = p->GetParameterBySemantic(0, "WORLDVIEW");
 			worldview_inv = p->GetParameterBySemantic(0, "WORLDVIEWINVERSE");
+
 			worldviewprojection = p->GetParameterBySemantic(0, "WORLDVIEWPROJECTION");
+			worldviewprojection_inv = p->GetParameterBySemantic(0, "WORLDVIEWPROJECTIONINV");
+
 			viewPos   = p->GetParameterBySemantic(0, "VIEWPOSITION");
 			viewDir   = p->GetParameterBySemantic(0, "VIEWDIRECTION");
-			matWVP_inv = p->GetParameterBySemantic(0, "WORLDVIEWPROJECTIONINV");
 		}
 
 		void commitChanges()
@@ -94,35 +103,44 @@ namespace engine {
 		void setMatrices(const math::Matrix4x4 &world, const math::Matrix4x4 &view, const math::Matrix4x4 &proj)
 		{
 			assert( NULL != p );
-			math::Matrix4x4 world_view_proj, matWVP_inv;
-			world_view_proj = world * view * proj;
-			matWVP_inv = world_view_proj.inverse();
 
 			math::Matrix4x4 world_view;
 			world_view = world * view;
-			math::Matrix4x4 world_inv = world.inverse(), world_view_inv = world_view.inverse();
+
+			math::Matrix4x4 world_view_proj;
+			world_view_proj = world_view * proj;
+
+			math::Matrix4x4 world_view_inv = world_view.inverse();
 
 			if (this->world != NULL)
 				setMatrix(this->world, world);
 			if (this->world_inv != NULL)
-				setMatrix(this->world_inv, world_inv);
+				setMatrix(this->world_inv, world.inverse());
+
 			if (this->view  != NULL)
 				setMatrix(this->view, view);
 			if (this->view_inv != NULL)
 				setMatrix(this->view, view.inverse());
+
 			if (this->projection != NULL)
 				setMatrix(this->projection, proj);
+			if (this->projection_inv != NULL)
+				setMatrix(this->projection_inv, proj.inverse());
+
 			if (this->worldview != NULL)
 				setMatrix(this->worldview, world_view);
 			if (this->worldview_inv != NULL)
 				setMatrix(this->worldview_inv, world_view_inv);
+
 			if (this->worldviewprojection != NULL)
 				setMatrix(this->worldviewprojection, world_view_proj);
-			if (this->matWVP_inv)
-				setMatrix(this->matWVP_inv, matWVP_inv);
+			if (this->worldviewprojection_inv != NULL)
+				setMatrix(this->worldviewprojection_inv, world_view_proj.inverse());
 
-			if (this->viewPos != NULL) setVector3(this->viewPos,  world_view_inv.getTranslation());
-			if (this->viewDir != NULL) setVector3(this->viewDir,  world_view.getZAxis());
+			if (this->viewPos != NULL)
+				setVector3(this->viewPos,  world_view_inv.getTranslation());
+			if (this->viewDir != NULL)
+				setVector3(this->viewDir,  world_view.getZAxis());
 		}
 
 		void draw(Drawable *d)
@@ -139,7 +157,11 @@ namespace engine {
 			p->End();
 		}
 
-		D3DXHANDLE world, world_inv, view, view_inv, projection, worldview, worldview_inv, worldviewprojection, matWVP_inv;
+		D3DXHANDLE world, world_inv,
+		           view, view_inv,
+				   projection, projection_inv,
+				   worldview, worldview_inv,
+				   worldviewprojection, worldviewprojection_inv;
 		D3DXHANDLE viewPos, viewDir;
 	};
 
