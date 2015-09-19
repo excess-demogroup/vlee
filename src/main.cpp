@@ -314,25 +314,6 @@ int main(int argc, char *argv[])
 		const sync_track *skyboxDesaturateTrack = sync_get_track(rocket, "skybox.desat");
 		const sync_track *skyboxTextureTrack = sync_get_track(rocket, "skybox.tex");
 
-		const sync_track *clusterL1Idx = sync_get_track(rocket, "cluster.l1.idx");
-		const sync_track *clusterL1Amt = sync_get_track(rocket, "cluster.l1.amt");
-		const sync_track *clusterL2Idx = sync_get_track(rocket, "cluster.l2.idx");
-		const sync_track *clusterL2Amt = sync_get_track(rocket, "cluster.l2.amt");
-		const sync_track *clusterBlomstTrack = sync_get_track(rocket, "cluster.blomst");
-
-		const sync_track *treeParticleCountTrack = sync_get_track(rocket, "tree.particles");
-		const sync_track *treeParticleSpeedTrack = sync_get_track(rocket, "tree.speed");
-
-		const sync_track *planeBendTrack = sync_get_track(rocket, "plane.bend");
-		const sync_track *planeAnimTrack = sync_get_track(rocket, "plane.anim");
-
-		const sync_track *logoFadeTrack = sync_get_track(rocket, "logo.fade");
-		const sync_track *logoDispTrack = sync_get_track(rocket, "logo.disp");
-
-		const sync_track *tunnelRadius1Track = sync_get_track(rocket, "tunnel.rad1");
-		const sync_track *tunnelRadius2Track = sync_get_track(rocket, "tunnel.rad2");
-		const sync_track *tunnelFogTrack = sync_get_track(rocket, "tunnel.fog");
-
 		const sync_track *dofFStopTrack = sync_get_track(rocket, "dof.fstop");
 		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
 		const sync_track *dofFocalDistTrack = sync_get_track(rocket, "dof.fdist");
@@ -442,78 +423,9 @@ int main(int argc, char *argv[])
 
 		engine::ParticleStreamer particleStreamer(device);
 		Effect *particle_fx = engine::loadEffect(device, "data/particle.fx");
-		Texture particle_tex = engine::loadTexture(device, "data/particle.png");
-		particle_fx->setTexture("tex", particle_tex);
-
-		Effect *cubes_fx = engine::loadEffect(device, "data/cubes.fx");
-		engine::MeshInstancer cube_instancer(device, cubes_fx, 4096);
-
-		Mesh *tunnel_x = engine::loadMesh(device, "data/tunnel.x");
-		Effect *tunnel_fx = engine::loadEffect(device, "data/tunnel.fx");
-		VolumeTexture volume_noise_tex = engine::loadVolumeTexture(device, "data/volume-noise.dds");
-		tunnel_fx->setTexture("volume_noise_tex", volume_noise_tex);
 
 		Mesh *skybox_x = engine::loadMesh(device, "data/skybox.x");
 		Effect *skybox_fx = engine::loadEffect(device, "data/skybox.fx");
-
-		Mesh *plane_128x128_x = engine::loadMesh(device, "data/plane-128x128.x");
-		Effect *sphere_lights_fx = engine::loadEffect(device, "data/sphere-lights.fx");
-		Anim sphere_lights = engine::loadAnim(device, "data/sphere-lights");
-		Texture sphere_lights_mask_tex = engine::loadTexture(device, "data/sphere-lights-mask.png");
-		sphere_lights_fx->setTexture("mask_tex", sphere_lights_mask_tex);
-		sphere_lights_fx->setTexture("noise_tex", noise_tex);
-		sphere_lights_fx->setVector2("nscale", Vector2(128.0f / noise_tex.getWidth(), 128.0f / noise_tex.getHeight()));
-
-		Effect *bend_plane_fx = engine::loadEffect(device, "data/bend-plane.fx");
-		Texture plane_pattern1_tex = engine::loadTexture(device, "data/plane_pattern1.png");
-		Texture plane_pattern2_tex = engine::loadTexture(device, "data/plane_pattern2.png");
-		bend_plane_fx->setTexture("pattern1_tex", plane_pattern1_tex);
-		bend_plane_fx->setTexture("pattern2_tex", plane_pattern2_tex);
-
-		Mesh *knot_x = engine::loadMesh(device, "data/knot.x");
-		int numVertices = knot_x->getVertexCount();
-		Vector3 *vertices = new Vector3[numVertices];
-		knot_x->getVertexPositions(vertices, 0, numVertices);
-
-		Mesh *tree_x = engine::loadMesh(device, "data/tree.x");
-		Effect *tree_fx = engine::loadEffect(device, "data/tree.fx");
-		Texture tree_ao_tex = engine::loadTexture(device, "data/tree-ao.png");
-		tree_fx->setTexture("ao_tex", tree_ao_tex);
-		tree_fx->setTexture("volume_noise_tex", volume_noise_tex);
-
-		Mesh *tree_floor1_x = engine::loadMesh(device, "data/tree-floor1.x");
-		Mesh *tree_floor2_x = engine::loadMesh(device, "data/tree-floor2.x");
-		Mesh *tree_floor3_x = engine::loadMesh(device, "data/tree-floor3.x");
-		Mesh *tree_floor4_x = engine::loadMesh(device, "data/tree-floor4.x");
-		Mesh *tree_floor5_x = engine::loadMesh(device, "data/tree-floor5.x");
-		Mesh *tree_floor6_x = engine::loadMesh(device, "data/tree-floor6.x");
-		Mesh *tree_floor7_x = engine::loadMesh(device, "data/tree-floor7.x");
-
-		Texture tree_floor1_ao_tex = engine::loadTexture(device, "data/tree-floor1-ao.png");
-		Texture tree_floor2_ao_tex = engine::loadTexture(device, "data/tree-floor2-ao.png");
-		Texture tree_floor3_ao_tex = engine::loadTexture(device, "data/tree-floor3-ao.png");
-		Texture tree_floor4_ao_tex = engine::loadTexture(device, "data/tree-floor4-ao.png");
-		Texture tree_floor5_ao_tex = engine::loadTexture(device, "data/tree-floor5-ao.png");
-		Texture tree_floor6_ao_tex = engine::loadTexture(device, "data/tree-floor6-ao.png");
-
-		Effect *tree_floor_fx = engine::loadEffect(device, "data/tree-floor.fx");
-		Effect *tree_floor7_fx = engine::loadEffect(device, "data/tree-floor7.fx");
-		Mesh *tree_emitters_x = engine::loadMesh(device, "data/tree-emitters.x");
-		int numEmitters = tree_emitters_x->getVertexCount();
-		Vector3 *emitters = new Vector3[numEmitters];
-		tree_emitters_x->getVertexPositions(emitters, 0, numEmitters);
-		struct Particle {
-			Vector3 pos;
-			float time;
-		};
-		std::vector<Particle> treeParticles[2];
-
-		Mesh *x_x = engine::loadMesh(device, "data/x.x");
-		Effect *x_fx = engine::loadEffect(device, "data/x.fx");
-
-		Mesh *kjennerruhu_x = engine::loadMesh(device, "data/kjennerruhu.x");
-		Effect *kjennerruhu_fx = engine::loadEffect(device, "data/kjennerruhu.fx");
-		kjennerruhu_fx->setTexture("spectrum_tex", spectrum_tex);	
 
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
@@ -592,17 +504,7 @@ int main(int argc, char *argv[])
 			particle_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
 			particle_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
 
-			bool particles = false;
-			bool tunnel = false;
-			bool sphereLights = false;
-			bool blackCubes = false;
-			bool blueCubes = false;
 			bool dof = true;
-			bool space = false;
-			bool particleObject = false;
-			bool tree = false;
-			bool logo = false;
-			bool kjennerruhu = false;
 			int dustParticleCount = 0;
 
 			float dustParticleAlpha = 1.0f;
@@ -610,38 +512,7 @@ int main(int argc, char *argv[])
 			int part = int(sync_get_val(partTrack, row));
 			switch (part) {
 			case 0:
-				sphereLights = true;
-				dustParticleCount = 30000;
-				dustParticleAlpha = 0.1f;
-				break;
-
-			case 1:
-				blackCubes = true;
-				blueCubes = true;
-				dustParticleCount = 10000;
-				dustParticleAlpha = 0.3f;
-				break;
-
-			case 2:
-				tunnel = true;
-				logo = true;
-				break;
-
-			case 3:
-				kjennerruhu = true;
-				break;
-
-			case 4:
-				particleObject = true;
-				break;
-
-			case 5:
-				tree = true;
-				break;
-
-			case 6:
-				logo = true;
-				space = true;
+				// TODO
 				break;
 			}
 
@@ -687,280 +558,6 @@ int main(int argc, char *argv[])
 				skybox_fx->draw(skybox_x);
 			}
 
-			if (sphereLights) {
-				sphere_lights_fx->setMatrices(world, view, proj);
-				sphere_lights_fx->setTexture("intensity_tex", sphere_lights.getFrame(0));
-				int scroll = int(row) % 256 - 128;
-				sphere_lights_fx->setFloat("scroll", scroll / 128.0f);
-				sphere_lights_fx->setVector2("noffs", Vector2(
-						floor(math::notRandf(int(beat * 100) + 0) * 128) / 128,
-						floor(math::notRandf(int(beat * 100) + 1) * 128) / 128));
-				sphere_lights_fx->commitChanges();
-				sphere_lights_fx->draw(plane_128x128_x);
-			}
-
-			if (blackCubes) {
-				cubes_fx->setMatrices(world, view, proj);
-				cubes_fx->commitChanges();
-
-				const int clusters = 8;
-				int clusterBombs = 64;
-
-				float clusterLightAmts[clusters] = { 0 };
-				int l1 = int(sync_get_val(clusterL1Idx, row));
-				int l2 = int(sync_get_val(clusterL2Idx, row));
-				if (l1 >= 0 && l1 < ARRAY_SIZE(clusterLightAmts)) {
-					clusterLightAmts[l1] = sync_get_val(clusterL1Amt, row);
-					if (clusterLightAmts[l1] < 0)
-						clusterLightAmts[l1] = rand() > RAND_MAX / 2 ? clusterLightAmts[l1] : 0;
-					clusterLightAmts[l1] = pow(clusterLightAmts[l1], 2.0f);
-				}
-				if (l2 >= 0 && l2 < ARRAY_SIZE(clusterLightAmts)) {
-					clusterLightAmts[l2] = sync_get_val(clusterL2Amt, row);
-					if (clusterLightAmts[l2] < 0)
-						clusterLightAmts[l2] = rand() > RAND_MAX / 2 ? clusterLightAmts[l2] : 0;
-					clusterLightAmts[l2] = pow(clusterLightAmts[l2], 2.0f);
-				}
-
-				// bunch of stuff
-				for (int i = 0; i < clusters; ++i) {
-					Vector3 clusterPos(cos(i / 5.210f) * 30.0f, sin(i / 5.12f) * 40.0f, 0);
-					Vector3 colors[] = {
-						Vector3(1, 1, 2),
-						Vector3(1.5, 1, 1.5)
-					};
-					Vector3 clusterColor = colors[i % ARRAY_SIZE(colors)] * clusterLightAmts[i];
-					float clustert = math::clamp(float((beat / 16) - floor(beat / 16)), 0.0f, 1.0f);
-
-
-					Matrix4x4 translation = Matrix4x4::translation(clusterPos);
-					Matrix4x4 rotation = Matrix4x4::rotation(Vector3(sin(i * 1.0f) * 10.0f, sin(i * 1.412331f) * 10.0f, 0) * float(beat * 0.01f));
-					Matrix4x4 scaling = Matrix4x4::scaling(Vector3(10, 10, 10));
-					Matrix4x4 base = translation * rotation;
-
-					cube_instancer.setInstanceTransform(i * clusterBombs, scaling * base);
-					cube_instancer.setInstanceColor(i * clusterBombs, clusterColor);
-
-					for (int j = 1; j < clusterBombs; ++j) {
-						int idx = i * clusterBombs + j;
-						float t = math::clamp(clustert * 2 - (j - 1), 0.0f, 1.0f);
-
-						Vector3 pos = math::lerp(Vector3(sin(idx / 5.220f) * 80.0f, cos(idx / 5.10f) * 80.0f, 0), Vector3(0, 0, 0), t);
-						Vector3 color = math::lerp(Vector3(0, 0, 0), clusterColor, pow(t, 20));
-
-						Matrix4x4 translation = Matrix4x4::translation(pos);
-						Matrix4x4 scaling = Matrix4x4::scaling(Vector3(1.5,1,1) * 2.0f * (1.5f + sin(idx / 5.120f)));
-						Matrix4x4 rotation = Matrix4x4::rotation(Vector3(sin(idx * 1.0f) * 10.0f, sin(idx * 1.12311231f) * 10.0f, 0) * float(beat * 0.01f));
-
-						cube_instancer.setInstanceTransform(idx, scaling * translation * rotation * base);
-						cube_instancer.setInstanceColor(idx, color);
-					}
-				}
-				cube_instancer.updateInstanceVertexBuffer();
-				cube_instancer.draw(device, clusters * clusterBombs);
-			}
-
-			if (blueCubes) {
-				cubes_fx->setMatrices(world, view, proj);
-				cubes_fx->commitChanges();
-
-				// flower-ish
-				int num_cubes = 0;
-				for (int i = 0; i < 8; ++i) {
-					double th = i * ((2 * M_PI) / 8);
-					Matrix4x4 curr = Matrix4x4::scaling(Vector3(2,1,4)) * Matrix4x4::rotation(Vector3(0, th, 0));
-					for (int j = 0; j < 30; ++j) {
-						Matrix4x4 rotation = Matrix4x4::rotation(Vector3(0, 0, 0.05));
-						Matrix4x4 translation = Matrix4x4::translation(Vector3(1, 0, 0));
-						Matrix4x4 scale = Matrix4x4::scaling(Vector3(1,1,1) * 0.9f);
-						curr = translation * rotation * scale * curr;
-						cube_instancer.setInstanceTransform(num_cubes, curr);
-						cube_instancer.setInstanceColor(num_cubes, math::Vector3(0.2,0.2,1) * pow(pow(float(cos(j / 10.0f - beat)), 2.0f), 10.0f) * 15.0 * sync_get_val(clusterBlomstTrack, row));
-						num_cubes++;
-					}
-				}
-				cube_instancer.updateInstanceVertexBuffer();
-				cube_instancer.draw(device, num_cubes);
-			}
-
-			float fogDensity = sync_get_val(tunnelFogTrack, row) * 0.0005f;
-			if (tunnel) {
-				Vector3 fogColor(0.3, 0.4, 0.6);
-				tunnel_fx->setFloat("fogDensity", fogDensity);
-				tunnel_fx->setVector3("fogColor", fogColor);
-				tunnel_fx->setFloat("time", float(beat * 0.1));
-
-//				float radius1 = math::lerp(70.0f, 20.0f, math::clamp(sync_get_val(logoDispTrack, row), 0.0f, 1.0f));
-//				float radius2 = math::lerp(60.0f, 10.0f, math::clamp(sync_get_val(logoDispTrack, row), 0.0f, 1.0f));
-				float radius1 = sync_get_val(tunnelRadius1Track, row);
-				float radius2 = sync_get_val(tunnelRadius2Track, row);
-
-				float scale   = math::lerp(2.0f, 1.0f, math::clamp(sync_get_val(logoDispTrack, row), 0.0f, 1.0f));
-				tunnel_fx->setFloat("radius", radius1);
-
-//				Matrix4x4 world = Matrix4x4::scaling(Vector3(scale, scale, scale));
-				tunnel_fx->setMatrices(world, view, proj);
-				tunnel_fx->commitChanges();
-				tunnel_fx->draw(tunnel_x);
-
-				cubes_fx->setMatrices(world, view, proj);
-				cubes_fx->setFloat("fogDensity", fogDensity);
-				cubes_fx->setVector3("fogColor", fogColor);
-				cubes_fx->commitChanges();
-
-				// bunch of stuff
-				int a = 36, b = 16;
-				for (int i = 0; i < a; ++i) {
-					float th = i * float((2 * M_PI) / a);
-					Matrix4x4 translation = Matrix4x4::translation(Vector3(65, 0, 0));
-					Matrix4x4 rotation = Matrix4x4::rotation(Vector3(0, 0, th));
-					Matrix4x4 base = translation * rotation;
-					for (int j = 0; j < b; ++j) {
-						float th = j * float((2 * M_PI) / b);
-						Matrix4x4 translation = Matrix4x4::translation(Vector3(radius2, 0, 0));
-						Matrix4x4 scale = Matrix4x4::scaling(Vector3(1, 10, 1));
-						Matrix4x4 rotation = Matrix4x4::rotation(Vector3(0, th, 0));
-
-						Matrix4x4 rotation2 = Matrix4x4::rotation(Vector3(cos(beat * 0.1) * 0.5, 0, 0));
-
-						cube_instancer.setInstanceTransform(i * b + j, translation * scale * rotation2 * rotation * base);
-						cube_instancer.setInstanceColor(i * b + j, math::Vector3(0, 0, 0));
-					}
-				}
-				cube_instancer.updateInstanceVertexBuffer();
-				cube_instancer.draw(device, a * b);
-
-				cubes_fx->setFloat("fogDensity", 0.0);
-				cubes_fx->setVector3("fogColor", Vector3(0, 0, 0));
-			}
-
-			if (tree) {
-				Vector3 fogColor(0.0, 0.0, 0.0);
-				tree_fx->setFloat("fogDensity", fogDensity);
-				tree_fx->setVector3("fogColor", fogColor);
-				tree_floor_fx->setFloat("fogDensity", fogDensity);
-				tree_floor_fx->setVector3("fogColor", fogColor);
-				tree_floor7_fx->setFloat("fogDensity", fogDensity);
-				tree_floor7_fx->setVector3("fogColor", fogColor);
-
-				tree_fx->setMatrices(world, view, proj);
-				tree_fx->commitChanges();
-				tree_fx->draw(tree_x);
-
-				tree_floor_fx->setMatrices(world, view, proj);
-
-				Vector3 light0 = Vector3(1, 0.25, 1) * pow(sync_get_val(clusterL1Amt, row), 2.0f);;
-				Vector3 light1 = Vector3(0.25, 0.25, 1) * pow(sync_get_val(clusterL2Amt, row), 2.0f);;
-
-				tree_floor_fx->setTexture("ao_tex", tree_floor1_ao_tex);
-				tree_floor_fx->setVector3("color", Vector3(0, 0, 0));
-				tree_floor_fx->commitChanges();
-				tree_floor_fx->draw(tree_floor1_x);
-
-				tree_floor_fx->setTexture("ao_tex", tree_floor2_ao_tex);
-				tree_floor_fx->setVector3("color", light0);
-				tree_floor_fx->commitChanges();
-				tree_floor_fx->draw(tree_floor2_x);
-
-				tree_floor_fx->setTexture("ao_tex", tree_floor3_ao_tex);
-				tree_floor_fx->setVector3("color", light1);
-				tree_floor_fx->commitChanges();
-				tree_floor_fx->draw(tree_floor3_x);
-
-				tree_floor_fx->setTexture("ao_tex", tree_floor4_ao_tex);
-				tree_floor_fx->setVector3("color", Vector3(0, 0, 0));
-				tree_floor_fx->commitChanges();
-				tree_floor_fx->draw(tree_floor4_x);
-
-				tree_floor_fx->setTexture("ao_tex", tree_floor5_ao_tex);
-				tree_floor_fx->setVector3("color", Vector3(0, 0, 0));
-				tree_floor_fx->commitChanges();
-				tree_floor_fx->draw(tree_floor5_x);
-
-				tree_floor_fx->setTexture("ao_tex", tree_floor6_ao_tex);
-				tree_floor_fx->setVector3("color", Vector3(0, 0, 0));
-				tree_floor_fx->commitChanges();
-				tree_floor_fx->draw(tree_floor6_x);
-
-				tree_floor7_fx->setMatrices(world, view, proj);
-				tree_floor7_fx->commitChanges();
-				tree_floor7_fx->draw(tree_floor7_x);
-			}
-
-			if (logo) {
-				float a = sync_get_val(logoFadeTrack, row);
-				if (a >= 0) {
-					if (tunnel) {
-						Vector3 fogColor(0.3, 0.4, 0.6);
-						x_fx->setFloat("fogDensity", 0.0005f);
-						x_fx->setVector3("fogColor", fogColor);
-
-						float s = 1.0f / math::lerp(20.0f, 5.0f, math::clamp(sync_get_val(logoDispTrack, row), 0.0f, 1.0f));
-//						float offset = sync_get_val(logoDispTrack, row);
-						float offset = math::lerp(10.0f, -10.0f, math::clamp(sync_get_val(logoDispTrack, row), 0.0f, 1.0f));
-						Vector3 pos = Vector3(sin((camTime + offset) * float(M_PI / 180)), cos((camTime + offset) * float(M_PI / 180)), 0) * sync_get_val(cameraDistanceTrack, row);
-//						camTarget = Vector3(sin((camTime + camOffset) * float(M_PI / 180)), cos((camTime + camOffset) * float(M_PI / 180)), 0) * sync_get_val(cameraDistanceTrack, row);
-						Matrix4x4 world = Matrix4x4::scaling(Vector3(s, s, s)) * Matrix4x4::translation(pos);
-
-						x_fx->setMatrices(world, view, proj);
-					} else {
-						x_fx->setFloat("fogDensity", 0.0f);
-						x_fx->setMatrices(world, view, proj);
-					}
-
-					a = pow(a, 2);
-					x_fx->setVector3("color", Vector3(a, a, a));
-					x_fx->commitChanges();
-					x_fx->draw(x_x);
-				}
-			}
-
-			if (kjennerruhu) {
-				float s = 10.0f;
-				float bend = sync_get_val(planeBendTrack, row) / 100;
-				Matrix4x4 bendWorld = Matrix4x4::scaling(Vector3(s, s, s * 3)) * Matrix4x4::translation(Vector3(0, -300, 200));
-				Matrix4x4 cubeProj  = Matrix4x4::projection(45.0f, 1.0f, 0.1f, 5000.f);
-				device.setRenderTarget(NULL, 1);
-				device.setDepthStencilSurface(reflection_depthstencil);
-
-				bend_plane_fx->setMatrices(bendWorld, view, proj);
-				bend_plane_fx->setFloat("bend", bend);
-				bend_plane_fx->setFloat("anim", sync_get_val(planeAnimTrack, row));
-				bend_plane_fx->commitChanges();
-
-				for (int i = 0; i < 6; i++) {
-					D3DCUBEMAP_FACES face = (D3DCUBEMAP_FACES)i;
-					Matrix4x4 cubeView = getCubemapViewMatrix(face);
-					device.setRenderTarget(reflection_target.getSurface(face), 0);
-					device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
-
-					int skybox = (int)sync_get_val(skyboxTextureTrack, row);
-					if (skybox >= 0 && skybox < (int)skyboxes.size()) {
-						skybox_fx->setMatrices(world, cubeView, cubeProj);
-						skybox_fx->setFloat("desaturate", sync_get_val(skyboxDesaturateTrack, row));
-						skybox_fx->setTexture("env_tex", skyboxes[skybox]);
-						skybox_fx->commitChanges();
-						skybox_fx->draw(skybox_x);
-					}
-
-					if (bend >= 0)
-						bend_plane_fx->draw(plane_128x128_x);
-				}
-
-				device.setRenderTarget(color_target.getRenderTarget(), 0);
-				device.setRenderTarget(depth_target.getRenderTarget(), 1);
-				device.setDepthStencilSurface(depthstencil);
-
-				kjennerruhu_fx->setTexture("env_tex", reflection_target);
-				kjennerruhu_fx->setMatrices(world, view, proj);
-				kjennerruhu_fx->setVector3("color", Vector3(1, 1, 1));
-				kjennerruhu_fx->commitChanges();
-				kjennerruhu_fx->draw(kjennerruhu_x);
-
-				if (bend >= 0)
-					bend_plane_fx->draw(plane_128x128_x);
-			}
-
 			if (dof) {
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 				device->SetRenderState(D3DRS_ZWRITEENABLE, false);
@@ -1002,61 +599,20 @@ int main(int argc, char *argv[])
 				dof_fx->p->End();
 			}
 
-			if (tunnel) {
-				device.setRenderTarget(dof_target.getSurface(0), 0);
-
-				// particles
+			if (dustParticleCount > 0) {
 				Matrix4x4 modelview = world * view;
 				Vector3 up(modelview._12, modelview._22, modelview._32);
 				Vector3 left(modelview._11, modelview._21, modelview._31);
 				math::normalize(up);
 				math::normalize(left);
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-
 				particle_fx->setVector3("up", up);
 				particle_fx->setVector3("left", left);
 				particle_fx->setMatrices(world, view, proj);
 				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
+				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
 
-				particleStreamer.begin();
-				for (int i = 0; i < 20 * 360; ++i) {
-					float th = i * float((2 * M_PI) / 360);
-					Vector3 pos = Vector3(sin(th), cos(th), 0) * 65;
-					Vector3 offset = normalize(Vector3(
-							sin(i * 32.0 + beat * 0.132),
-							cos(i * 45.0 + beat * 0.21),
-							cos(i * 23.0 - beat * 0.123)
-							));
-					pos += offset * 5;
-					float size = 20.0f / (1 + math::notRandf(i) * 300.0f);
-					particleStreamer.add(pos, size);
-					if (!particleStreamer.getRoom()) {
-						particleStreamer.end();
-						particle_fx->draw(&particleStreamer);
-						particleStreamer.begin();
-					}
-				}
-				particleStreamer.end();
-				particle_fx->draw(&particleStreamer);
-			}
-
-			Matrix4x4 modelview = world * view;
-			Vector3 up(modelview._12, modelview._22, modelview._32);
-			Vector3 left(modelview._11, modelview._21, modelview._31);
-			math::normalize(up);
-			math::normalize(left);
-			particle_fx->setVector3("up", up);
-			particle_fx->setVector3("left", left);
-			particle_fx->setMatrices(world, view, proj);
-			particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
-			device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-			device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-
-			if (dustParticleCount > 0) {
 				device.setRenderTarget(dof_target.getSurface(0), 0);
-
-				// particles
 
 				particleStreamer.begin();
 				for (int i = 0; i < dustParticleCount; ++i) {
@@ -1069,121 +625,6 @@ int main(int argc, char *argv[])
 					pos += offset * 10;
 					double size = 5.0 / (3 + i * 0.001);
 					particleStreamer.add(pos, float(size * dustParticleAlpha));
-					if (!particleStreamer.getRoom()) {
-						particleStreamer.end();
-						particle_fx->draw(&particleStreamer);
-						particleStreamer.begin();
-					}
-				}
-				particleStreamer.end();
-				particle_fx->draw(&particleStreamer);
-			}
-
-			if (tree) {
-				float freq = math::max(sync_get_val(treeParticleCountTrack, row), 0.000001f);
-				float period = 1.0 / freq;
-
-				// emit particles
-				static int index = 0;
-				static float lastEmit;
-				if (fabs(lastEmit - time) > 0.5) {
-					// less than two frames per second, I think not! first frame!
-					lastEmit = time;
-				}
-				int seed = 0;
-				while (treeParticles[index].size() < 100000 && time - lastEmit > period) {
-					int emitter = rand() % numEmitters;
-					Vector3 pos = emitters[emitter];
-					pos.x += (math::notRandf(seed++) * 2 - 1) * 0.1;
-					pos.y += (math::notRandf(seed++) * 2 - 1) * 0.1;
-					pos.z += (math::notRandf(seed++) * 2 - 1) * 0.1;
-					Particle p;
-					p.pos = pos;
-					p.time = 0.0f;
-					treeParticles[index].push_back(p);
-					lastEmit += period;
-				}
-				treeParticles[1 - index].resize(treeParticles[index].size());
-
-				// simulate
-				float gravity = -sync_get_val(treeParticleSpeedTrack, row);
-				int dstIndex = 0;
-				for (int i = 0; i < (int)treeParticles[index].size(); ++i) {
-					Particle p = treeParticles[index][i];
-
-					if (p.time < 10) {
-						Vector3 noisePos = p.pos / 5;
-						Vector3 grad0, grad1, grad2;
-						sdnoise3(100 - noisePos.x, noisePos.y, noisePos.z, &grad0.x, &grad0.y, &grad0.z);
-						sdnoise3(noisePos.x, 100 - noisePos.y, noisePos.z, &grad1.x, &grad1.y, &grad1.z);
-						sdnoise3(noisePos.x, noisePos.y, 100 - noisePos.z, &grad2.x, &grad2.y, &grad2.z);
-						Vector3 velocity = Vector3(grad2.y - grad1.z, grad0.z - grad2.x, grad1.x - grad0.y) + Vector3(0, gravity, 0);
-						p.pos += velocity * deltaTime;
-						p.time += deltaTime;
-						if (p.time < 10)
-							treeParticles[1 - index][dstIndex++] = p;
-					}
-				}
-				treeParticles[1 - index].resize(dstIndex);
-				index = 1 - index;
-
-				device.setRenderTarget(dof_target.getSurface(0), 0);
-
-				particleStreamer.begin();
-				for (int i = 0; i < (int)treeParticles[index].size(); ++i) {
-					Particle p = treeParticles[index][i];
-
-					double size = 3.0;
-					size *= std::max(0.0, sin(p.time * 0.22)) * (1 - (p.time / 10));
-
-					particleStreamer.add(p.pos, float(size * dustParticleAlpha));
-					if (!particleStreamer.getRoom()) {
-						particleStreamer.end();
-						particle_fx->draw(&particleStreamer);
-						particleStreamer.begin();
-					}
-				}
-				particleStreamer.end();
-				particle_fx->draw(&particleStreamer);
-			}
-
-			if (particleObject) {
-				device.setRenderTarget(dof_target.getSurface(0), 0);
-
-				particleStreamer.begin();
-				for (int i = 0; i < numVertices; ++i) {
-					Vector3 pos = vertices[i] * 30;
-					double size = 1.0 / 10;
-					particleStreamer.add(pos, float(size));
-					if (!particleStreamer.getRoom()) {
-						particleStreamer.end();
-						particle_fx->draw(&particleStreamer);
-						particleStreamer.begin();
-					}
-				}
-				particleStreamer.end();
-				particle_fx->draw(&particleStreamer);
-			}
-
-			if (space) {
-				device.setRenderTarget(dof_target.getSurface(0), 0);
-
-				particleStreamer.begin();
-				particleStreamer.add(Vector3(0, 0, 0), 50.0); // fake sun (make more better)
-				for (int i = 0; i < 100000; ++i) {
-					Vector3 pos = Vector3(math::notRandf(i) * 2 - 1, math::notRandf(i + 1) * 2 - 1, math::notRandf(i + 2) * 2 - 1) * 100;
-					Vector3 offset = normalize(Vector3(
-							sin(i * 0.23 + beat * 0.0532),
-							cos(i * 0.27 + beat * 0.0521),
-							cos(i * 0.31 - beat * 0.0512)
-							));
-					pos += offset * 10;
-
-					double size = 10.0 / (1.5 + i * 0.0025);
-					size *= 10.0 / (1.0 + math::length(pos) * 0.5);
-					size *= std::max(0.0, sin(i * 0.22 + beat * 0.7532));
-
-					particleStreamer.add(pos * 3, float(size * dustParticleAlpha));
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
 						particle_fx->draw(&particleStreamer);

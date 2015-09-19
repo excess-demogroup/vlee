@@ -700,15 +700,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\data\bend-plane.fx"
-			>
-		</File>
-		<File
 			RelativePath=".\data\blur.fx"
-			>
-		</File>
-		<File
-			RelativePath=".\data\cubes.fx"
 			>
 		</File>
 		<File
@@ -717,10 +709,6 @@
 		</File>
 		<File
 			RelativePath=".\data\fxaa.fx"
-			>
-		</File>
-		<File
-			RelativePath=".\data\kjennerruhu.fx"
 			>
 		</File>
 		<File
@@ -733,30 +721,6 @@
 		</File>
 		<File
 			RelativePath=".\data\skybox.fx"
-			>
-		</File>
-		<File
-			RelativePath=".\data\sphere-lights.fx"
-			>
-		</File>
-		<File
-			RelativePath=".\data\tree-floor.fx"
-			>
-		</File>
-		<File
-			RelativePath=".\data\tree-floor7.fx"
-			>
-		</File>
-		<File
-			RelativePath=".\data\tree.fx"
-			>
-		</File>
-		<File
-			RelativePath=".\data\tunnel.fx"
-			>
-		</File>
-		<File
-			RelativePath=".\data\x.fx"
 			>
 		</File>
 	</Files>
