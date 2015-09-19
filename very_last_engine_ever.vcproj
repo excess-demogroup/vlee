@@ -723,6 +723,10 @@
 			RelativePath=".\data\skybox.fx"
 			>
 		</File>
+		<File
+			RelativePath=".\data\sphere.fx"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
