@@ -69,14 +69,11 @@
 		<track name="dist.freq">
 			<key row="0" value="0" interpolation="0"/>
 		</track>
-		<track name="dof.fstop">
-			<key row="0" value="0" interpolation="0"/>
-		</track>
-		<track name="dof.flen">
-			<key row="0" value="4" interpolation="0"/>
-		</track>
 		<track name="dof.fdist">
-			<key row="0" value="0" interpolation="0"/>
+			<key row="0" value="20" interpolation="0"/>
+		</track>
+		<track name="dof.scale">
+			<key row="0" value="1" interpolation="0"/>
 		</track>
 		<track name="bloom.amt">
 			<key row="0" value="0" interpolation="0"/>

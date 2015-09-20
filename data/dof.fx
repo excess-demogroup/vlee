@@ -53,16 +53,13 @@ sampler temp2_samp = sampler_state {
 	sRGBTexture = FALSE;
 };
 
-float focal_distance, focal_length, f_stop;
 float2 viewport;
 #define SAMPLES 20
 
+float focal_distance, coc_scale;
 float coc(float z)
 {
-	float p = focal_distance; // focal distance
-	float f = focal_length; // focal length
-	float F = f_stop; // F-stop
-	return ((z * f) / (z - f) - (p * f) / (p - f)) * (p - f) / (p * F);
+	return coc_scale * ((z - focal_distance) / z);
 }
 
 struct VS_OUTPUT {

@@ -314,9 +314,9 @@ int main(int argc, char *argv[])
 		const sync_track *skyboxDesaturateTrack = sync_get_track(rocket, "skybox.desat");
 		const sync_track *skyboxTextureTrack = sync_get_track(rocket, "skybox.tex");
 
-		const sync_track *dofFStopTrack = sync_get_track(rocket, "dof.fstop");
-		const sync_track *dofFocalLengthTrack = sync_get_track(rocket, "dof.flen");
+		const sync_track *dofCocScaleTrack = sync_get_track(rocket, "dof.scale");
 		const sync_track *dofFocalDistTrack = sync_get_track(rocket, "dof.fdist");
+
 
 		Surface backbuffer   = device.getRenderTarget(0);
 
@@ -497,12 +497,11 @@ int main(int argc, char *argv[])
 				camTarget = Vector3(0, 0, 0);
 			}
 
+			float coc_scale = sync_get_val(dofCocScaleTrack, row) / letterbox_viewport.Height;
 			dof_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
-			dof_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
-			dof_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
+			dof_fx->setFloat("coc_scale", coc_scale);
 			particle_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
-			particle_fx->setFloat("focal_length", sync_get_val(dofFocalLengthTrack, row));
-			particle_fx->setFloat("f_stop", sync_get_val(dofFStopTrack, row));
+			particle_fx->setFloat("coc_scale", coc_scale);
 
 			bool dof = true;
 			int dustParticleCount = 0;
