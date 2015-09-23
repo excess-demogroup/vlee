@@ -46,6 +46,7 @@ struct VS_OUTPUT {
 	float depth : TEXCOORD1;
 	float rr : TEXCOORD2;
 	float3 origin : TEXCOORD3;
+	float3 spherePos : TEXCOORD4;
 };
 
 VS_OUTPUT vertex(VS_INPUT In)
@@ -77,8 +78,9 @@ VS_OUTPUT vertex(VS_INPUT In)
 	VS_OUTPUT o;
 	o.pos = float4(pos, 0, 1);
 	o.dir = rayTargetEye - rayStartEye;
-	o.origin = rayStartEye - spherePosEye;
+	o.origin = rayStartEye;
 	o.depth = rayStartEye.z;
+	o.spherePos = spherePosEye;
 
 	// just a silly precalc
 	o.rr = sphereRadius * sphereRadius;
@@ -94,7 +96,7 @@ struct PS_OUTPUT {
 PS_OUTPUT pixel(VS_OUTPUT In)
 {
 	float3 dir = normalize(In.dir);
-	float3 pos = In.origin;
+	float3 pos = In.origin - In.spherePos;
 	float rr = In.rr;
 
 	float a = dot(pos, pos);
