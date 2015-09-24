@@ -143,9 +143,20 @@ namespace engine {
 				setVector3(this->viewDir,  world_view.getZAxis());
 		}
 
+		void drawPass(Drawable *d, int idx)
+		{
+			UINT passes = 0;
+			p->Begin(&passes, 0);
+
+			p->BeginPass(idx);
+			d->draw();
+			p->EndPass();
+
+			p->End();
+		}
+
 		void draw(Drawable *d)
 		{
-//			assert( NULL != p );
 			UINT passes = 0;
 			p->Begin(&passes, 0);
 			for (unsigned j = 0; j < passes; ++j)
