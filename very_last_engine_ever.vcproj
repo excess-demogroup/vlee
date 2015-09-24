@@ -724,6 +724,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\data\sphere-resolve.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\sphere.fx"
 			>
 		</File>

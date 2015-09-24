@@ -328,6 +328,10 @@ int main(int argc, char *argv[])
 			caps.PixelShaderVersion < D3DVS_VERSION(3, 0))
 			use_sm20_codepath = true;
 
+		// 0: XYZ = normal, W = unused
+		RenderTexture gbuffer_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
+		RenderTexture ao_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
+
 		RenderTexture color_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
 		RenderTexture depth_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_R32F);
 		Surface depthstencil = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8);
@@ -430,6 +434,7 @@ int main(int argc, char *argv[])
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
 		Effect *sphere_fx = engine::loadEffect(device, "data/sphere.fx");
+		Effect *sphere_resolve_fx = engine::loadEffect(device, "data/sphere-resolve.fx");
 
 		bool dump_video = false;
 		for (int i = 1; i < argc; ++i)
@@ -561,13 +566,19 @@ int main(int argc, char *argv[])
 			}
 
 			if (spheres) {
+				device.setRenderTarget(gbuffer_target.getRenderTarget(), 0);
+				device.setRenderTarget(depth_target.getRenderTarget(), 1);
+				// clear GBuffer
+				device->Clear(0, 0, D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
+
 				sphere_fx->setMatrices(world, view, proj);
+				sphere_fx->setFloat("radiusScale", 1.0f);
 				sphere_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
 
 				particleStreamer.begin();
-				for (int i = 0; i < 1000; ++i) {
+				for (int i = 0; i < 360; ++i) {
 					float th = i * float((2 * M_PI) / 360);
-					Vector3 pos = Vector3(sin(th), cos(th), 0) * 10;
+					Vector3 pos = Vector3(sin(th), cos(th), 0) * 3;
 					Vector3 offset = normalize(Vector3(
 							sin(i * 32.0 + beat * 0.132),
 							cos(i * 45.0 + beat * 0.21),
@@ -578,12 +589,50 @@ int main(int argc, char *argv[])
 					particleStreamer.add(pos, size);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
-						sphere_fx->draw(&particleStreamer);
+						sphere_fx->drawPass(&particleStreamer, 0);
 						particleStreamer.begin();
 					}
 				}
 				particleStreamer.end();
-				sphere_fx->draw(&particleStreamer);
+				sphere_fx->drawPass(&particleStreamer, 0);
+
+				device.setRenderTarget(ao_target.getRenderTarget(), 0);
+				device.setRenderTarget(NULL, 1);
+				device->Clear(0, 0, D3DCLEAR_TARGET, 0x00FFFFFF, 1.f, 0);
+				sphere_fx->setTexture("depth_tex", depth_target);
+				sphere_fx->setTexture("gbuffer_tex", gbuffer_target);
+
+				particleStreamer.begin();
+				for (int i = 0; i < 360; ++i) {
+					float th = i * float((2 * M_PI) / 360);
+					Vector3 pos = Vector3(sin(th), cos(th), 0) * 3;
+					Vector3 offset = normalize(Vector3(
+							sin(i * 32.0 + beat * 0.132),
+							cos(i * 45.0 + beat * 0.21),
+							cos(i * 23.0 - beat * 0.123)
+							));
+					pos += offset;
+					float size = 0.5f;
+					particleStreamer.add(pos, size);
+					if (!particleStreamer.getRoom()) {
+						particleStreamer.end();
+						sphere_fx->drawPass(&particleStreamer, 1);
+						particleStreamer.begin();
+					}
+				}
+				particleStreamer.end();
+				sphere_fx->drawPass(&particleStreamer, 1);
+				sphere_fx->setTexture("depth_tex", NULL);
+				sphere_fx->setTexture("gbuffer_tex", NULL);
+
+				device.setRenderTarget(color_target.getRenderTarget(), 0);
+				device.setRenderTarget(depth_target.getRenderTarget(), 1);
+
+				sphere_resolve_fx->setTexture("tex", gbuffer_target);
+				sphere_resolve_fx->setTexture("tex", ao_target);
+				int w = color_target.getSurface(0).getWidth();
+				int h = color_target.getSurface(0).getHeight();
+				drawRect(device, sphere_resolve_fx, 0, 0, float(w), float(h));
 			}
 
 			if (dof) {

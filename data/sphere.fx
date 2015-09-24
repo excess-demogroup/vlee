@@ -125,11 +125,143 @@ PS_OUTPUT pixel(VS_OUTPUT In)
 	return o;
 }
 
+float sphereAO(float3 pos, float3 normal, float3 spos, float r)
+{
+	float3 dir = spos.xyz - pos;
+	float l  = length(dir);
+	float nl = dot(normal, dir / l);
+	float h  = l / r;
+	float h2 = h * h;
+	float k2 = 1 - h2 * nl * nl;
+
+	// above/below horizon: Quilez - http://iquilezles.org/www/articles/sphereao/sphereao.htm
+	float res = max(0, nl) / h2;
+
+	// intersecting horizon: Lagarde/de Rousiers - http://www.frostbite.com/wp-content/uploads/2014/11/course_notes_moving_frostbite_to_pbr.pdf
+	if (k2 > 0)
+	{
+#ifdef ACCURATE_AO
+		res = nl * acos(-nl * sqrt((h2 - 1) / (1 - nl * nl))) - sqrt(k2 * (h2 - 1));
+		res = res / h2 + atan(sqrt(k2 / (h2 - 1)));
+		res /= 3.141593;
+#else
+		// cheap approximation: Quilez
+		res = pow(clamp(0.5 * (nl * h + 1) / h2, 0, 1), 1.5);
+#endif
+	}
+
+	return res;
+}
+
+texture depth_tex;
+sampler depth_samp = sampler_state {
+	Texture = (depth_tex);
+	MipFilter = NONE;
+	MinFilter = POINT;
+	MagFilter = POINT;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	sRGBTexture = FALSE;
+};
+
+texture gbuffer_tex;
+sampler gbuffer_samp = sampler_state {
+	Texture = (gbuffer_tex);
+	MipFilter = NONE;
+	MinFilter = POINT;
+	MagFilter = POINT;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	sRGBTexture = FALSE;
+};
+
+struct VS_OUTPUT2 {
+	float4 pos : POSITION0;
+	float3 spherePos : TEXCOORD0;
+	float2 sphereRadius : TEXCOORD1;
+	float2 uv : TEXCOORD2;
+};
+
+const float2 viewport;
+
+VS_OUTPUT2 vertex2(VS_INPUT In)
+{
+	float2 pos = In.uv;
+	float3 spherePos = In.pos;
+	float sphereRadius = In.size * 3;
+
+	float3 spherePosEye = mul(float4(spherePos, 1), matWorldView).xyz;
+	float4 spherePosClip = mul(float4(spherePosEye, 1), matProjection);
+	if (spherePosClip.z < -spherePosClip.w) {
+		VS_OUTPUT o;
+		o.pos = float4(0, 0, 0, -1);
+		o.dir = 0;
+		o.origin = 0;
+		o.depth = 0;
+		// return o;
+	}
+
+	float4 bbox = getSphereBounds(spherePosEye, sphereRadius);
+	pos.x = clamp(pos.x, bbox.x, bbox.z);
+	pos.y = clamp(pos.y, bbox.y, bbox.w);
+
+	VS_OUTPUT2 o;
+	o.pos = float4(pos, 0, 1);
+	o.spherePos = spherePosEye;
+	o.sphereRadius = float2(In.size, sphereRadius);
+	o.uv = pos.xy; // * float2(1, -1);
+	o.uv += 0.5 / viewport;
+
+	// just a silly precalc
+	return o;
+}
+
+float4 pixel2(VS_OUTPUT2 In) : COLOR0
+{
+	float2 texCoord = 0.5 + In.uv * float2(0.5, -0.5);
+	float eyeDepth = tex2D(depth_samp, texCoord).r;
+
+	// early out
+	if (eyeDepth < In.spherePos.z - In.sphereRadius.y ||
+	    eyeDepth > In.spherePos.z + In.sphereRadius.y)
+		discard;
+
+	// TODO: optimize this (eye-pos reconstruction, super-silly implementation)
+	float4 temp = mul(float4(0, 0, eyeDepth, 1), matProjection);
+	float4 temp2 = mul(float4(In.uv, temp.z / temp.w, 1), matProjectionInverse);
+	float3 eyePos = temp2.xyz / temp2.w;
+
+	float3 eyeNormal = tex2D(gbuffer_samp, texCoord).xyz;
+
+	float d = distance(eyePos.xyz, In.spherePos);
+	if (d > In.sphereRadius.y)
+		discard;
+
+	// TODO: optimize this in VS
+	float f = 1 - (d - In.sphereRadius.x) / (In.sphereRadius.y - In.sphereRadius.x);
+
+	float ao = sphereAO(eyePos, eyeNormal, In.spherePos, In.sphereRadius.x);
+
+	return float4(0, 0, 0, ao * f);
+}
+
 technique sphere {
-	pass P0 {
+	pass Geometry {
 		VertexShader = compile vs_3_0 vertex();
 		PixelShader  = compile ps_3_0 pixel();
 		AlphaBlendEnable = False;
 		ZWriteEnable = True;
+	}
+
+	pass AO {
+		VertexShader = compile vs_3_0 vertex2();
+		PixelShader  = compile ps_3_0 pixel2();
+		ZWriteEnable = False;
+		AlphaBlendEnable = True;
+		SeparateAlphaBlendEnable = True;
+		SrcBlend = One;
+		DestBlend = One;
+		SrcBlendAlpha = InvDestAlpha;
+		DestBlendAlpha = One;
 	}
 }
