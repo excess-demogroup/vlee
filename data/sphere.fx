@@ -180,6 +180,8 @@ struct VS_OUTPUT2 {
 	float3 spherePos : TEXCOORD0;
 	float2 sphereRadius : TEXCOORD1;
 	float2 uv : TEXCOORD2;
+	float2 texCoord : TEXCOORD3;
+	float2 dir : TEXCOORD4;
 };
 
 const float2 viewport;
@@ -205,12 +207,20 @@ VS_OUTPUT2 vertex2(VS_INPUT In)
 	pos.x = clamp(pos.x, bbox.x, bbox.z);
 	pos.y = clamp(pos.y, bbox.y, bbox.w);
 
+	float4 eyeSpaceNear = mul(float4(pos, 0, 1), matProjectionInverse);
+	float4 eyeSpaceFar = mul(float4(pos, 1, 1), matProjectionInverse);
+	float3 rayStartEye = eyeSpaceNear.xyz / eyeSpaceNear.w;
+	float3 rayTargetEye = eyeSpaceFar.xyz / eyeSpaceFar.w;
+	float3 dir = rayTargetEye - rayStartEye;
+
 	VS_OUTPUT2 o;
 	o.pos = float4(pos, 0, 1);
 	o.spherePos = spherePosEye;
 	o.sphereRadius = float2(In.size, sphereRadius);
 	o.uv = pos.xy; // * float2(1, -1);
-	o.uv += 0.5 / viewport;
+	o.texCoord = 0.5 + o.uv * float2(0.5, -0.5);
+	o.texCoord += 0.5 / viewport;
+	o.dir = dir.xy / dir.z;
 
 	// just a silly precalc
 	return o;
@@ -218,7 +228,7 @@ VS_OUTPUT2 vertex2(VS_INPUT In)
 
 float4 pixel2(VS_OUTPUT2 In) : COLOR0
 {
-	float2 texCoord = 0.5 + In.uv * float2(0.5, -0.5);
+	float2 texCoord = In.texCoord;
 	float eyeDepth = tex2D(depth_samp, texCoord).r;
 
 	// early out
@@ -226,11 +236,7 @@ float4 pixel2(VS_OUTPUT2 In) : COLOR0
 	    eyeDepth > In.spherePos.z + In.sphereRadius.y)
 		discard;
 
-	// TODO: optimize this (eye-pos reconstruction, super-silly implementation)
-	float4 temp = mul(float4(0, 0, eyeDepth, 1), matProjection);
-	float4 temp2 = mul(float4(In.uv, temp.z / temp.w, 1), matProjectionInverse);
-	float3 eyePos = temp2.xyz / temp2.w;
-
+	float3 eyePos = float3(In.dir * eyeDepth, eyeDepth);
 	float3 eyeNormal = tex2D(gbuffer_samp, texCoord).xyz;
 
 	float d = distance(eyePos.xyz, In.spherePos);
