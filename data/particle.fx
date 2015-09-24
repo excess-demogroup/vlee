@@ -47,10 +47,10 @@ VS_OUTPUT vertex(VS_INPUT In)
 
 float4 pixel(VS_OUTPUT In)  : COLOR
 {
-   float d = max(abs(In.uv.x), 0.87 * abs(In.uv.y) + 0.5 * abs(In.uv.x)) * 0.6;
-   float e = fwidth(d);
-   d = saturate((0.5 - d) / e);
-   return d * In.color;
+	float d = max(abs(In.uv.x), 0.87 * abs(In.uv.y) + 0.5 * abs(In.uv.x)) * 0.6;
+	float e = fwidth(d);
+	d = saturate((0.5 - d) / e);
+	return d * In.color;
 }
 
 technique white {
