@@ -576,16 +576,16 @@ int main(int argc, char *argv[])
 				sphere_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
 
 				particleStreamer.begin();
-				for (int i = 0; i < 360; ++i) {
+				for (int i = 0; i < 36000; ++i) {
 					float th = i * float((2 * M_PI) / 360);
 					Vector3 pos = Vector3(sin(th), cos(th), 0) * 3;
 					Vector3 offset = normalize(Vector3(
-							sin(i * 32.0 + beat * 0.132),
-							cos(i * 45.0 + beat * 0.21),
-							cos(i * 23.0 - beat * 0.123)
+							sin((i % 1337) * 12.0 + beat * 0.0332),
+							cos((i % 1338) * 15.0 + beat * 0.041),
+							cos((i % 1339) * 13.0 - beat * 0.0323)
 							));
 					pos += offset;
-					float size = 0.5f;
+					float size = 0.03f + pow(math::notRandf(i), 150.0f) * 0.5;
 					particleStreamer.add(pos, size);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
@@ -603,16 +603,16 @@ int main(int argc, char *argv[])
 				sphere_fx->setTexture("gbuffer_tex", gbuffer_target);
 
 				particleStreamer.begin();
-				for (int i = 0; i < 360; ++i) {
+				for (int i = 0; i < 36000; ++i) {
 					float th = i * float((2 * M_PI) / 360);
 					Vector3 pos = Vector3(sin(th), cos(th), 0) * 3;
 					Vector3 offset = normalize(Vector3(
-							sin(i * 32.0 + beat * 0.132),
-							cos(i * 45.0 + beat * 0.21),
-							cos(i * 23.0 - beat * 0.123)
+							sin((i % 1337) * 12.0 + beat * 0.0332),
+							cos((i % 1338) * 15.0 + beat * 0.041),
+							cos((i % 1339) * 13.0 - beat * 0.0323)
 							));
 					pos += offset;
-					float size = 0.5f;
+					float size = 0.03f + pow(math::notRandf(i), 150.0f) * 0.5;
 					particleStreamer.add(pos, size);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
