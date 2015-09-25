@@ -72,7 +72,7 @@ VS_OUTPUT vertex(VS_INPUT In)
 
 	float4 eyeSpaceNear = mul(float4(pos, 0, 1), matProjectionInverse);
 	float4 eyeSpaceFar = mul(float4(pos, 1, 1), matProjectionInverse);
-	float3 rayStartEye = eyeSpaceNear.xyz / eyeSpaceNear.w; 
+	float3 rayStartEye = eyeSpaceNear.xyz / eyeSpaceNear.w;
 	float3 rayTargetEye = eyeSpaceFar.xyz / eyeSpaceFar.w;
 
 	VS_OUTPUT o;
