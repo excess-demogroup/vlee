@@ -43,7 +43,7 @@
 
 #include "sdnoise1234.h"
 
-#include <sync.h>
+#include "sync/sync.h"
 
 using math::Vector2;
 using math::Vector3;

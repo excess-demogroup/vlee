@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9d.lib d3d9.lib dxerr.lib lib/bass.lib lib/sync_player-debug.lib winmm.lib Ws2_32.lib"
+				AdditionalDependencies="d3dx9d.lib d3d9.lib dxerr.lib lib/bass.lib winmm.lib Ws2_32.lib"
 				LinkIncremental="2"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
@@ -142,7 +142,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr.lib lib/bass.lib lib/sync_player-release.lib winmm.lib Ws2_32.lib"
+				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr.lib lib/bass.lib winmm.lib Ws2_32.lib"
 				OutputFile="$(OutDir)\demo.exe"
 				LinkIncremental="1"
 				GenerateManifest="true"
@@ -223,7 +223,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr.lib lib/bass.lib lib/sync_player-release-client.lib winmm.lib Ws2_32.lib"
+				AdditionalDependencies="d3dx9.lib d3d9.lib dxerr.lib lib/bass.lib winmm.lib Ws2_32.lib"
 				OutputFile="$(OutDir)\demo_client.exe"
 				LinkIncremental="1"
 				GenerateManifest="false"
@@ -456,6 +456,66 @@
 				<File
 					RelativePath=".\src\renderer\device.cpp"
 					>
+				</File>
+			</Filter>
+			<Filter
+				Name="sync"
+				>
+				<File
+					RelativePath=".\src\sync\sync_device.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="SyncRelease|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\src\sync\track.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="SyncRelease|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
 				</File>
 			</Filter>
 		</Filter>
@@ -709,6 +769,26 @@
 				</File>
 				<File
 					RelativePath=".\src\math\vector3.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="sync"
+				>
+				<File
+					RelativePath=".\src\sync\base.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\sync\device.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\sync\sync.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\sync\track.h"
 					>
 				</File>
 			</Filter>
