@@ -92,6 +92,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy /y &quot;$(SolutionDir)lib\bass.dll&quot; &quot;$(TargetDir)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -175,6 +176,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy /y &quot;$(SolutionDir)lib\bass.dll&quot; &quot;$(TargetDir)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -256,6 +258,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy /y &quot;$(SolutionDir)lib\bass.dll&quot; &quot;$(TargetDir)&quot;"
 			/>
 		</Configuration>
 	</Configurations>
