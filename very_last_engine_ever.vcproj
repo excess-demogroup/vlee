@@ -202,7 +202,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="1"
+				Optimization="2"
 				AdditionalIncludeDirectories="include;&quot;$(ProjectDir)/src&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CRT_SECURE_NO_DEPRECATE;SYNC"
 				RuntimeLibrary="0"
