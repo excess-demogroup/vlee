@@ -17,7 +17,7 @@ namespace engine
 		inline float getValue(float time)
 		{
 			int pos = int(time * rate);
-			if (pos >= int(data.size())) pos = data.size() - 1;
+			if (pos >= int(data.size())) pos = int(data.size()) - 1;
 
 			float v1 = data[pos];
 			if (pos == data.size() - 1) return v1;

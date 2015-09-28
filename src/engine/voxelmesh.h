@@ -14,7 +14,7 @@ namespace engine
 	class VoxelMesh
 	{
 	public:
-		VoxelMesh(renderer::Device &device, engine::Effect *effect, const VoxelGrid &voxelGrid, size_t maxSize) :
+		VoxelMesh(renderer::Device &device, engine::Effect *effect, const VoxelGrid &voxelGrid, UINT maxSize) :
 		  effect(effect),
 		  voxelGrid(voxelGrid),
 		  maxSize(maxSize),
@@ -42,7 +42,7 @@ namespace engine
 			return grid[getIndex(x, y, z)];
 		}
 		
-		size_t getIndex(int x, int y, int z) const
+		int getIndex(int x, int y, int z) const
 		{
 			assert(x >= 0);
 			assert(y >= 0);
@@ -58,7 +58,7 @@ namespace engine
 				z * maxSize * maxSize;
 		}
 		
-		size_t updateDynamicVertexBuffer(renderer::VertexBuffer &vb);
+		UINT updateDynamicVertexBuffer(renderer::VertexBuffer &vb);
 		
 		void fillGrid(math::Matrix4x4 mrot);
 		void setupVoxel(renderer::Device &device);
@@ -66,12 +66,12 @@ namespace engine
 		
 		BYTE *grid;
 		const VoxelGrid &voxelGrid;
-		size_t maxSize;
+		UINT maxSize;
 		float currSize;
 		
 		renderer::VertexDeclaration vertex_decl;
 		renderer::VertexBuffer dynamic_vb;
-		size_t cubes;
+		UINT cubes;
 		renderer::VertexBuffer static_vb;
 		renderer::IndexBuffer ib;
 		engine::Effect *effect;

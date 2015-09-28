@@ -21,7 +21,7 @@ namespace engine
 			assert(0 != textures.size());
 			int idx = int(pos * textures.size());
 			idx %= (textures.size() * 2) - 1;
-			if (idx >= int(textures.size())) idx = textures.size() - 1 - (idx - textures.size());
+			if (idx >= int(textures.size())) idx = int(textures.size()) - 1 - (idx - int(textures.size()));
 			return getTexture(size_t(idx));
 		}
 		

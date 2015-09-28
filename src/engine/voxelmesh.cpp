@@ -153,7 +153,7 @@ void VoxelMesh::fillGrid(math::Matrix4x4 mrot)
 	}
 }
 
-size_t VoxelMesh::updateDynamicVertexBuffer(renderer::VertexBuffer &vb)
+UINT VoxelMesh::updateDynamicVertexBuffer(renderer::VertexBuffer &vb)
 {
 	int cubes = 0;
 	int culled = 0;
