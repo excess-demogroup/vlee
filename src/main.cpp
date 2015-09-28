@@ -41,8 +41,6 @@
 #include "engine/spectrumdata.h"
 #include "engine/video.h"
 
-#include "sdnoise1234.h"
-
 #include "sync/sync.h"
 
 using math::Vector2;
