@@ -84,7 +84,7 @@ public:
 		ret->setScale(Vector3(1, 1, 1));
 
 		std::string animFilename = loadString(xmlElem, "keys");
-		printf("anim: %s\n", animFilename.c_str());
+		core::log::printf("loading animation: %s\n", animFilename.c_str());
 		if (!animFilename.empty())
 		{
 			FILE *fp = fopen((basename + animFilename).c_str(), "rb");
