@@ -321,11 +321,6 @@ int main(int argc, char *argv[])
 		D3DCAPS9 caps;
 		direct3d->GetDeviceCaps(config::adapter, D3DDEVTYPE_HAL, &caps);
 
-		bool use_sm20_codepath = false;
-		if (FAILED(direct3d->CheckDeviceFormat(config::adapter, D3DDEVTYPE_HAL, config::mode.Format, D3DUSAGE_QUERY_FILTER | D3DUSAGE_RENDERTARGET, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F)) ||
-			caps.PixelShaderVersion < D3DVS_VERSION(3, 0))
-			use_sm20_codepath = true;
-
 		// 0: XYZ = normal, W = unused
 		RenderTexture gbuffer_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
 		RenderTexture ao_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
