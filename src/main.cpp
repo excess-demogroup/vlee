@@ -465,8 +465,8 @@ int main(int argc, char *argv[])
 #endif
 			double beat = row / 4;
 
-			float camTime = sync_get_val(cameraTimeTrack, row);
-			float camOffset = sync_get_val(cameraOffsetTrack, row);
+			double camTime = sync_get_val(cameraTimeTrack, row);
+			double camOffset = sync_get_val(cameraOffsetTrack, row);
 			Vector3 camPos, camTarget, camUp = Vector3(0, 1, 0);
 			switch ((int)sync_get_val(cameraIndexTrack, row)) {
 			case 0:
@@ -477,19 +477,19 @@ int main(int argc, char *argv[])
 				break;
 
 			case 1:
-				camPos = Vector3(sin(camTime * float(M_PI / 180)), cos(camTime * float(M_PI / 180)), 0) * sync_get_val(cameraDistanceTrack, row);
-				camTarget = Vector3(sin((camTime + camOffset) * float(M_PI / 180)), cos((camTime + camOffset) * float(M_PI / 180)), 0) * sync_get_val(cameraDistanceTrack, row);
+				camPos = Vector3(sin(camTime * float(M_PI / 180)), cos(camTime * float(M_PI / 180)), 0) * float(sync_get_val(cameraDistanceTrack, row));
+				camTarget = Vector3(sin((camTime + camOffset) * float(M_PI / 180)), cos((camTime + camOffset) * float(M_PI / 180)), 0) * float(sync_get_val(cameraDistanceTrack, row));
 				camUp = camPos - camTarget;
 				camUp = Vector3(camUp.y, camUp.z, camUp.x);
 				break;
 
 			case 2: {
-				float angle = sync_get_val(cameraTimeTrack, row) * float(M_PI / 180);
-				float angle2 = angle + sync_get_val(cameraOffsetTrack, row) * float(M_PI / 180);
+				double angle = sync_get_val(cameraTimeTrack, row) * float(M_PI / 180);
+				double angle2 = angle + sync_get_val(cameraOffsetTrack, row) * float(M_PI / 180);
 				camPos = Vector3(sin(angle) * 30, 0, cos(angle) * 30);
-				camPos += normalize(camPos) * sync_get_val(cameraYTrack, row);
+				camPos += normalize(camPos) * float(sync_get_val(cameraYTrack, row));
 				camTarget = Vector3(sin(angle2) * 30, 0, cos(angle2) * 30);
-				camTarget += normalize(camTarget) * sync_get_val(cameraYTrack, row);
+				camTarget += normalize(camTarget) * float(sync_get_val(cameraYTrack, row));
 				} break;
 
 			case 3:
@@ -498,14 +498,15 @@ int main(int argc, char *argv[])
 				break;
 
 			default:
-				camPos = Vector3(0, 1, 0) * sync_get_val(cameraDistanceTrack, row);
+				camPos = Vector3(0, 1, 0) * float(sync_get_val(cameraDistanceTrack, row));
 				camTarget = Vector3(0, 0, 0);
 			}
 
-			float coc_scale = sync_get_val(dofCocScaleTrack, row) / letterbox_viewport.Height;
-			dof_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
+			float focal_distance = float(sync_get_val(dofFocalDistTrack, row));
+			float coc_scale = float(sync_get_val(dofCocScaleTrack, row) / letterbox_viewport.Height);
+			dof_fx->setFloat("focal_distance", focal_distance);
 			dof_fx->setFloat("coc_scale", coc_scale);
-			particle_fx->setFloat("focal_distance", sync_get_val(dofFocalDistTrack, row));
+			particle_fx->setFloat("focal_distance", focal_distance);
 			particle_fx->setFloat("coc_scale", coc_scale);
 
 			bool dof = true;
@@ -528,10 +529,10 @@ int main(int argc, char *argv[])
 
 			double shake_phase = beat * 32 * sync_get_val(cameraShakeSpeedTrack, row);
 			Vector3 camOffs(sin(shake_phase), cos(shake_phase * 0.9), sin(shake_phase - 0.5));
-			camPos += camOffs * sync_get_val(cameraShakeAmtTrack, row);
-			camTarget += camOffs * sync_get_val(cameraShakeAmtTrack, row);
+			camPos += camOffs * float(sync_get_val(cameraShakeAmtTrack, row));
+			camTarget += camOffs * float(sync_get_val(cameraShakeAmtTrack, row));
 
-			float camRoll = sync_get_val(cameraRollTrack, row) * float(M_PI / 180);
+			double camRoll = sync_get_val(cameraRollTrack, row) * (M_PI / 180);
 			Matrix4x4 view;
 			D3DXMatrixLookAtLH(&view, &camPos, &camTarget, &camUp);
 			view *= Matrix4x4::rotation(Vector3(0, 0, camRoll));
@@ -557,7 +558,7 @@ int main(int argc, char *argv[])
 			int skybox = (int)sync_get_val(skyboxTextureTrack, row);
 			if (skybox >= 0 && skybox < (int)skyboxes.size()) {
 				skybox_fx->setMatrices(world, view, proj);
-				skybox_fx->setFloat("desaturate", sync_get_val(skyboxDesaturateTrack, row));
+				skybox_fx->setFloat("desaturate", float(sync_get_val(skyboxDesaturateTrack, row)));
 				skybox_fx->setTexture("env_tex", skyboxes[skybox]);
 				skybox_fx->commitChanges();
 				skybox_fx->draw(skybox_x);
@@ -715,7 +716,7 @@ int main(int argc, char *argv[])
 			device.setRenderTarget(fxaa_target.getSurface(0), 0);
 			device.setRenderTarget(color1_hdr.getSurface(), 1);
 			fxaa_fx->setTexture("color_tex", dof ? dof_target : color_target);
-			fxaa_fx->setFloat("bloom_cutoff", sync_get_val(bloomCutoffTrack, row));
+			fxaa_fx->setFloat("bloom_cutoff", float(sync_get_val(bloomCutoffTrack, row)));
 			drawRect(device, fxaa_fx, 0, 0, float(letterbox_viewport.Width), float(letterbox_viewport.Height));
 			device.setRenderTarget(NULL, 1);
 
@@ -789,36 +790,36 @@ int main(int argc, char *argv[])
 			device->Clear(0, 0, D3DCLEAR_TARGET, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
 			device.setViewport(&letterbox_viewport);
 
-			float flash = sync_get_val(colorMapFlashTrack, row);
-			float fade = sync_get_val(colorMapFadeTrack, row);
-			float pulse = sync_get_val(pulseAmt2Track, row);
+			float flash = float(sync_get_val(colorMapFlashTrack, row));
+			float fade = float(sync_get_val(colorMapFadeTrack, row));
+			float pulse = float(sync_get_val(pulseAmt2Track, row));
 			fade = std::max(0.0f, fade - pulse + float(cos(beat * sync_get_val(pulseSpeed2Track, row) * M_PI)) * pulse);
 			postprocess_fx->setVector3("noffs", Vector3(math::notRandf(int(beat * 100)), math::notRandf(int(beat * 100) + 1), 0));
 			postprocess_fx->setFloat("flash", flash < 0 ? math::randf() : pow(flash, 2.0f));
 			postprocess_fx->setFloat("fade", pow(fade, 2.2f));
-			postprocess_fx->setFloat("dist_amt", sync_get_val(distAmtTrack, row) / 100);
-			postprocess_fx->setFloat("dist_freq", sync_get_val(distFreqTrack, row) * 2 * float(M_PI));
-			postprocess_fx->setFloat("dist_time", float(beat * 4) + sync_get_val(distOffsetTrack, row));
+			postprocess_fx->setFloat("dist_amt", float(sync_get_val(distAmtTrack, row) / 100));
+			postprocess_fx->setFloat("dist_freq", float(sync_get_val(distFreqTrack, row) * 2 * M_PI));
+			postprocess_fx->setFloat("dist_time", float(beat * 4 + sync_get_val(distOffsetTrack, row)));
 			postprocess_fx->setTexture("color_tex", fxaa_target);
-			postprocess_fx->setFloat("overlay_alpha", sync_get_val(colorMapOverlayAlphaTrack, row));
+			postprocess_fx->setFloat("overlay_alpha", float(sync_get_val(colorMapOverlayAlphaTrack, row)));
 			postprocess_fx->setTexture("overlay_tex", overlays.getTexture(int(sync_get_val(colorMapOverlayTrack, row)) % overlays.getTextureCount()));
 			postprocess_fx->setTexture("bloom_tex", color1_hdr);
-			postprocess_fx->setFloat("block_thresh", sync_get_val(glitchBlockThreshTrack, row));
-			postprocess_fx->setFloat("line_thresh", sync_get_val(glitchLineThreshTrack, row));
-			postprocess_fx->setFloat("overlayGlitch", sync_get_val(glitchOverlayTrack, row));
+			postprocess_fx->setFloat("block_thresh", float(sync_get_val(glitchBlockThreshTrack, row)));
+			postprocess_fx->setFloat("line_thresh", float(sync_get_val(glitchLineThreshTrack, row)));
+			postprocess_fx->setFloat("overlayGlitch", float(sync_get_val(glitchOverlayTrack, row)));
 
-			postprocess_fx->setFloat("flare_amount", sync_get_val(flareAmountTrack, row));
-			postprocess_fx->setFloat("distCoeff", sync_get_val(lensDistTrack, row));
-			postprocess_fx->setFloat("cubeDistort", sync_get_val(lensDistTrack, row));
+			postprocess_fx->setFloat("flare_amount", float(sync_get_val(flareAmountTrack, row)));
+			postprocess_fx->setFloat("distCoeff", float(sync_get_val(lensDistTrack, row)));
+			postprocess_fx->setFloat("cubeDistort", float(sync_get_val(lensDistTrack, row)));
 
-			float bloom_shape = sync_get_val(bloomShapeTrack, row);
+			float bloom_shape = float(sync_get_val(bloomShapeTrack, row));
 			float bloom_weight[7];
 			float bloom_total = 0;
 			for (int i = 0; i < 7; ++i) {
 				bloom_weight[i] = powf(float(i), bloom_shape);
 				bloom_total += bloom_weight[i];
 			}
-			float bloom_scale = sync_get_val(bloomAmtTrack, row) / bloom_total;
+			float bloom_scale = float(sync_get_val(bloomAmtTrack, row) / bloom_total);
 			for (int i = 0; i < 7; ++i)
 				bloom_weight[i] *= bloom_scale;
 			postprocess_fx->setFloatArray("bloom_weight", bloom_weight, ARRAY_SIZE(bloom_weight));
