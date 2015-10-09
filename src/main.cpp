@@ -61,6 +61,8 @@ using engine::Anim;
 
 using namespace core;
 
+#define D3DFMT_INTZ ((D3DFORMAT)MAKEFOURCC('I','N','T','Z'))
+
 void makeLetterboxViewport(D3DVIEWPORT9 *viewport, int w, int h, float monitor_aspect, float demo_aspect)
 {
 	float backbuffer_aspect = float(w) / h;
@@ -326,8 +328,7 @@ int main(int argc, char *argv[])
 		RenderTexture ao_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
 
 		RenderTexture color_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
-		RenderTexture depth_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_R32F);
-		Surface depthstencil = device.createDepthStencilSurface(letterbox_viewport.Width, letterbox_viewport.Height, D3DFMT_D24S8);
+		RenderTexture depth_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_INTZ, D3DMULTISAMPLE_NONE, D3DUSAGE_DEPTHSTENCIL);
 
 		RenderTexture dof_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
 		RenderTexture dof_temp1_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
@@ -497,10 +498,16 @@ int main(int argc, char *argv[])
 				camTarget = Vector3(0, 0, 0);
 			}
 
+			float zNear = 0.1f;
+			float zFar = 5000.0f;
+			Vector2 nearFar((zFar - zNear) / -(zFar * zNear),
+			                 1.0f / zNear);
+
 			float focal_distance = float(sync_get_val(dofFocalDistTrack, row));
 			float coc_scale = float(sync_get_val(dofCocScaleTrack, row) / letterbox_viewport.Height);
 			dof_fx->setFloat("focal_distance", focal_distance);
 			dof_fx->setFloat("coc_scale", coc_scale);
+			dof_fx->setVector2("nearFar", nearFar);
 			particle_fx->setFloat("focal_distance", focal_distance);
 			particle_fx->setFloat("coc_scale", coc_scale);
 
@@ -532,16 +539,14 @@ int main(int argc, char *argv[])
 			D3DXMatrixLookAtLH(&view, &camPos, &camTarget, &camUp);
 			view *= Matrix4x4::rotation(Vector3(0, 0, camRoll));
 
-
 			Matrix4x4 world = Matrix4x4::identity();
-			Matrix4x4 proj  = Matrix4x4::projection(80.0f, float(DEMO_ASPECT), 0.1f, 5000.f);
+			Matrix4x4 proj  = Matrix4x4::projection(80.0f, float(DEMO_ASPECT), zNear, zFar);
 
 			// render
 			device->BeginScene();
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
 			device.setRenderTarget(color_target.getRenderTarget(), 0);
-			device.setRenderTarget(depth_target.getRenderTarget(), 1);
-			device.setDepthStencilSurface(depthstencil);
+			device.setDepthStencilSurface(depth_target.getRenderTarget());
 			device->SetRenderState(D3DRS_ZENABLE, true);
 
 			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
@@ -561,11 +566,11 @@ int main(int argc, char *argv[])
 
 			if (spheres) {
 				device.setRenderTarget(gbuffer_target.getRenderTarget(), 0);
-				device.setRenderTarget(depth_target.getRenderTarget(), 1);
 				// clear GBuffer
 				device->Clear(0, 0, D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
 
 				sphere_fx->setMatrices(world, view, proj);
+				sphere_fx->setVector2("nearFar", nearFar);
 				sphere_fx->setFloat("radiusScale", 1.0f);
 				sphere_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
 
@@ -620,7 +625,6 @@ int main(int argc, char *argv[])
 				sphere_fx->setTexture("gbuffer_tex", NULL);
 
 				device.setRenderTarget(color_target.getRenderTarget(), 0);
-				device.setRenderTarget(depth_target.getRenderTarget(), 1);
 
 				sphere_resolve_fx->setTexture("tex", gbuffer_target);
 				sphere_resolve_fx->setTexture("tex", ao_target);
@@ -706,7 +710,7 @@ int main(int argc, char *argv[])
 				particle_fx->draw(&particleStreamer);
 			}
 
-			device.setDepthStencilSurface(depthstencil);
+			device.setDepthStencilSurface(depth_target.getRenderTarget());
 
 			device.setRenderTarget(fxaa_target.getSurface(0), 0);
 			device.setRenderTarget(color1_hdr.getSurface(), 1);

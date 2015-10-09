@@ -1,6 +1,7 @@
 const float4x4 matWorldView : WORLDVIEW;
 const float4x4 matProjection : PROJECTION;
 const float4x4 matProjectionInverse : PROJECTIONINVERSE;
+const float2 nearFar;
 
 #ifdef FAST_BOUNDS
 
@@ -89,7 +90,6 @@ VS_OUTPUT vertex(VS_INPUT In)
 
 struct PS_OUTPUT {
 	float4 color : COLOR;
-	float4 viewDepth : COLOR1;
 	float depth : DEPTH;
 };
 
@@ -115,7 +115,6 @@ PS_OUTPUT pixel(VS_OUTPUT In)
 		float depth = In.depth + dir.z * t;
 		float2 clipPos = depth * matProjection[2].zw + matProjection[3].zw;
 		o.depth = clipPos.x / clipPos.y;
-		o.viewDepth = depth;
 
 		if (0 > o.depth || o.depth > 1)
 			discard;
@@ -229,7 +228,8 @@ VS_OUTPUT2 vertex2(VS_INPUT In)
 float4 pixel2(VS_OUTPUT2 In) : COLOR0
 {
 	float2 texCoord = In.texCoord;
-	float eyeDepth = tex2D(depth_samp, texCoord).r;
+	float clipDepth = tex2D(depth_samp, texCoord).r;
+	float eyeDepth = rcp(clipDepth * nearFar.x + nearFar.y);
 
 	// early out
 	if (eyeDepth < In.spherePos.z - In.sphereRadius.y ||

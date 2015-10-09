@@ -54,6 +54,7 @@ sampler temp2_samp = sampler_state {
 };
 
 float2 viewport;
+float2 nearFar;
 #define SAMPLES 20
 
 float focal_distance, coc_scale;
@@ -69,7 +70,8 @@ struct VS_OUTPUT {
 
 float4 ps_premult(float2 texCoord : TEXCOORD0) : COLOR
 {
-	float eyeDepth = tex2D(depth_samp, texCoord).r;
+	float clipDepth = tex2D(depth_samp, texCoord).r;
+	float eyeDepth = rcp(clipDepth * nearFar.x + nearFar.y);
 
 	float size = abs(coc(eyeDepth));
 	size += (distance(texCoord, 0.5) * 2) * 0.0125;

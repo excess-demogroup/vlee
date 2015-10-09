@@ -9,9 +9,8 @@ namespace renderer {
 		RenderTexture(Device &device, UINT width, UINT height,
 		    UINT levels = 1, D3DFORMAT format = D3DFMT_A8R8G8B8,
 		    D3DMULTISAMPLE_TYPE multisample = D3DMULTISAMPLE_NONE,
-		    DWORD usage = 0)
-			: Texture(device, width, height, levels,
-			    D3DUSAGE_RENDERTARGET | usage, format)
+		    DWORD usage = D3DUSAGE_RENDERTARGET)
+			: Texture(device, width, height, levels, usage, format)
 		{
 			multisampled = D3DMULTISAMPLE_NONE != multisample;
 
