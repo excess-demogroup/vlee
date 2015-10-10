@@ -36,9 +36,10 @@ float4 getSphereBounds(float3 center, float r)
 #endif
 
 struct VS_INPUT {
-	float3 pos  : POSITION;
-	float  size : TEXCOORD0;
-	float2 uv   : TEXCOORD2;
+	float3 pos   : POSITION;
+	float  size  : TEXCOORD0;
+	float3 color : TEXCOORD1;
+	float2 uv    : TEXCOORD2;
 };
 
 struct VS_OUTPUT {
@@ -48,6 +49,7 @@ struct VS_OUTPUT {
 	float rr : TEXCOORD2;
 	float3 origin : TEXCOORD3;
 	float3 spherePos : TEXCOORD4;
+	float3 color : TEXCOORD5;
 };
 
 VS_OUTPUT vertex(VS_INPUT In)
@@ -82,6 +84,7 @@ VS_OUTPUT vertex(VS_INPUT In)
 	o.origin = rayStartEye;
 	o.depth = rayStartEye.z;
 	o.spherePos = spherePosEye;
+	o.color = In.color;
 
 	// just a silly precalc
 	o.rr = sphereRadius * sphereRadius;
@@ -111,7 +114,7 @@ PS_OUTPUT pixel(VS_OUTPUT In)
 		// calculate normal
 		float3 n = normalize(pos + dir * t);
 		o.gbuffer0 = float4(n, 1);
-		o.gbuffer1 = float4(1, 1, 1, 0); // white for now, no AO
+		o.gbuffer1 = float4(In.color, 0); // no AO
 
 		// calculate z
 		float depth = In.depth + dir.z * t;

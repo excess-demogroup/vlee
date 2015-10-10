@@ -578,6 +578,7 @@ int main(int argc, char *argv[])
 				static struct {
 					Vector3 pos;
 					float size;
+					Vector3 color;
 				} spheres[36000];
 				for (int i = 0; i < ARRAY_SIZE(spheres); ++i) {
 					float th = i * float((2 * M_PI) / 360);
@@ -591,11 +592,14 @@ int main(int argc, char *argv[])
 					float size = 0.03f + pow(math::notRandf(i), 150.0f) * 0.5f;
 					spheres[i].pos = pos;
 					spheres[i].size = size;
+					spheres[i].color = Vector3(0.5 + sin((i % 1340) * 14.0),
+					                           0.5 + sin((i % 1341) * 16.0),
+					                           0.5 + sin((i % 1342) * 17.0));
 				}
 
 				particleStreamer.begin();
 				for (int i = 0; i < ARRAY_SIZE(spheres); ++i) {
-					particleStreamer.add(spheres[i].pos, spheres[i].size);
+					particleStreamer.add(spheres[i].pos, spheres[i].size, spheres[i].color);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
 						sphere_fx->drawPass(&particleStreamer, 0);
