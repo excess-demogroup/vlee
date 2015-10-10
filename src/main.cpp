@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
 		// 0: XYZ = normal, W = unused
 		// 1: XYZ = albedo, W = unused
 		RenderTexture gbuffer_target0(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
-		RenderTexture gbuffer_target1(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
+		RenderTexture gbuffer_target1(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A8R8G8B8);
 
 		RenderTexture color_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
 		RenderTexture depth_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_INTZ, D3DMULTISAMPLE_NONE, D3DUSAGE_DEPTHSTENCIL);
