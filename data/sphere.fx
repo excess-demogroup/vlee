@@ -89,7 +89,8 @@ VS_OUTPUT vertex(VS_INPUT In)
 }
 
 struct PS_OUTPUT {
-	float4 color : COLOR;
+	float4 gbuffer0 : COLOR0;
+	float4 gbuffer1 : COLOR1;
 	float depth : DEPTH;
 };
 
@@ -109,7 +110,8 @@ PS_OUTPUT pixel(VS_OUTPUT In)
 
 		// calculate normal
 		float3 n = normalize(pos + dir * t);
-		o.color = float4(n, 1);
+		o.gbuffer0 = float4(n, 1);
+		o.gbuffer1 = float4(1, 1, 1, 0); // white for now, no AO
 
 		// calculate z
 		float depth = In.depth + dir.z * t;
@@ -163,9 +165,20 @@ sampler depth_samp = sampler_state {
 	sRGBTexture = FALSE;
 };
 
-texture gbuffer_tex;
-sampler gbuffer_samp = sampler_state {
-	Texture = (gbuffer_tex);
+texture gbuffer_tex0;
+sampler gbuffer_samp0 = sampler_state {
+	Texture = (gbuffer_tex0);
+	MipFilter = NONE;
+	MinFilter = POINT;
+	MagFilter = POINT;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	sRGBTexture = FALSE;
+};
+
+texture gbuffer_tex1;
+sampler gbuffer_samp1 = sampler_state {
+	Texture = (gbuffer_tex1);
 	MipFilter = NONE;
 	MinFilter = POINT;
 	MagFilter = POINT;
@@ -237,7 +250,7 @@ float4 pixel2(VS_OUTPUT2 In) : COLOR0
 		discard;
 
 	float3 eyePos = float3(In.dir * eyeDepth, eyeDepth);
-	float3 eyeNormal = tex2D(gbuffer_samp, texCoord).xyz;
+	float3 eyeNormal = tex2D(gbuffer_samp0, texCoord).xyz;
 
 	float d = distance(eyePos.xyz, In.spherePos);
 	if (d > In.sphereRadius.y)
@@ -265,7 +278,7 @@ technique sphere {
 		ZWriteEnable = False;
 		AlphaBlendEnable = True;
 		SeparateAlphaBlendEnable = True;
-		SrcBlend = One;
+		SrcBlend = Zero;
 		DestBlend = One;
 		SrcBlendAlpha = InvDestAlpha;
 		DestBlendAlpha = One;

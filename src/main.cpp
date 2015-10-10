@@ -324,8 +324,9 @@ int main(int argc, char *argv[])
 		direct3d->GetDeviceCaps(config::adapter, D3DDEVTYPE_HAL, &caps);
 
 		// 0: XYZ = normal, W = unused
-		RenderTexture gbuffer_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
-		RenderTexture ao_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
+		// 1: XYZ = albedo, W = unused
+		RenderTexture gbuffer_target0(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
+		RenderTexture gbuffer_target1(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
 
 		RenderTexture color_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
 		RenderTexture depth_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_INTZ, D3DMULTISAMPLE_NONE, D3DUSAGE_DEPTHSTENCIL);
@@ -565,13 +566,13 @@ int main(int argc, char *argv[])
 			}
 
 			if (spheres) {
-				device.setRenderTarget(gbuffer_target.getRenderTarget(), 0);
+				device.setRenderTarget(gbuffer_target0.getRenderTarget(), 0);
+				device.setRenderTarget(gbuffer_target1.getRenderTarget(), 1);
 				// clear GBuffer
 				device->Clear(0, 0, D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
 
 				sphere_fx->setMatrices(world, view, proj);
 				sphere_fx->setVector2("nearFar", nearFar);
-				sphere_fx->setFloat("radiusScale", 1.0f);
 				sphere_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
 
 				static struct {
@@ -604,11 +605,11 @@ int main(int argc, char *argv[])
 				particleStreamer.end();
 				sphere_fx->drawPass(&particleStreamer, 0);
 
-				device.setRenderTarget(ao_target.getRenderTarget(), 0);
 				device.setRenderTarget(NULL, 1);
-				device->Clear(0, 0, D3DCLEAR_TARGET, 0x00FFFFFF, 1.f, 0);
+				device.setRenderTarget(gbuffer_target1.getRenderTarget(), 0);
 				sphere_fx->setTexture("depth_tex", depth_target);
-				sphere_fx->setTexture("gbuffer_tex", gbuffer_target);
+				sphere_fx->setTexture("gbuffer_tex0", gbuffer_target0);
+				sphere_fx->setTexture("gbuffer_tex1", gbuffer_target1);
 
 				particleStreamer.begin();
 				for (int i = 0; i < ARRAY_SIZE(spheres); ++i) {
@@ -622,15 +623,16 @@ int main(int argc, char *argv[])
 				particleStreamer.end();
 				sphere_fx->drawPass(&particleStreamer, 1);
 				sphere_fx->setTexture("depth_tex", NULL);
-				sphere_fx->setTexture("gbuffer_tex", NULL);
+				sphere_fx->setTexture("gbuffer_tex0", NULL);
+				sphere_fx->setTexture("gbuffer_tex1", NULL);
 
 				device.setRenderTarget(color_target.getRenderTarget(), 0);
 
-				sphere_resolve_fx->setTexture("tex", gbuffer_target);
-				sphere_resolve_fx->setTexture("tex", ao_target);
+				sphere_resolve_fx->setTexture("tex", gbuffer_target1);
 				int w = color_target.getSurface(0).getWidth();
 				int h = color_target.getSurface(0).getHeight();
 				drawRect(device, sphere_resolve_fx, 0, 0, float(w), float(h));
+				sphere_resolve_fx->setTexture("tex", NULL);
 			}
 
 			if (dof) {
