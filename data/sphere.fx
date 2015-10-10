@@ -38,7 +38,7 @@ float4 getSphereBounds(float3 center, float r)
 struct VS_INPUT {
 	float3 pos  : POSITION;
 	float  size : TEXCOORD0;
-	float2 uv   : TEXCOORD1;
+	float2 uv   : TEXCOORD2;
 };
 
 struct VS_OUTPUT {

@@ -24,11 +24,11 @@ namespace engine {
 
 		void begin()
 		{
-			locked_pointer = (float*)dynamic_vb.lock(0, PARTICLE_STREAMER_VERTEX_COUNT * 4 * sizeof(float), D3DLOCK_DISCARD);
+			locked_pointer = (float*)dynamic_vb.lock(0, PARTICLE_STREAMER_VERTEX_COUNT * (3 + 1 + 3) * sizeof(float), D3DLOCK_DISCARD);
 			locked_particles = PARTICLE_STREAMER_PARTICLE_COUNT;
 		}
 
-		inline void add(const math::Vector3 &pos, const float size)
+		inline void add(const math::Vector3 &pos, const float size, const math::Vector3 &color = math::Vector3(1, 1, 1))
 		{
 			assert(NULL != locked_pointer);
 			assert(0 != locked_particles);
@@ -38,6 +38,9 @@ namespace engine {
 				*locked_pointer++ = pos.y;
 				*locked_pointer++ = pos.z;
 				*locked_pointer++ = size;
+				*locked_pointer++ = color.x;
+				*locked_pointer++ = color.y;
+				*locked_pointer++ = color.z;
 			}
 			locked_particles--;
 		}

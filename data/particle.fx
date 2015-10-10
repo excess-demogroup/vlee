@@ -6,7 +6,7 @@ const float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 struct VS_INPUT {
 	float3 pos  : POSITION;
 	float  size : TEXCOORD0;
-	float2 uv   : TEXCOORD1;
+	float2 uv   : TEXCOORD2;
 };
 
 struct VS_OUTPUT {

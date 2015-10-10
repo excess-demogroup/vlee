@@ -32,7 +32,7 @@ ParticleStreamer::ParticleStreamer(renderer::Device &device) :
 		static_vb.unlock();
 	}
 
-	dynamic_vb = device.createVertexBuffer(PARTICLE_STREAMER_VERTEX_COUNT * 4 * sizeof(float), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, D3DPOOL_DEFAULT);
+	dynamic_vb = device.createVertexBuffer(PARTICLE_STREAMER_VERTEX_COUNT * (3 + 1 + 3) * sizeof(float), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, D3DPOOL_DEFAULT);
 
 	const int index_buffer_size = PARTICLE_STREAMER_PARTICLE_COUNT * sizeof(unsigned short) * 6;
 	indices = device.createIndexBuffer(index_buffer_size, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16);
@@ -55,7 +55,8 @@ ParticleStreamer::ParticleStreamer(renderer::Device &device) :
 	{
 		{ 0, 0 * sizeof(float), D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 },
 		{ 0, 3 * sizeof(float), D3DDECLTYPE_FLOAT1, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 },
-		{ 1, 0 * sizeof(float), D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 1 },
+		{ 0, 4 * sizeof(float), D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 1 },
+		{ 1, 0 * sizeof(float), D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 2 },
 		D3DDECL_END()
 	};
 
@@ -73,7 +74,7 @@ void ParticleStreamer::draw()
 	core::d3dErr(device->SetFVF(0));
 	core::d3dErr(device->SetVertexDeclaration(vertex_decl));
 
-	device->SetStreamSource(0, dynamic_vb, 0, 4 * sizeof(float));
+	device->SetStreamSource(0, dynamic_vb, 0, (3 + 1 + 3) * sizeof(float));
 	device->SetStreamSource(1, static_vb,  0, 2 * sizeof(float));
 
 	core::d3dErr(device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, max_vertex, 0, primitive_count));
