@@ -4,9 +4,10 @@ const float4x4 matView : VIEW;
 const float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 
 struct VS_INPUT {
-	float3 pos  : POSITION;
-	float  size : TEXCOORD0;
-	float2 uv   : TEXCOORD2;
+	float3 pos   : POSITION;
+	float  size  : TEXCOORD0;
+	float3 color : TEXCOORD1;
+	float2 uv    : TEXCOORD2;
 };
 
 struct VS_OUTPUT {
@@ -38,7 +39,7 @@ VS_OUTPUT vertex(VS_INPUT In)
 	VS_OUTPUT Out;
 	Out.pos = mul(float4(pos,  1), matWorldViewProjection);
 	Out.uv = In.uv;
-	Out.color = (float4(1,1,1,1) * In.size) / (size * size * 50000.0);
+	Out.color = (float4(In.color, 1) * In.size) / (size * size * 50000.0);
 
 	if (screenPos.z < 0.5)
 		Out.pos.w = -1;
