@@ -168,15 +168,18 @@ technique dof {
 	pass premult {
 		VertexShader = compile vs_3_0 vs_main();
 		PixelShader  = compile ps_3_0 ps_premult();
+		ZEnable = False;
 	}
 
 	pass temp {
 		VertexShader = compile vs_3_0 vs_main();
 		PixelShader  = compile ps_3_0 ps_temp();
+		ZEnable = False;
 	}
 
 	pass dof {
 		VertexShader = compile vs_3_0 vs_main();
 		PixelShader  = compile ps_3_0 ps_dof();
+		ZEnable = False;
 	}
 }

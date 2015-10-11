@@ -60,6 +60,7 @@ technique white {
 		PixelShader  = compile ps_3_0 pixel();
 		AlphaBlendEnable = True;
 		ZWriteEnable = False;
+		ZEnable = True;
 		SrcBlend = SrcAlpha;
 		DestBlend = One;
 	}

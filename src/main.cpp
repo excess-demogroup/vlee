@@ -611,6 +611,7 @@ int main(int argc, char *argv[])
 
 				device.setRenderTarget(NULL, 1);
 				device.setRenderTarget(gbuffer_target1.getRenderTarget(), 0);
+
 				sphere_fx->setTexture("depth_tex", depth_target);
 				sphere_fx->setTexture("gbuffer_tex0", gbuffer_target0);
 				sphere_fx->setTexture("gbuffer_tex1", gbuffer_target1);
@@ -655,6 +656,7 @@ int main(int argc, char *argv[])
 
 				device.setRenderTarget(dof_target.getSurface(0), 0);
 				device.setRenderTarget(NULL, 1);
+
 				dof_fx->setTexture("color_tex", color_target);
 				dof_fx->setTexture("depth_tex", depth_target);
 				dof_fx->p->BeginPass(0);
@@ -679,6 +681,8 @@ int main(int argc, char *argv[])
 				dof_fx->p->End();
 			}
 
+			device.setDepthStencilSurface(depth_target.getRenderTarget());
+
 			if (dustParticleCount > 0) {
 				Matrix4x4 modelview = world * view;
 				Vector3 up(modelview._12, modelview._22, modelview._32);
@@ -689,8 +693,6 @@ int main(int argc, char *argv[])
 				particle_fx->setVector3("left", left);
 				particle_fx->setMatrices(world, view, proj);
 				particle_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
-				device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-				device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
 
 				device.setRenderTarget(dof_target.getSurface(0), 0);
 
@@ -714,8 +716,6 @@ int main(int argc, char *argv[])
 				particleStreamer.end();
 				particle_fx->draw(&particleStreamer);
 			}
-
-			device.setDepthStencilSurface(depth_target.getRenderTarget());
 
 			device.setRenderTarget(fxaa_target.getSurface(0), 0);
 			device.setRenderTarget(color1_hdr.getSurface(), 1);
@@ -789,8 +789,6 @@ int main(int argc, char *argv[])
 
 			/* letterbox */
 			device.setRenderTarget(backbuffer);
-			device.setRenderTarget(NULL, 1);
-			device->SetDepthStencilSurface(NULL);
 			device->Clear(0, 0, D3DCLEAR_TARGET, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
 			device.setViewport(&letterbox_viewport);
 
