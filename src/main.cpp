@@ -429,7 +429,7 @@ int main(int argc, char *argv[])
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
 		Effect *sphere_fx = engine::loadEffect(device, "data/sphere.fx");
-		Effect *sphere_resolve_fx = engine::loadEffect(device, "data/sphere-resolve.fx");
+		Effect *lighting_fx = engine::loadEffect(device, "data/lighting.fx");
 
 		bool dump_video = false;
 		for (int i = 1; i < argc; ++i)
@@ -565,12 +565,12 @@ int main(int argc, char *argv[])
 				skybox_fx->draw(skybox_x);
 			}
 
-			if (spheres) {
-				device.setRenderTarget(gbuffer_target0.getRenderTarget(), 0);
-				device.setRenderTarget(gbuffer_target1.getRenderTarget(), 1);
-				// clear GBuffer
-				device->Clear(0, 0, D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
+			device.setRenderTarget(gbuffer_target0.getRenderTarget(), 0);
+			device.setRenderTarget(gbuffer_target1.getRenderTarget(), 1);
+			// clear GBuffer
+			device->Clear(0, 0, D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
 
+			if (spheres) {
 				sphere_fx->setMatrices(world, view, proj);
 				sphere_fx->setVector2("nearFar", nearFar);
 				sphere_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
@@ -629,15 +629,14 @@ int main(int argc, char *argv[])
 				sphere_fx->setTexture("depth_tex", NULL);
 				sphere_fx->setTexture("gbuffer_tex0", NULL);
 				sphere_fx->setTexture("gbuffer_tex1", NULL);
-
-				device.setRenderTarget(color_target.getRenderTarget(), 0);
-
-				sphere_resolve_fx->setTexture("tex", gbuffer_target1);
-				int w = color_target.getSurface(0).getWidth();
-				int h = color_target.getSurface(0).getHeight();
-				drawRect(device, sphere_resolve_fx, 0, 0, float(w), float(h));
-				sphere_resolve_fx->setTexture("tex", NULL);
 			}
+
+			device.setRenderTarget(color_target.getRenderTarget(), 0);
+			lighting_fx->setTexture("tex", gbuffer_target1);
+			int w = color_target.getSurface(0).getWidth();
+			int h = color_target.getSurface(0).getHeight();
+			drawRect(device, lighting_fx, 0, 0, float(w), float(h));
+			lighting_fx->setTexture("tex", NULL);
 
 			if (dof) {
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);

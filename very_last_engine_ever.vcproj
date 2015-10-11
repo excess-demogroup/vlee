@@ -1136,6 +1136,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\data\lighting.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\particle.fx"
 			>
 		</File>
@@ -1145,10 +1149,6 @@
 		</File>
 		<File
 			RelativePath=".\data\skybox.fx"
-			>
-		</File>
-		<File
-			RelativePath=".\data\sphere-resolve.fx"
 			>
 		</File>
 		<File

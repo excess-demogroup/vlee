@@ -29,9 +29,10 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	return float4(col.rgb * ao, 1);
 }
 
-technique blur {
+technique lighting {
 	pass P0 {
 		VertexShader = compile vs_3_0 vertex();
 		PixelShader  = compile ps_3_0 pixel();
+		ZEnable = False;
 	}
 }
