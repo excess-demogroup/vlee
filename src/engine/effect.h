@@ -120,7 +120,7 @@ namespace engine {
 			if (this->view  != NULL)
 				setMatrix(this->view, view);
 			if (this->view_inv != NULL)
-				setMatrix(this->view, view.inverse());
+				setMatrix(this->view_inv, view.inverse());
 
 			if (this->projection != NULL)
 				setMatrix(this->projection, proj);
@@ -170,9 +170,9 @@ namespace engine {
 
 		D3DXHANDLE world, world_inv,
 		           view, view_inv,
-				   projection, projection_inv,
-				   worldview, worldview_inv,
-				   worldviewprojection, worldviewprojection_inv;
+		           projection, projection_inv,
+		           worldview, worldview_inv,
+		           worldviewprojection, worldviewprojection_inv;
 		D3DXHANDLE viewPos, viewDir;
 	};
 
