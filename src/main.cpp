@@ -196,6 +196,75 @@ Matrix4x4 calcPlaneMatrix(Vector3 &v0, Vector3 &v1, Vector3 &v2)
 	return ret;
 }
 
+std::vector<renderer::VolumeTexture> loadColorMaps(renderer::Device &device, std::string folder)
+{
+	const int MAP_SIZE = 32;
+
+	renderer::Texture temp_tex = device.createTexture(MAP_SIZE * MAP_SIZE, MAP_SIZE, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_MANAGED);
+	std::vector<renderer::VolumeTexture> color_maps;
+	for (int i = 0; true; ++i) {
+		char temp[256];
+		sprintf(temp, "%s/%04d.png", folder.c_str(), i);
+		D3DXIMAGE_INFO info;
+		if (FAILED(D3DXLoadSurfaceFromFile(temp_tex.getSurface(), NULL, NULL, temp, NULL, D3DX_FILTER_NONE, 0, &info)))
+			break;
+
+		D3DSURFACE_DESC desc = temp_tex.getSurface().getDesc();
+		assert(desc.Format == D3DFMT_X8R8G8B8);
+
+		if (info.Width != MAP_SIZE * MAP_SIZE || info.Height != MAP_SIZE)
+			throw core::FatalException("color-map is of wrong size!");
+
+		renderer::VolumeTexture cube_tex = device.createVolumeTexture(MAP_SIZE, MAP_SIZE, MAP_SIZE, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_MANAGED);
+
+		D3DLOCKED_RECT rect;
+		core::d3dErr(temp_tex.getSurface()->LockRect(&rect, NULL, 0));
+		D3DLOCKED_BOX box;
+		core::d3dErr(cube_tex->LockBox(0, &box, NULL, 0));
+		for (int z = 0; z < MAP_SIZE; ++z)
+			for (int y = 0; y < MAP_SIZE; ++y)
+				for (int x = 0; x < MAP_SIZE; ++x) {
+					((unsigned char*)box.pBits)[z * 4 + y * box.RowPitch + x * box.SlicePitch + 0] = ((unsigned char*)rect.pBits)[(x + z * MAP_SIZE) * 4 + y * rect.Pitch + 0];
+					((unsigned char*)box.pBits)[z * 4 + y * box.RowPitch + x * box.SlicePitch + 1] = ((unsigned char*)rect.pBits)[(x + z * MAP_SIZE) * 4 + y * rect.Pitch + 1];
+					((unsigned char*)box.pBits)[z * 4 + y * box.RowPitch + x * box.SlicePitch + 2] = ((unsigned char*)rect.pBits)[(x + z * MAP_SIZE) * 4 + y * rect.Pitch + 2];
+					((unsigned char*)box.pBits)[z * 4 + y * box.RowPitch + x * box.SlicePitch + 3] = ((unsigned char*)rect.pBits)[(x + z * MAP_SIZE) * 4 + y * rect.Pitch + 3];
+				}
+		cube_tex->UnlockBox(0);
+		temp_tex.getSurface()->UnlockRect();
+		color_maps.push_back(cube_tex);
+	}
+
+	if (0 == color_maps.size())
+		throw core::FatalException("no color maps!");
+
+	return color_maps;
+}
+
+std::vector<renderer::CubeTexture> loadSkyboxes(renderer::Device &device, std::string folder)
+{
+	std::vector<renderer::CubeTexture> ret;
+	for (int i = 0; true; ++i) {
+		char temp[256];
+		sprintf(temp, "%s/%04d.dds", folder.c_str(), i);
+		renderer::CubeTexture tex;
+		if (FAILED(D3DXCreateCubeTextureFromFileEx(
+			device,
+			temp,
+			D3DX_DEFAULT, // size
+			D3DX_DEFAULT, // miplevels
+			0, D3DFMT_UNKNOWN, // usage and format
+			D3DPOOL_MANAGED, // pool
+			D3DX_DEFAULT, D3DX_DEFAULT, // filtering
+			0, NULL, NULL,
+			&tex.tex)))
+			break;
+
+		ret.push_back(tex);
+	}
+
+	return ret;
+}
+
 int main(int argc, char *argv[])
 {
 #ifdef _DEBUG
@@ -374,62 +443,8 @@ int main(int argc, char *argv[])
 		RenderCubeTexture reflection_target(device, 512, 1, D3DFMT_A16B16G16R16F);
 		Surface reflection_depthstencil = device.createDepthStencilSurface(512, 512, D3DFMT_D24S8);
 
-#define MAP_SIZE 32
-		renderer::Texture temp_tex = device.createTexture(MAP_SIZE * MAP_SIZE, MAP_SIZE, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_MANAGED);
-		std::vector<renderer::VolumeTexture> color_maps;
-		for (int i = 0; true; ++i) {
-			char temp[256];
-			sprintf(temp, "data/color_maps/%04d.png", i);
-			D3DXIMAGE_INFO info;
-			if (FAILED(D3DXLoadSurfaceFromFile(temp_tex.getSurface(), NULL, NULL, temp, NULL, D3DX_FILTER_NONE, 0, &info)))
-				break;
-
-			D3DSURFACE_DESC desc = temp_tex.getSurface().getDesc();
-			assert(desc.Format == D3DFMT_X8R8G8B8);
-
-			if (info.Width != MAP_SIZE * MAP_SIZE || info.Height != MAP_SIZE)
-				throw core::FatalException("color-map is of wrong size!");
-
-			renderer::VolumeTexture cube_tex = device.createVolumeTexture(MAP_SIZE, MAP_SIZE, MAP_SIZE, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_MANAGED);
-
-			D3DLOCKED_RECT rect;
-			core::d3dErr(temp_tex.getSurface()->LockRect(&rect, NULL, 0));
-			D3DLOCKED_BOX box;
-			core::d3dErr(cube_tex->LockBox(0, &box, NULL, 0));
-			for (int z = 0; z < MAP_SIZE; ++z)
-				for (int y = 0; y < MAP_SIZE; ++y)
-					for (int x = 0; x < MAP_SIZE; ++x) {
-						((unsigned char*)box.pBits)[z * 4 + y * box.RowPitch + x * box.SlicePitch + 0] = ((unsigned char*)rect.pBits)[(x + z * MAP_SIZE) * 4 + y * rect.Pitch + 0];
-						((unsigned char*)box.pBits)[z * 4 + y * box.RowPitch + x * box.SlicePitch + 1] = ((unsigned char*)rect.pBits)[(x + z * MAP_SIZE) * 4 + y * rect.Pitch + 1];
-						((unsigned char*)box.pBits)[z * 4 + y * box.RowPitch + x * box.SlicePitch + 2] = ((unsigned char*)rect.pBits)[(x + z * MAP_SIZE) * 4 + y * rect.Pitch + 2];
-						((unsigned char*)box.pBits)[z * 4 + y * box.RowPitch + x * box.SlicePitch + 3] = ((unsigned char*)rect.pBits)[(x + z * MAP_SIZE) * 4 + y * rect.Pitch + 3];
-					}
-			cube_tex->UnlockBox(0);
-			temp_tex.getSurface()->UnlockRect();
-			color_maps.push_back(cube_tex);
-		}
-		if (0 == color_maps.size())
-			throw core::FatalException("no color maps!");
-
-		std::vector<renderer::CubeTexture> skyboxes;
-		for (int i = 0; true; ++i) {
-			char temp[256];  
-			sprintf(temp, "data/skyboxes/%04d.dds", i);
-			renderer::CubeTexture tex;
-			if (FAILED(D3DXCreateCubeTextureFromFileEx(
-				device,
-				temp,
-				D3DX_DEFAULT, // size
-				D3DX_DEFAULT, // miplevels
-				0, D3DFMT_UNKNOWN, // usage and format
-				D3DPOOL_MANAGED, // pool
-				D3DX_DEFAULT, D3DX_DEFAULT, // filtering
-				0, NULL, NULL,
-				&tex.tex)))
-				break;
-
-			skyboxes.push_back(tex);
-		}
+		std::vector<renderer::VolumeTexture> color_maps = loadColorMaps(device, "data/color_maps");
+		std::vector<renderer::CubeTexture> skyboxes = loadSkyboxes(device, "data/skyboxes");
 
 		Effect *dof_fx = engine::loadEffect(device, "data/dof.fx");
 		dof_fx->setVector3("viewport", Vector3(letterbox_viewport.Width, letterbox_viewport.Height, 0.0f));
