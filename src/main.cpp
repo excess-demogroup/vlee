@@ -167,6 +167,35 @@ Matrix4x4 getCubemapViewMatrix(D3DCUBEMAP_FACES face)
 	return view;
 }
 
+Matrix4x4 calcPlaneMatrix(Vector3 &v0, Vector3 &v1, Vector3 &v2)
+{
+	Vector3 a = v0 - v1;
+	Vector3 b = v2 - v0;
+	Vector3 n = cross(b, a);
+
+	Matrix4x4 ret;
+	ret._11 = a.x;
+	ret._12 = a.y;
+	ret._13 = a.z;
+	ret._14 = 0;
+
+	ret._21 = b.x;
+	ret._22 = b.y;
+	ret._23 = b.z;
+	ret._24 = 0;
+
+	ret._31 = n.x;
+	ret._32 = n.y;
+	ret._33 = n.z;
+	ret._34 = 0;
+
+	ret._41 = v0.x;
+	ret._42 = v0.y;
+	ret._43 = v0.z;
+	ret._44 = 0;
+	return ret;
+}
+
 int main(int argc, char *argv[])
 {
 #ifdef _DEBUG
@@ -288,6 +317,8 @@ int main(int argc, char *argv[])
 		const sync_track *cameraIndexTrack      = sync_get_track(rocket, "cam.index");
 		const sync_track *cameraShakeAmtTrack   = sync_get_track(rocket, "cam.shake.amt");
 		const sync_track *cameraShakeSpeedTrack = sync_get_track(rocket, "cam.shake.speed");
+
+		const sync_track *planeMoveTrack = sync_get_track(rocket, "plane.move");
 
 		const sync_track *colorMapFadeTrack    = sync_get_track(rocket, "cm.fade");
 		const sync_track *colorMapFlashTrack   = sync_get_track(rocket, "cm.flash");
@@ -428,8 +459,21 @@ int main(int argc, char *argv[])
 
 		Anim overlays = engine::loadAnim(device, "data/overlays");
 
-		Effect *sphere_fx = engine::loadEffect(device, "data/sphere.fx");
+		Effect *mesh_fx = engine::loadEffect(device, "data/mesh.fx");
+
+		Mesh *room_x = engine::loadMesh(device, "data/room.x");
+		Texture room_ao_tex = engine::loadTexture(device, "data/room-ao.png");
+		Texture room_albedo_tex = engine::loadTexture(device, "data/concrete_01_dif.png");
+		Texture room_normal_tex = engine::loadTexture(device, "data/concrete_01_nm.png");
+		Texture room_specular_tex = engine::loadTexture(device, "data/concrete_01_spec.png");
+
 		Effect *lighting_fx = engine::loadEffect(device, "data/lighting.fx");
+		Texture excess_logo_tex = engine::loadTexture(device, "data/excess-logo.png");
+		lighting_fx->setTexture("logo_tex", excess_logo_tex);
+
+		Effect *sphere_fx = engine::loadEffect(device, "data/sphere.fx");
+
+		Effect *plane_fx = engine::loadEffect(device, "data/plane.fx");
 
 		bool dump_video = false;
 		for (int i = 1; i < argc; ++i)
@@ -499,8 +543,8 @@ int main(int argc, char *argv[])
 				camTarget = Vector3(0, 0, 0);
 			}
 
-			float zNear = 0.1f;
-			float zFar = 5000.0f;
+			float zNear = 1.0f;
+			float zFar = 500.0f;
 			Vector2 nearFar((zFar - zNear) / -(zFar * zNear),
 			                 1.0f / zNear);
 
@@ -516,12 +560,15 @@ int main(int argc, char *argv[])
 			bool spheres = false;
 			int dustParticleCount = 0;
 
-			float dustParticleAlpha = 1.0f;
-
 			int part = int(sync_get_val(partTrack, row));
 			switch (part) {
 			case 0:
 				spheres = true;
+				dustParticleCount = 100;
+				break;
+
+			case 1:
+				dof = false;
 				break;
 			}
 
@@ -570,6 +617,13 @@ int main(int argc, char *argv[])
 			// clear GBuffer
 			device->Clear(0, 0, D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
 
+			mesh_fx->setMatrices(world, view, proj);
+			mesh_fx->setTexture("albedo_tex", room_albedo_tex);
+			mesh_fx->setTexture("normal_tex", room_normal_tex);
+			mesh_fx->setTexture("specular_tex", room_specular_tex);
+			mesh_fx->setTexture("ao_tex", room_ao_tex);
+			mesh_fx->draw(room_x);
+
 			if (spheres) {
 				sphere_fx->setMatrices(world, view, proj);
 				sphere_fx->setVector2("nearFar", nearFar);
@@ -582,16 +636,16 @@ int main(int argc, char *argv[])
 				} spheres[36000];
 				for (int i = 0; i < ARRAY_SIZE(spheres); ++i) {
 					float th = i * float((2 * M_PI) / 360);
-					Vector3 pos = Vector3(sin(th), cos(th), 0) * 3;
+					Vector3 pos = Vector3(sin(th), cos(th), 0) * 30;
 					Vector3 offset = normalize(Vector3(
 							sin((i % 1337) * 12.0 + beat * 0.0332),
 							cos((i % 1338) * 15.0 + beat * 0.041),
 							cos((i % 1339) * 13.0 - beat * 0.0323)
 							));
-					pos += offset;
+					pos += offset * 10;
 					float size = 0.03f + pow(math::notRandf(i), 150.0f) * 0.5f;
 					spheres[i].pos = pos;
-					spheres[i].size = size;
+					spheres[i].size = size * 10;
 					spheres[i].color = Vector3(0.5 + sin((i % 1340) * 14.0),
 					                           0.5 + sin((i % 1341) * 16.0),
 					                           0.5 + sin((i % 1342) * 17.0));
@@ -627,17 +681,33 @@ int main(int argc, char *argv[])
 				}
 				particleStreamer.end();
 				sphere_fx->drawPass(&particleStreamer, 1);
-				sphere_fx->setTexture("depth_tex", NULL);
-				sphere_fx->setTexture("gbuffer_tex0", NULL);
-				sphere_fx->setTexture("gbuffer_tex1", NULL);
 			}
 
+			float size = 25;
+			float plane_distance = float(sync_get_val(planeMoveTrack, row));
+
+			Vector3 v0 = mul(view, Vector3(-size, -size, plane_distance));
+			Vector3 v1 = mul(view, Vector3( size, -size, plane_distance));
+			Vector3 v2 = mul(view, Vector3(-size,  size, plane_distance));
+			Vector3 v3 = mul(view, Vector3( size,  size, plane_distance));
+			Matrix4x4 planeMatrix = calcPlaneMatrix(v0, v1, v2);
+			D3DXVECTOR4 planeVertices[4] = {
+				D3DXVECTOR4(v0.x, v0.y, v0.z, 1),
+				D3DXVECTOR4(v2.x, v2.y, v2.z, 1),
+				D3DXVECTOR4(v3.x, v3.y, v3.z, 1),
+				D3DXVECTOR4(v1.x, v1.y, v1.z, 1)
+			};
+			lighting_fx->p->SetVectorArray("planeVertices", planeVertices, 4);
+
 			device.setRenderTarget(color_target.getRenderTarget(), 0);
-			lighting_fx->setTexture("tex", gbuffer_target1);
-			int w = color_target.getSurface(0).getWidth();
-			int h = color_target.getSurface(0).getHeight();
-			drawRect(device, lighting_fx, 0, 0, float(w), float(h));
-			lighting_fx->setTexture("tex", NULL);
+			device.setRenderTarget(NULL, 1);
+			lighting_fx->setMatrices(world, view, proj);
+			lighting_fx->setTexture("depth_tex", depth_target);
+			lighting_fx->setTexture("gbuffer_tex0", gbuffer_target0);
+			lighting_fx->setTexture("gbuffer_tex1", gbuffer_target1);
+			lighting_fx->setVector2("nearFar", nearFar);
+			lighting_fx->setMatrix("planeMatrix", planeMatrix);
+			drawQuad(device, lighting_fx, -1, -1, 2, 2);
 
 			if (dof) {
 				device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
@@ -683,6 +753,12 @@ int main(int argc, char *argv[])
 
 			device.setDepthStencilSurface(depth_target.getRenderTarget());
 
+			{
+				Matrix4x4 world = Matrix4x4::translation(Vector3(0, 0, plane_distance));
+				plane_fx->setMatrices(world, view, proj);
+				drawQuad(device, plane_fx, -size, -size, size * 2, size * 2);
+			}
+
 			if (dustParticleCount > 0) {
 				Matrix4x4 modelview = world * view;
 				Vector3 up(modelview._12, modelview._22, modelview._32);
@@ -698,15 +774,15 @@ int main(int argc, char *argv[])
 
 				particleStreamer.begin();
 				for (int i = 0; i < dustParticleCount; ++i) {
-					Vector3 pos = Vector3(math::notRandf(i) * 2 - 1, math::notRandf(i + 1) * 2 - 1, math::notRandf(i + 2) * 2 - 1) * 100;
+					Vector3 pos = Vector3(math::notRandf(i) * 2 - 1, math::notRandf(i + 1) * 2 - 1, math::notRandf(i + 2) * 2 - 1) * 30;
 					Vector3 offset = normalize(Vector3(
 							sin(i * 0.23 + beat * 0.0532),
 							cos(i * 0.27 + beat * 0.0521),
 							cos(i * 0.31 - beat * 0.0512)
 							));
-					pos += offset * 10;
-					double size = 5.0 / (3 + i * 0.001);
-					particleStreamer.add(pos, float(size * dustParticleAlpha));
+					pos += offset * 3;
+					float size = math::notRandf(i * 3 + 1) * 2.5f;
+					particleStreamer.add(pos, size);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
 						particle_fx->draw(&particleStreamer);

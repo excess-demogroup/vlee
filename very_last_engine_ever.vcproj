@@ -1140,7 +1140,15 @@
 			>
 		</File>
 		<File
+			RelativePath=".\data\mesh.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\particle.fx"
+			>
+		</File>
+		<File
+			RelativePath=".\data\plane.fx"
 			>
 		</File>
 		<File

@@ -1,7 +1,8 @@
 <sync rows="4253">
 	<tracks>
 		<track name="part">
-			<key row="0" value="0" interpolation="0"/>
+			<key row="0" value="1" interpolation="0"/>
+			<key row="11" value="0" interpolation="0"/>
 		</track>
 		<track name="cm.overlay">
 			<key row="0" value="0" interpolation="0"/>
@@ -19,10 +20,12 @@
 			<key row="0" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.dist">
-			<key row="0" value="10" interpolation="0"/>
+			<key row="0" value="70" interpolation="2"/>
+			<key row="16" value="35" interpolation="0"/>
 		</track>
 		<track name="cam.time">
-			<key row="0" value="0" interpolation="0"/>
+			<key row="0" value="0" interpolation="1"/>
+			<key row="1376" value="30" interpolation="0"/>
 		</track>
 		<track name="cam.offset">
 			<key row="0" value="0" interpolation="0"/>
@@ -31,7 +34,12 @@
 			<key row="0" value="0" interpolation="0"/>
 		</track>
 		<track name="cam.y">
-			<key row="0" value="0" interpolation="0"/>
+			<key row="0" value="0" interpolation="2"/>
+			<key row="16" value="7" interpolation="0"/>
+			<key row="48" value="7" interpolation="2"/>
+			<key row="80" value="-20" interpolation="0"/>
+			<key row="104" value="-20" interpolation="2"/>
+			<key row="136" value="30" interpolation="0"/>
 		</track>
 		<track name="cam.z">
 			<key row="0" value="0" interpolation="0"/>
@@ -41,6 +49,8 @@
 		</track>
 		<track name="cam.at.y">
 			<key row="0" value="0" interpolation="0"/>
+			<key row="104" value="0" interpolation="2"/>
+			<key row="136" value="-20" interpolation="0"/>
 		</track>
 		<track name="cam.at.z">
 			<key row="0" value="0" interpolation="0"/>
@@ -73,16 +83,16 @@
 			<key row="0" value="20" interpolation="0"/>
 		</track>
 		<track name="dof.scale">
-			<key row="0" value="1" interpolation="0"/>
+			<key row="0" value="5" interpolation="0"/>
 		</track>
 		<track name="bloom.amt">
-			<key row="0" value="0" interpolation="0"/>
+			<key row="0" value="100" interpolation="0"/>
 		</track>
 		<track name="bloom.cutoff">
 			<key row="0" value="0" interpolation="0"/>
 		</track>
 		<track name="bloom.shape">
-			<key row="0" value="1" interpolation="0"/>
+			<key row="0" value="0.01" interpolation="0"/>
 		</track>
 		<track name="glitch.lines">
 			<key row="0" value="0" interpolation="0"/>
@@ -104,6 +114,11 @@
 		</track>
 		<track name="cm.lensdist">
 			<key row="0" value="0" interpolation="0"/>
+		</track>
+		<track name="plane.move">
+			<key row="16" value="-11" interpolation="0"/>
+			<key row="177" value="-15" interpolation="0"/>
+			<key row="247" value="15" interpolation="0"/>
 		</track>
 	</tracks>
 	<bookmarks/>
