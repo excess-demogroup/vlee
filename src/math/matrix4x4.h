@@ -120,13 +120,13 @@ namespace math
 
 	inline Vector3 mul(const Matrix4x4 &m, const Vector3 &v)
 	{
-		D3DXVECTOR4 temp;
-		D3DXVec3Transform(
-			&temp,
+		Vector3 ret;
+		D3DXVec3TransformCoord(
+			&ret,
 			&v,
 			&m
 		);
-		return Vector3(temp.x, temp.y, temp.z);
+		return ret;
 	}
 
 }
