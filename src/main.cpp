@@ -368,6 +368,9 @@ int main(int argc, char *argv[])
 
 		RenderTexture fxaa_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
 
+		RenderTexture color1_hdr = RenderTexture(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F);
+		RenderTexture color2_hdr = RenderTexture(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F);
+
 		RenderCubeTexture reflection_target(device, 512, 1, D3DFMT_A16B16G16R16F);
 		Surface reflection_depthstencil = device.createDepthStencilSurface(512, 512, D3DFMT_D24S8);
 
@@ -427,9 +430,6 @@ int main(int argc, char *argv[])
 
 			skyboxes.push_back(tex);
 		}
-
-		RenderTexture color1_hdr = RenderTexture(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F);
-		RenderTexture color2_hdr = RenderTexture(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F);
 
 		Effect *dof_fx = engine::loadEffect(device, "data/dof.fx");
 		dof_fx->setVector3("viewport", Vector3(letterbox_viewport.Width, letterbox_viewport.Height, 0.0f));
