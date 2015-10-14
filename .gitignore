@@ -4,3 +4,4 @@
 /Win32/
 /x64/
 data/*.track
+/errorlog.txt
