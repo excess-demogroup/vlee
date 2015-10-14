@@ -1140,6 +1140,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\data\logo-anim.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\mesh.fx"
 			>
 		</File>

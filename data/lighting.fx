@@ -63,7 +63,7 @@ sampler gbuffer_samp1 = sampler_state {
 texture logo_tex;
 sampler logo_samp = sampler_state {
 	Texture = (logo_tex);
-	MipFilter = NONE;
+	MipFilter = LINEAR;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
 	AddressU = BORDER;
@@ -125,14 +125,15 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	if (tmp > 0)
 	{
 		float factor = tmp / (2 * 3.14159265);
-		col += albedo * 5 * factor;
+		float3 logo_color = tex2Dlod(logo_samp, float4(0.5, 0.5, 0, 999)).rgb * 100;
+		col += albedo * logo_color * factor;
 	}
 #endif
 
 	float3 viewDir = normalize(eyePos);
 	float3 rayOrigin = eyePos;
 	float3 rayDir = reflect(viewDir, eyeNormal);
-	float fres = pow(saturate(1 + dot(eyeNormal, viewDir.xyz) * 0.95), 0.5);
+	float fres = pow(saturate(1 + dot(eyeNormal, viewDir.xyz) * 0.95), 0.25);
 
 	float3 hit = planeIntersect(rayOrigin, rayDir, planeMatrix);
 	if (hit.z > 0)

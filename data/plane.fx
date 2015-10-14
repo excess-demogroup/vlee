@@ -32,7 +32,7 @@ sampler albedo_samp = sampler_state {
 
 float4 ps_main(VS_OUTPUT Input) : COLOR
 {
-	return float4(1, 1, 1, 1); // tex2D(albedo_samp, Input.TexCoord0);
+	return tex2D(albedo_samp, Input.TexCoord0);
 }
 
 technique mesh {
@@ -40,7 +40,13 @@ technique mesh {
 		VertexShader = compile vs_2_0 vs_main();
 		PixelShader  = compile ps_2_0 ps_main();
 
-		AlphaBlendEnable = False;
-		ZWriteEnable = True;
+		AlphaBlendEnable = True;
+		SrcBlend = SrcAlpha;
+		DestBlend = One;
+
+		CullMode = None;
+
+		ZEnable = True;
+		ZWriteEnable = False;
 	}
 }

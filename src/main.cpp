@@ -437,8 +437,10 @@ int main(int argc, char *argv[])
 
 		RenderTexture fxaa_target(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
 
-		RenderTexture color1_hdr = RenderTexture(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F);
-		RenderTexture color2_hdr = RenderTexture(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F);
+		RenderTexture color1_hdr(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F);
+		RenderTexture color2_hdr(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F);
+
+		RenderTexture logo_anim_target(device, 512, 512, 0, D3DFMT_A16B16G16R16F, D3DMULTISAMPLE_NONE, D3DUSAGE_RENDERTARGET | D3DUSAGE_AUTOGENMIPMAP);
 
 		RenderCubeTexture reflection_target(device, 512, 1, D3DFMT_A16B16G16R16F);
 		Surface reflection_depthstencil = device.createDepthStencilSurface(512, 512, D3DFMT_D24S8);
@@ -483,12 +485,15 @@ int main(int argc, char *argv[])
 		Texture room_specular_tex = engine::loadTexture(device, "data/concrete_01_spec.png");
 
 		Effect *lighting_fx = engine::loadEffect(device, "data/lighting.fx");
-		Texture excess_logo_tex = engine::loadTexture(device, "data/excess-logo.png");
-		lighting_fx->setTexture("logo_tex", excess_logo_tex);
+		lighting_fx->setTexture("logo_tex", logo_anim_target);
 
 		Effect *sphere_fx = engine::loadEffect(device, "data/sphere.fx");
 
 		Effect *plane_fx = engine::loadEffect(device, "data/plane.fx");
+
+		Effect *logo_anim_fx = engine::loadEffect(device, "data/logo-anim.fx");
+		Anim shapes = engine::loadAnim(device, "data/shapes");
+		Anim strokes = engine::loadAnim(device, "data/strokes");
 
 		bool dump_video = false;
 		for (int i = 1; i < argc; ++i)
@@ -608,6 +613,16 @@ int main(int argc, char *argv[])
 			// render
 			device->BeginScene();
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
+
+			device.setRenderTarget(logo_anim_target.getRenderTarget(), 0);
+			device.setRenderTarget(NULL, 1);
+			device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
+			logo_anim_fx->setTexture("shape_tex", shapes.getTexture(0));
+			logo_anim_fx->setTexture("stroke_tex", strokes.getTexture(0));
+			logo_anim_fx->setFloat("time", float(fmod(beat / 16, 1)));
+			drawRect(device, logo_anim_fx, 0, 0, float(logo_anim_target.getWidth()), float(logo_anim_target.getHeight()));
+			// logo_anim_target.tex->GenerateMipSubLevels();
+
 			device.setRenderTarget(color_target.getRenderTarget(), 0);
 			device.setDepthStencilSurface(depth_target.getRenderTarget());
 			device->SetRenderState(D3DRS_ZENABLE, true);
@@ -771,6 +786,7 @@ int main(int argc, char *argv[])
 			{
 				Matrix4x4 world = Matrix4x4::translation(Vector3(0, 0, plane_distance));
 				plane_fx->setMatrices(world, view, proj);
+				plane_fx->setTexture("albedo_tex", logo_anim_target);
 				drawQuad(device, plane_fx, -size, -size, size * 2, size * 2);
 			}
 
