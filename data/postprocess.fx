@@ -142,11 +142,11 @@ float3 sample_spectrum(sampler2D tex, float2 start, float2 stop, int samples, fl
 
 float3 color_correct(float3 color)
 {
-#if 0
+#if 1
 	float3 uvw = pow(color, 1.0 / 2.2) * (31.0 / 32) + 0.5 / 32;
 	return lerp(tex3Dlod(color_map1_samp, float4(uvw, 0)),
-                tex3Dlod(color_map2_samp, float4(uvw, 0)),
-                color_map_lerp);
+	            tex3Dlod(color_map2_samp, float4(uvw, 0)),
+	            color_map_lerp);
 #else
 	return sqrt(color);
 #endif

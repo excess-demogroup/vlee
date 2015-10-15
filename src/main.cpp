@@ -392,6 +392,9 @@ int main(int argc, char *argv[])
 		const sync_track *colorMapFadeTrack    = sync_get_track(rocket, "cm.fade");
 		const sync_track *colorMapFlashTrack   = sync_get_track(rocket, "cm.flash");
 		const sync_track *colorMapOverlayTrack = sync_get_track(rocket, "cm.overlay");
+		const sync_track *colorMapColormap1Track = sync_get_track(rocket, "cm.colormap1");
+		const sync_track *colorMapColormap2Track = sync_get_track(rocket, "cm.colormap2");
+		const sync_track *colorMapColorFadeTrack = sync_get_track(rocket, "cm.colorfade");
 		const sync_track *colorMapOverlayAlphaTrack = sync_get_track(rocket, "cm.overlay_alpha");
 		const sync_track *pulseAmt2Track       = sync_get_track(rocket, "cm.pulse.amt");
 		const sync_track *pulseSpeed2Track     = sync_get_track(rocket, "cm.pulse.speed");
@@ -932,7 +935,10 @@ int main(int argc, char *argv[])
 			for (int i = 0; i < 7; ++i)
 				bloom_weight[i] *= bloom_scale;
 			postprocess_fx->setFloatArray("bloom_weight", bloom_weight, ARRAY_SIZE(bloom_weight));
-			postprocess_fx->commitChanges();
+
+			postprocess_fx->setTexture("color_map1_tex", color_maps[(int)sync_get_val(colorMapColormap1Track, row) % color_maps.size()]);
+			postprocess_fx->setTexture("color_map2_tex", color_maps[(int)sync_get_val(colorMapColormap2Track, row) % color_maps.size()]);
+			postprocess_fx->setFloat("color_map_lerp", float(sync_get_val(colorMapColorFadeTrack, row)));
 
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
 			drawRect(device, postprocess_fx, float(letterbox_viewport.X), float(letterbox_viewport.Y), float(letterbox_viewport.Width), float(letterbox_viewport.Height));
