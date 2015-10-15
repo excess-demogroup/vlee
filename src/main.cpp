@@ -43,6 +43,8 @@
 
 #include "sync/sync.h"
 
+#include "Box2D/Box2D.h"
+
 using math::Vector2;
 using math::Vector3;
 using math::Matrix4x4;
