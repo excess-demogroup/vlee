@@ -267,6 +267,38 @@ std::vector<renderer::CubeTexture> loadSkyboxes(renderer::Device &device, std::s
 	return ret;
 }
 
+std::vector<std::vector<Vector3> > loadSpheres(const char *path)
+{
+	FILE *fp = fopen(path, "rb");
+	if (!fp)
+		throw core::FatalException(std::string("failed to load ") + path);
+
+	int spheres;
+	if (fread(&spheres, sizeof(spheres), 1, fp) != 1)
+		throw core::FatalException("read error");
+
+	std::vector<std::vector<Vector3> > ret;
+	for (int i = 0; i < spheres; ++i) {
+		int keys;
+		fread(&keys, sizeof(keys), 1, fp);
+		std::vector<Vector3> curr;
+		for (int j = 0; j < keys; ++j) {
+
+			Vector3 tmp;
+			if (fread(&tmp.x, sizeof(tmp.x), 1, fp) != 1 ||
+			    fread(&tmp.y, sizeof(tmp.y), 1, fp) != 1 ||
+			    fread(&tmp.z, sizeof(tmp.z), 1, fp) != 1)
+				throw core::FatalException(std::string("read error: ") + strerror(ferror(fp)));
+
+			curr.push_back(tmp);
+		}
+		ret.push_back(curr);
+	}
+	fclose(fp);
+
+	return ret;
+}
+
 int main(int argc, char *argv[])
 {
 #ifdef _DEBUG
@@ -505,6 +537,8 @@ int main(int argc, char *argv[])
 		Anim shapes = engine::loadAnim(device, "data/shapes");
 		Anim strokes = engine::loadAnim(device, "data/strokes");
 
+		std::vector<std::vector<Vector3> > sphereAnim = loadSpheres("data/spheres.anim");
+
 		bool dump_video = false;
 		for (int i = 1; i < argc; ++i)
 			if (!strcmp(argv[i], "--dump-video"))
@@ -588,6 +622,7 @@ int main(int argc, char *argv[])
 
 			bool dof = true;
 			bool spheres = false;
+			bool spherePhysics = false;
 			int dustParticleCount = 0;
 
 			int part = int(sync_get_val(partTrack, row));
@@ -599,6 +634,10 @@ int main(int argc, char *argv[])
 
 			case 1:
 				dof = false;
+				break;
+
+			case 2:
+				spherePhysics = true;
 				break;
 			}
 
@@ -715,6 +754,61 @@ int main(int argc, char *argv[])
 				particleStreamer.begin();
 				for (int i = 0; i < ARRAY_SIZE(spheres); ++i) {
 					particleStreamer.add(spheres[i].pos, spheres[i].size);
+					if (!particleStreamer.getRoom()) {
+						particleStreamer.end();
+						sphere_fx->drawPass(&particleStreamer, 1);
+						particleStreamer.begin();
+					}
+				}
+				particleStreamer.end();
+				sphere_fx->drawPass(&particleStreamer, 1);
+			}
+
+			if (spherePhysics) {
+				sphere_fx->setMatrices(world, view, proj);
+				sphere_fx->setVector2("nearFar", nearFar);
+				sphere_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
+
+				int frame = int(float(beat));
+				float t = float(fmod(beat, 1));
+
+				std::vector<Vector3> spheres;
+				spheres.resize(sphereAnim.size());
+				for (int i = 0; i < int(sphereAnim.size()); ++i) {
+					const std::vector<Vector3> &anim = sphereAnim[i];
+					int idx = std::min(frame, int(anim.size()) - 2);
+					Vector3 pos = anim[idx] + (anim[idx + 1] - anim[idx]) * t;
+					spheres[i] = pos;
+				}
+
+				float size = 1;
+
+				particleStreamer.begin();
+				for (int i = 0; i < int(spheres.size()); ++i) {
+					Vector3 color(0.75 + 0.5 * sin((i % 1340) * 14.0),
+					              0.75 + 0.5 * sin((i % 1341) * 16.0),
+					              0.75 + 0.5 * sin((i % 1342) * 17.0));
+
+					particleStreamer.add(spheres[i], size, color);
+					if (!particleStreamer.getRoom()) {
+						particleStreamer.end();
+						sphere_fx->drawPass(&particleStreamer, 0);
+						particleStreamer.begin();
+					}
+				}
+				particleStreamer.end();
+				sphere_fx->drawPass(&particleStreamer, 0);
+
+				device.setRenderTarget(NULL, 1);
+				device.setRenderTarget(gbuffer_target1.getRenderTarget(), 0);
+
+				sphere_fx->setTexture("depth_tex", depth_target);
+				sphere_fx->setTexture("gbuffer_tex0", gbuffer_target0);
+				sphere_fx->setTexture("gbuffer_tex1", gbuffer_target1);
+
+				particleStreamer.begin();
+				for (int i = 0; i < ARRAY_SIZE(spheres); ++i) {
+					particleStreamer.add(spheres[i], size);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
 						sphere_fx->drawPass(&particleStreamer, 1);
