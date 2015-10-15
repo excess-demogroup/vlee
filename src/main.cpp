@@ -968,6 +968,22 @@ int main(int argc, char *argv[])
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
 
+#ifndef SYNC_PLAYER
+				if (WM_KEYDOWN == msg.message) {
+					switch (LOWORD(msg.wParam)) {
+					case 'R':
+						log::printf("reloading color maps");
+						color_maps = loadColorMaps(device, "data/color_maps");
+						break;
+
+					case 'O':
+						log::printf("reloading overlays");
+						overlays = engine::loadAnim(device, "data/overlays");
+						break;
+					}
+				}
+#endif
+
 				/* handle keys-events */
 				if (WM_QUIT == msg.message ||
 				    WM_CLOSE == msg.message ||
