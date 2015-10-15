@@ -1,4 +1,4 @@
-const float time;
+const float time, fade;
 
 struct PS_INPUT {
 	float4 Position : POSITION0;
@@ -30,7 +30,7 @@ sampler stroke_samp = sampler_state {
 float4 ps_main(PS_INPUT Input) : COLOR
 {
 	float d = tex2D(shape_samp, Input.TexCoord0).x;
-	return tex2D(stroke_samp, float2(0.5 - d / 512, time));
+	return tex2D(stroke_samp, float2(d, time)) * fade;
 }
 
 technique mesh {

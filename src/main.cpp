@@ -390,6 +390,11 @@ int main(int argc, char *argv[])
 		const sync_track *cameraShakeSpeedTrack = sync_get_track(rocket, "cam.shake.speed");
 
 		const sync_track *planeMoveTrack = sync_get_track(rocket, "plane.move");
+		const sync_track *planeRotTrack = sync_get_track(rocket, "plane.rot");
+		const sync_track *planeShapeTrack = sync_get_track(rocket, "plane.shape");
+		const sync_track *planeStrokeTrack = sync_get_track(rocket, "plane.stroke");
+		const sync_track *planeTimeTrack = sync_get_track(rocket, "plane.time");
+		const sync_track *planeFadeTrack = sync_get_track(rocket, "plane.fade");
 
 		const sync_track *colorMapFadeTrack    = sync_get_track(rocket, "cm.fade");
 		const sync_track *colorMapFlashTrack   = sync_get_track(rocket, "cm.flash");
@@ -622,9 +627,11 @@ int main(int argc, char *argv[])
 			device.setRenderTarget(logo_anim_target.getRenderTarget(), 0);
 			device.setRenderTarget(NULL, 1);
 			device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
-			logo_anim_fx->setTexture("shape_tex", shapes.getTexture(0));
-			logo_anim_fx->setTexture("stroke_tex", strokes.getTexture(0));
-			logo_anim_fx->setFloat("time", float(fmod(beat / 16, 1)));
+
+			logo_anim_fx->setTexture("shape_tex", shapes.getTexture(int(sync_get_val(planeShapeTrack, row))));
+			logo_anim_fx->setTexture("stroke_tex", strokes.getTexture(int(sync_get_val(planeStrokeTrack, row))));
+			logo_anim_fx->setFloat("time", float(fmod(sync_get_val(planeTimeTrack, row) / 512, 1)));
+			logo_anim_fx->setFloat("fade", float(sync_get_val(planeFadeTrack, row)));
 			drawRect(device, logo_anim_fx, 0, 0, float(logo_anim_target.getWidth()), float(logo_anim_target.getHeight()));
 			// logo_anim_target.tex->GenerateMipSubLevels();
 
@@ -720,11 +727,14 @@ int main(int argc, char *argv[])
 
 			float size = 25;
 			float plane_distance = float(sync_get_val(planeMoveTrack, row));
+			float plane_rot = float(sync_get_val(planeRotTrack, row));
 
-			Vector3 v0 = mul(view, Vector3(-size, -size, plane_distance));
-			Vector3 v1 = mul(view, Vector3( size, -size, plane_distance));
-			Vector3 v2 = mul(view, Vector3(-size,  size, plane_distance));
-			Vector3 v3 = mul(view, Vector3( size,  size, plane_distance));
+			Matrix4x4 planeRotation = Matrix4x4::rotation(Vector3(0, 0, plane_rot * float(M_PI / 180)));
+			Matrix4x4 planeTransform = planeRotation * view;
+			Vector3 v0 = mul(planeTransform, Vector3(-size, -size, plane_distance));
+			Vector3 v1 = mul(planeTransform, Vector3( size, -size, plane_distance));
+			Vector3 v2 = mul(planeTransform, Vector3(-size,  size, plane_distance));
+			Vector3 v3 = mul(planeTransform, Vector3( size,  size, plane_distance));
 			Matrix4x4 planeMatrix = calcPlaneMatrix(v0, v1, v2);
 			D3DXVECTOR4 planeVertices[4] = {
 				D3DXVECTOR4(v0.x, v0.y, v0.z, 1),
@@ -789,7 +799,7 @@ int main(int argc, char *argv[])
 			device.setDepthStencilSurface(depth_target.getRenderTarget());
 
 			{
-				Matrix4x4 world = Matrix4x4::translation(Vector3(0, 0, plane_distance));
+				Matrix4x4 world = planeRotation * Matrix4x4::translation(Vector3(0, 0, plane_distance));
 				plane_fx->setMatrices(world, view, proj);
 				plane_fx->setTexture("albedo_tex", logo_anim_target);
 				drawQuad(device, plane_fx, -size, -size, size * 2, size * 2);
