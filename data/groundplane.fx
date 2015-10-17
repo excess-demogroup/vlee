@@ -71,28 +71,13 @@ sampler specular_samp = sampler_state {
 	sRGBTexture = True;
 };
 
-texture ao_tex;
-sampler ao_samp = sampler_state {
-	Texture = (ao_tex);
-	MipFilter = Linear;
-	MinFilter = Linear;
-	MagFilter = Linear;
-	AddressU = Wrap;
-	AddressV = Wrap;
-	sRGBTexture = False;
-};
-
 PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
 	PS_OUTPUT o;
 
-#if 0
-	float3 eyeNormal = normalize(Input.TangentToView[2]);
-#else
 	float3 tangentNormal = normalize(tex2D(normal_samp, Input.TexCoord0).xyz * 2 - 1);
 	tangentNormal = lerp(tangentNormal, float3(0, 0, 1), 0.75);
 	float3 eyeNormal = normalize(mul(tangentNormal, Input.TangentToView));
-#endif
 
 	float3 albedo = tex2D(albedo_samp, Input.TexCoord0).rgb * 0.25;
 	float ao = 1;
