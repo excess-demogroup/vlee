@@ -4,7 +4,7 @@ float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 struct VS_INPUT {
 	float4 Position : POSITION0;
 	float3 Normal : NORMAL;
-#if 1
+#if 0
 	float3 Tangent : TEXCOORD1;
 	float3 Binormal : TEXCOORD2;
 #else
@@ -94,9 +94,9 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 	float3 eyeNormal = normalize(mul(tangentNormal, Input.TangentToView));
 #endif
 
-	float3 albedo = tex2D(albedo_samp, Input.TexCoord0).rgb;
-	float ao = tex2D(ao_samp, Input.TexCoord1).r;
-	float spec = tex2D(specular_samp, Input.TexCoord0).r * 5;
+	float3 albedo = tex2D(albedo_samp, Input.TexCoord0).rgb * 0.25;
+	float ao = 1;
+	float spec = tex2D(specular_samp, Input.TexCoord0).r * 15;
 
 	o.gbuffer0 = float4(eyeNormal, spec);
 	o.gbuffer1 = float4(albedo, 1 - ao);
@@ -105,8 +105,8 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 
 technique mesh {
 	pass Geometry {
-		VertexShader = compile vs_3_0 vs_main();
-		PixelShader  = compile ps_3_0 ps_main();
+		VertexShader = compile vs_2_0 vs_main();
+		PixelShader  = compile ps_2_0 ps_main();
 
 		AlphaBlendEnable = False;
 		ZWriteEnable = True;

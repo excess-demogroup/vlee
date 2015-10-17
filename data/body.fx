@@ -15,24 +15,13 @@ VS_OUTPUT vs_main(VS_INPUT input)
 {
 	VS_OUTPUT output;
 	output.Position = mul(input.Position, matWorldViewProjection);
-	output.TexCoord0 = float2(input.TexCoord.x, 1 - input.TexCoord.y);
+	output.TexCoord0 = input.TexCoord;
 	return output;
 }
 
-texture albedo_tex;
-sampler albedo_samp = sampler_state {
-	Texture = (albedo_tex);
-	MipFilter = Linear;
-	MinFilter = Linear;
-	MagFilter = Linear;
-	AddressU = Wrap;
-	AddressV = Wrap;
-	sRGBTexture = True;
-};
-
 float4 ps_main(VS_OUTPUT Input) : COLOR
 {
-	return tex2D(albedo_samp, Input.TexCoord0);
+	return float4(1, 1, 1, 1);
 }
 
 technique mesh {

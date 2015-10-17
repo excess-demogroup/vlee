@@ -427,6 +427,7 @@ int main(int argc, char *argv[])
 		const sync_track *planeStrokeTrack = sync_get_track(rocket, "plane.stroke");
 		const sync_track *planeTimeTrack = sync_get_track(rocket, "plane.time");
 		const sync_track *planeFadeTrack = sync_get_track(rocket, "plane.fade");
+		const sync_track *planeOverbrightTrack = sync_get_track(rocket, "plane.overbright");
 
 		const sync_track *colorMapFadeTrack    = sync_get_track(rocket, "cm.fade");
 		const sync_track *colorMapFlashTrack   = sync_get_track(rocket, "cm.flash");
@@ -526,12 +527,41 @@ int main(int argc, char *argv[])
 		Texture room_normal_tex = engine::loadTexture(device, "data/concrete_01_nm.png");
 		Texture room_specular_tex = engine::loadTexture(device, "data/concrete_01_spec.png");
 
+		Texture con_diffuse_tex = engine::loadTexture(device, "data/Con_Diffuse_1.jpg");
+		Texture con_normal_tex = engine::loadTexture(device, "data/Con_Normal_1.jpg");
+		Texture con_specular_tex = engine::loadTexture(device, "data/Con_Specular_1.png");
+
+		Effect *corridor_fx = engine::loadEffect(device, "data/corridor.fx");
+		corridor_fx->setTexture("albedo_tex", con_diffuse_tex);
+		corridor_fx->setTexture("normal_tex", con_normal_tex);
+		corridor_fx->setTexture("specular_tex", con_specular_tex);
+
+		Effect *corridor_dark_fx = engine::loadEffect(device, "data/corridor-dark.fx");
+		corridor_dark_fx->setTexture("albedo_tex", con_diffuse_tex);
+		corridor_dark_fx->setTexture("normal_tex", con_normal_tex);
+		corridor_dark_fx->setTexture("specular_tex", con_specular_tex);
+
+		Mesh *corridor1_x = engine::loadMesh(device, "data/corridor1.x");
+		Mesh *corridor1_dark_x = engine::loadMesh(device, "data/corridor1-dark.x");
+		Texture corridor1_ao_tex = engine::loadTexture(device, "data/corridor1_ao.png");
+
+		Mesh *dist_sphere_x = engine::loadMesh(device, "data/dist-sphere.x");
+		int dist_sphere_num_vertices = dist_sphere_x->getVertexCount();
+		Vector3 *dist_sphere_vertices = new Vector3[dist_sphere_num_vertices];
+		dist_sphere_x->getVertexPositions(dist_sphere_vertices, 0, dist_sphere_num_vertices);
+		Effect *dist_sphere_fx = engine::loadEffect(device, "data/dist-sphere.fx");
+		Effect *dist_sphere_cubes_fx = engine::loadEffect(device, "data/dist-sphere-cubes.fx");
+		engine::MeshInstancer dist_sphere_cubes(device, dist_sphere_cubes_fx, dist_sphere_num_vertices);
+
 		Effect *lighting_fx = engine::loadEffect(device, "data/lighting.fx");
 		lighting_fx->setTexture("logo_tex", logo_anim_target);
 
 		Effect *sphere_fx = engine::loadEffect(device, "data/sphere.fx");
 
 		Effect *plane_fx = engine::loadEffect(device, "data/plane.fx");
+
+		Mesh *groundplane_x = engine::loadMesh(device, "data/groundplane.x");
+		Effect *groundplane_fx = engine::loadEffect(device, "data/groundplane.fx");
 
 		Effect *logo_anim_fx = engine::loadEffect(device, "data/logo-anim.fx");
 		Anim shapes = engine::loadAnim(device, "data/shapes");
@@ -576,7 +606,7 @@ int main(int argc, char *argv[])
 			switch ((int)sync_get_val(cameraIndexTrack, row)) {
 			case 0:
 				camTarget = Vector3(sync_get_val(cameraAtXTrack, row), sync_get_val(cameraAtYTrack, row), sync_get_val(cameraAtZTrack, row));
-				camPos = camTarget + Vector3(sin(camTime / 2) * sync_get_val(cameraDistanceTrack, row),
+				camPos = Vector3(sin(camTime / 2) * sync_get_val(cameraDistanceTrack, row),
 					sync_get_val(cameraYTrack, row),
 					cos(camTime / 2) * sync_get_val(cameraDistanceTrack, row));
 				break;
@@ -623,20 +653,36 @@ int main(int argc, char *argv[])
 			bool dof = true;
 			bool spheres = false;
 			bool spherePhysics = false;
+			bool room = false;
+			bool reflectionPlane = false;
+			bool groundplane = false;
+			bool corridor = false;
 			int dustParticleCount = 0;
+			Vector3 fogColor(0, 0, 0);
 
 			int part = int(sync_get_val(partTrack, row));
 			switch (part) {
 			case 0:
-				spheres = true;
-				dustParticleCount = 100;
+				groundplane = true;
+				reflectionPlane = true;
 				break;
 
 			case 1:
-				dof = false;
+				corridor = true;
+				fogColor = Vector3(0.01, 0.01, 0.01);
+				reflectionPlane = true;
 				break;
 
 			case 2:
+				room = true;
+				dustParticleCount = 100;
+				break;
+
+			case 3:
+				spheres = true;
+				break;
+
+			case 4:
 				spherePhysics = true;
 				break;
 			}
@@ -667,8 +713,8 @@ int main(int argc, char *argv[])
 			device.setRenderTarget(NULL, 1);
 			device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
 
-			logo_anim_fx->setTexture("shape_tex", shapes.getTexture(int(sync_get_val(planeShapeTrack, row))));
-			logo_anim_fx->setTexture("stroke_tex", strokes.getTexture(int(sync_get_val(planeStrokeTrack, row))));
+			logo_anim_fx->setTexture("shape_tex", shapes.getTexture(int(sync_get_val(planeShapeTrack, row)) % shapes.getTextureCount()));
+			logo_anim_fx->setTexture("stroke_tex", strokes.getTexture(int(sync_get_val(planeStrokeTrack, row)) % strokes.getTextureCount()));
 			logo_anim_fx->setFloat("time", float(fmod(sync_get_val(planeTimeTrack, row) / 512, 1)));
 			logo_anim_fx->setFloat("fade", float(sync_get_val(planeFadeTrack, row)));
 			drawRect(device, logo_anim_fx, 0, 0, float(logo_anim_target.getWidth()), float(logo_anim_target.getHeight()));
@@ -698,12 +744,38 @@ int main(int argc, char *argv[])
 			// clear GBuffer
 			device->Clear(0, 0, D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
 
-			mesh_fx->setMatrices(world, view, proj);
-			mesh_fx->setTexture("albedo_tex", room_albedo_tex);
-			mesh_fx->setTexture("normal_tex", room_normal_tex);
-			mesh_fx->setTexture("specular_tex", room_specular_tex);
-			mesh_fx->setTexture("ao_tex", room_ao_tex);
-			mesh_fx->draw(room_x);
+			if (groundplane) {
+				Matrix4x4 world = Matrix4x4::translation(Vector3(0, -25, 0));
+
+				groundplane_fx->setMatrices(world, view, proj);
+				groundplane_fx->setTexture("albedo_tex", room_albedo_tex);
+				groundplane_fx->setTexture("normal_tex", room_normal_tex);
+				groundplane_fx->setTexture("specular_tex", room_specular_tex);
+				groundplane_fx->setTexture("ao_tex", room_ao_tex);
+				groundplane_fx->draw(groundplane_x);
+			}
+
+			if (room) {
+				mesh_fx->setMatrices(world, view, proj);
+				mesh_fx->setTexture("albedo_tex", room_albedo_tex);
+				mesh_fx->setTexture("normal_tex", room_normal_tex);
+				mesh_fx->setTexture("specular_tex", room_specular_tex);
+				mesh_fx->setTexture("ao_tex", room_ao_tex);
+				mesh_fx->draw(room_x);
+			}
+
+			if (corridor) {
+				for (int i = 0; i < 10; ++i) {
+					Matrix4x4 world = Matrix4x4::translation(Vector3(0, 0, i * 315));
+					corridor_fx->setMatrices(world, view, proj);
+					corridor_fx->setTexture("ao_tex", corridor1_ao_tex);
+					corridor_fx->draw(corridor1_x);
+
+					corridor_dark_fx->setMatrices(world, view, proj);
+					corridor_dark_fx->setTexture("ao_tex", corridor1_ao_tex);
+					corridor_dark_fx->draw(corridor1_dark_x);
+				}
+			}
 
 			if (spheres) {
 				sphere_fx->setMatrices(world, view, proj);
@@ -824,11 +896,10 @@ int main(int argc, char *argv[])
 			float plane_rot = float(sync_get_val(planeRotTrack, row));
 
 			Matrix4x4 planeRotation = Matrix4x4::rotation(Vector3(0, 0, plane_rot * float(M_PI / 180)));
-			Matrix4x4 planeTransform = planeRotation * view;
-			Vector3 v0 = mul(planeTransform, Vector3(-size, -size, plane_distance));
-			Vector3 v1 = mul(planeTransform, Vector3( size, -size, plane_distance));
-			Vector3 v2 = mul(planeTransform, Vector3(-size,  size, plane_distance));
-			Vector3 v3 = mul(planeTransform, Vector3( size,  size, plane_distance));
+			Vector3 v0 = mul(view, mul(planeRotation, Vector3(-size, -size, plane_distance)));
+			Vector3 v1 = mul(view, mul(planeRotation, Vector3( size, -size, plane_distance)));
+			Vector3 v2 = mul(view, mul(planeRotation, Vector3(-size,  size, plane_distance)));
+			Vector3 v3 = mul(view, mul(planeRotation, Vector3( size,  size, plane_distance)));
 			Matrix4x4 planeMatrix = calcPlaneMatrix(v0, v1, v2);
 			D3DXVECTOR4 planeVertices[4] = {
 				D3DXVECTOR4(v0.x, v0.y, v0.z, 1),
@@ -837,6 +908,9 @@ int main(int argc, char *argv[])
 				D3DXVECTOR4(v1.x, v1.y, v1.z, 1)
 			};
 			lighting_fx->p->SetVectorArray("planeVertices", planeVertices, 4);
+			lighting_fx->setFloat("planeOverbright", float(sync_get_val(planeOverbrightTrack, row)));
+			lighting_fx->setVector3("fogColor", fogColor);
+			lighting_fx->setFloat("fogDensity", 0.005);
 
 			device.setRenderTarget(color_target.getRenderTarget(), 0);
 			device.setRenderTarget(NULL, 1);
@@ -892,7 +966,7 @@ int main(int argc, char *argv[])
 
 			device.setDepthStencilSurface(depth_target.getRenderTarget());
 
-			{
+			if (reflectionPlane) {
 				Matrix4x4 world = planeRotation * Matrix4x4::translation(Vector3(0, 0, plane_distance));
 				plane_fx->setMatrices(world, view, proj);
 				plane_fx->setTexture("albedo_tex", logo_anim_target);
@@ -1085,6 +1159,11 @@ int main(int argc, char *argv[])
 					case 'O':
 						log::printf("reloading overlays");
 						overlays = engine::loadAnim(device, "data/overlays");
+						break;
+
+					case 'P':
+						shapes = engine::loadAnim(device, "data/shapes");
+						strokes = engine::loadAnim(device, "data/strokes");
 						break;
 					}
 				}

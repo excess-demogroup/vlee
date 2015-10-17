@@ -198,6 +198,7 @@ float3 sample_lensflare(float2 pos)
 
 float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 {
+	return tex2D(color_samp, In.uv);
 	float2 block = floor(vpos / 16);
 	float2 uv_noise = block / 64;
 	uv_noise += floor(dist_time * float2(1234.0, 3543.0) * uv_noise) / 64;

@@ -3712,11 +3712,31 @@
 			>
 		</File>
 		<File
+			RelativePath=".\data\corridor-dark.fx"
+			>
+		</File>
+		<File
+			RelativePath=".\data\corridor.fx"
+			>
+		</File>
+		<File
+			RelativePath=".\data\dist-sphere-cubes.fx"
+			>
+		</File>
+		<File
+			RelativePath=".\data\dist-sphere.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\dof.fx"
 			>
 		</File>
 		<File
 			RelativePath=".\data\fxaa.fx"
+			>
+		</File>
+		<File
+			RelativePath=".\data\groundplane.fx"
 			>
 		</File>
 		<File

@@ -1,16 +1,15 @@
 float4x4 matWorldView : WORLDVIEW;
 float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 
+const float3 amt;
+const float3 scale;
+const float3 phase;
+
 struct VS_INPUT {
 	float4 Position : POSITION0;
 	float3 Normal : NORMAL;
-#if 1
-	float3 Tangent : TEXCOORD1;
-	float3 Binormal : TEXCOORD2;
-#else
 	float3 Tangent : TANGENT;
 	float3 Binormal : BINORMAL;
-#endif
 	float2 TexCoord : TEXCOORD0;
 };
 
@@ -21,15 +20,39 @@ struct VS_OUTPUT {
 	float3x3 TangentToView : TEXCOORD2;
 };
 
+float3 deform(float3 p)
+{
+	float s = 3;
+	float3 p2 = p * scale + phase;
+	s += sin(p2.x) * amt.x;
+	s += sin(p2.y) * amt.y;
+	s += sin(p2.z) * amt.z;
+	return p * s / 3;
+}
+
 VS_OUTPUT vs_main(VS_INPUT input)
 {
 	VS_OUTPUT output;
-	output.Position = mul(input.Position, matWorldViewProjection);
+
+	float3 pos = input.Position.xyz;
+	float3 p1 = pos + input.Tangent * 0.1;
+	float3 p2 = pos + input.Binormal * 0.1;
+
+	pos = deform(pos);
+	p1 = deform(p1);
+	p2 = deform(p2);
+
+	float3 t = normalize(p1 - pos);
+	float3 b = normalize(p2 - pos);
+	float3 n = cross(t, b);
+
+	output.Position = mul(float4(pos, 1), matWorldViewProjection);
 	output.TexCoord0 = input.TexCoord * 5;
 	output.TexCoord1 = input.TexCoord;
-	output.TangentToView[0] = mul(float4(input.Tangent, 0), matWorldView).xyz;
-	output.TangentToView[1] = mul(float4(input.Binormal, 0), matWorldView).xyz;
-	output.TangentToView[2] = mul(float4(input.Normal, 0), matWorldView).xyz;
+	output.TangentToView[0] = mul(float4(t, 0), matWorldView).xyz;
+	output.TangentToView[1] = mul(float4(b, 0), matWorldView).xyz;
+	output.TangentToView[2] = mul(float4(n, 0), matWorldView).xyz;
+//	output.TangentToView[2] = input.Tangent; // DEBUG!
 	return output;
 }
 
@@ -86,7 +109,7 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
 	PS_OUTPUT o;
 
-#if 0
+#if 1
 	float3 eyeNormal = normalize(Input.TangentToView[2]);
 #else
 	float3 tangentNormal = normalize(tex2D(normal_samp, Input.TexCoord0).xyz * 2 - 1);
@@ -96,14 +119,14 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 
 	float3 albedo = tex2D(albedo_samp, Input.TexCoord0).rgb;
 	float ao = tex2D(ao_samp, Input.TexCoord1).r;
-	float spec = tex2D(specular_samp, Input.TexCoord0).r * 5;
+	float spec = 0.5; // tex2D(specular_samp, Input.TexCoord0).r * 5;
 
 	o.gbuffer0 = float4(eyeNormal, spec);
 	o.gbuffer1 = float4(albedo, 1 - ao);
 	return o;
 }
 
-technique mesh {
+technique dist_sphere {
 	pass Geometry {
 		VertexShader = compile vs_3_0 vs_main();
 		PixelShader  = compile ps_3_0 ps_main();

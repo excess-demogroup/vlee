@@ -1,9 +1,12 @@
 const float4x4 matProjectionInverse : PROJECTIONINVERSE;
 const float4x4 matView : VIEW;
 const float4x4 matViewInverse : VIEWINVERSE;
+const float3 fogColor;
+const float fogDensity;
 const float4x4 planeMatrix;
 const float3 planeVertices[4];
 const float2 nearFar;
+const float planeOverbright;
 
 struct VS_OUTPUT {
 	float4 pos : POSITION;
@@ -122,10 +125,9 @@ float4 pixel(VS_OUTPUT In) : COLOR
 #endif
 
 	float tmp = dot(lv, eyeNormal);
-	if (tmp > 0)
-	{
+	if (tmp > 0) {
 		float factor = tmp / (2 * 3.14159265);
-		float3 logo_color = tex2Dlod(logo_samp, float4(0.5, 0.5, 0, 999)).rgb * 100;
+		float3 logo_color = tex2Dlod(logo_samp, float4(0.5, 0.5, 0, 999)).rgb * planeOverbright;
 		col += albedo * logo_color * factor;
 	}
 #endif
@@ -136,17 +138,26 @@ float4 pixel(VS_OUTPUT In) : COLOR
 	float fres = pow(saturate(1 + dot(eyeNormal, viewDir.xyz) * 0.95), 0.25);
 
 	float3 hit = planeIntersect(rayOrigin, rayDir, planeMatrix);
-	if (hit.z > 0)
-	{
+	if (hit.z > 0) {
 		float3 refl = tex2Dlod(logo_samp, float4(hit.xy, 0, 0)).rgb;
 		col += refl * spec * fres;
 	}
 
+	col.rgb = lerp(fogColor, col.rgb, exp(-eyeDepth * fogDensity));
+
+//	return float4(albedo, 1);
+//	return float4(ao, ao, ao, 1);
 //	return float4(frac(eyePos), 1);
+//	return float4((float3)length(eyeNormal), 1);
 //	return float4(max(0, eyeNormal), 1);
 //	return float4(fres, fres, fres, 1);
 //	return float4(abs(matViewInverse[0].xyz), 1);
 //	return float4(spec, spec, spec, 1);
+//	return frac(100 * tex2D(depth_samp, In.tex.xy).r);
+//	return tex2D(depth_samp, float4(In.tex.xy, In.tex.xy * 10 - 5)).r;
+
+	if (length(eyeNormal) < 0.1)
+		return float4(fogColor, 1);
 
 	return float4(col, 1);
 }

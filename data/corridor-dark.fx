@@ -4,14 +4,10 @@ float4x4 matWorldViewProjection : WORLDVIEWPROJECTION;
 struct VS_INPUT {
 	float4 Position : POSITION0;
 	float3 Normal : NORMAL;
-#if 1
-	float3 Tangent : TEXCOORD1;
-	float3 Binormal : TEXCOORD2;
-#else
 	float3 Tangent : TANGENT;
 	float3 Binormal : BINORMAL;
-#endif
-	float2 TexCoord : TEXCOORD0;
+	float2 TexCoord0 : TEXCOORD0;
+	float2 TexCoord1 : TEXCOORD1;
 };
 
 struct VS_OUTPUT {
@@ -25,8 +21,8 @@ VS_OUTPUT vs_main(VS_INPUT input)
 {
 	VS_OUTPUT output;
 	output.Position = mul(input.Position, matWorldViewProjection);
-	output.TexCoord0 = input.TexCoord * 5;
-	output.TexCoord1 = input.TexCoord;
+	output.TexCoord0 = input.TexCoord0;
+	output.TexCoord1 = input.TexCoord1;
 	output.TangentToView[0] = mul(float4(input.Tangent, 0), matWorldView).xyz;
 	output.TangentToView[1] = mul(float4(input.Binormal, 0), matWorldView).xyz;
 	output.TangentToView[2] = mul(float4(input.Normal, 0), matWorldView).xyz;
@@ -90,13 +86,13 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 	float3 eyeNormal = normalize(Input.TangentToView[2]);
 #else
 	float3 tangentNormal = normalize(tex2D(normal_samp, Input.TexCoord0).xyz * 2 - 1);
-	tangentNormal = lerp(tangentNormal, float3(0, 0, 1), 0.75);
+//	tangentNormal = lerp(tangentNormal, float3(0, 0, 1), 0.75);
 	float3 eyeNormal = normalize(mul(tangentNormal, Input.TangentToView));
 #endif
 
-	float3 albedo = tex2D(albedo_samp, Input.TexCoord0).rgb;
+	float3 albedo = float3(0.2, 0.2, 0.2); //tex2D(albedo_samp, Input.TexCoord0).rgb;
 	float ao = tex2D(ao_samp, Input.TexCoord1).r;
-	float spec = tex2D(specular_samp, Input.TexCoord0).r * 5;
+	float spec = 1; // tex2D(specular_samp, Input.TexCoord0).r * 5;
 
 	o.gbuffer0 = float4(eyeNormal, spec);
 	o.gbuffer1 = float4(albedo, 1 - ao);
