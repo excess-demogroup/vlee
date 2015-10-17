@@ -86,7 +86,7 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 	float3 eyeNormal = normalize(mul(tangentNormal, Input.TangentToView));
 
 	float3 albedo = tex2D(albedo_samp, Input.TexCoord0).rgb;
-	float ao = tex2D(ao_samp, Input.TexCoord1).r;
+	float ao = tex2D(ao_samp, Input.TexCoord1).r * 0.75;
 	float spec = tex2D(specular_samp, Input.TexCoord0).r;
 
 	o.gbuffer0 = float4(eyeNormal, spec * ao);

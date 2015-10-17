@@ -3716,6 +3716,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\data\corridor-floor.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\data\corridor.fx"
 			>
 		</File>

@@ -27,10 +27,22 @@ sampler stroke_samp = sampler_state {
 	sRGBTexture = True;
 };
 
+texture greetings_tex;
+sampler greetings_samp = sampler_state {
+	Texture = (greetings_tex);
+	MipFilter = Linear;
+	MinFilter = Linear;
+	MagFilter = Linear;
+	AddressU = Clamp;
+	AddressV = Clamp;
+	sRGBTexture = True;
+};
+
 float4 ps_main(PS_INPUT Input) : COLOR
 {
 	float d = tex2D(shape_samp, Input.TexCoord0).x;
-	return tex2D(stroke_samp, float2(d, time)) * fade;
+	float4 g = tex2D(greetings_samp, float2(Input.TexCoord0.x, 1 - Input.TexCoord0.y));
+	return (tex2D(stroke_samp, float2(d, time)) + g) * fade;
 }
 
 technique mesh {
