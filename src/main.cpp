@@ -430,6 +430,11 @@ int main(int argc, char *argv[])
 		const sync_track *planeTimeTrack = sync_get_track(rocket, "plane.time");
 		const sync_track *planeFadeTrack = sync_get_track(rocket, "plane.fade");
 		const sync_track *planeOverbrightTrack = sync_get_track(rocket, "plane.overbright");
+		const sync_track *planeCountTrack = sync_get_track(rocket, "plane.count");
+		const sync_track *planeOffsXTrack = sync_get_track(rocket, "plane.offs.x");
+		const sync_track *planeOffsYTrack = sync_get_track(rocket, "plane.offs.y");
+		const sync_track *planeOffsZTrack = sync_get_track(rocket, "plane.offs.z");
+
 
 		const sync_track *colorMapFadeTrack    = sync_get_track(rocket, "cm.fade");
 		const sync_track *colorMapFlashTrack   = sync_get_track(rocket, "cm.flash");
@@ -872,20 +877,39 @@ int main(int argc, char *argv[])
 			float size = float(sync_get_val(planeSizeTrack, row));
 			float plane_distance = float(sync_get_val(planeMoveTrack, row));
 			float plane_rot = float(sync_get_val(planeRotTrack, row));
+			int planeCount = int(sync_get_val(planeCountTrack, row));
+			const int MAX_PLANES = 4;
+			planeCount = math::clamp(planeCount, int(0), MAX_PLANES);
+			Vector3 planeOffset(float(sync_get_val(planeOffsXTrack, row)),
+			                    float(sync_get_val(planeOffsYTrack, row)),
+			                    float(sync_get_val(planeOffsZTrack, row)));
+			Vector3 planeOrigin = -(planeOffset * float(planeCount - 1)) / 2;
 
 			Matrix4x4 planeRotation = Matrix4x4::rotation(Vector3(0, 0, plane_rot * float(M_PI / 180)));
-			Vector3 v0 = mul(view, mul(planeRotation, Vector3(-size, -size, plane_distance)));
-			Vector3 v1 = mul(view, mul(planeRotation, Vector3( size, -size, plane_distance)));
-			Vector3 v2 = mul(view, mul(planeRotation, Vector3(-size,  size, plane_distance)));
-			Vector3 v3 = mul(view, mul(planeRotation, Vector3( size,  size, plane_distance)));
-			Matrix4x4 planeMatrix = calcPlaneMatrix(v0, v1, v2);
-			D3DXVECTOR4 planeVertices[4] = {
-				D3DXVECTOR4(v1.x, v1.y, v1.z, 1),
-				D3DXVECTOR4(v3.x, v3.y, v3.z, 1),
-				D3DXVECTOR4(v2.x, v2.y, v2.z, 1),
-				D3DXVECTOR4(v0.x, v0.y, v0.z, 1)
-			};
-			lighting_fx->p->SetVectorArray("planeVertices", planeVertices, 4);
+
+			Matrix4x4 planeMatrices[MAX_PLANES];
+			D3DXVECTOR4 planeVertices[MAX_PLANES * 4];
+			for (int i = 0; i < planeCount; ++i) {
+				Matrix4x4 planeTranslation = Matrix4x4::translation(planeOrigin + planeOffset * float(i));
+				Matrix4x4 planeTransform = (planeRotation * planeTranslation) * view;
+				Vector3 v0 = mul(planeTransform, Vector3(-size, -size, plane_distance));
+				Vector3 v1 = mul(planeTransform, Vector3( size, -size, plane_distance));
+				Vector3 v2 = mul(planeTransform, Vector3(-size,  size, plane_distance));
+				Vector3 v3 = mul(planeTransform, Vector3( size,  size, plane_distance));
+
+				log::printf("v0: %f %f %f\n", v0.x, v0.y, v0.z);
+				log::printf("v1: %f %f %f\n", v0.x, v0.y, v0.z);
+				log::printf("v2: %f %f %f\n", v0.x, v0.y, v0.z);
+				log::printf("v0: %f %f %f\n", v0.x, v0.y, v0.z);
+
+				planeMatrices[i] = calcPlaneMatrix(v0, v1, v2);
+				planeVertices[i * 4 + 0] = D3DXVECTOR4(v1.x, v1.y, v1.z, 1);
+				planeVertices[i * 4 + 1] = D3DXVECTOR4(v3.x, v3.y, v3.z, 1);
+				planeVertices[i * 4 + 2] = D3DXVECTOR4(v2.x, v2.y, v2.z, 1);
+				planeVertices[i * 4 + 3] = D3DXVECTOR4(v0.x, v0.y, v0.z, 1);
+			}
+			lighting_fx->p->SetInt("planeCount", planeCount);
+			lighting_fx->p->SetVectorArray("planeVertices", planeVertices, 4 * planeCount);
 			lighting_fx->setFloat("planeOverbright", float(sync_get_val(planeOverbrightTrack, row)));
 			lighting_fx->setVector3("fogColor", fogColor);
 			lighting_fx->setFloat("fogDensity", 0.01);
@@ -897,7 +921,7 @@ int main(int argc, char *argv[])
 			lighting_fx->setTexture("gbuffer_tex0", gbuffer_target0);
 			lighting_fx->setTexture("gbuffer_tex1", gbuffer_target1);
 			lighting_fx->setVector2("nearFar", nearFar);
-			lighting_fx->setMatrix("planeMatrix", planeMatrix);
+			lighting_fx->p->SetMatrixArray("planeMatrices", planeMatrices, planeCount);
 			drawQuad(device, lighting_fx, -1, -1, 2, 2);
 
 			if (dof) {
@@ -945,10 +969,12 @@ int main(int argc, char *argv[])
 			device.setDepthStencilSurface(depth_target.getRenderTarget());
 
 			if (reflectionPlane) {
-				Matrix4x4 world = planeRotation * Matrix4x4::translation(Vector3(0, 0, plane_distance));
-				plane_fx->setMatrices(world, view, proj);
-				plane_fx->setTexture("albedo_tex", logo_anim_target);
-				drawQuad(device, plane_fx, -size, -size, size * 2, size * 2);
+				for (int i = 0; i < planeCount; ++i) {
+					Matrix4x4 world = planeRotation * Matrix4x4::translation(planeOrigin + planeOffset * float(i) + Vector3(0, 0, plane_distance));
+					plane_fx->setMatrices(world, view, proj);
+					plane_fx->setTexture("albedo_tex", logo_anim_target);
+					drawQuad(device, plane_fx, -size, -size, size * 2, size * 2);
+				}
 			}
 
 			if (dustParticleCount > 0) {

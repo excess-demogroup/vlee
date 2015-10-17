@@ -17,7 +17,7 @@ namespace math
 	}
 
 	template <typename T>
-	inline float clamp(T x, T minval, T maxval)
+	inline T clamp(T x, T minval, T maxval)
 	{
 		return std::max(std::min(x, maxval), minval);
 	}

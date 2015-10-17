@@ -3,8 +3,10 @@ const float4x4 matView : VIEW;
 const float4x4 matViewInverse : VIEWINVERSE;
 const float3 fogColor;
 const float fogDensity;
-const float4x4 planeMatrix;
-const float3 planeVertices[4];
+#define MAX_PLANES 4
+const float4x4 planeMatrices[MAX_PLANES];
+const float3 planeVertices[4 * MAX_PLANES];
+const int planeCount;
 const float2 nearFar;
 const float planeOverbright;
 
@@ -102,45 +104,49 @@ float4 pixel(VS_OUTPUT In) : COLOR
 
 	float3 col = albedo * ao;
 
-#if 1
-	float3 planeVertexDirs[5];
-	for (int i = 0; i < 4; ++i)
-		planeVertexDirs[i] = normalize(planeVertices[i].xyz - eyePos);
-	planeVertexDirs[4] = planeVertexDirs[0];
-
-	float3 lv = float3(0, 0, 0);
-	for (i = 0; i < 4; ++i) {
-		float3 v0 = planeVertexDirs[i];
-		float3 v1 = planeVertexDirs[i + 1];
-
-		float a = acos(dot(v0, v1));
-		float3 b = normalize(cross(v0, v1));
-		lv += a * b;
-	}
-
-#if 0
-	// two-sided lighting
-	if (dot(planeMatrix[2].xyz, eyePos) < dot(planeMatrix[2].xyz, planeMatrix[3].xyz))
-		lv = -lv;
-#endif
-
-	float tmp = dot(lv, eyeNormal);
-	if (tmp > 0) {
-		float factor = tmp / (2 * 3.14159265);
-		float3 logo_color = tex2Dlod(logo_samp, float4(0.5, 0.5, 0, 999)).rgb * planeOverbright;
-		col += albedo * logo_color * factor;
-	}
-#endif
-
 	float3 viewDir = normalize(eyePos);
 	float3 rayOrigin = eyePos;
 	float3 rayDir = reflect(viewDir, eyeNormal);
 	float fres = pow(saturate(1 + dot(eyeNormal, viewDir.xyz) * 0.95), 0.25);
 
-	float3 hit = planeIntersect(rayOrigin, rayDir, planeMatrix);
-	if (hit.z > 0) {
-		float3 refl = tex2Dlod(logo_samp, float4(hit.xy, 0, 0)).rgb;
-		col += refl * spec * fres;
+	for (int i = 0; i < planeCount; ++i) {
+		float3 planeVertexDirs[5];
+//		for (int j = 0; j < 4; ++j)
+//			planeVertexDirs[i] = normalize(planeVertices[i * 3 + j].xyz - eyePos);
+		planeVertexDirs[0] = normalize(planeVertices[i * 3 + 0].xyz - eyePos);
+		planeVertexDirs[1] = normalize(planeVertices[i * 3 + 1].xyz - eyePos);
+		planeVertexDirs[2] = normalize(planeVertices[i * 3 + 2].xyz - eyePos);
+		planeVertexDirs[3] = normalize(planeVertices[i * 3 + 3].xyz - eyePos);
+		planeVertexDirs[4] = planeVertexDirs[0];
+
+		float3 lv = float3(0, 0, 0);
+		for (int j = 0; j < 4; ++j) {
+			float3 v0 = planeVertexDirs[j];
+			float3 v1 = planeVertexDirs[j + 1];
+
+			float a = acos(dot(v0, v1));
+			float3 b = normalize(cross(v0, v1));
+			lv += a * b;
+		}
+
+#if 0
+		// two-sided lighting
+		if (dot(planeMatrices[i][2].xyz, eyePos) < dot(planeMatrices[i][2].xyz, planeMatrices[i][3].xyz))
+			lv = -lv;
+#endif
+
+		float tmp = dot(lv, eyeNormal);
+		if (tmp > 0) {
+			float factor = tmp / (2 * 3.14159265);
+			float3 logo_color = tex2Dlod(logo_samp, float4(0.5, 0.5, 0, 999)).rgb * planeOverbright;
+			col += albedo * logo_color * factor;
+		}
+
+		float3 hit = planeIntersect(rayOrigin, rayDir, planeMatrices[i]);
+		if (hit.z > 0) {
+			float3 refl = tex2Dlod(logo_samp, float4(hit.xy, 0, 0)).rgb;
+			col += refl * spec * fres;
+		}
 	}
 
 	col.rgb = lerp(fogColor, col.rgb, exp(-eyeDepth * fogDensity));
