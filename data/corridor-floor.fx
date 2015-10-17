@@ -92,7 +92,7 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 
 	float3 albedo = float3(0.2, 0.2, 0.2); //tex2D(albedo_samp, Input.TexCoord0).rgb;
 	float ao = tex2D(ao_samp, Input.TexCoord1).r;
-	float spec = tex2D(specular_samp, Input.TexCoord0).r * 0.25;
+	float spec = 1; // tex2D(specular_samp, Input.TexCoord0).r * 5;
 
 	o.gbuffer0 = float4(eyeNormal, spec);
 	o.gbuffer1 = float4(albedo, 1 - ao);

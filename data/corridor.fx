@@ -82,19 +82,14 @@ PS_OUTPUT ps_main(VS_OUTPUT Input)
 {
 	PS_OUTPUT o;
 
-#if 0
-	float3 eyeNormal = normalize(Input.TangentToView[2]);
-#else
 	float3 tangentNormal = normalize(tex2D(normal_samp, Input.TexCoord0).xyz * 2 - 1);
-//	tangentNormal = lerp(tangentNormal, float3(0, 0, 1), 0.75);
 	float3 eyeNormal = normalize(mul(tangentNormal, Input.TangentToView));
-#endif
 
 	float3 albedo = tex2D(albedo_samp, Input.TexCoord0).rgb;
 	float ao = tex2D(ao_samp, Input.TexCoord1).r;
-	float spec = tex2D(specular_samp, Input.TexCoord0).r * 5;
+	float spec = tex2D(specular_samp, Input.TexCoord0).r;
 
-	o.gbuffer0 = float4(eyeNormal, spec);
+	o.gbuffer0 = float4(eyeNormal, spec * ao);
 	o.gbuffer1 = float4(albedo, 1 - ao);
 	return o;
 }
