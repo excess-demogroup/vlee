@@ -460,6 +460,11 @@ int main(int argc, char *argv[])
 		const sync_track *dofCocScaleTrack = sync_get_track(rocket, "dof.scale");
 		const sync_track *dofFocalDistTrack = sync_get_track(rocket, "dof.fdist");
 
+		const sync_track *groundYTrack = sync_get_track(rocket, "ground.y");
+
+		const sync_track *spheresAnimTrack = sync_get_track(rocket, "spheres.anim");
+		const sync_track *spheresDistTrack = sync_get_track(rocket, "spheres.dist");
+		const sync_track *spheresPalTrack = sync_get_track(rocket, "spheres.pal");
 
 		Surface backbuffer   = device.getRenderTarget(0);
 
@@ -543,18 +548,12 @@ int main(int argc, char *argv[])
 		Mesh *corridor1_dark_x = engine::loadMesh(device, "data/corridor1-dark.x");
 		Texture corridor1_ao_tex = engine::loadTexture(device, "data/corridor1_ao.png");
 
-		Mesh *dist_sphere_x = engine::loadMesh(device, "data/dist-sphere.x");
-		int dist_sphere_num_vertices = dist_sphere_x->getVertexCount();
-		Vector3 *dist_sphere_vertices = new Vector3[dist_sphere_num_vertices];
-		dist_sphere_x->getVertexPositions(dist_sphere_vertices, 0, dist_sphere_num_vertices);
-		Effect *dist_sphere_fx = engine::loadEffect(device, "data/dist-sphere.fx");
-		Effect *dist_sphere_cubes_fx = engine::loadEffect(device, "data/dist-sphere-cubes.fx");
-		engine::MeshInstancer dist_sphere_cubes(device, dist_sphere_cubes_fx, dist_sphere_num_vertices);
-
 		Effect *lighting_fx = engine::loadEffect(device, "data/lighting.fx");
 		lighting_fx->setTexture("logo_tex", logo_anim_target);
 
 		Effect *sphere_fx = engine::loadEffect(device, "data/sphere.fx");
+		Texture kulefarger_tex = engine::loadTexture(device, "data/kulefarger.png");
+		sphere_fx->setTexture("colors_tex", kulefarger_tex);
 
 		Effect *plane_fx = engine::loadEffect(device, "data/plane.fx");
 
@@ -652,7 +651,8 @@ int main(int argc, char *argv[])
 			bool reflectionPlane = false;
 			bool groundplane = false;
 			bool corridor = false;
-			bool spheres = false;
+			bool sphereSphere = false;
+			bool sphereColumn = false;
 			int dustParticleCount = 0;
 			Vector3 fogColor(0, 0, 0);
 
@@ -670,7 +670,13 @@ int main(int argc, char *argv[])
 				break;
 
 			case 2:
-				spheres = true;
+				sphereSphere = true;
+				reflectionPlane = true;
+				break;
+
+			case 3:
+				corridor = true;
+				sphereColumn = true;
 				reflectionPlane = true;
 				break;
 			}
@@ -733,7 +739,7 @@ int main(int argc, char *argv[])
 			device->Clear(0, 0, D3DCLEAR_TARGET, 0xFF000000, 1.f, 0);
 
 			if (groundplane) {
-				Matrix4x4 world = Matrix4x4::translation(Vector3(0, -25, 0));
+				Matrix4x4 world = Matrix4x4::translation(Vector3(0, float(sync_get_val(groundYTrack, row)), 0));
 
 				groundplane_fx->setMatrices(world, view, proj);
 				groundplane_fx->setTexture("albedo_tex", room_albedo_tex);
@@ -755,37 +761,71 @@ int main(int argc, char *argv[])
 				}
 			}
 
-			if (spheres) {
+			if (sphereSphere || sphereColumn) {
 				sphere_fx->setMatrices(world, view, proj);
 				sphere_fx->setVector2("nearFar", nearFar);
 				sphere_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
 
-				static struct {
+				float anim = float(sync_get_val(spheresAnimTrack, row));
+				float dist = float(sync_get_val(spheresDistTrack, row));
+				float pal = float(0.5f + sync_get_val(spheresPalTrack, row)) / kulefarger_tex.getHeight();
+
+				struct Sphere {
 					Vector3 pos;
 					float size;
 					Vector3 color;
-				} spheres[3600];
-				for (int i = 0; i < ARRAY_SIZE(spheres); ++i) {
-					float s = math::notRandf(i * 2 + 0) * float(M_PI * 2);
-					float t = math::notRandf(i * 2 + 1) * 2 - 1;
-					float l = sqrt(1 - t * t);
-					Vector3 pos = Vector3(sin(s) * l, cos(s) * l, t) * 70;
-					Vector3 offset = normalize(Vector3(
-							sin((i % 1337) * 12.0 + beat * 0.0332),
-							cos((i % 1338) * 15.0 + beat * 0.041),
-							cos((i % 1339) * 13.0 - beat * 0.0323)
-							));
-					pos += offset * 10;
-					float size = 0.2f + pow(math::notRandf(i), 5.0f) * 0.75f;
-					spheres[i].pos = pos;
-					spheres[i].size = size * 10;
-					spheres[i].color = Vector3(0.5 + sin((i % 1340) * 14.0),
-					                           0.5 + sin((i % 1341) * 16.0),
-					                           0.5 + sin((i % 1342) * 17.0));
+				};
+
+				std::vector<Sphere> spheres;
+				if (sphereSphere) {
+					spheres.resize(3600);
+					for (int i = 0; i < spheres.size(); ++i) {
+						float s = math::notRandf(i * 3 + 0) * float(M_PI * 2);
+						float t = math::notRandf(i * 3 + 1) * 2 - 1;
+						float l = sqrt(1 - t * t);
+						Vector3 pos = Vector3(sin(s) * l, cos(s) * l, t) * 70;
+						Vector3 offset = normalize(Vector3(
+								sin((i % 1337) * 12.0 + anim * 0.0332),
+								cos((i % 1338) * 15.0 + anim * 0.041),
+								cos((i % 1339) * 13.0 - anim * 0.0323)
+								));
+						pos += offset * dist;
+						float size = 0.2f + pow(math::notRandf(i), 5.0f) * 0.75f;
+						spheres[i].pos = pos;
+						spheres[i].size = size * 10;
+
+						int color_idx = int(math::notRandf(i * 3 + 2) * kulefarger_tex.getWidth());
+						float color = (0.5f + color_idx) / kulefarger_tex.getWidth();
+						spheres[i].color = Vector3(color,
+						                           pal,
+						                           0.0f);
+					}
+				} else {
+					spheres.resize(3600);
+					for (int i = 0; i < spheres.size(); ++i) {
+						float s = math::notRandf(i * 3 + 0) * float(M_PI * 2);
+						float t = math::notRandf(i * 3 + 1) * 2 - 1;
+						Vector3 pos = Vector3(sin(s), cos(s), i);
+						Vector3 offset = normalize(Vector3(
+								sin((i % 1337) * 12.0 + anim * 0.0332),
+								cos((i % 1338) * 15.0 + anim * 0.041),
+								cos((i % 1339) * 13.0 - anim * 0.0323)
+								));
+						pos += offset * dist;
+						float size = 0.2f + pow(math::notRandf(i), 5.0f) * 0.75f;
+						spheres[i].pos = pos;
+						spheres[i].size = size * 10;
+
+						int color_idx = int(math::notRandf(i * 3 + 2) * kulefarger_tex.getWidth());
+						float color = (0.5f + color_idx) / kulefarger_tex.getWidth();
+						spheres[i].color = Vector3(color,
+												   pal,
+												   0.0f);
+					}
 				}
 
 				particleStreamer.begin();
-				for (int i = 0; i < ARRAY_SIZE(spheres); ++i) {
+				for (int i = 0; i < spheres.size(); ++i) {
 					particleStreamer.add(spheres[i].pos, spheres[i].size, spheres[i].color);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
@@ -804,7 +844,7 @@ int main(int argc, char *argv[])
 				sphere_fx->setTexture("gbuffer_tex1", gbuffer_target1);
 
 				particleStreamer.begin();
-				for (int i = 0; i < ARRAY_SIZE(spheres); ++i) {
+				for (int i = 0; i < spheres.size(); ++i) {
 					particleStreamer.add(spheres[i].pos, spheres[i].size);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();

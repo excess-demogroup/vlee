@@ -97,6 +97,17 @@ struct PS_OUTPUT {
 	float depth : DEPTH;
 };
 
+texture colors_tex;
+sampler colors_samp = sampler_state {
+	Texture = (colors_tex);
+	MipFilter = Linear;
+	MinFilter = Linear;
+	MagFilter = Linear;
+	AddressU = Clamp;
+	AddressV = Wrap;
+	sRGBTexture = True;
+};
+
 PS_OUTPUT pixel(VS_OUTPUT In)
 {
 	float3 dir = normalize(In.dir);
@@ -114,7 +125,7 @@ PS_OUTPUT pixel(VS_OUTPUT In)
 		// calculate normal
 		float3 n = normalize(pos + dir * t);
 		o.gbuffer0 = float4(n, 1);
-		o.gbuffer1 = float4(In.color, 0); // no AO
+		o.gbuffer1 = float4(tex2D(colors_samp, In.color.xy).rgb, 0); // no AO
 
 		// calculate z
 		float depth = In.depth + dir.z * t;
