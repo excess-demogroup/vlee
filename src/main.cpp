@@ -521,8 +521,6 @@ int main(int argc, char *argv[])
 
 		Effect *mesh_fx = engine::loadEffect(device, "data/mesh.fx");
 
-		Mesh *room_x = engine::loadMesh(device, "data/room.x");
-		Texture room_ao_tex = engine::loadTexture(device, "data/room-ao.png");
 		Texture room_albedo_tex = engine::loadTexture(device, "data/concrete_01_dif.png");
 		Texture room_normal_tex = engine::loadTexture(device, "data/concrete_01_nm.png");
 		Texture room_specular_tex = engine::loadTexture(device, "data/concrete_01_spec.png");
@@ -637,7 +635,7 @@ int main(int argc, char *argv[])
 				camTarget = Vector3(0, 0, 0);
 			}
 
-			float zNear = 1.0f;
+			float zNear = 0.1f;
 			float zFar = 500.0f;
 			Vector2 nearFar((zFar - zNear) / -(zFar * zNear),
 			                 1.0f / zNear);
@@ -651,12 +649,10 @@ int main(int argc, char *argv[])
 			particle_fx->setFloat("coc_scale", coc_scale);
 
 			bool dof = true;
-			bool spheres = false;
-			bool spherePhysics = false;
-			bool room = false;
 			bool reflectionPlane = false;
 			bool groundplane = false;
 			bool corridor = false;
+			bool spheres = false;
 			int dustParticleCount = 0;
 			Vector3 fogColor(0, 0, 0);
 
@@ -674,16 +670,8 @@ int main(int argc, char *argv[])
 				break;
 
 			case 2:
-				room = true;
-				dustParticleCount = 100;
-				break;
-
-			case 3:
 				spheres = true;
-				break;
-
-			case 4:
-				spherePhysics = true;
+				reflectionPlane = true;
 				break;
 			}
 
@@ -751,17 +739,7 @@ int main(int argc, char *argv[])
 				groundplane_fx->setTexture("albedo_tex", room_albedo_tex);
 				groundplane_fx->setTexture("normal_tex", room_normal_tex);
 				groundplane_fx->setTexture("specular_tex", room_specular_tex);
-				groundplane_fx->setTexture("ao_tex", room_ao_tex);
 				groundplane_fx->draw(groundplane_x);
-			}
-
-			if (room) {
-				mesh_fx->setMatrices(world, view, proj);
-				mesh_fx->setTexture("albedo_tex", room_albedo_tex);
-				mesh_fx->setTexture("normal_tex", room_normal_tex);
-				mesh_fx->setTexture("specular_tex", room_specular_tex);
-				mesh_fx->setTexture("ao_tex", room_ao_tex);
-				mesh_fx->draw(room_x);
 			}
 
 			if (corridor) {
@@ -786,17 +764,19 @@ int main(int argc, char *argv[])
 					Vector3 pos;
 					float size;
 					Vector3 color;
-				} spheres[36000];
+				} spheres[3600];
 				for (int i = 0; i < ARRAY_SIZE(spheres); ++i) {
-					float th = i * float((2 * M_PI) / 360);
-					Vector3 pos = Vector3(sin(th), cos(th), 0) * 30;
+					float s = math::notRandf(i * 2 + 0) * float(M_PI * 2);
+					float t = math::notRandf(i * 2 + 1) * 2 - 1;
+					float l = sqrt(1 - t * t);
+					Vector3 pos = Vector3(sin(s) * l, cos(s) * l, t) * 70;
 					Vector3 offset = normalize(Vector3(
 							sin((i % 1337) * 12.0 + beat * 0.0332),
 							cos((i % 1338) * 15.0 + beat * 0.041),
 							cos((i % 1339) * 13.0 - beat * 0.0323)
 							));
 					pos += offset * 10;
-					float size = 0.03f + pow(math::notRandf(i), 150.0f) * 0.5f;
+					float size = 0.2f + pow(math::notRandf(i), 5.0f) * 0.75f;
 					spheres[i].pos = pos;
 					spheres[i].size = size * 10;
 					spheres[i].color = Vector3(0.5 + sin((i % 1340) * 14.0),
@@ -826,61 +806,6 @@ int main(int argc, char *argv[])
 				particleStreamer.begin();
 				for (int i = 0; i < ARRAY_SIZE(spheres); ++i) {
 					particleStreamer.add(spheres[i].pos, spheres[i].size);
-					if (!particleStreamer.getRoom()) {
-						particleStreamer.end();
-						sphere_fx->drawPass(&particleStreamer, 1);
-						particleStreamer.begin();
-					}
-				}
-				particleStreamer.end();
-				sphere_fx->drawPass(&particleStreamer, 1);
-			}
-
-			if (spherePhysics) {
-				sphere_fx->setMatrices(world, view, proj);
-				sphere_fx->setVector2("nearFar", nearFar);
-				sphere_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
-
-				int frame = int(float(beat));
-				float t = float(fmod(beat, 1));
-
-				std::vector<Vector3> spheres;
-				spheres.resize(sphereAnim.size());
-				for (int i = 0; i < int(sphereAnim.size()); ++i) {
-					const std::vector<Vector3> &anim = sphereAnim[i];
-					int idx = std::min(frame, int(anim.size()) - 2);
-					Vector3 pos = anim[idx] + (anim[idx + 1] - anim[idx]) * t;
-					spheres[i] = pos;
-				}
-
-				float size = 1;
-
-				particleStreamer.begin();
-				for (int i = 0; i < int(spheres.size()); ++i) {
-					Vector3 color(0.75 + 0.5 * sin((i % 1340) * 14.0),
-					              0.75 + 0.5 * sin((i % 1341) * 16.0),
-					              0.75 + 0.5 * sin((i % 1342) * 17.0));
-
-					particleStreamer.add(spheres[i], size, color);
-					if (!particleStreamer.getRoom()) {
-						particleStreamer.end();
-						sphere_fx->drawPass(&particleStreamer, 0);
-						particleStreamer.begin();
-					}
-				}
-				particleStreamer.end();
-				sphere_fx->drawPass(&particleStreamer, 0);
-
-				device.setRenderTarget(NULL, 1);
-				device.setRenderTarget(gbuffer_target1.getRenderTarget(), 0);
-
-				sphere_fx->setTexture("depth_tex", depth_target);
-				sphere_fx->setTexture("gbuffer_tex0", gbuffer_target0);
-				sphere_fx->setTexture("gbuffer_tex1", gbuffer_target1);
-
-				particleStreamer.begin();
-				for (int i = 0; i < ARRAY_SIZE(spheres); ++i) {
-					particleStreamer.add(spheres[i], size);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
 						sphere_fx->drawPass(&particleStreamer, 1);
