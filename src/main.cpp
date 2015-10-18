@@ -514,7 +514,10 @@ int main(int argc, char *argv[])
 		Effect *postprocess_fx = engine::loadEffect(device, "data/postprocess.fx");
 		postprocess_fx->setVector3("viewport", Vector3(letterbox_viewport.Width, letterbox_viewport.Height, 0.0f));
 		Texture lensdirt_tex = engine::loadTexture(device, "data/lensdirt.png");
+		Texture vignette_tex = engine::loadTexture(device, "data/vignette.png");
 		postprocess_fx->setTexture("lensdirt_tex", lensdirt_tex);
+		postprocess_fx->setTexture("vignette_tex", vignette_tex);
+
 
 		Texture noise_tex = engine::loadTexture(device, "data/noise.png");
 		postprocess_fx->setTexture("noise_tex", noise_tex);
@@ -897,10 +900,10 @@ int main(int argc, char *argv[])
 				Vector3 v2 = mul(planeTransform, Vector3(-size,  size, plane_distance));
 				Vector3 v3 = mul(planeTransform, Vector3( size,  size, plane_distance));
 
-				log::printf("v0: %f %f %f\n", v0.x, v0.y, v0.z);
+/*				log::printf("v0: %f %f %f\n", v0.x, v0.y, v0.z);
 				log::printf("v1: %f %f %f\n", v0.x, v0.y, v0.z);
 				log::printf("v2: %f %f %f\n", v0.x, v0.y, v0.z);
-				log::printf("v0: %f %f %f\n", v0.x, v0.y, v0.z);
+				log::printf("v0: %f %f %f\n", v0.x, v0.y, v0.z); */
 
 				planeMatrices[i] = calcPlaneMatrix(v0, v1, v2);
 				planeVertices[i * 4 + 0] = D3DXVECTOR4(v1.x, v1.y, v1.z, 1);

@@ -111,6 +111,18 @@ sampler2D lensdirt_samp = sampler_state {
 	sRGBTexture = TRUE;
 };
 
+texture vignette_tex;
+sampler2D vignette_samp = sampler_state {
+	Texture = (vignette_tex);
+	MipFilter = NONE;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	AddressW = CLAMP;
+	sRGBTexture = TRUE;
+};
+
 struct VS_OUTPUT {
 	float4 pos : POSITION;
 	float2 uv  : TEXCOORD0;
@@ -233,6 +245,7 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 	float3 col = sample_spectrum(color_samp, pos, end, samples, 0);
 
 	col += (sample_bloom(pos) + sample_lensflare(pos)) * tex2Dlod(lensdirt_samp, float4(pos, 0, 0));
+	col *= 1 - tex2Dlod(vignette_samp, float4(pos, 0, 0)).a;
 
 	col = color_correct(col);
 
