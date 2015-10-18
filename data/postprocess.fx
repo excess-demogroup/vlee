@@ -108,7 +108,7 @@ sampler2D lensdirt_samp = sampler_state {
 	AddressU = CLAMP;
 	AddressV = CLAMP;
 	AddressW = CLAMP;
-	sRGBTexture = TRUE;
+	sRGBTexture = FALSE;
 };
 
 texture vignette_tex;
@@ -208,6 +208,14 @@ float3 sample_lensflare(float2 pos)
 	return flare * flare_amount;
 }
 
+float srgb_decode(float v)
+{
+	if (v <= 0.04045)
+		return v / 12.92;
+	else
+		return pow((v + 0.055) / 1.055, 2.4);
+}
+
 float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 {
 	float2 block = floor(vpos / 16);
@@ -244,7 +252,7 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 	int samples = max(3, int(length(viewport * (end - pos) / 2)));
 	float3 col = sample_spectrum(color_samp, pos, end, samples, 0);
 
-	col += (sample_bloom(pos) + sample_lensflare(pos)) * tex2Dlod(lensdirt_samp, float4(pos, 0, 0));
+	col += (sample_bloom(pos) + sample_lensflare(pos)) * srgb_decode(tex2Dlod(lensdirt_samp, float4(pos, 0, 0)));
 	col *= 1 - tex2Dlod(vignette_samp, float4(pos, 0, 0)).a;
 
 	col = color_correct(col);
