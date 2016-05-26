@@ -12,7 +12,7 @@
 
 #include "../math/vector3.h"
 
-#include "tinyxml2.h"
+#include <tinyxml2.h>
 
 using namespace scenegraph;
 using namespace tinyxml2;
