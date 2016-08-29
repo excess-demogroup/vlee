@@ -494,6 +494,7 @@ int main(int argc, char *argv[])
 
 		RenderTexture color1_hdr(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F);
 		RenderTexture color2_hdr(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F);
+		RenderTexture flare_tex(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
 
 		RenderTexture logo_anim_target(device, 512, 512, 0, D3DFMT_A16B16G16R16F, D3DMULTISAMPLE_NONE, D3DUSAGE_RENDERTARGET | D3DUSAGE_AUTOGENMIPMAP);
 
@@ -511,6 +512,9 @@ int main(int argc, char *argv[])
 		Effect *fxaa_fx = engine::loadEffect(device, "data/fxaa.fx");
 		fxaa_fx->setVector3("viewportInv", Vector3(1.0f / letterbox_viewport.Width, 1.0f / letterbox_viewport.Height, 0.0f));
 
+		Effect *flare_fx = engine::loadEffect(device, "data/flare.fx");
+		flare_fx->setVector3("viewport", Vector3(letterbox_viewport.Width, letterbox_viewport.Height, 0.0f));
+
 		Effect *postprocess_fx = engine::loadEffect(device, "data/postprocess.fx");
 		postprocess_fx->setVector3("viewport", Vector3(letterbox_viewport.Width, letterbox_viewport.Height, 0.0f));
 		Texture lensdirt_tex = engine::loadTexture(device, "data/lensdirt.png");
@@ -524,6 +528,7 @@ int main(int argc, char *argv[])
 		postprocess_fx->setVector3("nscale", Vector3(letterbox_viewport.Width / 256.0f, letterbox_viewport.Height / 256.0f, 0.0f));
 
 		Texture spectrum_tex = engine::loadTexture(device, "data/spectrum.png");
+		flare_fx->setTexture("spectrum_tex", spectrum_tex);
 		postprocess_fx->setTexture("spectrum_tex", spectrum_tex);
 
 		engine::ParticleStreamer particleStreamer(device);
@@ -1084,6 +1089,10 @@ int main(int argc, char *argv[])
 				}
 			}
 
+			device.setRenderTarget(flare_tex.getSurface(0));
+			flare_fx->setTexture("bloom_tex", color1_hdr);
+			drawRect(device, flare_fx, 0, 0, float(flare_tex.getWidth()), float(flare_tex.getHeight()));
+
 			/* letterbox */
 			device.setRenderTarget(backbuffer);
 			device->Clear(0, 0, D3DCLEAR_TARGET, D3DXCOLOR(0, 0, 0, 0), 1.f, 0);
@@ -1103,6 +1112,7 @@ int main(int argc, char *argv[])
 			postprocess_fx->setFloat("overlay_alpha", float(sync_get_val(colorMapOverlayAlphaTrack, row)));
 			postprocess_fx->setTexture("overlay_tex", overlays.getTexture(int(sync_get_val(colorMapOverlayTrack, row)) % overlays.getTextureCount()));
 			postprocess_fx->setTexture("bloom_tex", color1_hdr);
+			postprocess_fx->setTexture("flare_tex", flare_tex);
 			postprocess_fx->setFloat("block_thresh", float(sync_get_val(glitchBlockThreshTrack, row)));
 			postprocess_fx->setFloat("line_thresh", float(sync_get_val(glitchLineThreshTrack, row)));
 			postprocess_fx->setFloat("overlayGlitch", float(sync_get_val(glitchOverlayTrack, row)));
