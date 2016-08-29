@@ -494,7 +494,7 @@ int main(int argc, char *argv[])
 
 		RenderTexture color1_hdr(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F);
 		RenderTexture color2_hdr(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F);
-		RenderTexture flare_tex(device, letterbox_viewport.Width, letterbox_viewport.Height, 1, D3DFMT_A16B16G16R16F);
+		RenderTexture flare_tex(device, letterbox_viewport.Width / 4, letterbox_viewport.Height / 4, 1, D3DFMT_A16B16G16R16F);
 
 		RenderTexture logo_anim_target(device, 512, 512, 0, D3DFMT_A16B16G16R16F, D3DMULTISAMPLE_NONE, D3DUSAGE_RENDERTARGET | D3DUSAGE_AUTOGENMIPMAP);
 
