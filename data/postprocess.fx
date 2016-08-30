@@ -233,7 +233,7 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 		end += dist * 0.12;
 	}
 
-	int samples = max(3, int(length(viewport * (end - pos) / 2)));
+	int samples = clamp(int(length(viewport * (end - pos) / 2)), 3, 8);
 	float3 col = sample_spectrum(color_samp, pos, end, samples, 0);
 
 	col += (sample_bloom(pos) + sample_lensflare(pos)) * srgb_decode(tex2Dlod(lensdirt_samp, float4(pos, 0, 0)));
