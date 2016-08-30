@@ -559,15 +559,6 @@
 			<key row="1408" value="2.1" interpolation="0"/>
 			<key row="3968" value="0" interpolation="0"/>
 		</track>
-		<track name="dist.amt">
-			<key row="0" value="0" interpolation="0"/>
-		</track>
-		<track name="dist.offset">
-			<key row="0" value="0" interpolation="0"/>
-		</track>
-		<track name="dist.freq">
-			<key row="0" value="0" interpolation="0"/>
-		</track>
 		<track name="dof.fdist">
 			<key row="0" value="20" interpolation="0"/>
 			<key row="136" value="0" interpolation="0"/>

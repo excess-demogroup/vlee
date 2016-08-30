@@ -1,7 +1,6 @@
 const float flash, fade, overlay_alpha;
 const float2 noffs, nscale;
-const float noise_amt;
-const float dist_amt, dist_freq, dist_time;
+const float dist_time;
 const float2 viewport;
 const float color_map_lerp;
 const float bloom_weight[7];
@@ -216,10 +215,6 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 	float f = (1 + r2 * (distCoeff + cubeDistort * sqrt(r2))) / (1 + (distCoeff + cubeDistort) * 2);
 	pos = f * (pos - 0.5) + 0.5;
 	pos2 = f * (pos2 - 0.5) + 0.5;
-
-	pos += float2(
-			(sin(pos.y * dist_freq + dist_time) * 2 - 1) * dist_amt,
-			(sin(pos.x * dist_freq + dist_time) * 2 - 1) * dist_amt);
 
 	float dist = pow(2 * distance(In.uv, float2(0.5, 0.5)), 2);
 	const float sep = 0.03;
