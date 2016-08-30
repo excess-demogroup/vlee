@@ -221,7 +221,7 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 	// glitch some blocks and lines
 	if (tex2D(noise_samp, uv_noise).r < block_thresh ||
 	    tex2D(noise_samp, float2(uv_noise.y, 0)).r < line_thresh) {
-	    float2 dist = (frac(uv_noise) - 0.5) * 0.3;
+		float2 dist = (frac(uv_noise) - 0.5) * 0.3;
 		pos += dist * 0.1;
 		end += dist * 0.12;
 	}
