@@ -733,7 +733,7 @@ int main(int argc, char *argv[])
 			logo_anim_fx->setTexture("greetings_tex", greetings.getTexture(int(sync_get_val(planeGreetingsTrack, row)) % greetings.getTextureCount()));
 			logo_anim_fx->setFloat("time", float(fmod((sync_get_val(planeTimeTrack, row) + 0.5) / 512, 1)));
 			logo_anim_fx->setFloat("fade", float(sync_get_val(planeFadeTrack, row)));
-			drawRect(device, logo_anim_fx, 0, 0, float(logo_anim_target.getWidth()), float(logo_anim_target.getHeight()));
+			drawQuad(device, logo_anim_fx, -1, -1, 2, 2);
 
 			device.setRenderTarget(color_target.getRenderTarget(), 0);
 			device.setDepthStencilSurface(depth_target.getRenderTarget());
@@ -1019,7 +1019,7 @@ int main(int argc, char *argv[])
 			device.setRenderTarget(color1_hdr.getSurface(), 1);
 			fxaa_fx->setTexture("color_tex", dof ? dof_target : color_target);
 			fxaa_fx->setFloat("bloom_cutoff", float(sync_get_val(bloomCutoffTrack, row)));
-			drawRect(device, fxaa_fx, 0, 0, float(letterbox_viewport.Width), float(letterbox_viewport.Height));
+			drawQuad(device, fxaa_fx, -1, -1, 2, 2);
 			device.setRenderTarget(NULL, 1);
 
 			/* downsample and blur */
@@ -1081,13 +1081,13 @@ int main(int argc, char *argv[])
 					device.setRenderTarget(j ? color1_hdr.getSurface(i) : color2_hdr.getSurface(i), 0);
 					int w = color1_hdr.getSurface(i).getWidth();
 					int h = color1_hdr.getSurface(i).getHeight();
-					drawRect(device, blur_fx, 0, 0, float(w), float(h));
+					drawQuad(device, blur_fx, -1, -1, 2, 2);
 				}
 			}
 
 			device.setRenderTarget(flare_tex.getSurface(0));
 			flare_fx->setTexture("bloom_tex", color1_hdr);
-			drawRect(device, flare_fx, 0, 0, float(flare_tex.getWidth()), float(flare_tex.getHeight()));
+			drawQuad(device, flare_fx, -1, -1, 2, 2);
 
 			/* letterbox */
 			device.setRenderTarget(backbuffer);
@@ -1132,7 +1132,8 @@ int main(int argc, char *argv[])
 			postprocess_fx->setFloat("color_map_lerp", float(sync_get_val(colorMapColorFadeTrack, row)));
 
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
-			drawRect(device, postprocess_fx, float(letterbox_viewport.X), float(letterbox_viewport.Y), float(letterbox_viewport.Width), float(letterbox_viewport.Height));
+			drawQuad(device, postprocess_fx, -1, -1, 2, 2);
+
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
 			device->EndScene(); /* WE DONE IS! */
 
