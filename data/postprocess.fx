@@ -7,7 +7,6 @@ const float bloom_weight[7];
 const float block_thresh, line_thresh;
 const float flare_amount;
 const float distCoeff;
-const float cubeDistort;
 const float overlayGlitch;
 
 texture color_tex;
@@ -136,6 +135,7 @@ sampler2D vignette_samp = sampler_state {
 struct VS_OUTPUT {
 	float4 pos : POSITION;
 	float2 uv  : TEXCOORD0;
+	float2 npos : TEXCOORD1;
 };
 
 VS_OUTPUT vertex(float4 ipos : POSITION, float2 uv : TEXCOORD0)
@@ -143,6 +143,8 @@ VS_OUTPUT vertex(float4 ipos : POSITION, float2 uv : TEXCOORD0)
 	VS_OUTPUT Out;
 	Out.pos = ipos;
 	Out.uv = uv;
+	Out.npos = uv * 2 - 1;
+	Out.npos.x *= viewport.x / viewport.y;
 	return Out;
 }
 
@@ -205,16 +207,12 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 	float2 uv_noise = block / 64;
 	uv_noise += floor(dist_offset * uv_noise) / 64;
 
-	float2 pos = In.uv;
-	float2 pos2 = In.uv;
-
 	float haspect = viewport.x / viewport.y;
-	float vaspect = viewport.y / viewport.x;
-	float r2 = haspect * haspect * (pos.x * 2 - 1) * (pos.x * 2 - 1) + (pos.y * 2 - 1) * (pos.y * 2 - 1);
-//	float r2 = (pos.x - 0.5) * (pos.x - 0.5) + vaspect * vaspect * (pos.y - 0.5) * (pos.y - 0.5);
-	float f = (1 + r2 * (distCoeff + cubeDistort * sqrt(r2))) / (1 + (distCoeff + cubeDistort) * 2);
-	pos = f * (pos - 0.5) + 0.5;
-	pos2 = f * (pos2 - 0.5) + 0.5;
+	float r2 = dot(In.npos, In.npos);
+	float f = (1 + r2 * (2 * distCoeff * sqrt(r2))) / (1 + distCoeff * 4);
+	float2 pos = f * (In.uv - 0.5) + 0.5;
+
+	float2 pos2 = pos;
 
 	float dist = pow(2 * distance(In.uv, float2(0.5, 0.5)), 2);
 	const float sep = 0.03;

@@ -1113,7 +1113,6 @@ int main(int argc, char *argv[])
 
 			postprocess_fx->setFloat("flare_amount", float(sync_get_val(flareAmountTrack, row)));
 			postprocess_fx->setFloat("distCoeff", float(sync_get_val(lensDistTrack, row)));
-			postprocess_fx->setFloat("cubeDistort", float(sync_get_val(lensDistTrack, row)));
 
 			float bloom_shape = float(sync_get_val(bloomShapeTrack, row));
 			float bloom_weight[7];
