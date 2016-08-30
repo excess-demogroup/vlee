@@ -1,6 +1,6 @@
 const float flash, fade, overlay_alpha;
 const float2 noffs, nscale;
-const float dist_time;
+const float2 dist_offset;
 const float2 viewport;
 const float color_map_lerp;
 const float bloom_weight[7];
@@ -203,7 +203,7 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 {
 	float2 block = floor(vpos / 16);
 	float2 uv_noise = block / 64;
-	uv_noise += floor(dist_time * float2(1234.0, 3543.0) * uv_noise) / 64;
+	uv_noise += floor(dist_offset * uv_noise) / 64;
 
 	float2 pos = In.uv;
 	float2 pos2 = In.uv;

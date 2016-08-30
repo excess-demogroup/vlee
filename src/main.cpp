@@ -1101,7 +1101,7 @@ int main(int argc, char *argv[])
 			postprocess_fx->setVector3("noffs", Vector3(math::notRandf(int(beat * 100)), math::notRandf(int(beat * 100) + 1), 0));
 			postprocess_fx->setFloat("flash", flash < 0 ? math::randf() : pow(flash, 2.0f));
 			postprocess_fx->setFloat("fade", pow(fade, 2.2f));
-			postprocess_fx->setFloat("dist_time", float(beat * 4));
+			postprocess_fx->setVector2("dist_offset", Vector2(1234.0, 3543.0) * float(beat * 4));
 			postprocess_fx->setTexture("color_tex", fxaa_target);
 			postprocess_fx->setFloat("overlay_alpha", float(sync_get_val(colorMapOverlayAlphaTrack, row)));
 			postprocess_fx->setTexture("overlay_tex", overlays.getTexture(int(sync_get_val(colorMapOverlayTrack, row)) % overlays.getTextureCount()));
