@@ -903,11 +903,6 @@ int main(int argc, char *argv[])
 				Vector3 v2 = mul(planeTransform, Vector3(-size,  size, plane_distance));
 				Vector3 v3 = mul(planeTransform, Vector3( size,  size, plane_distance));
 
-/*				log::printf("v0: %f %f %f\n", v0.x, v0.y, v0.z);
-				log::printf("v1: %f %f %f\n", v0.x, v0.y, v0.z);
-				log::printf("v2: %f %f %f\n", v0.x, v0.y, v0.z);
-				log::printf("v0: %f %f %f\n", v0.x, v0.y, v0.z); */
-
 				planeMatrices[i] = calcPlaneMatrix(v0, v1, v2);
 				planeVertices[i * 4 + 0] = D3DXVECTOR4(v1.x, v1.y, v1.z, 1);
 				planeVertices[i * 4 + 1] = D3DXVECTOR4(v3.x, v3.y, v3.z, 1);
