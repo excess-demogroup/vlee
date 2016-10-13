@@ -9,6 +9,5 @@
 #include "engine/mesh.h"
 
 namespace engine {
-	void drawRect(renderer::Device &device, Effect *fx, float x, float y, float w, float h);
 	void drawQuad(renderer::Device &device, Effect *fx, float x, float y, float w, float h);
 }

@@ -1,8 +1,9 @@
 #include "device.h"
 #include "track.h"
-#include <stdio.h>
-#include <math.h>
 #include <assert.h>
+#include <ctype.h>
+#include <math.h>
+#include <stdio.h>
 #include <string.h>
 
 static int find_track(struct sync_device *d, const char *name)
@@ -14,14 +15,40 @@ static int find_track(struct sync_device *d, const char *name)
 	return -1; /* not found */
 }
 
+static const char *path_encode(const char *path)
+{
+	static char temp[FILENAME_MAX];
+	int i, pos = 0;
+	int path_len = (int)strlen(path);
+	for (i = 0; i < path_len; ++i) {
+		int ch = path[i];
+		if (isalnum(ch) || ch == '.' || ch == '_') {
+			if (pos >= sizeof(temp) - 1)
+				break;
+
+			temp[pos++] = (char)ch;
+		} else {
+			if (pos >= sizeof(temp) - 3)
+				break;
+
+			temp[pos++] = '-';
+			temp[pos++] = "0123456789ABCDEF"[(ch >> 4) & 0xF];
+			temp[pos++] = "0123456789ABCDEF"[ch & 0xF];
+		}
+	}
+
+	temp[pos] = '\0';
+	return temp;
+}
+
 static const char *sync_track_path(const char *base, const char *name)
 {
 	static char temp[FILENAME_MAX];
 	strncpy(temp, base, sizeof(temp) - 1);
 	temp[sizeof(temp) - 1] = '\0';
-	strncat(temp, "_", sizeof(temp) - 1);
-	strncat(temp, name, sizeof(temp) - 1);
-	strncat(temp, ".track", sizeof(temp) - 1);
+	strncat(temp, "_", sizeof(temp) - strlen(temp) - 1);
+	strncat(temp, path_encode(name), sizeof(temp) - strlen(temp) - 1);
+	strncat(temp, ".track", sizeof(temp) - strlen(temp) - 1);
 	return temp;
 }
 
@@ -84,8 +111,14 @@ static struct Library *socket_base = NULL;
 
 static SOCKET server_connect(const char *host, unsigned short nport)
 {
+	SOCKET sock = INVALID_SOCKET;
+#ifdef USE_GETADDRINFO
+	struct addrinfo *addr, *curr;
+	char port[6];
+#else
 	struct hostent *he;
 	char **ap;
+#endif
 
 #ifdef WIN32
 	static int need_init = 1;
@@ -103,40 +136,63 @@ static SOCKET server_connect(const char *host, unsigned short nport)
 	}
 #endif
 
+#ifdef USE_GETADDRINFO
+
+	snprintf(port, sizeof(port), "%u", nport);
+	if (getaddrinfo(host, port, 0, &addr) != 0)
+		return INVALID_SOCKET;
+
+	for (curr = addr; curr; curr = curr->ai_next) {
+		int family = curr->ai_family;
+		struct sockaddr *sa = curr->ai_addr;
+		int sa_len = (int)curr->ai_addrlen;
+
+#else
+
 	he = gethostbyname(host);
 	if (!he)
 		return INVALID_SOCKET;
 
 	for (ap = he->h_addr_list; *ap; ++ap) {
-		SOCKET sock;
-		struct sockaddr_in sa;
+		int family = he->h_addrtype;
+		struct sockaddr_in sin;
+		struct sockaddr *sa = (struct sockaddr *)&sin;
+		int sa_len = sizeof(*sa);
 
-		sa.sin_family = he->h_addrtype;
-		sa.sin_port = htons(nport);
-		memcpy(&sa.sin_addr, *ap, he->h_length);
-		memset(&sa.sin_zero, 0, sizeof(sa.sin_zero));
+		sin.sin_family = he->h_addrtype;
+		sin.sin_port = htons(nport);
+		memcpy(&sin.sin_addr, *ap, he->h_length);
+		memset(&sin.sin_zero, 0, sizeof(sin.sin_zero));
 
-		sock = socket(he->h_addrtype, SOCK_STREAM, 0);
+#endif
+
+		sock = socket(family, SOCK_STREAM, 0);
 		if (sock == INVALID_SOCKET)
 			continue;
 
-		if (connect(sock, (struct sockaddr *)&sa, sizeof(sa)) >= 0) {
+		if (connect(sock, sa, sa_len) >= 0) {
 			char greet[128];
 
 			if (xsend(sock, CLIENT_GREET, strlen(CLIENT_GREET), 0) ||
-				xrecv(sock, greet, strlen(SERVER_GREET), 0)) {
+			    xrecv(sock, greet, strlen(SERVER_GREET), 0)) {
 				closesocket(sock);
+				sock = INVALID_SOCKET;
 				continue;
 			}
 
 			if (!strncmp(SERVER_GREET, greet, strlen(SERVER_GREET)))
-				return sock;
+				break;
 		}
 
 		closesocket(sock);
+		sock = INVALID_SOCKET;
 	}
 
-	return INVALID_SOCKET;
+#ifdef USE_GETADDRINFO
+	freeaddrinfo(addr);
+#endif
+
+	return sock;
 }
 
 #else
@@ -167,7 +223,7 @@ struct sync_device *sync_create_device(const char *base)
 	if (!d)
 		return NULL;
 
-	d->base = strdup(base);
+	d->base = strdup(path_encode(base));
 	if (!d->base) {
 		free(d);
 		return NULL;
@@ -179,11 +235,11 @@ struct sync_device *sync_create_device(const char *base)
 #ifndef SYNC_PLAYER
 	d->row = -1;
 	d->sock = INVALID_SOCKET;
-#else
+#endif
+
 	d->io_cb.open = (void *(*)(const char *, const char *))fopen;
 	d->io_cb.read = (size_t (*)(void *, size_t, size_t, void *))fread;
 	d->io_cb.close = (int (*)(void *))fclose;
-#endif
 
 	return d;
 }
@@ -191,6 +247,12 @@ struct sync_device *sync_create_device(const char *base)
 void sync_destroy_device(struct sync_device *d)
 {
 	int i;
+
+#ifndef SYNC_PLAYER
+	if (d->sock != INVALID_SOCKET)
+		closesocket(d->sock);
+#endif
+
 	for (i = 0; i < (int)d->num_tracks; ++i) {
 		free(d->tracks[i]->name);
 		free(d->tracks[i]->keys);
@@ -208,9 +270,7 @@ void sync_destroy_device(struct sync_device *d)
 #endif
 }
 
-#ifdef SYNC_PLAYER
-
-static int get_track_data(struct sync_device *d, struct sync_track *t)
+static int read_track_data(struct sync_device *d, struct sync_track *t)
 {
 	int i;
 	void *fp = d->io_cb.open(sync_track_path(d->base, t->name), "rb");
@@ -234,8 +294,6 @@ static int get_track_data(struct sync_device *d, struct sync_track *t)
 	d->io_cb.close(fp);
 	return 0;
 }
-
-#else
 
 static int save_track(const struct sync_track *t, const char *path)
 {
@@ -265,7 +323,9 @@ void sync_save_tracks(const struct sync_device *d)
 	}
 }
 
-static int get_track_data(struct sync_device *d, struct sync_track *t)
+#ifndef SYNC_PLAYER
+
+static int fetch_track_data(struct sync_device *d, struct sync_track *t)
 {
 	unsigned char cmd = GET_TRACK;
 	uint32_t name_len;
@@ -329,7 +389,7 @@ static int handle_del_key_cmd(SOCKET sock, struct sync_device *data)
 	return sync_del_key(data->tracks[track], row);
 }
 
-int sync_connect(struct sync_device *d, const char *host, unsigned short port)
+int sync_tcp_connect(struct sync_device *d, const char *host, unsigned short port)
 {
 	int i;
 	if (d->sock != INVALID_SOCKET)
@@ -346,13 +406,18 @@ int sync_connect(struct sync_device *d, const char *host, unsigned short port)
 	}
 
 	for (i = 0; i < (int)d->num_tracks; ++i) {
-		if (get_track_data(d, d->tracks[i])) {
+		if (fetch_track_data(d, d->tracks[i])) {
 			closesocket(d->sock);
 			d->sock = INVALID_SOCKET;
 			return -1;
 		}
 	}
 	return 0;
+}
+
+int sync_connect(struct sync_device *d, const char *host, unsigned short port)
+{
+	return sync_tcp_connect(d, host, port);
 }
 
 int sync_update(struct sync_device *d, int row, struct sync_cb *cb,
@@ -364,7 +429,7 @@ int sync_update(struct sync_device *d, int row, struct sync_cb *cb,
 	/* look for new commands */
 	while (socket_poll(d->sock)) {
 		unsigned char cmd = 0, flag;
-		uint32_t row;
+		uint32_t new_row;
 		if (xrecv(d->sock, (char *)&cmd, 1, 0))
 			goto sockerr;
 
@@ -378,10 +443,10 @@ int sync_update(struct sync_device *d, int row, struct sync_cb *cb,
 				goto sockerr;
 			break;
 		case SET_ROW:
-			if (xrecv(d->sock, (char *)&row, sizeof(row), 0))
+			if (xrecv(d->sock, (char *)&new_row, sizeof(new_row), 0))
 				goto sockerr;
 			if (cb && cb->set_row)
-				cb->set_row(cb_param, ntohl(row));
+				cb->set_row(cb_param, ntohl(new_row));
 			break;
 		case PAUSE:
 			if (xrecv(d->sock, (char *)&flag, 1, 0))
@@ -416,7 +481,7 @@ sockerr:
 	return -1;
 }
 
-#endif
+#endif /* !defined(SYNC_PLAYER) */
 
 static int create_track(struct sync_device *d, const char *name)
 {
@@ -446,6 +511,12 @@ const struct sync_track *sync_get_track(struct sync_device *d,
 	idx = create_track(d, name);
 	t = d->tracks[idx];
 
-	get_track_data(d, t);
+#ifndef SYNC_PLAYER
+	if (d->sock != INVALID_SOCKET)
+		fetch_track_data(d, t);
+	else
+#endif
+		read_track_data(d, t);
+
 	return t;
 }

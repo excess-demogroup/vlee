@@ -9,10 +9,12 @@
 /* configure socket-stack */
 #ifdef _WIN32
  #define WIN32_LEAN_AND_MEAN
+ #define USE_GETADDRINFO
  #ifndef NOMINMAX
   #define NOMINMAX
  #endif
  #include <winsock2.h>
+ #include <ws2tcpip.h>
  #include <windows.h>
  #include <limits.h>
 #elif defined(USE_AMITCP)
@@ -45,9 +47,8 @@ struct sync_device {
 #ifndef SYNC_PLAYER
 	int row;
 	SOCKET sock;
-#else
-	struct sync_io_cb io_cb;
 #endif
+	struct sync_io_cb io_cb;
 };
 
 #endif /* SYNC_DEVICE_H */

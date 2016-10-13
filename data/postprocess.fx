@@ -1,14 +1,12 @@
 const float flash, fade, overlay_alpha;
 const float2 noffs, nscale;
-const float noise_amt;
-const float dist_amt, dist_freq, dist_time;
+const float2 dist_offset;
 const float2 viewport;
 const float color_map_lerp;
 const float bloom_weight[7];
 const float block_thresh, line_thresh;
 const float flare_amount;
 const float distCoeff;
-const float cubeDistort;
 const float overlayGlitch;
 
 texture color_tex;
@@ -26,6 +24,17 @@ texture bloom_tex;
 sampler bloom_samp = sampler_state {
 	Texture = (bloom_tex);
 	MipFilter = POINT;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	AddressU = BORDER;
+	AddressV = BORDER;
+	sRGBTexture = FALSE;
+};
+
+texture flare_tex;
+sampler flare_samp = sampler_state {
+	Texture = (flare_tex);
+	MipFilter = NONE;
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
 	AddressU = BORDER;
@@ -126,6 +135,7 @@ sampler2D vignette_samp = sampler_state {
 struct VS_OUTPUT {
 	float4 pos : POSITION;
 	float2 uv  : TEXCOORD0;
+	float2 npos : TEXCOORD1;
 };
 
 VS_OUTPUT vertex(float4 ipos : POSITION, float2 uv : TEXCOORD0)
@@ -133,6 +143,8 @@ VS_OUTPUT vertex(float4 ipos : POSITION, float2 uv : TEXCOORD0)
 	VS_OUTPUT Out;
 	Out.pos = ipos;
 	Out.uv = uv;
+	Out.npos = uv * 2 - 1;
+	Out.npos.x *= viewport.x / viewport.y;
 	return Out;
 }
 
@@ -178,34 +190,7 @@ float3 sample_bloom(float2 pos)
 
 float3 sample_lensflare(float2 pos)
 {
-	// do the lens flare
-	float2 ipos = -pos + 1.0;
-	const int ghosts = 8;
-	float2 delta = (0.5 - ipos) / (ghosts * 0.5);
-
-	float3 flare = 0;
-	for (int i = 0; i < ghosts; ++i) {
-		float2 ghost_start = ipos + delta * 0.8 * i;
-		float2 ghost_stop = ipos + delta * 1.2 * i;
-		int ghost_samples = max(3, int(length(viewport * (ghost_stop - ghost_start) / 16)));
-		flare += sample_spectrum(bloom_samp, ghost_start, ghost_stop, ghost_samples, 1);
-	}
-
-	// fake anamorphic
-	float2 nnpos = pos - 0.5;
-	float2 nipos = -pos + 0.5;
-	flare += tex2Dlod(bloom_samp, float4(nnpos * float2(0.5, 1) + 0.5, 0, 1)).rgb * float3(0.25, 0.25, 2.0);
-	flare += tex2Dlod(bloom_samp, float4(nipos * float2(0.3,-1) + 0.5, 0, 1)).rgb * float3(0.25, 0.25, 2.0);
-
-	// sample halo
-	float flare_fade = pow(1 - abs(2 * distance(pos, 0.5) - 1), 5);
-	float2 halo_start = ipos + normalize(delta) * 0.5 * 0.95;
-	float2 halo_stop = ipos + normalize(delta) * 0.5 * 1.05;
-	int halo_samples = max(3, int(length(viewport * (halo_stop - halo_start) / 2)));
-
-	flare += sample_spectrum(bloom_samp, halo_start, halo_stop, halo_samples, 2) * flare_fade;
-
-	return flare * flare_amount;
+	return tex2Dlod(flare_samp, float4(pos, 0, 0)).rgb * flare_amount;
 }
 
 float srgb_decode(float v)
@@ -220,22 +205,14 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 {
 	float2 block = floor(vpos / 16);
 	float2 uv_noise = block / 64;
-	uv_noise += floor(dist_time * float2(1234.0, 3543.0) * uv_noise) / 64;
-
-	float2 pos = In.uv;
-	float2 pos2 = In.uv;
+	uv_noise += floor(dist_offset * uv_noise) / 64;
 
 	float haspect = viewport.x / viewport.y;
-	float vaspect = viewport.y / viewport.x;
-	float r2 = haspect * haspect * (pos.x * 2 - 1) * (pos.x * 2 - 1) + (pos.y * 2 - 1) * (pos.y * 2 - 1);
-//	float r2 = (pos.x - 0.5) * (pos.x - 0.5) + vaspect * vaspect * (pos.y - 0.5) * (pos.y - 0.5);
-	float f = (1 + r2 * (distCoeff + cubeDistort * sqrt(r2))) / (1 + (distCoeff + cubeDistort) * 2);
-	pos = f * (pos - 0.5) + 0.5;
-	pos2 = f * (pos2 - 0.5) + 0.5;
+	float r2 = dot(In.npos, In.npos);
+	float f = (1 + r2 * (2 * distCoeff * sqrt(r2))) / (1 + distCoeff * 4);
+	float2 pos = f * (In.uv - 0.5) + 0.5;
 
-	pos += float2(
-			(sin(pos.y * dist_freq + dist_time) * 2 - 1) * dist_amt,
-			(sin(pos.x * dist_freq + dist_time) * 2 - 1) * dist_amt);
+	float2 pos2 = pos;
 
 	float dist = pow(2 * distance(In.uv, float2(0.5, 0.5)), 2);
 	const float sep = 0.03;
@@ -244,15 +221,17 @@ float4 pixel(VS_OUTPUT In, float2 vpos : VPOS) : COLOR
 	// glitch some blocks and lines
 	if (tex2D(noise_samp, uv_noise).r < block_thresh ||
 	    tex2D(noise_samp, float2(uv_noise.y, 0)).r < line_thresh) {
-	    float2 dist = (frac(uv_noise) - 0.5) * 0.3;
+		float2 dist = (frac(uv_noise) - 0.5) * 0.3;
 		pos += dist * 0.1;
 		end += dist * 0.12;
 	}
 
-	int samples = max(3, int(length(viewport * (end - pos) / 2)));
+	int samples = clamp(int(length(viewport * (end - pos) / 2)), 3, 8);
 	float3 col = sample_spectrum(color_samp, pos, end, samples, 0);
 
-	col += (sample_bloom(pos) + sample_lensflare(pos)) * srgb_decode(tex2Dlod(lensdirt_samp, float4(pos, 0, 0)));
+	float dirt = srgb_decode(tex2Dlod(lensdirt_samp, float4(pos, 0, 0)));
+	col += sample_bloom(pos) * dirt;
+	col += sample_lensflare(pos) * dirt;
 	col *= 1 - tex2Dlod(vignette_samp, float4(pos, 0, 0)).a;
 
 	col = color_correct(col);

@@ -1,6 +1,11 @@
 #ifndef SYNC_BASE_H
 #define SYNC_BASE_H
 
+#ifdef _MSC_VER
+ #define _CRT_SECURE_NO_WARNINGS
+ #define _CRT_NONSTDC_NO_DEPRECATE 1
+#endif
+
 #include <stddef.h>
 
 /* configure inline keyword */
@@ -15,8 +20,9 @@
 
 /* configure lacking CRT features */
 #ifdef _MSC_VER
- #define strdup _strdup
- #define snprintf _snprintf
+ #if _MSC_VER < 1900
+  #define snprintf _snprintf
+ #endif
  /* int is 32-bit for both x86 and x64 */
  typedef unsigned int uint32_t;
  #define UINT32_MAX UINT_MAX

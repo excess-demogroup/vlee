@@ -299,6 +299,8 @@ std::vector<std::vector<Vector3> > loadSpheres(const char *path)
 	return ret;
 }
 
+extern "C" _declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+
 int main(int argc, char *argv[])
 {
 #ifdef _DEBUG
@@ -399,7 +401,7 @@ int main(int argc, char *argv[])
 			throw FatalException("something went wrong - failed to connect to host?");
 
 #ifndef SYNC_PLAYER
-		if (sync_connect(rocket, "localhost", SYNC_DEFAULT_PORT))
+		if (sync_tcp_connect(rocket, "localhost", SYNC_DEFAULT_PORT))
 			throw FatalException("failed to connect to host");
 #endif
 
@@ -451,10 +453,6 @@ int main(int argc, char *argv[])
 		const sync_track *bloomShapeTrack  = sync_get_track(rocket, "bloom.shape");
 		const sync_track *bloomAmtTrack    = sync_get_track(rocket, "bloom.amt");
 
-		const sync_track *distAmtTrack     = sync_get_track(rocket, "dist.amt");
-		const sync_track *distFreqTrack    = sync_get_track(rocket, "dist.freq");
-		const sync_track *distOffsetTrack  = sync_get_track(rocket, "dist.offset");
-
 		const sync_track *glitchBlockThreshTrack = sync_get_track(rocket, "glitch.blocks");
 		const sync_track *glitchLineThreshTrack = sync_get_track(rocket, "glitch.lines");
 		const sync_track *glitchOverlayTrack = sync_get_track(rocket, "glitch.overlay");
@@ -494,6 +492,7 @@ int main(int argc, char *argv[])
 
 		RenderTexture color1_hdr(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F);
 		RenderTexture color2_hdr(device, letterbox_viewport.Width, letterbox_viewport.Height, 0, D3DFMT_A16B16G16R16F);
+		RenderTexture flare_tex(device, letterbox_viewport.Width / 4, letterbox_viewport.Height / 4, 1, D3DFMT_A16B16G16R16F);
 
 		RenderTexture logo_anim_target(device, 512, 512, 0, D3DFMT_A16B16G16R16F, D3DMULTISAMPLE_NONE, D3DUSAGE_RENDERTARGET | D3DUSAGE_AUTOGENMIPMAP);
 
@@ -511,6 +510,9 @@ int main(int argc, char *argv[])
 		Effect *fxaa_fx = engine::loadEffect(device, "data/fxaa.fx");
 		fxaa_fx->setVector3("viewportInv", Vector3(1.0f / letterbox_viewport.Width, 1.0f / letterbox_viewport.Height, 0.0f));
 
+		Effect *flare_fx = engine::loadEffect(device, "data/flare.fx");
+		flare_fx->setVector3("viewport", Vector3(letterbox_viewport.Width, letterbox_viewport.Height, 0.0f));
+
 		Effect *postprocess_fx = engine::loadEffect(device, "data/postprocess.fx");
 		postprocess_fx->setVector3("viewport", Vector3(letterbox_viewport.Width, letterbox_viewport.Height, 0.0f));
 		Texture lensdirt_tex = engine::loadTexture(device, "data/lensdirt.png");
@@ -524,6 +526,7 @@ int main(int argc, char *argv[])
 		postprocess_fx->setVector3("nscale", Vector3(letterbox_viewport.Width / 256.0f, letterbox_viewport.Height / 256.0f, 0.0f));
 
 		Texture spectrum_tex = engine::loadTexture(device, "data/spectrum.png");
+		flare_fx->setTexture("spectrum_tex", spectrum_tex);
 		postprocess_fx->setTexture("spectrum_tex", spectrum_tex);
 
 		engine::ParticleStreamer particleStreamer(device);
@@ -732,7 +735,7 @@ int main(int argc, char *argv[])
 			logo_anim_fx->setTexture("greetings_tex", greetings.getTexture(int(sync_get_val(planeGreetingsTrack, row)) % greetings.getTextureCount()));
 			logo_anim_fx->setFloat("time", float(fmod((sync_get_val(planeTimeTrack, row) + 0.5) / 512, 1)));
 			logo_anim_fx->setFloat("fade", float(sync_get_val(planeFadeTrack, row)));
-			drawRect(device, logo_anim_fx, 0, 0, float(logo_anim_target.getWidth()), float(logo_anim_target.getHeight()));
+			drawQuad(device, logo_anim_fx, -1, -1, 2, 2);
 
 			device.setRenderTarget(color_target.getRenderTarget(), 0);
 			device.setDepthStencilSurface(depth_target.getRenderTarget());
@@ -800,7 +803,7 @@ int main(int argc, char *argv[])
 				std::vector<Sphere> spheres;
 				if (sphereSphere) {
 					spheres.resize(3600);
-					for (int i = 0; i < spheres.size(); ++i) {
+					for (size_t i = 0; i < spheres.size(); ++i) {
 						float s = math::notRandf(i * 3 + 0) * float(M_PI * 2);
 						float t = math::notRandf(i * 3 + 1) * 2 - 1;
 						float l = sqrt(1 - t * t);
@@ -823,7 +826,7 @@ int main(int argc, char *argv[])
 					}
 				} else {
 					spheres.resize(3600);
-					for (int i = 0; i < spheres.size(); ++i) {
+					for (size_t i = 0; i < spheres.size(); ++i) {
 						float s = math::notRandf(i * 3 + 0) * float(M_PI * 2);
 						float t = math::notRandf(i * 3 + 1) * 2 - 1;
 						Vector3 pos = Vector3(sin(s), cos(s), i);
@@ -846,7 +849,7 @@ int main(int argc, char *argv[])
 				}
 
 				particleStreamer.begin();
-				for (int i = 0; i < spheres.size(); ++i) {
+				for (size_t i = 0; i < spheres.size(); ++i) {
 					particleStreamer.add(spheres[i].pos, spheres[i].size, spheres[i].color);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
@@ -865,7 +868,7 @@ int main(int argc, char *argv[])
 				sphere_fx->setTexture("gbuffer_tex1", gbuffer_target1);
 
 				particleStreamer.begin();
-				for (int i = 0; i < spheres.size(); ++i) {
+				for (size_t i = 0; i < spheres.size(); ++i) {
 					particleStreamer.add(spheres[i].pos, spheres[i].size);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
@@ -900,11 +903,6 @@ int main(int argc, char *argv[])
 				Vector3 v2 = mul(planeTransform, Vector3(-size,  size, plane_distance));
 				Vector3 v3 = mul(planeTransform, Vector3( size,  size, plane_distance));
 
-/*				log::printf("v0: %f %f %f\n", v0.x, v0.y, v0.z);
-				log::printf("v1: %f %f %f\n", v0.x, v0.y, v0.z);
-				log::printf("v2: %f %f %f\n", v0.x, v0.y, v0.z);
-				log::printf("v0: %f %f %f\n", v0.x, v0.y, v0.z); */
-
 				planeMatrices[i] = calcPlaneMatrix(v0, v1, v2);
 				planeVertices[i * 4 + 0] = D3DXVECTOR4(v1.x, v1.y, v1.z, 1);
 				planeVertices[i * 4 + 1] = D3DXVECTOR4(v3.x, v3.y, v3.z, 1);
@@ -915,7 +913,7 @@ int main(int argc, char *argv[])
 			lighting_fx->p->SetVectorArray("planeVertices", planeVertices, 4 * planeCount);
 			lighting_fx->setFloat("planeOverbright", float(sync_get_val(planeOverbrightTrack, row)));
 			lighting_fx->setVector3("fogColor", fogColor);
-			lighting_fx->setFloat("fogDensity", 0.01);
+			lighting_fx->setFloat("fogDensity", 0.01f);
 
 			device.setRenderTarget(color_target.getRenderTarget(), 0);
 			device.setRenderTarget(NULL, 1);
@@ -1018,7 +1016,7 @@ int main(int argc, char *argv[])
 			device.setRenderTarget(color1_hdr.getSurface(), 1);
 			fxaa_fx->setTexture("color_tex", dof ? dof_target : color_target);
 			fxaa_fx->setFloat("bloom_cutoff", float(sync_get_val(bloomCutoffTrack, row)));
-			drawRect(device, fxaa_fx, 0, 0, float(letterbox_viewport.Width), float(letterbox_viewport.Height));
+			drawQuad(device, fxaa_fx, -1, -1, 2, 2);
 			device.setRenderTarget(NULL, 1);
 
 			/* downsample and blur */
@@ -1080,9 +1078,13 @@ int main(int argc, char *argv[])
 					device.setRenderTarget(j ? color1_hdr.getSurface(i) : color2_hdr.getSurface(i), 0);
 					int w = color1_hdr.getSurface(i).getWidth();
 					int h = color1_hdr.getSurface(i).getHeight();
-					drawRect(device, blur_fx, 0, 0, float(w), float(h));
+					drawQuad(device, blur_fx, -1, -1, 2, 2);
 				}
 			}
+
+			device.setRenderTarget(flare_tex.getSurface(0));
+			flare_fx->setTexture("bloom_tex", color1_hdr);
+			drawQuad(device, flare_fx, -1, -1, 2, 2);
 
 			/* letterbox */
 			device.setRenderTarget(backbuffer);
@@ -1096,20 +1098,18 @@ int main(int argc, char *argv[])
 			postprocess_fx->setVector3("noffs", Vector3(math::notRandf(int(beat * 100)), math::notRandf(int(beat * 100) + 1), 0));
 			postprocess_fx->setFloat("flash", flash < 0 ? math::randf() : pow(flash, 2.0f));
 			postprocess_fx->setFloat("fade", pow(fade, 2.2f));
-			postprocess_fx->setFloat("dist_amt", float(sync_get_val(distAmtTrack, row) / 100));
-			postprocess_fx->setFloat("dist_freq", float(sync_get_val(distFreqTrack, row) * 2 * M_PI));
-			postprocess_fx->setFloat("dist_time", float(beat * 4 + sync_get_val(distOffsetTrack, row)));
+			postprocess_fx->setVector2("dist_offset", Vector2(1234.0, 3543.0) * float(beat * 4));
 			postprocess_fx->setTexture("color_tex", fxaa_target);
 			postprocess_fx->setFloat("overlay_alpha", float(sync_get_val(colorMapOverlayAlphaTrack, row)));
 			postprocess_fx->setTexture("overlay_tex", overlays.getTexture(int(sync_get_val(colorMapOverlayTrack, row)) % overlays.getTextureCount()));
 			postprocess_fx->setTexture("bloom_tex", color1_hdr);
+			postprocess_fx->setTexture("flare_tex", flare_tex);
 			postprocess_fx->setFloat("block_thresh", float(sync_get_val(glitchBlockThreshTrack, row)));
 			postprocess_fx->setFloat("line_thresh", float(sync_get_val(glitchLineThreshTrack, row)));
 			postprocess_fx->setFloat("overlayGlitch", float(sync_get_val(glitchOverlayTrack, row)));
 
 			postprocess_fx->setFloat("flare_amount", float(sync_get_val(flareAmountTrack, row)));
 			postprocess_fx->setFloat("distCoeff", float(sync_get_val(lensDistTrack, row)));
-			postprocess_fx->setFloat("cubeDistort", float(sync_get_val(lensDistTrack, row)));
 
 			float bloom_shape = float(sync_get_val(bloomShapeTrack, row));
 			float bloom_weight[7];
@@ -1128,7 +1128,8 @@ int main(int argc, char *argv[])
 			postprocess_fx->setFloat("color_map_lerp", float(sync_get_val(colorMapColorFadeTrack, row)));
 
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
-			drawRect(device, postprocess_fx, float(letterbox_viewport.X), float(letterbox_viewport.Y), float(letterbox_viewport.Width), float(letterbox_viewport.Height));
+			drawQuad(device, postprocess_fx, -1, -1, 2, 2);
+
 			device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
 			device->EndScene(); /* WE DONE IS! */
 
