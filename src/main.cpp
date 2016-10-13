@@ -913,7 +913,7 @@ int main(int argc, char *argv[])
 			lighting_fx->p->SetVectorArray("planeVertices", planeVertices, 4 * planeCount);
 			lighting_fx->setFloat("planeOverbright", float(sync_get_val(planeOverbrightTrack, row)));
 			lighting_fx->setVector3("fogColor", fogColor);
-			lighting_fx->setFloat("fogDensity", 0.01);
+			lighting_fx->setFloat("fogDensity", 0.01f);
 
 			device.setRenderTarget(color_target.getRenderTarget(), 0);
 			device.setRenderTarget(NULL, 1);
