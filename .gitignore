@@ -1,7 +1,13 @@
 *.ncb
 *.suo
 *.user
+*.sdf
+*.opensdf
 /Win32/
 /x64/
-data/*.track
+/data/*.track
 /errorlog.txt
+/.nuget/
+/packages/
+/packages.config
+/ipch/
