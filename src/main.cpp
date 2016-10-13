@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
 			throw FatalException("something went wrong - failed to connect to host?");
 
 #ifndef SYNC_PLAYER
-		if (sync_connect(rocket, "localhost", SYNC_DEFAULT_PORT))
+		if (sync_tcp_connect(rocket, "localhost", SYNC_DEFAULT_PORT))
 			throw FatalException("failed to connect to host");
 #endif
 
