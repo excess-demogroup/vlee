@@ -803,7 +803,7 @@ int main(int argc, char *argv[])
 				std::vector<Sphere> spheres;
 				if (sphereSphere) {
 					spheres.resize(3600);
-					for (int i = 0; i < spheres.size(); ++i) {
+					for (size_t i = 0; i < spheres.size(); ++i) {
 						float s = math::notRandf(i * 3 + 0) * float(M_PI * 2);
 						float t = math::notRandf(i * 3 + 1) * 2 - 1;
 						float l = sqrt(1 - t * t);
@@ -826,7 +826,7 @@ int main(int argc, char *argv[])
 					}
 				} else {
 					spheres.resize(3600);
-					for (int i = 0; i < spheres.size(); ++i) {
+					for (size_t i = 0; i < spheres.size(); ++i) {
 						float s = math::notRandf(i * 3 + 0) * float(M_PI * 2);
 						float t = math::notRandf(i * 3 + 1) * 2 - 1;
 						Vector3 pos = Vector3(sin(s), cos(s), i);
@@ -849,7 +849,7 @@ int main(int argc, char *argv[])
 				}
 
 				particleStreamer.begin();
-				for (int i = 0; i < spheres.size(); ++i) {
+				for (size_t i = 0; i < spheres.size(); ++i) {
 					particleStreamer.add(spheres[i].pos, spheres[i].size, spheres[i].color);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
@@ -868,7 +868,7 @@ int main(int argc, char *argv[])
 				sphere_fx->setTexture("gbuffer_tex1", gbuffer_target1);
 
 				particleStreamer.begin();
-				for (int i = 0; i < spheres.size(); ++i) {
+				for (size_t i = 0; i < spheres.size(); ++i) {
 					particleStreamer.add(spheres[i].pos, spheres[i].size);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
