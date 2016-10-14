@@ -19,9 +19,3 @@
 
 #define DEMO_ASPECT (16.0 / 9)
 #define BPM 186.0
-
-#ifdef VJSYS
-#define DEFAULT_SOUNDCARD 0
-#else
-#define DEFAULT_SOUNDCARD 1
-#endif

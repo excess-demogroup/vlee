@@ -24,7 +24,7 @@ D3DMULTISAMPLE_TYPE config::multisample = DEFAULT_MULTISAMPLE;
 float config::aspect = 1.0; // float(DEFAULT_WIDTH) / DEFAULT_HEIGHT;
 bool config::vsync = DEFAULT_VSYNC;
 bool config::fullscreen = DEFAULT_FULLSCREEN;
-unsigned config::soundcard = DEFAULT_SOUNDCARD;
+unsigned config::soundcard = 0;
 
 
 static void refreshModes(HWND hDlg)
@@ -237,11 +237,14 @@ static LRESULT onInitDialog(HWND hDlg)
 
 	// playback device
 	BASS_DEVICEINFO info;
-	for (int i = 0; BASS_GetDeviceInfo(i, &info); ++i)
+	for (int i = 0; BASS_GetDeviceInfo(i, &info); ++i) {
 		SendMessage(GetDlgItem(hDlg, IDC_SOUNDCARD), CB_ADDSTRING, 0, (LPARAM)info.name);
+		if (info.flags & BASS_DEVICE_DEFAULT)
+			soundcard = i;
+	}
 
 	// select default soundcard
-	SendMessage(GetDlgItem(hDlg, IDC_SOUNDCARD), (UINT)CB_SETCURSEL, (WPARAM)DEFAULT_SOUNDCARD, 0);
+	SendMessage(GetDlgItem(hDlg, IDC_SOUNDCARD), (UINT)CB_SETCURSEL, (WPARAM)soundcard, 0);
 
 	return (LRESULT)TRUE;
 }
