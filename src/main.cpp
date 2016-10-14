@@ -1194,6 +1194,9 @@ int main(int argc, char *argv[])
 		/** END OF DEMO ***/
 
 		// cleanup
+#ifndef SYNC_PLAYER
+		sync_save_tracks(rocket);
+#endif
 		sync_destroy_device(rocket);
 		if (stream)
 			BASS_StreamFree(stream);
