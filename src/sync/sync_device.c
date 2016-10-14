@@ -223,7 +223,7 @@ struct sync_device *sync_create_device(const char *base)
 	if (!d)
 		return NULL;
 
-	d->base = strdup(path_encode(base));
+	d->base = strdup(base);
 	if (!d->base) {
 		free(d);
 		return NULL;
