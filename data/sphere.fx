@@ -3,37 +3,26 @@ const float4x4 matProjection : PROJECTION;
 const float4x4 matProjectionInverse : PROJECTIONINVERSE;
 const float2 nearFar;
 
-#ifdef FAST_BOUNDS
-
 float4 getSphereBounds(float3 center, float r)
 {
-	float4 p = center.xyxy + float4(-r, -r, r, r);
-	float4 z = center.zzzz - float4(-r, -r, r, r) * sign(p);
-	return p * float2(matProjection[0].x, matProjection[1].y).xyxy / z;
-}
+	if (center.z > r) {
+		float2 cLengthRcp = float2(dot(center.xz, center.xz),
+		                           dot(center.yz, center.yz));
+		float2 tSquared = cLengthRcp - r * r;
 
-#else
-
-float4 getSphereBounds(float3 center, float r)
-{
-	float2 cLengthRcp = float2(dot(center.xz, center.xz),
-	                           dot(center.yz, center.yz));
-	float2 tSquared = cLengthRcp - r * r;
-
-	if (tSquared.x > 0 && tSquared.y > 0) {
-		float3 a = float3(sqrt(tSquared.x), r, -r) * cLengthRcp.x;
-		float3 b = float3(sqrt(tSquared.y), r, -r) * cLengthRcp.y;
-		float4 p = float4(dot(a.xz, center.xz), dot(b.xz, center.yz),
-		                  dot(a.xy, center.xz), dot(b.xy, center.yz));
-		float4 z = float4(dot(a.yx, center.xz), dot(b.yx, center.yz),
-		                  dot(a.zx, center.xz), dot(b.zx, center.yz));
-		return p * float2(matProjection[0].x, matProjection[1].y).xyxy / z;
+		if (tSquared.x > 0 && tSquared.y > 0) {
+			float3 a = float3(sqrt(tSquared.x), r, -r) * cLengthRcp.x;
+			float3 b = float3(sqrt(tSquared.y), r, -r) * cLengthRcp.y;
+			float4 p = float4(dot(a.xz, center.xz), dot(b.xz, center.yz),
+							  dot(a.xy, center.xz), dot(b.xy, center.yz));
+			float4 z = float4(dot(a.yx, center.xz), dot(b.yx, center.yz),
+							  dot(a.zx, center.xz), dot(b.zx, center.yz));
+			return p * float2(matProjection[0].x, matProjection[1].y).xyxy / z;
+		}
 	}
 
 	return float4(-1, -1, 1, 1); // whole screen
 }
-
-#endif
 
 struct VS_INPUT {
 	float3 pos   : POSITION;
