@@ -198,6 +198,31 @@ Matrix4x4 calcPlaneMatrix(Vector3 &v0, Vector3 &v1, Vector3 &v2)
 	return ret;
 }
 
+void normalizePlane(float plane[4])
+{
+	float mag = sqrt(plane[0] * plane[0] +
+	                 plane[1] * plane[1] +
+	                 plane[2] * plane[2]);
+	float scale = 1.0f / mag;
+	for (int i = 0; i < 4; ++i)
+		plane[i] = plane[i] * scale;
+}
+
+bool sphereInsideFrustum(const float frustum[6][4], const Vector3 &pos, float radius)
+{
+	for (int i = 0; i < 6; ++i) {
+		float d = frustum[i][0] * pos.x +
+		          frustum[i][1] * pos.y +
+		          frustum[i][2] * pos.z +
+		          frustum[i][3];
+
+		if (d < -radius)
+			return false;
+	}
+
+	return true;
+}
+
 std::vector<renderer::VolumeTexture> loadColorMaps(renderer::Device &device, std::string folder)
 {
 	const int MAP_SIZE = 32;
@@ -790,6 +815,13 @@ int main(int argc, char *argv[])
 				sphere_fx->setVector2("nearFar", nearFar);
 				sphere_fx->setVector2("viewport", Vector2(letterbox_viewport.Width, letterbox_viewport.Height));
 
+				math::Matrix4x4 worldViewProj = world * view * proj;
+
+				float frustum[6][4];
+				worldViewProj.extractFrustumPlanes(frustum);
+				for (int i = 0; i < 6; ++i)
+					normalizePlane(frustum[i]);
+
 				float anim = float(sync_get_val(spheresAnimTrack, row));
 				float dist = float(sync_get_val(spheresDistTrack, row));
 				float pal = float(0.5f + sync_get_val(spheresPalTrack, row)) / kulefarger_tex.getHeight();
@@ -850,7 +882,13 @@ int main(int argc, char *argv[])
 
 				particleStreamer.begin();
 				for (size_t i = 0; i < spheres.size(); ++i) {
-					particleStreamer.add(spheres[i].pos, spheres[i].size, spheres[i].color);
+					Vector3 pos = spheres[i].pos;
+					float size = spheres[i].size;
+
+					if (!sphereInsideFrustum(frustum, pos, size))
+						continue;
+
+					particleStreamer.add(pos, size, spheres[i].color);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
 						sphere_fx->drawPass(&particleStreamer, 0);
@@ -869,7 +907,13 @@ int main(int argc, char *argv[])
 
 				particleStreamer.begin();
 				for (size_t i = 0; i < spheres.size(); ++i) {
-					particleStreamer.add(spheres[i].pos, spheres[i].size);
+					Vector3 pos = spheres[i].pos;
+					float size = spheres[i].size * 3;
+
+					if (!sphereInsideFrustum(frustum, pos, size))
+						continue;
+
+					particleStreamer.add(pos, spheres[i].size, spheres[i].color);
 					if (!particleStreamer.getRoom()) {
 						particleStreamer.end();
 						sphere_fx->drawPass(&particleStreamer, 1);
